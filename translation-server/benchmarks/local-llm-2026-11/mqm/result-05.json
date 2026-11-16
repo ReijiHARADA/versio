@@ -1,0 +1,452 @@
+[
+ {
+  "id": "epmc-PMC13185203:b-588341b0",
+  "annotations": {
+   "A": [
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "ASOをヌクレオチドと誤訳"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "leave-one-outの指定が欠落"
+    }
+   ],
+   "B": [],
+   "C": [],
+   "D": [],
+   "E": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "支援ベクトルマシンは誤訳"
+    },
+    {
+     "cat": "fact",
+     "sev": "minor",
+     "note": "21nTと誤記"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "効果測定の対象を取り違え"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "leave-one-outを誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "観測活動は不自然な訳"
+    }
+   ],
+   "F": [],
+   "G": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "分散を変動と訳した"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "レーブワンアウトは不適切"
+    }
+   ]
+  }
+ },
+ {
+  "id": "manual-medical-deep-learning-meta-review:b-dff51ad3",
+  "annotations": {
+   "A": [],
+   "B": [
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "医療分野の特定の分野が冗長"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "high-levelを包括的と訳した"
+    }
+   ],
+   "C": [
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "Hence（そのため）が欠落"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "医学分域の誤字"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "医学的ディープ学習が不自然"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "surveyを調査結果と訳した"
+    },
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "文体が不統一"
+    }
+   ],
+   "D": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "almost impossibleが弱まった"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "systematicの係り先が不正確"
+    }
+   ],
+   "E": [],
+   "F": [
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "in generalが欠落"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "high-level/systematicが曖昧"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "surveyを調査結果と訳した"
+    }
+   ],
+   "G": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "severalを数多くと訳した"
+    }
+   ]
+  }
+ },
+ {
+  "id": "epmc-PMC13613203:b-fbccc540",
+  "annotations": {
+   "A": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "integrityを信頼性と訳した"
+    }
+   ],
+   "B": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "integrityを倫理的側面と訳した"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "参考文献の作成は不正確"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "alt textをキャプションと訳した"
+    }
+   ],
+   "C": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "manuscriptを写本と誤訳"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "(s)が残り不自然"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "言語研磨は不自然"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "完璧性は不適切"
+    },
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "我々に連絡は文体不統一"
+    }
+   ],
+   "D": [],
+   "E": [],
+   "F": [],
+   "G": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "公式化は不適切"
+    }
+   ]
+  }
+ },
+ {
+  "id": "arxiv-2509.25504:b-41024f23",
+  "annotations": {
+   "A": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "commoditizationを普及と訳した"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "multi-modalが欠落"
+    },
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "最大限に活用するが原文にない"
+    },
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "当社は論文として不自然"
+    }
+   ],
+   "B": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "multi-modalを多層的と訳した"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "物理空間の係り方が曖昧"
+    }
+   ],
+   "C": [
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "課題の文が意味不明に変形"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "large（大規模）が欠落"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "XRブロックは固有名の誤訳"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "チャネル化するが不自然"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "disembodiedが欠落"
+    }
+   ],
+   "D": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "agentsを要素と訳した"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "multi-modalを多次元と訳した"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "rawが欠落"
+    }
+   ],
+   "E": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "commoditizationを普及と訳した"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "3D diffusion modelsが欠落"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "multi-modalを多角的と訳した"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "disembodiedが欠落"
+    },
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "当社は論文として不自然"
+    }
+   ],
+   "F": [
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "当社は論文として不自然"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "協働体は不自然な訳"
+    }
+   ],
+   "G": [
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "当社は論文として不自然"
+    }
+   ]
+  }
+ },
+ {
+  "id": "arxiv-2510.02017:b-016c803c",
+  "annotations": {
+   "A": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "MIを情報不均衡と誤訳"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "critical",
+     "note": "格差が縮小を拡大と逆に訳した"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "対抗的な評価手法が不適切"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "保証を予測と訳した"
+    }
+   ],
+   "B": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "政策は不適切（ポリシー）"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "(i)がラベル関連ビットが不自然"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "感度の高いビットは誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "対抗的批判は不自然"
+    }
+   ],
+   "C": [],
+   "D": [
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "当社は論文として不自然"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "評価者はcriticの誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "敏感な情報は不自然"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "ギャップ縮小と性能維持を取り違え"
+    }
+   ],
+   "E": [
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "sensitiveを重要でないと訳した"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "criticsを敵対的学習と訳した"
+    },
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "パラメータが原文にない"
+    }
+   ],
+   "F": [
+    {
+     "cat": "untranslated",
+     "sev": "minor",
+     "note": "Implicationsが未訳"
+    },
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "全角数字・記号が不自然"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "sensitiveを機密と訳した"
+    }
+   ],
+   "G": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "感度の高いビットは誤訳"
+    }
+   ]
+  }
+ }
+]

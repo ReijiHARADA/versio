@@ -1,0 +1,62 @@
+[
+ {
+  "name": "madlad-3b",
+  "doc": "epmc-PMC13476272",
+  "pages": 17,
+  "blocks": 43,
+  "source_chars": 30958,
+  "wall_sec": 819.9,
+  "conc": 8,
+  "first_block_sec": 289.1
+ },
+ {
+  "name": "madlad-3b",
+  "doc": "epmc-PMC13592641",
+  "pages": 20,
+  "blocks": 46,
+  "source_chars": 45926,
+  "wall_sec": 1487.4,
+  "conc": 8,
+  "first_block_sec": 354.2
+ },
+ {
+  "name": "plamo3-2b",
+  "doc": "epmc-PMC13476272",
+  "pages": 17,
+  "blocks": 43,
+  "source_chars": 30958,
+  "wall_sec": 56.4,
+  "conc": 8,
+  "first_block_sec": 17.53
+ },
+ {
+  "name": "plamo3-2b",
+  "doc": "epmc-PMC13592641",
+  "pages": 20,
+  "blocks": 46,
+  "source_chars": 45926,
+  "wall_sec": 96.6,
+  "conc": 8,
+  "first_block_sec": 9.99
+ },
+ {
+  "name": "plamo3-8b",
+  "doc": "epmc-PMC13476272",
+  "pages": 17,
+  "blocks": 43,
+  "source_chars": 30958,
+  "wall_sec": 201.4,
+  "conc": 8,
+  "first_block_sec": 58.82
+ },
+ {
+  "name": "plamo3-8b",
+  "doc": "epmc-PMC13592641",
+  "pages": 20,
+  "blocks": 46,
+  "source_chars": 45926,
+  "wall_sec": 261.8,
+  "conc": 8,
+  "first_block_sec": 29.93
+ }
+]

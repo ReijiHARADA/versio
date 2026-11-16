@@ -1,0 +1,9 @@
+items judged: 40/40
+system          MQM/100w major+rows critical  facts    sec    RSS  top error cats
+plamo3-8b           0.50          2        0  1.000    9.5   3738  mistranslation:10, terminology:7, style:3
+plamo3-2b           0.62          2        0  1.000    3.5   2273  terminology:16, mistranslation:5, style:2
+cat-7b              2.92          8        2  0.976   14.4   5842  terminology:35, mistranslation:34, fluency:18
+tgemma-12b          3.72         12        1  0.984   21.7   4508  mistranslation:53, terminology:44, addition:27
+hunyuan-mt-7b       4.14         14        1  0.984   22.2   4800  terminology:58, mistranslation:55, addition:36
+tgemma-4b           5.95         21        1  0.976    8.4   3346  mistranslation:82, terminology:70, omission:37
+madlad-3b          10.46         32        5  0.976   26.0    150  mistranslation:127, terminology:125, fluency:68

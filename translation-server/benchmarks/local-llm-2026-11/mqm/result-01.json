@@ -1,0 +1,392 @@
+[
+ {
+  "id": "epmc-PMC13551842:b-db8cade5",
+  "annotations": {
+   "A": [
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "最後に同内容の文を重複して追加"
+    },
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "です・ます調で論文文体に不適"
+    }
+   ],
+   "B": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "cyberbullyingをサイバーバッシングと誤訳"
+    }
+   ],
+   "C": [
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "「一方、」が原文にない"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "予測因子が「予測する研究」にずれた"
+    }
+   ],
+   "D": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "重症度は不適、相関関係は相関要因"
+    }
+   ],
+   "E": [],
+   "F": [],
+   "G": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "cyberbullyingをサイバーいざこざと誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "ビッグ5・バイスタンダー表記が不統一"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "比較的少ない研究が行われている不自然"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "differentの意味が欠落"
+    }
+   ]
+  }
+ },
+ {
+  "id": "arxiv-2510.04786:b-eda79601",
+  "annotations": {
+   "A": [
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "「当社の」は論文として不適"
+    }
+   ],
+   "B": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "最強のモデルが最強の性能に変化"
+    }
+   ],
+   "C": [
+    {
+     "cat": "addition",
+     "sev": "major",
+     "note": "TTCをTest-Time Contextsと誤った補足"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "括弧で比較対象の意味がずれた"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "domainをデータセットと訳出"
+    }
+   ],
+   "D": [
+    {
+     "cat": "untranslated",
+     "sev": "major",
+     "note": "第1文が英語のまま"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "multiple-choiceを多項式問題と誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "codingを符号化と訳出"
+    },
+    {
+     "cat": "fact",
+     "sev": "minor",
+     "note": "QweN3の誤記"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "ボトルネルコ等の誤字・不自然表現"
+    }
+   ],
+   "E": [
+    {
+     "cat": "addition",
+     "sev": "major",
+     "note": "TTCをテスト時強化学習と誤った補足"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "move beyondが必要があるに変化"
+    }
+   ],
+   "F": [],
+   "G": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "majorityのマジョリティ音訳"
+    },
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "考慮されたが直訳調"
+    }
+   ]
+  }
+ },
+ {
+  "id": "arxiv-2509.24008:b-76c953b8",
+  "annotations": {
+   "A": [],
+   "B": [
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "secondaryが欠落"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "trainingが欠落"
+    }
+   ],
+   "C": [
+    {
+     "cat": "fact",
+     "sev": "minor",
+     "note": "MVBencchの誤記"
+    },
+    {
+     "cat": "fact",
+     "sev": "minor",
+     "note": "ViideoMMEの誤記"
+    },
+    {
+     "cat": "fact",
+     "sev": "minor",
+     "note": "GPTP-4Vの誤記"
+    },
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "データセットを補足"
+    }
+   ],
+   "D": [
+    {
+     "cat": "mistranslation",
+     "sev": "critical",
+     "note": "4倍少ないを4倍使用と逆転"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "短い形式に関して,MVBenchが不自然"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "ビdeオの文字化け"
+    }
+   ],
+   "E": [],
+   "F": [
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "secondaryが欠落"
+    },
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "これは...示しています等の補足"
+    },
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "データセットを補足"
+    }
+   ],
+   "G": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "short-formを短時間用と訳出"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "secondaryが欠落"
+    }
+   ]
+  }
+ },
+ {
+  "id": "epmc-PMC13345230:b-724a2eb7",
+  "annotations": {
+   "A": [],
+   "B": [
+    {
+     "cat": "mistranslation",
+     "sev": "critical",
+     "note": "非有意なベースラインにも有意差ありと誤記"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "異質性が有意な差に変化"
+    }
+   ],
+   "C": [],
+   "D": [
+    {
+     "cat": "fact",
+     "sev": "minor",
+     "note": "XGBooストの混在表記"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "補正後の有意な差の文が冗長"
+    }
+   ],
+   "E": [
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "LLM（大規模言語モデル）と補足"
+    }
+   ],
+   "F": [],
+   "G": [
+    {
+     "cat": "untranslated",
+     "sev": "critical",
+     "note": "後半の大部分が英語のまま"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "後行比較・競合基準が不適"
+    },
+    {
+     "cat": "untranslated",
+     "sev": "minor",
+     "note": "Tables 1, 2, and S4 Tableが英語"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "In the pooled overall analysisが欠落"
+    }
+   ]
+  }
+ },
+ {
+  "id": "epmc-PMC13613328:b-2ed86204",
+  "annotations": {
+   "A": [
+    {
+     "cat": "untranslated",
+     "sev": "minor",
+     "note": "Nociceptors（nociceptor）で未訳"
+    }
+   ],
+   "B": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "Neuropathic painを神経症性痛みと誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "Dorsal根神経節等が半訳"
+    },
+    {
+     "cat": "untranslated",
+     "sev": "minor",
+     "note": "Sensitisationが英語のまま"
+    },
+    {
+     "cat": "fact",
+     "sev": "minor",
+     "note": "Gugleの誤記"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "ノシセプターは不適"
+    }
+   ],
+   "C": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "神経性疼痛・痛覚受容体は不正確"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "2026年までの期間が欠落"
+    }
+   ],
+   "D": [],
+   "E": [],
+   "F": [
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "組み合わせを組み合わせたが重複"
+    },
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "厳密にが原文にない"
+    }
+   ],
+   "G": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "Nociceptorsを感覚受容体と誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "脊髄後根節・後角は不正確"
+    },
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "などが原文にない"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "特にの重複"
+    }
+   ]
+  }
+ }
+]

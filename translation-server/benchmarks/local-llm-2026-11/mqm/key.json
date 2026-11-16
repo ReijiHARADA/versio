@@ -1,0 +1,362 @@
+{
+ "arxiv-2510.01887:b-c68e4cb6": {
+  "A": "tgemma-12b",
+  "B": "hunyuan-mt-7b",
+  "C": "plamo3-2b",
+  "D": "tgemma-4b",
+  "E": "plamo3-8b",
+  "F": "madlad-3b",
+  "G": "cat-7b"
+ },
+ "epmc-PMC13312647:b-2b210cae": {
+  "A": "cat-7b",
+  "B": "hunyuan-mt-7b",
+  "C": "madlad-3b",
+  "D": "plamo3-2b",
+  "E": "tgemma-12b",
+  "F": "plamo3-8b",
+  "G": "tgemma-4b"
+ },
+ "arxiv-2509.25968:b-d2988571": {
+  "A": "madlad-3b",
+  "B": "tgemma-4b",
+  "C": "plamo3-2b",
+  "D": "tgemma-12b",
+  "E": "plamo3-8b",
+  "F": "cat-7b",
+  "G": "hunyuan-mt-7b"
+ },
+ "arxiv-2404.01485:b-cc6a4ad3": {
+  "A": "plamo3-8b",
+  "B": "hunyuan-mt-7b",
+  "C": "madlad-3b",
+  "D": "tgemma-12b",
+  "E": "plamo3-2b",
+  "F": "cat-7b",
+  "G": "tgemma-4b"
+ },
+ "manual-fashion-hybrid-cmf:b-ddec4bc8": {
+  "A": "cat-7b",
+  "B": "tgemma-4b",
+  "C": "plamo3-8b",
+  "D": "plamo3-2b",
+  "E": "hunyuan-mt-7b",
+  "F": "madlad-3b",
+  "G": "tgemma-12b"
+ },
+ "epmc-PMC13551842:b-db8cade5": {
+  "A": "tgemma-12b",
+  "B": "hunyuan-mt-7b",
+  "C": "tgemma-4b",
+  "D": "cat-7b",
+  "E": "plamo3-8b",
+  "F": "plamo3-2b",
+  "G": "madlad-3b"
+ },
+ "arxiv-2510.04786:b-eda79601": {
+  "A": "tgemma-4b",
+  "B": "plamo3-2b",
+  "C": "hunyuan-mt-7b",
+  "D": "madlad-3b",
+  "E": "tgemma-12b",
+  "F": "plamo3-8b",
+  "G": "cat-7b"
+ },
+ "arxiv-2509.24008:b-76c953b8": {
+  "A": "plamo3-2b",
+  "B": "tgemma-4b",
+  "C": "cat-7b",
+  "D": "madlad-3b",
+  "E": "plamo3-8b",
+  "F": "tgemma-12b",
+  "G": "hunyuan-mt-7b"
+ },
+ "epmc-PMC13345230:b-724a2eb7": {
+  "A": "plamo3-8b",
+  "B": "tgemma-4b",
+  "C": "hunyuan-mt-7b",
+  "D": "cat-7b",
+  "E": "tgemma-12b",
+  "F": "plamo3-2b",
+  "G": "madlad-3b"
+ },
+ "epmc-PMC13613328:b-2ed86204": {
+  "A": "tgemma-12b",
+  "B": "madlad-3b",
+  "C": "hunyuan-mt-7b",
+  "D": "plamo3-8b",
+  "E": "plamo3-2b",
+  "F": "cat-7b",
+  "G": "tgemma-4b"
+ },
+ "arxiv-2510.00019:b-c59163e9": {
+  "A": "hunyuan-mt-7b",
+  "B": "cat-7b",
+  "C": "madlad-3b",
+  "D": "tgemma-12b",
+  "E": "plamo3-8b",
+  "F": "plamo3-2b",
+  "G": "tgemma-4b"
+ },
+ "arxiv-2510.02836:b-1d945737": {
+  "A": "tgemma-4b",
+  "B": "plamo3-2b",
+  "C": "madlad-3b",
+  "D": "cat-7b",
+  "E": "tgemma-12b",
+  "F": "hunyuan-mt-7b",
+  "G": "plamo3-8b"
+ },
+ "arxiv-2510.00245:b-26785901": {
+  "A": "madlad-3b",
+  "B": "hunyuan-mt-7b",
+  "C": "cat-7b",
+  "D": "tgemma-4b",
+  "E": "plamo3-2b",
+  "F": "plamo3-8b",
+  "G": "tgemma-12b"
+ },
+ "manual-wear-scale:b-36045918": {
+  "A": "tgemma-12b",
+  "B": "tgemma-4b",
+  "C": "madlad-3b",
+  "D": "plamo3-8b",
+  "E": "plamo3-2b",
+  "F": "cat-7b",
+  "G": "hunyuan-mt-7b"
+ },
+ "epmc-PMC13643957:b-b8e25663": {
+  "A": "cat-7b",
+  "B": "tgemma-4b",
+  "C": "hunyuan-mt-7b",
+  "D": "tgemma-12b",
+  "E": "madlad-3b",
+  "F": "plamo3-2b",
+  "G": "plamo3-8b"
+ },
+ "arxiv-2411.01344:b-79caf32f": {
+  "A": "tgemma-4b",
+  "B": "plamo3-8b",
+  "C": "plamo3-2b",
+  "D": "cat-7b",
+  "E": "tgemma-12b",
+  "F": "madlad-3b",
+  "G": "hunyuan-mt-7b"
+ },
+ "arxiv-2510.00222:b-4fe4fc13": {
+  "A": "madlad-3b",
+  "B": "cat-7b",
+  "C": "hunyuan-mt-7b",
+  "D": "tgemma-4b",
+  "E": "plamo3-2b",
+  "F": "plamo3-8b",
+  "G": "tgemma-12b"
+ },
+ "epmc-PMC11997001:b-20f27d95": {
+  "A": "cat-7b",
+  "B": "hunyuan-mt-7b",
+  "C": "tgemma-4b",
+  "D": "plamo3-8b",
+  "E": "plamo3-2b",
+  "F": "tgemma-12b",
+  "G": "madlad-3b"
+ },
+ "epmc-PMC13630993:b-9e416092": {
+  "A": "tgemma-12b",
+  "B": "madlad-3b",
+  "C": "hunyuan-mt-7b",
+  "D": "cat-7b",
+  "E": "plamo3-8b",
+  "F": "plamo3-2b",
+  "G": "tgemma-4b"
+ },
+ "arxiv-2508.16612:b-3776d79b": {
+  "A": "plamo3-8b",
+  "B": "tgemma-12b",
+  "C": "hunyuan-mt-7b",
+  "D": "madlad-3b",
+  "E": "tgemma-4b",
+  "F": "cat-7b",
+  "G": "plamo3-2b"
+ },
+ "manual-marketing-consumer-response:b-b8b40f14": {
+  "A": "plamo3-8b",
+  "B": "hunyuan-mt-7b",
+  "C": "madlad-3b",
+  "D": "cat-7b",
+  "E": "tgemma-4b",
+  "F": "tgemma-12b",
+  "G": "plamo3-2b"
+ },
+ "epmc-PMC13596825:b-d1727f1d": {
+  "A": "plamo3-8b",
+  "B": "tgemma-4b",
+  "C": "tgemma-12b",
+  "D": "hunyuan-mt-7b",
+  "E": "cat-7b",
+  "F": "madlad-3b",
+  "G": "plamo3-2b"
+ },
+ "arxiv-2509.24913:b-af7e1f90": {
+  "A": "madlad-3b",
+  "B": "tgemma-4b",
+  "C": "tgemma-12b",
+  "D": "plamo3-8b",
+  "E": "cat-7b",
+  "F": "plamo3-2b",
+  "G": "hunyuan-mt-7b"
+ },
+ "epmc-PMC12885475:b-468f63e5": {
+  "A": "plamo3-2b",
+  "B": "madlad-3b",
+  "C": "tgemma-12b",
+  "D": "hunyuan-mt-7b",
+  "E": "cat-7b",
+  "F": "tgemma-4b",
+  "G": "plamo3-8b"
+ },
+ "arxiv-2501.10568:b-15609cab": {
+  "A": "tgemma-12b",
+  "B": "hunyuan-mt-7b",
+  "C": "plamo3-2b",
+  "D": "madlad-3b",
+  "E": "tgemma-4b",
+  "F": "cat-7b",
+  "G": "plamo3-8b"
+ },
+ "epmc-PMC13185203:b-588341b0": {
+  "A": "tgemma-4b",
+  "B": "tgemma-12b",
+  "C": "plamo3-8b",
+  "D": "plamo3-2b",
+  "E": "madlad-3b",
+  "F": "cat-7b",
+  "G": "hunyuan-mt-7b"
+ },
+ "manual-medical-deep-learning-meta-review:b-dff51ad3": {
+  "A": "cat-7b",
+  "B": "tgemma-4b",
+  "C": "madlad-3b",
+  "D": "tgemma-12b",
+  "E": "plamo3-2b",
+  "F": "hunyuan-mt-7b",
+  "G": "plamo3-8b"
+ },
+ "epmc-PMC13613203:b-fbccc540": {
+  "A": "tgemma-4b",
+  "B": "tgemma-12b",
+  "C": "madlad-3b",
+  "D": "plamo3-8b",
+  "E": "hunyuan-mt-7b",
+  "F": "plamo3-2b",
+  "G": "cat-7b"
+ },
+ "arxiv-2509.25504:b-41024f23": {
+  "A": "tgemma-4b",
+  "B": "cat-7b",
+  "C": "madlad-3b",
+  "D": "hunyuan-mt-7b",
+  "E": "tgemma-12b",
+  "F": "plamo3-2b",
+  "G": "plamo3-8b"
+ },
+ "arxiv-2510.02017:b-016c803c": {
+  "A": "hunyuan-mt-7b",
+  "B": "madlad-3b",
+  "C": "plamo3-8b",
+  "D": "tgemma-4b",
+  "E": "tgemma-12b",
+  "F": "cat-7b",
+  "G": "plamo3-2b"
+ },
+ "epmc-PMC13445422:b-7096ea85": {
+  "A": "plamo3-8b",
+  "B": "hunyuan-mt-7b",
+  "C": "plamo3-2b",
+  "D": "cat-7b",
+  "E": "tgemma-12b",
+  "F": "madlad-3b",
+  "G": "tgemma-4b"
+ },
+ "manual-ozchi-finger-specific-touch:b-88c136ad": {
+  "A": "plamo3-8b",
+  "B": "cat-7b",
+  "C": "hunyuan-mt-7b",
+  "D": "plamo3-2b",
+  "E": "tgemma-4b",
+  "F": "tgemma-12b",
+  "G": "madlad-3b"
+ },
+ "epmc-PMC13331908:b-6fc4388e": {
+  "A": "tgemma-12b",
+  "B": "madlad-3b",
+  "C": "cat-7b",
+  "D": "hunyuan-mt-7b",
+  "E": "plamo3-8b",
+  "F": "tgemma-4b",
+  "G": "plamo3-2b"
+ },
+ "arxiv-2509.25293:b-3e2761a4": {
+  "A": "hunyuan-mt-7b",
+  "B": "cat-7b",
+  "C": "tgemma-12b",
+  "D": "tgemma-4b",
+  "E": "madlad-3b",
+  "F": "plamo3-8b",
+  "G": "plamo3-2b"
+ },
+ "arxiv-2510.04825:b-14baf22d": {
+  "A": "hunyuan-mt-7b",
+  "B": "madlad-3b",
+  "C": "plamo3-8b",
+  "D": "plamo3-2b",
+  "E": "cat-7b",
+  "F": "tgemma-4b",
+  "G": "tgemma-12b"
+ },
+ "arxiv-2510.00489:b-2df1221f": {
+  "A": "madlad-3b",
+  "B": "plamo3-2b",
+  "C": "tgemma-4b",
+  "D": "plamo3-8b",
+  "E": "cat-7b",
+  "F": "hunyuan-mt-7b",
+  "G": "tgemma-12b"
+ },
+ "arxiv-2510.00407:b-a58cd0a9": {
+  "A": "tgemma-4b",
+  "B": "plamo3-8b",
+  "C": "madlad-3b",
+  "D": "hunyuan-mt-7b",
+  "E": "cat-7b",
+  "F": "tgemma-12b",
+  "G": "plamo3-2b"
+ },
+ "epmc-PMC13652345:b-57d69b98": {
+  "A": "plamo3-2b",
+  "B": "cat-7b",
+  "C": "madlad-3b",
+  "D": "tgemma-12b",
+  "E": "hunyuan-mt-7b",
+  "F": "plamo3-8b",
+  "G": "tgemma-4b"
+ },
+ "epmc-PMC13627437:b-530c251c": {
+  "A": "tgemma-12b",
+  "B": "hunyuan-mt-7b",
+  "C": "cat-7b",
+  "D": "plamo3-8b",
+  "E": "tgemma-4b",
+  "F": "madlad-3b",
+  "G": "plamo3-2b"
+ },
+ "arxiv-2510.04493:b-e211b24d": {
+  "A": "cat-7b",
+  "B": "plamo3-8b",
+  "C": "plamo3-2b",
+  "D": "tgemma-12b",
+  "E": "tgemma-4b",
+  "F": "hunyuan-mt-7b",
+  "G": "madlad-3b"
+ }
+}

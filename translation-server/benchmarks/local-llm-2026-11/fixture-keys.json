@@ -1,0 +1,202 @@
+[
+ {
+  "key": "arxiv-2510.01887:b-c68e4cb6",
+  "paperId": "arxiv-2510.01887",
+  "tag": "random"
+ },
+ {
+  "key": "epmc-PMC13312647:b-2b210cae",
+  "paperId": "epmc-PMC13312647",
+  "tag": "random"
+ },
+ {
+  "key": "arxiv-2509.25968:b-d2988571",
+  "paperId": "arxiv-2509.25968",
+  "tag": "random"
+ },
+ {
+  "key": "arxiv-2404.01485:b-cc6a4ad3",
+  "paperId": "arxiv-2404.01485",
+  "tag": "random"
+ },
+ {
+  "key": "manual-fashion-hybrid-cmf:b-ddec4bc8",
+  "paperId": "manual-fashion-hybrid-cmf",
+  "tag": "random"
+ },
+ {
+  "key": "epmc-PMC13551842:b-db8cade5",
+  "paperId": "epmc-PMC13551842",
+  "tag": "random"
+ },
+ {
+  "key": "arxiv-2510.04786:b-eda79601",
+  "paperId": "arxiv-2510.04786",
+  "tag": "random"
+ },
+ {
+  "key": "arxiv-2509.24008:b-76c953b8",
+  "paperId": "arxiv-2509.24008",
+  "tag": "random"
+ },
+ {
+  "key": "epmc-PMC13345230:b-724a2eb7",
+  "paperId": "epmc-PMC13345230",
+  "tag": "random"
+ },
+ {
+  "key": "epmc-PMC13613328:b-2ed86204",
+  "paperId": "epmc-PMC13613328",
+  "tag": "random"
+ },
+ {
+  "key": "arxiv-2510.00019:b-c59163e9",
+  "paperId": "arxiv-2510.00019",
+  "tag": "random"
+ },
+ {
+  "key": "arxiv-2510.02836:b-1d945737",
+  "paperId": "arxiv-2510.02836",
+  "tag": "random"
+ },
+ {
+  "key": "arxiv-2510.00245:b-26785901",
+  "paperId": "arxiv-2510.00245",
+  "tag": "random"
+ },
+ {
+  "key": "manual-wear-scale:b-36045918",
+  "paperId": "manual-wear-scale",
+  "tag": "random"
+ },
+ {
+  "key": "epmc-PMC13643957:b-b8e25663",
+  "paperId": "epmc-PMC13643957",
+  "tag": "random"
+ },
+ {
+  "key": "arxiv-2411.01344:b-79caf32f",
+  "paperId": "arxiv-2411.01344",
+  "tag": "random"
+ },
+ {
+  "key": "arxiv-2510.00222:b-4fe4fc13",
+  "paperId": "arxiv-2510.00222",
+  "tag": "random"
+ },
+ {
+  "key": "epmc-PMC11997001:b-20f27d95",
+  "paperId": "epmc-PMC11997001",
+  "tag": "random"
+ },
+ {
+  "key": "epmc-PMC13630993:b-9e416092",
+  "paperId": "epmc-PMC13630993",
+  "tag": "random"
+ },
+ {
+  "key": "arxiv-2508.16612:b-3776d79b",
+  "paperId": "arxiv-2508.16612",
+  "tag": "random"
+ },
+ {
+  "key": "manual-marketing-consumer-response:b-b8b40f14",
+  "paperId": "manual-marketing-consumer-response",
+  "tag": "random"
+ },
+ {
+  "key": "epmc-PMC13596825:b-d1727f1d",
+  "paperId": "epmc-PMC13596825",
+  "tag": "random"
+ },
+ {
+  "key": "arxiv-2509.24913:b-af7e1f90",
+  "paperId": "arxiv-2509.24913",
+  "tag": "random"
+ },
+ {
+  "key": "epmc-PMC12885475:b-468f63e5",
+  "paperId": "epmc-PMC12885475",
+  "tag": "random"
+ },
+ {
+  "key": "arxiv-2501.10568:b-15609cab",
+  "paperId": "arxiv-2501.10568",
+  "tag": "random"
+ },
+ {
+  "key": "epmc-PMC13185203:b-588341b0",
+  "paperId": "epmc-PMC13185203",
+  "tag": "random"
+ },
+ {
+  "key": "manual-medical-deep-learning-meta-review:b-dff51ad3",
+  "paperId": "manual-medical-deep-learning-meta-review",
+  "tag": "random"
+ },
+ {
+  "key": "epmc-PMC13613203:b-fbccc540",
+  "paperId": "epmc-PMC13613203",
+  "tag": "random"
+ },
+ {
+  "key": "arxiv-2509.25504:b-41024f23",
+  "paperId": "arxiv-2509.25504",
+  "tag": "random"
+ },
+ {
+  "key": "arxiv-2510.02017:b-016c803c",
+  "paperId": "arxiv-2510.02017",
+  "tag": "random"
+ },
+ {
+  "key": "epmc-PMC13445422:b-7096ea85",
+  "paperId": "epmc-PMC13445422",
+  "tag": "citation"
+ },
+ {
+  "key": "manual-ozchi-finger-specific-touch:b-88c136ad",
+  "paperId": "manual-ozchi-finger-specific-touch",
+  "tag": "citation"
+ },
+ {
+  "key": "epmc-PMC13331908:b-6fc4388e",
+  "paperId": "epmc-PMC13331908",
+  "tag": "citation"
+ },
+ {
+  "key": "arxiv-2509.25293:b-3e2761a4",
+  "paperId": "arxiv-2509.25293",
+  "tag": "citation"
+ },
+ {
+  "key": "arxiv-2510.04825:b-14baf22d",
+  "paperId": "arxiv-2510.04825",
+  "tag": "citation"
+ },
+ {
+  "key": "arxiv-2510.00489:b-2df1221f",
+  "paperId": "arxiv-2510.00489",
+  "tag": "citation"
+ },
+ {
+  "key": "arxiv-2510.00407:b-a58cd0a9",
+  "paperId": "arxiv-2510.00407",
+  "tag": "citation"
+ },
+ {
+  "key": "epmc-PMC13652345:b-57d69b98",
+  "paperId": "epmc-PMC13652345",
+  "tag": "citation"
+ },
+ {
+  "key": "epmc-PMC13627437:b-530c251c",
+  "paperId": "epmc-PMC13627437",
+  "tag": "citation"
+ },
+ {
+  "key": "arxiv-2510.04493:b-e211b24d",
+  "paperId": "arxiv-2510.04493",
+  "tag": "citation"
+ }
+]
