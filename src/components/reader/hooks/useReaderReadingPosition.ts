@@ -100,6 +100,13 @@ export function useReaderReadingPosition(opts: {
       .map((b) => b.id);
   }, [storeBlocks, storeSections]);
 
+  // The open paper's translation runs first; other papers wait their turn.
+  useEffect(() => {
+    if (!paperId) return;
+    translationManager.setReaderPaper(paperId);
+    return () => translationManager.clearReaderPaper(paperId);
+  }, [paperId]);
+
   const prioritizeVisible = useCallback(
     (blockId: string) => {
       if (!paperId) return;

@@ -106,7 +106,25 @@ export async function importPDFV2(
     llmProviders,
   } = createTranslationEngine(cfg);
 
+  let releaseExtraction: (() => void) | undefined;
+
   try {
+    // One extraction at a time across the app; also pauses translation queues.
+    if (translationManager.isExtracting()) {
+      callbacks.onProgress({
+        stage: "reading",
+        stageProgress: 0,
+        stageTotal: 1,
+        message: "順番待ち...",
+      });
+    }
+    try {
+      releaseExtraction = await translationManager.acquireExtractionSlot(callbacks.signal);
+    } catch (error) {
+      throwIfImportAborted(callbacks.signal, { paperId });
+      throw error;
+    }
+
     // Stage 1: Reading file
     callbacks.onStageChange("reading");
     callbacks.onProgress({
@@ -251,6 +269,7 @@ export async function importPDFV2(
     rememberDocument(paper, sections, blocks);
 
     // Notify that partial data is ready (can start viewing)
+    releaseExtraction?.();
     callbacks.onPartialReady(paper, sections, blocks);
     throwIfImportAborted(callbacks.signal, { paperId, partialReady: true });
 
@@ -751,6 +770,7 @@ export async function importPDFV2(
     });
     return null;
   } finally {
+    releaseExtraction?.();
     releaseImportHash?.();
     translationManager.detach(paperId);
     activeImportPaperIds.delete(paperId);
