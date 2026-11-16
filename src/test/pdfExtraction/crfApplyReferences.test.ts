@@ -31,8 +31,18 @@ describe("applyCrfReferences", () => {
   });
 
   it("skips Japanese reference lists", () => {
-    const blocks = [block("b-ref", "reference", "山田太郎. 2020. 日本語の参考文献. 情報処理学会論文誌.", 100)];
-    expect(wantsCrfReferences([page], blocks, [section])).toBe(false);
+    const ja = "山田太郎. 2020. 日本語の参考文献. 情報処理学会論文誌.";
+    const jaPage = { pageNumber: 1, width: 600, height: 800, textItems: [item("参考文献", 40, 80), item(ja, 40, 100)] } as never;
+    expect(wantsCrfReferences([jaPage], [block("b-ref", "reference", ja, 100)], [section])).toBe(false);
+  });
+
+  it("reads the zone after a References heading on the page even when the blocks lost it", () => {
+    const zonePage = { pageNumber: 1, width: 600, height: 800, textItems: [item("Body text ends here.", 40, 60), item("References", 40, 84), ...REFS.map((t, i) => item(t, 40, 100 + i * 12))] } as never;
+    const blocks = [block("b-body", "paragraph", "Body text ends here.", 56, "s-body")];
+    const { blocks: out, outcome } = applyCrfReferences({ paperId: "p", pages: [zonePage], blocks, sections: [] });
+    expect(outcome.applied).toBe(true);
+    expect(out.map((b) => b.type)).toEqual(["paragraph", "reference", "reference"]);
+    expect(out[0].id).toBe("b-body");
   });
 
   it("keeps the blocks when there is no references section", () => {
@@ -54,5 +64,12 @@ describe("referencesEnd", () => {
   });
   it("does not cut when references continue after a few odd entries", () => {
     expect(referencesEnd([ref, prose, prose, ref, ref, ref])).toBe(6);
+  });
+});
+
+describe("referencesEnd with web references", () => {
+  it("keeps numbered entries that only carry a URL", () => {
+    const web = (n: number) => ({ raw: `${n}. GitHub - tool [https://github.com/x/y]` });
+    expect(referencesEnd([{ raw: "1. A B. Title. 2020.", year: "2020" }, web(2), web(3), web(4), web(5)])).toBe(5);
   });
 });

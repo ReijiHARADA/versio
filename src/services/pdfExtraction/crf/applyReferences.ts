@@ -12,19 +12,44 @@ import type { BoundingBox, PaperBlock, Section } from "../../../types/paper";
 import type { ExtractedPage } from "../../pdfService";
 import { parseCitation } from "./citation";
 import { referenceLinesFromPages, selectReferenceBlocks } from "./referenceLines";
+import { referenceZoneLines } from "./referenceZone";
 import { segmentReferenceLines, type RefLine } from "./segmentReferences";
 
 const CJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/gu;
 
 export type CrfReferencesOutcome = { applied: boolean; reason: string; references: number };
 
+/**
+ * Native lines of the references: the zone found on the page text, or (no
+ * references heading line) the lines under the projected reference blocks.
+ */
+function referenceInput(pages: ExtractedPage[], blocks: PaperBlock[], sections: Section[]): { lines: RefLine[]; zone: boolean } {
+  const zone = referenceZoneLines(pages);
+  if (zone && zone.length > 0) return { lines: zone, zone: true };
+  return { lines: referenceLinesFromPages(pages, selectReferenceBlocks(blocks, sections)), zone: false };
+}
+
+const isLatin = (text: string) => text.length > 0 && (text.match(CJK)?.length ?? 0) / text.length <= 0.05;
+
 /** Quick pre-check before loading models: is there a Latin-script references section? */
 export function wantsCrfReferences(pages: ExtractedPage[], blocks: PaperBlock[], sections: Section[]): boolean {
-  const referenceBlocks = selectReferenceBlocks(blocks, sections);
-  if (referenceBlocks.length === 0) return false;
-  const text = referenceBlocks.map((b) => b.original ?? "").join(" ");
-  const cjk = text.match(CJK)?.length ?? 0;
-  return text.length > 0 && cjk / text.length <= 0.05 && pages.length > 0;
+  if (pages.length === 0) return false;
+  const { lines } = referenceInput(pages, blocks, sections);
+  return isLatin(lines.map((l) => l.text).join(" "));
+}
+
+const inBox = (line: RefLine, box: BoundingBox) =>
+  line.page === box.page && line.y !== undefined && line.x + 2 >= box.x - 2 && line.x <= box.x + box.width && line.y + 1 >= box.y - 3 && line.y <= box.y + box.height + 1;
+const compact = (text: string | null | undefined) => (text ?? "").replace(/\s+/g, "").length;
+
+/** Blocks the accepted reference lines stand for: at least half of a block's characters sit on those lines. */
+function coveredBlocks(blocks: PaperBlock[], lines: RefLine[]): PaperBlock[] {
+  const replaceable = new Set(["reference", "paragraph", "footnote"]);
+  return blocks.filter((block) => {
+    if (!replaceable.has(block.type) || block.boundingBoxes.length === 0) return false;
+    const covered = lines.filter((line) => block.boundingBoxes.some((box) => inBox(line, box))).reduce((n, line) => n + compact(line.text), 0);
+    return covered >= 0.5 * compact(block.original);
+  });
 }
 
 function boxesOf(lines: RefLine[]): BoundingBox[] {
@@ -50,15 +75,16 @@ function boxesOf(lines: RefLine[]): BoundingBox[] {
  * Where the reference list ends. Versio's section split can run the references
  * section into an appendix; GROBID cuts that with its segmentation model. Score
  * each segment +1 when it looks like a reference (accepted, with a year,
- * authors or a DOI; appendix prose has none of them) and -1 otherwise, and cut where the prefix sum peaks. Only
+ * authors, a DOI, a number label or a URL; appendix prose has none of them) and -1 otherwise, and cut where the prefix sum peaks. Only
  * a tail of at least 3 segments is cut, so a last yearless entry stays.
  */
-export function referencesEnd(citations: Array<{ rejected?: true; year?: string; authors?: string; doi?: string }>): number {
+export function referencesEnd(citations: Array<{ raw?: string; rejected?: true; year?: string; authors?: string; doi?: string }>): number {
   let sum = 0;
   let best = 0;
   let cut = citations.length;
   citations.forEach((c, i) => {
-    sum += !c.rejected && (c.year || c.authors || c.doi) ? 1 : -1;
+    const labelled = /^\s*(?:\[\s*\d+\s*\]|\d+\.\s)|https?:\/\//.test(c.raw ?? "");
+    sum += !c.rejected && (c.year || c.authors || c.doi || labelled) ? 1 : -1;
     if (sum >= best) {
       best = sum;
       cut = i + 1;
@@ -79,27 +105,32 @@ export function applyCrfReferences(input: {
   sections: Section[];
 }): { blocks: PaperBlock[]; outcome: CrfReferencesOutcome } {
   const unchanged = (reason: string) => ({ blocks: input.blocks, outcome: { applied: false, reason, references: 0 } });
-  if (!wantsCrfReferences(input.pages, input.blocks, input.sections)) return unchanged("no latin references section");
-  const referenceBlocks = selectReferenceBlocks(input.blocks, input.sections);
-  const lines = referenceLinesFromPages(input.pages, referenceBlocks);
-  const segments = segmentReferenceLines(lines);
-  if (segments.length === 0) return unchanged("no segments");
+  if (input.pages.length === 0) return unchanged("no pages");
+  const { lines } = referenceInput(input.pages, input.blocks, input.sections);
+  if (!isLatin(lines.map((l) => l.text).join(" "))) return unchanged("no latin references section");
+  const all = segmentReferenceLines(lines);
+  if (all.length === 0) return unchanged("no segments");
+  const parsed = all.map((segment) => parseCitation(segment.text));
+  // Past the end of the list (an appendix read into the zone) nothing is touched.
+  const tail = referencesEnd(parsed);
+  const segments = all.slice(0, tail);
+  const citations = parsed.slice(0, tail);
+  const accepted = segments.flatMap((segment, i) => (citations[i].rejected ? [] : segment.lines));
+  const removed = new Set(coveredBlocks(input.blocks, accepted));
 
-  const removed = new Set(referenceBlocks);
-  const sectionId = referenceBlocks[0].sectionId;
+  const anchor = input.blocks.findIndex((b) => removed.has(b));
+  const firstPage = segments[0].lines.find((l) => l.page !== undefined)?.page ?? 0;
+  const before = anchor >= 0 ? anchor : input.blocks.reduce((last, b, i) => (b.pageStart <= firstPage ? i + 1 : last), 0);
+  const sectionId = anchor >= 0 ? input.blocks[anchor].sectionId : (input.blocks[before - 1]?.sectionId ?? null);
   const usedIds = new Set(input.blocks.filter((b) => !removed.has(b)).map((b) => b.id));
   const rebuilt: PaperBlock[] = [];
   let references = 0;
-  const citations = segments.map((segment) => parseCitation(segment.text));
-  const tail = referencesEnd(citations);
   segments.forEach((segment, index) => {
-    const parsed = citations[index];
-    // Past the end of the list (appendix absorbed into the section): keep the text as paragraphs.
-    const citation = index >= tail ? { ...parsed, rejected: true as const } : parsed;
+    const citation = citations[index];
     const boxes = boxesOf(segment.lines);
     const pages = boxes.map((b) => b.page);
-    const pageStart = pages.length ? Math.min(...pages) : referenceBlocks[0].pageStart;
-    const pageEnd = pages.length ? Math.max(...pages) : referenceBlocks[referenceBlocks.length - 1].pageEnd;
+    const pageStart = pages.length ? Math.min(...pages) : firstPage;
+    const pageEnd = pages.length ? Math.max(...pages) : firstPage;
     const type = citation.rejected ? "paragraph" : "reference";
     if (!citation.rejected) references += 1;
     rebuilt.push({
@@ -132,22 +163,21 @@ export function applyCrfReferences(input: {
     });
   });
   if (references === 0) return unchanged("no references accepted");
-  // Never lose text: the rebuilt section must carry (almost) all characters of the blocks it replaces.
-  const chars = (texts: Array<string | null>) => texts.join("").replace(/\s+/g, "").length;
-  if (chars(rebuilt.map((b) => b.original)) < 0.85 * chars(referenceBlocks.map((b) => b.original))) return unchanged("text coverage below 85%");
+  // Never lose text: the rebuilt references must carry (almost) all characters of the blocks they replace.
+  const rebuiltChars = rebuilt.reduce((n, b) => n + compact(b.original), 0);
+  const removedChars = [...removed].reduce((n, b) => n + compact(b.original), 0);
+  if (rebuiltChars < 0.85 * removedChars) return unchanged("text coverage below 85%");
 
   const out: PaperBlock[] = [];
-  let inserted = false;
-  for (const block of input.blocks) {
+  input.blocks.forEach((block, i) => {
+    if (anchor < 0 && i === before) out.push(...rebuilt);
     if (removed.has(block)) {
-      if (!inserted) {
-        out.push(...rebuilt);
-        inserted = true;
-      }
-      continue;
+      if (i === anchor) out.push(...rebuilt);
+      return;
     }
     out.push(block);
-  }
+  });
+  if (anchor < 0 && before >= input.blocks.length) out.push(...rebuilt);
   out.forEach((block, i) => {
     block.order = i;
   });

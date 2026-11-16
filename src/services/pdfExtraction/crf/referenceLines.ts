@@ -8,7 +8,7 @@ const inside = (x: number, y: number, box: { x: number; y: number; width: number
 type Item = ExtractedPage["textItems"][number];
 
 /** Join a baseline group, inserting a space only where the glyph runs are visibly apart. */
-function joinItems(items: Item[]): string {
+export function joinItems(items: Item[]): string {
   let out = "";
   let prevEnd = -Infinity;
   for (const item of items) {
@@ -84,7 +84,7 @@ export function referenceLinesFromPages(pages: ExtractedPage[], referenceBlocks:
   return output.filter((line) => line.text);
 }
 
-const REFERENCES_TITLE = /^(?:references?|bibliography|literature cited|works cited|reference list|参考文献|引用文献|文献)$/i;
+export const REFERENCES_TITLE = /^(?:references?|bibliography|literature cited|works cited|reference list|参考文献|引用文献|文献)$/i;
 
 /**
  * Blocks that delimit the references section. Only sections whose title is a
