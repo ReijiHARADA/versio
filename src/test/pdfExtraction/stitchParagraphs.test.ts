@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { stitchParagraphContinuations } from "../../services/pdfExtraction/projection/stitchParagraphs";
+import { reconcileTranslationWarnings, stitchParagraphContinuations } from "../../services/pdfExtraction/projection/stitchParagraphs";
 import type { PaperBlock } from "../../types/paper";
 
 const block = (id: string, type: PaperBlock["type"], original: string, page = 1, metadata: Record<string, unknown> = {}): PaperBlock =>
@@ -64,5 +64,43 @@ describe("stitchParagraphContinuations", () => {
 
   it("does not reach beyond the next page", () => {
     expect(stitchParagraphContinuations([block("a", "paragraph", OPEN, 2), block("b", "paragraph", CONTINUATION, 4)], sections)).toHaveLength(2);
+  });
+});
+
+describe("reconcileTranslationWarnings", () => {
+  const TAIL = "段落の末尾が欠けている可能性があります";
+  it("drops a warning that the final text no longer supports", () => {
+    const repaired = block("a", "paragraph", "The repaired paragraph now ends with a full stop after the join.", 1, { translationInputWarning: TAIL });
+    expect(reconcileTranslationWarnings([repaired])[0].metadata.translationInputWarning).toBeUndefined();
+  });
+
+  it("treats a colon lead-in as complete only when an equation, table or list item follows", () => {
+    const lead = () => block("a", "paragraph", "Under the Poisson objective, the loss function is defined in Eq. 2:", 1, { translationInputWarning: TAIL });
+    expect(reconcileTranslationWarnings([lead(), block("eq", "equation", "L = sum")])[0].metadata.translationInputWarning).toBeUndefined();
+    expect(reconcileTranslationWarnings([lead(), block("i", "paragraph", "• first item", 1, { listRole: "item" })])[0].metadata.translationInputWarning).toBeUndefined();
+    expect(reconcileTranslationWarnings([lead(), block("h", "heading", "Results")])[0].metadata.translationInputWarning).toBe(TAIL);
+    expect(reconcileTranslationWarnings([lead()])[0].metadata.translationInputWarning).toBe(TAIL);
+  });
+
+  it("keeps other defects of an introduced lead-in and leaves context warnings and list items alone", () => {
+    const hyphen = reconcileTranslationWarnings([block("a", "paragraph", "The state of the of robot that is optimized in the local window of the map is defined as:"), block("eq", "equation", "x")]);
+    expect(hyphen[0].metadata.translationInputWarning).toMatch(/機能語/);
+    const context = block("a", "paragraph", "A complete sentence.", 1, { translationInputWarning: "後続ブロックが前段の文を継続している可能性があります" });
+    expect(reconcileTranslationWarnings([context])[0].metadata.translationInputWarning).toMatch(/後続/);
+    const item = (text: string) => block("a", "paragraph", text, 1, { listRole: "item", translationInputWarning: "段落の末尾が欠けている可能性があります" });
+    expect(reconcileTranslationWarnings([item("• risk factors in the investment portfolio;")])[0].metadata.translationInputWarning).toBeUndefined();
+    expect(reconcileTranslationWarnings([item("• the material available, so it must be checked and")])[0].metadata.translationInputWarning).toMatch(/末尾/);
+  });
+});
+
+describe("reconcileTranslationWarnings around display equations", () => {
+  it("looks past equation debris and accepts a where-clause after the equation", () => {
+    const lead = block("a", "paragraph", "Under the Poisson objective, the loss function is defined in Eq. 2:", 1, { translationInputWarning: "段落の末尾が欠けている可能性があります" });
+    const where = block("w", "paragraph", "where θ denotes the set of tree parameters and λ is an L2 regularisation term.", 1, { translationInputWarning: "段落の先頭が前段から続いている可能性があります" });
+    const out = reconcileTranslationWarnings([lead, block("d", "paragraph", "1 Xn"), block("eq", "equation", "L(θ) = Σ"), where]);
+    expect(out[0].metadata.translationInputWarning).toBeUndefined();
+    expect(out[3].metadata.translationInputWarning).toBeUndefined();
+    const orphan = reconcileTranslationWarnings([block("p", "paragraph", "A complete sentence before the cut."), where]);
+    expect(orphan[1].metadata.translationInputWarning).toMatch(/先頭/);
   });
 });

@@ -65,6 +65,8 @@ export type AuditBlock = {
   translatable: boolean;
 };
 
+// Text blocks carry the Reader's text; other blocks (figure, table, equation,
+// list, code, reference) are kept as context so a paragraph's neighbours are known.
 const TEXT_TYPES = new Set(["paragraph", "heading", "footnote"]);
 
 await loadNodeCrfRuntime();
@@ -79,7 +81,7 @@ for (const [n, doc] of docs.entries()) {
     await enhanceReferencesWithCrf(result, pages, loadNodeCrfRuntime);
     const sectionTitle = new Map(result.sections.map((s) => [s.id, `${s.normalizedKind}:${s.originalTitle ?? ""}`]));
     const blocks: AuditBlock[] = result.blocks
-      .filter((b) => TEXT_TYPES.has(b.type) && (b.original ?? "").trim())
+      .filter((b) => !TEXT_TYPES.has(b.type) || (b.original ?? "").trim())
       .map((b) => ({
         id: b.id,
         type: b.type,
