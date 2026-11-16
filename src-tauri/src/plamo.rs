@@ -43,7 +43,9 @@ fn kill_child(slot: &Mutex<Option<Child>>) {
 
 impl PlamoState {
     pub fn stop(&self) {
-        if let Some((mut child, _, _)) = self.server.lock().unwrap_or_else(|e| e.into_inner()).take() {
+        if let Some((mut child, _, _)) =
+            self.server.lock().unwrap_or_else(|e| e.into_inner()).take()
+        {
             let _ = child.kill();
             let _ = child.wait();
             log::info!("PLaMo server stopped.");
@@ -69,8 +71,21 @@ pub struct PlamoServerInfo {
 
 pub fn server_args(model: &Path, port: u16, token: &str) -> Vec<String> {
     [
-        "-m", &model.to_string_lossy(), "--host", "127.0.0.1", "--port", &port.to_string(),
-        "--api-key", token, "--jinja", "-c", "65536", "-np", "8", "-ngl", "99",
+        "-m",
+        &model.to_string_lossy(),
+        "--host",
+        "127.0.0.1",
+        "--port",
+        &port.to_string(),
+        "--api-key",
+        token,
+        "--jinja",
+        "-c",
+        "65536",
+        "-np",
+        "8",
+        "-ngl",
+        "99",
     ]
     .iter()
     .map(|s| s.to_string())
@@ -92,7 +107,11 @@ pub fn verify_file(path: &Path, size: u64, sha256_hex: &str) -> Result<(), Strin
         }
         hasher.update(&buf[..n]);
     }
-    let hex: String = hasher.finalize().iter().map(|b| format!("{b:02x}")).collect();
+    let hex: String = hasher
+        .finalize()
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
     if hex == sha256_hex {
         Ok(())
     } else {
@@ -105,7 +124,11 @@ pub fn child_alive(child: &mut Child) -> bool {
 }
 
 fn model_path(app: &AppHandle) -> Result<PathBuf, String> {
-    let dir = app.path().app_data_dir().map_err(|e| e.to_string())?.join("models");
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?
+        .join("models");
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     Ok(dir.join(MODEL_FILE))
 }
@@ -121,14 +144,22 @@ fn sidecar_path() -> Result<PathBuf, String> {
 
 /// Status code of `GET <path>` on 127.0.0.1:<port>, optionally with a bearer token.
 pub fn http_status(port: u16, path: &str, token: Option<&str>) -> Option<u16> {
-    let mut stream = TcpStream::connect_timeout(&([127, 0, 0, 1], port).into(), Duration::from_millis(500)).ok()?;
+    let mut stream =
+        TcpStream::connect_timeout(&([127, 0, 0, 1], port).into(), Duration::from_millis(500))
+            .ok()?;
     let _ = stream.set_read_timeout(Some(Duration::from_secs(2)));
-    let auth = token.map(|t| format!("Authorization: Bearer {t}\r\n")).unwrap_or_default();
-    let req = format!("GET {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n{auth}Connection: close\r\n\r\n");
+    let auth = token
+        .map(|t| format!("Authorization: Bearer {t}\r\n"))
+        .unwrap_or_default();
+    let req =
+        format!("GET {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n{auth}Connection: close\r\n\r\n");
     stream.write_all(req.as_bytes()).ok()?;
     let mut head = [0u8; 16];
     let n = stream.read(&mut head).ok()?;
-    std::str::from_utf8(head.get(9..12.min(n))?).ok()?.parse().ok()
+    std::str::from_utf8(head.get(9..12.min(n))?)
+        .ok()?
+        .parse()
+        .ok()
 }
 
 /// Our server answers authenticated requests; a stale sidecar or another program does not.
@@ -151,14 +182,24 @@ fn pick_port() -> Result<u16, String> {
 /// Kill a process left over from a crashed/force-quit run, if the pid file names one with
 /// the expected command name. Removes the pid file.
 pub fn kill_orphan(pid_file: &Path, expected_comm: &str) {
-    let Some(pid) = std::fs::read_to_string(pid_file).ok().and_then(|s| s.trim().parse::<u32>().ok()) else {
+    let Some(pid) = std::fs::read_to_string(pid_file)
+        .ok()
+        .and_then(|s| s.trim().parse::<u32>().ok())
+    else {
         return;
     };
     let _ = std::fs::remove_file(pid_file);
-    let comm = Command::new("/bin/ps").args(["-p", &pid.to_string(), "-o", "comm="]).output();
+    let comm = Command::new("/bin/ps")
+        .args(["-p", &pid.to_string(), "-o", "comm="])
+        .output();
     if let Ok(out) = comm {
-        if String::from_utf8_lossy(&out.stdout).trim().ends_with(expected_comm) {
-            let _ = Command::new("/bin/kill").args(["-9", &pid.to_string()]).status();
+        if String::from_utf8_lossy(&out.stdout)
+            .trim()
+            .ends_with(expected_comm)
+        {
+            let _ = Command::new("/bin/kill")
+                .args(["-9", &pid.to_string()])
+                .status();
             log::warn!("Killed orphaned {expected_comm} (pid {pid}).");
         }
     }
@@ -168,7 +209,8 @@ pub fn kill_orphan(pid_file: &Path, expected_comm: &str) {
 /// hook, and macOS has no parent-death signal, so a tiny shell watcher covers that case.
 /// The watcher exits on its own when the child exits.
 pub fn spawn_watchdog(parent: u32, child: u32) {
-    let script = "while kill -0 \"$0\" 2>/dev/null && kill -0 \"$1\" 2>/dev/null; do sleep 2; done; \
+    let script =
+        "while kill -0 \"$0\" 2>/dev/null && kill -0 \"$1\" 2>/dev/null; do sleep 2; done; \
                   kill -0 \"$0\" 2>/dev/null || kill -9 \"$1\" 2>/dev/null";
     let _ = Command::new("/bin/sh")
         .args(["-c", script, &parent.to_string(), &child.to_string()])
@@ -188,9 +230,15 @@ fn status(app: &AppHandle) -> Result<PlamoModelStatus, String> {
     let downloaded_bytes = if present {
         MODEL_SIZE
     } else {
-        std::fs::metadata(part_path(&model)).map(|m| m.len()).unwrap_or(0)
+        std::fs::metadata(part_path(&model))
+            .map(|m| m.len())
+            .unwrap_or(0)
     };
-    Ok(PlamoModelStatus { present, downloaded_bytes, total_bytes: MODEL_SIZE })
+    Ok(PlamoModelStatus {
+        present,
+        downloaded_bytes,
+        total_bytes: MODEL_SIZE,
+    })
 }
 
 #[tauri::command]
@@ -209,12 +257,23 @@ fn download_blocking(app: &AppHandle) -> Result<(), String> {
     // A curl from a force-quit run would interleave writes into the same `.part`.
     let curl_pid = pid_file(app, "download.pid")?;
     kill_orphan(&curl_pid, "curl");
-    if std::fs::metadata(&part).map(|m| m.len() > MODEL_SIZE).unwrap_or(false) {
+    if std::fs::metadata(&part)
+        .map(|m| m.len() > MODEL_SIZE)
+        .unwrap_or(false)
+    {
         let _ = std::fs::remove_file(&part);
     }
     let url = format!("https://huggingface.co/{MODEL_REPO}/resolve/{MODEL_REVISION}/{MODEL_FILE}");
     let child = Command::new("/usr/bin/curl")
-        .args(["-fsSL", "-C", "-", "--retry", "5", "--retry-all-errors", "-o"])
+        .args([
+            "-fsSL",
+            "-C",
+            "-",
+            "--retry",
+            "5",
+            "--retry-all-errors",
+            "-o",
+        ])
         .arg(&part)
         .arg(&url)
         .stdin(Stdio::null())
@@ -293,7 +352,10 @@ fn ensure_blocking(app: &AppHandle) -> Result<PlamoServerInfo, String> {
         let mut slot = state.server.lock().unwrap();
         if let Some((child, port, token)) = slot.as_mut() {
             if child_alive(child) {
-                return Ok(PlamoServerInfo { base_url: format!("http://127.0.0.1:{port}"), token: token.clone() });
+                return Ok(PlamoServerInfo {
+                    base_url: format!("http://127.0.0.1:{port}"),
+                    token: token.clone(),
+                });
             }
             log::warn!("PLaMo server exited; respawning.");
             *slot = None;
@@ -304,7 +366,9 @@ fn ensure_blocking(app: &AppHandle) -> Result<PlamoServerInfo, String> {
     let port = pick_port()?;
     let token = crate::random_api_token();
     let mut command = Command::new(sidecar_path()?);
-    command.args(server_args(&model, port, &token)).stdin(Stdio::null());
+    command
+        .args(server_args(&model, port, &token))
+        .stdin(Stdio::null());
     match open_log(app).and_then(|f| Some((f.try_clone().ok()?, f))) {
         Some((out, err)) => command.stdout(out).stderr(err),
         None => command.stdout(Stdio::null()).stderr(Stdio::null()),
@@ -337,7 +401,10 @@ fn ensure_blocking(app: &AppHandle) -> Result<PlamoServerInfo, String> {
         std::thread::sleep(Duration::from_millis(250));
     }
     log::info!("PLaMo server ready on port {port}.");
-    Ok(PlamoServerInfo { base_url: format!("http://127.0.0.1:{port}"), token })
+    Ok(PlamoServerInfo {
+        base_url: format!("http://127.0.0.1:{port}"),
+        token,
+    })
 }
 
 #[tauri::command]
@@ -357,14 +424,28 @@ mod tests {
         assert_eq!(
             args,
             [
-                "-m", "/m/x.gguf", "--host", "127.0.0.1", "--port", "8766", "--api-key", "tok", "--jinja",
-                "-c", "65536", "-np", "8", "-ngl", "99"
+                "-m",
+                "/m/x.gguf",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8766",
+                "--api-key",
+                "tok",
+                "--jinja",
+                "-c",
+                "65536",
+                "-np",
+                "8",
+                "-ngl",
+                "99"
             ]
         );
     }
 
     fn temp_with(bytes: &[u8], name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!("versio-plamo-test-{}-{name}", std::process::id()));
+        let p =
+            std::env::temp_dir().join(format!("versio-plamo-test-{}-{name}", std::process::id()));
         std::fs::write(&p, bytes).unwrap();
         p
     }
@@ -376,7 +457,10 @@ mod tests {
     #[test]
     fn verify_file_rejects_wrong_hash() {
         let p = temp_with(b"abc", "hash");
-        assert_eq!(verify_file(&p, 3, ABD), Err("checksum_mismatch".to_string()));
+        assert_eq!(
+            verify_file(&p, 3, ABD),
+            Err("checksum_mismatch".to_string())
+        );
     }
 
     #[test]
@@ -398,7 +482,9 @@ mod tests {
             if let Ok((mut s, _)) = listener.accept() {
                 let mut buf = [0u8; 512];
                 let _ = s.read(&mut buf);
-                let _ = s.write_all(format!("HTTP/1.1 {status}\r\nContent-Length: 0\r\n\r\n").as_bytes());
+                let _ = s.write_all(
+                    format!("HTTP/1.1 {status}\r\nContent-Length: 0\r\n\r\n").as_bytes(),
+                );
             }
         });
         port
@@ -436,8 +522,13 @@ mod tests {
     fn stop_kills_download_and_does_not_wait_for_a_start() {
         let state = PlamoState::default();
         let _starting = state.starting.lock().unwrap(); // a start is in its health wait
-        *state.download_child.lock().unwrap() = Some(Command::new("/bin/sleep").arg("30").spawn().unwrap());
-        *state.server.lock().unwrap() = Some((Command::new("/bin/sleep").arg("30").spawn().unwrap(), 1, "t".into()));
+        *state.download_child.lock().unwrap() =
+            Some(Command::new("/bin/sleep").arg("30").spawn().unwrap());
+        *state.server.lock().unwrap() = Some((
+            Command::new("/bin/sleep").arg("30").spawn().unwrap(),
+            1,
+            "t".into(),
+        ));
         let t0 = Instant::now();
         state.stop();
         assert!(t0.elapsed() < Duration::from_secs(1));
