@@ -1,0 +1,23 @@
+[
+{"id":"arxiv-2510.00019:b-c59163e9","annotations":{
+"A":[{"cat":"terminology","sev":"minor","note":"quadruplesを四重項と訳出"}],
+"B":[{"cat":"terminology","sev":"minor","note":"quadruplesを四重項と訳出"}],
+"C":[{"cat":"terminology","sev":"minor","note":"quadruplesを四重項と訳出"}]}},
+{"id":"arxiv-2510.02836:b-1d945737","annotations":{"A":[],"B":[{"cat":"fluency","sev":"minor","note":"「実践…機能を備えていた」が不自然"}],"C":[]}},
+{"id":"arxiv-2510.00245:b-26785901","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"manual-wear-scale:b-36045918","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"epmc-PMC13643957:b-b8e25663","annotations":{
+"A":[{"cat":"mistranslation","sev":"minor","note":"orの選択関係が「と」で並列化"},{"cat":"fluency","sev":"minor","note":"修飾関係が複雑で読みにくい"}],
+"B":[{"cat":"mistranslation","sev":"minor","note":"orの選択関係が「と」で並列化"}],
+"C":[{"cat":"mistranslation","sev":"minor","note":"orの選択関係が「と」で並列化"}]}},
+{"id":"arxiv-2411.01344:b-79caf32f","annotations":{
+"A":[{"cat":"mistranslation","sev":"minor","note":"socialが倫理的に置換"},{"cat":"mistranslation","sev":"minor","note":"social connectionを社会的文脈と誤訳"}],
+"B":[],"C":[]}},
+{"id":"arxiv-2510.00222:b-4fe4fc13","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"epmc-PMC11997001:b-20f27d95","annotations":{
+"A":[{"cat":"terminology","sev":"major","note":"RR(呼吸数)を安静時心拍数と誤訳"}],
+"B":[{"cat":"terminology","sev":"major","note":"RR(呼吸数)を安静時心拍数と誤訳"}],
+"C":[{"cat":"terminology","sev":"major","note":"RR(呼吸数)を安静時心拍数と誤訳"}]}},
+{"id":"epmc-PMC13630993:b-9e416092","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"arxiv-2508.16612:b-3776d79b","annotations":{"A":[],"B":[],"C":[]}}
+]

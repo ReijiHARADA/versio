@@ -1,0 +1,21 @@
+[
+{"id":"arxiv-2510.01887:b-c68e4cb6","annotations":{"A":[],"B":[{"cat":"fluency","sev":"minor","note":"「Scoreのすべてを用いて」が不自然"}],"C":[]}},
+{"id":"epmc-PMC13312647:b-2b210cae","annotations":{
+"A":[{"cat":"terminology","sev":"minor","note":"core facilityを基幹施設と訳出"},{"cat":"terminology","sev":"minor","note":"機関名を直訳"}],
+"B":[{"cat":"terminology","sev":"minor","note":"機関名を直訳"}],
+"C":[{"cat":"terminology","sev":"minor","note":"core facilityを基幹施設と訳出"},{"cat":"terminology","sev":"minor","note":"機関名を直訳"}]}},
+{"id":"arxiv-2509.25968:b-d2988571","annotations":{"A":[],"B":[{"cat":"addition","sev":"major","note":"「新たな表現」「融合」は原文にない"},{"cat":"mistranslation","sev":"major","note":"our cameraを各自のカメラと誤訳"}],"C":[]}},
+{"id":"arxiv-2404.01485:b-cc6a4ad3","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"manual-fashion-hybrid-cmf:b-ddec4bc8","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"epmc-PMC13551842:b-db8cade5","annotations":{
+"A":[{"cat":"mistranslation","sev":"minor","note":"interactivelyの交互作用の意が不明瞭"}],
+"B":[{"cat":"mistranslation","sev":"minor","note":"interactivelyの交互作用の意が不明瞭"}],
+"C":[{"cat":"mistranslation","sev":"minor","note":"interactivelyの交互作用の意が不明瞭"}]}},
+{"id":"arxiv-2510.04786:b-eda79601","annotations":{"A":[],"B":[{"cat":"mistranslation","sev":"minor","note":"suggestsを「提案している」と誤訳"}],"C":[]}},
+{"id":"arxiv-2509.24008:b-76c953b8","annotations":{
+"A":[{"cat":"terminology","sev":"minor","note":"secondary accuracyを二次精度と訳出"}],
+"B":[{"cat":"terminology","sev":"minor","note":"secondary accuracyを二次精度と訳出"}],
+"C":[{"cat":"terminology","sev":"minor","note":"secondary accuracyを二次精度と訳出"}]}},
+{"id":"epmc-PMC13345230:b-724a2eb7","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"epmc-PMC13613328:b-2ed86204","annotations":{"A":[],"B":[],"C":[]}}
+]

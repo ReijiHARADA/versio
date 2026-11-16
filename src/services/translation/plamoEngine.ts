@@ -5,10 +5,12 @@
 
 import { TranslationQualityError } from "./retryPolicy";
 import { checkTranslation } from "./translationCheck";
+import type { GlossaryEntry } from "../llm/types";
 import type { EngineStatus, TranslationEngine, TranslationResult } from "./types";
 
 export const PLAMO_MODEL = "plamo-3-translate-2b";
-export const PLAMO_MODEL_VERSION = "q4_k_m-1ffd9073";
+// Bump when request options change output (form, glossary handling) so translation_cache does not mix them.
+export const PLAMO_MODEL_VERSION = "q4_k_m-1ffd9073-plain";
 
 export type PlamoServerInfo = { baseUrl: string; token: string };
 type PlamoModelStatus = { present: boolean; downloadedBytes: number; totalBytes: number };
@@ -25,9 +27,36 @@ async function tauriInvoke<T>(cmd: string): Promise<T> {
 
 class AuthError extends Error {}
 
+type PlamoGlossaryTerm = { source: string; target: string };
+const MAX_GLOSSARY_TERMS = 30;
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Glossary terms that occur in `text`, keyed by their surface form there. A hyphen may
+ * appear between any two letters (PDF line-break hyphenation, e.g. "neuroim-aging"), and
+ * PLaMo matches glossary sources literally, so the surface form is what gets sent.
+ */
+export function glossaryForText(text: string, entries: GlossaryEntry[]): PlamoGlossaryTerm[] {
+  const out: PlamoGlossaryTerm[] = [];
+  const seen = new Set<string>();
+  for (const { term, translation } of entries) {
+    const source = term?.trim();
+    const target = translation?.trim();
+    if (!source || !target || source.includes("<|plamo:") || target.includes("<|plamo:")) continue;
+    const pattern = [...source].map(escapeRe).join("-?");
+    const match = new RegExp(`(?<![\\p{L}\\p{N}])${pattern}(?![\\p{L}\\p{N}])`, "iu").exec(text);
+    if (!match || seen.has(match[0])) continue;
+    seen.add(match[0]);
+    out.push({ source: match[0], target });
+    if (out.length >= MAX_GLOSSARY_TERMS) break;
+  }
+  return out;
+}
+
 export class PlamoEngine implements TranslationEngine {
   readonly name = "plamo";
   private server: PlamoServerInfo | null = null;
+  private glossary: GlossaryEntry[] = [];
   private readonly getServer: () => Promise<PlamoServerInfo>;
   private readonly fetchImpl: typeof fetch;
 
@@ -36,7 +65,13 @@ export class PlamoEngine implements TranslationEngine {
     this.fetchImpl = deps.fetchImpl ?? ((...args) => fetch(...args));
   }
 
+  /** Paper glossary; terms found in each block are passed to PLaMo as hard term constraints. */
+  setGlossary(entries: GlossaryEntry[]): void {
+    this.glossary = entries;
+  }
+
   private async request(text: string): Promise<ChatReply> {
+    const glossary = glossaryForText(text, this.glossary);
     this.server ??= await this.getServer();
     const res = await this.fetchImpl(`${this.server.baseUrl}/v1/chat/completions`, {
       method: "POST",
@@ -45,7 +80,13 @@ export class PlamoEngine implements TranslationEngine {
         messages: [{ role: "user", content: text }],
         temperature: 0,
         max_tokens: 4096,
-        chat_template_kwargs: { source_lang: "en", target_lang: "ja" },
+        // "plain" = だ・である調, the register of Japanese papers (blind MQM: 7 better / 1 worse).
+        chat_template_kwargs: {
+          source_lang: "en",
+          target_lang: "ja",
+          form: "plain",
+          ...(glossary.length ? { glossary } : {}),
+        },
         stop: ["<|plamo:tag|>", "<|plamo:bos|>"],
       }),
     });

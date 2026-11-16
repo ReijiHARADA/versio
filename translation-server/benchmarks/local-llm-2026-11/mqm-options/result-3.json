@@ -1,0 +1,12 @@
+[
+{"id":"epmc-PMC13445422:b-7096ea85","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"manual-ozchi-finger-specific-touch:b-88c136ad","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"epmc-PMC13331908:b-6fc4388e","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"arxiv-2509.25293:b-3e2761a4","annotations":{"A":[{"cat":"mistranslation","sev":"minor","note":"lower-incomeの対象が低所得層に"}],"B":[{"cat":"mistranslation","sev":"minor","note":"lower-incomeの対象が低所得層に"}],"C":[]}},
+{"id":"arxiv-2510.04825:b-14baf22d","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"arxiv-2510.00489:b-2df1221f","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"arxiv-2510.00407:b-a58cd0a9","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"epmc-PMC13652345:b-57d69b98","annotations":{"A":[{"cat":"terminology","sev":"major","note":"neuroimagingを「神経加齢」と誤訳"},{"cat":"terminology","sev":"minor","note":"ubiquitousを「普遍的」と訳した"}],"B":[{"cat":"terminology","sev":"major","note":"neuroimagingを「神経加齢」と誤訳"}],"C":[{"cat":"terminology","sev":"major","note":"neuroimagingを「神経加齢」と誤訳"},{"cat":"terminology","sev":"minor","note":"ubiquitousを「普遍的」と訳した"}]}},
+{"id":"epmc-PMC13627437:b-530c251c","annotations":{"A":[],"B":[],"C":[{"cat":"terminology","sev":"minor","note":"fixelの表記が「フィセル」で誤り"}]}},
+{"id":"arxiv-2510.04493:b-e211b24d","annotations":{"A":[],"B":[{"cat":"fluency","sev":"minor","note":"最終文の主語が欠け不自然"}],"C":[{"cat":"fluency","sev":"minor","note":"最終文の主語が欠け不自然"}]}}
+]

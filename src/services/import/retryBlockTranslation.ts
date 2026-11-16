@@ -7,6 +7,7 @@ import { assignBlockTranslation, preserveSourceTranslation } from "../glossary/a
 import { applyGlossary, normalizeSourceGroundedTerminology } from "../llm/glossaryService";
 import {
   createTranslationEngine,
+  setEngineGlossary,
   setAppleEligibleSources,
 } from "../translation/createTranslationEngine";
 import { projectSafeUnitTranslation } from "../translation/partialProjection";
@@ -37,10 +38,11 @@ export async function retryBlockTranslation(
     (await getSetting<ImportConfig>("translationSettingsV2")) ??
     {};
   const cfg = resolveImportConfig(saved);
-  const { engine, appleRouter } = createTranslationEngine(cfg);
+  const { engine, appleRouter, primaryEngine } = createTranslationEngine(cfg);
   setAppleEligibleSources(appleRouter, [source]);
 
   const glossary = await getGlossary(block.paperId);
+  setEngineGlossary({ primaryEngine }, glossary);
 
   try {
     const result = await engine.translate(source, "en", "ja");

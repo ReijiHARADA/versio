@@ -105,3 +105,21 @@ generated: 2026-11-16
 6. `paper.sh`: 論文1本の所要時間を計測
 
 集計結果は `translation-server/benchmarks/local-llm-2026-11/` にあります。
+
+## 追試: PLaMo 2B のリクエストオプション（2026-11-17）
+
+同じ 40 段落で PLaMo 3 Translate 2B に3通りのオプションを与え、3 system だけの盲検 MQM（`mqm-options/`）で比べた。
+
+| 設定 | MQM/100語 ↓ | major 以上を含む段落 | です・ます調の段落 | 事実保持 |
+|---|---|---|---|---|
+| 既定（form 指定なし） | 0.84 | 3 | 2/40 | 1.000 |
+| **`form: "plain"`（だ・である調）** | **0.67** | 3 | 0/40 | 1.000 |
+| plain ＋ 直前段落を `context` に渡す | 0.89 | 3 | 0/40 | 1.000 |
+
+- 段落ごとの比較: plain は既定より良い 7 / 悪い 1 / 同じ 32。context ありは plain より良い 5 / 悪い 9 で、原文にない語が増えた（addition）。
+  - **採用:** `form: "plain"`。**不採用:** 直前段落の context。
+  - 今回の評価者は初回と別のエージェントで、既定設定の MQM は初回の 0.62 から 0.84 に動いた。同じ回の中での比較だけを根拠にする。
+- **用語集（`glossary`）:** MQM の減点は terminology が最大（例: RR→安静時心拍数、sensitive bits→感度の高い、neuroim-aging→神経加齢）。この3件に正しい訳語を `glossary` で渡すと、3件とも指定どおりに訳された。
+  - 論文の用語集のうち、その段落に現れる語だけを、原文での表記のまま渡す（行末ハイフンで分かれた語も含む。`glossaryForText`）。
+
+再現: `translation-server/scripts/local_llm_bench/ctxrun.py plain|ctx <port>`。そのあと `pack.py` と同じ方式で3 system の判定パケットを作る。
