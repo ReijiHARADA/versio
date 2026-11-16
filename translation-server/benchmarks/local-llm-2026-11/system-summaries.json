@@ -1,0 +1,86 @@
+[
+ {
+  "name": "cat-7b",
+  "rows": 40,
+  "mean_sec": 14.4,
+  "median_sec": 10.9,
+  "total_sec": 576.1,
+  "tok_per_sec": 14.9,
+  "peak_rss_mb": 5842,
+  "breakdown": "0/40",
+  "fact_retention": 0.976,
+  "rows_with_lost_fact": 1
+ },
+ {
+  "name": "hunyuan-mt-7b",
+  "rows": 40,
+  "mean_sec": 22.16,
+  "median_sec": 22.31,
+  "total_sec": 886.4,
+  "tok_per_sec": 13.0,
+  "peak_rss_mb": 4800,
+  "breakdown": "0/40",
+  "fact_retention": 0.984,
+  "rows_with_lost_fact": 2
+ },
+ {
+  "name": "madlad-3b",
+  "rows": 40,
+  "mean_sec": 25.99,
+  "median_sec": 18.0,
+  "total_sec": 1039.5,
+  "tok_per_sec": 9.2,
+  "peak_rss_mb": 150,
+  "breakdown": "1/40",
+  "fact_retention": 0.976,
+  "rows_with_lost_fact": 3
+ },
+ {
+  "name": "plamo3-2b",
+  "rows": 40,
+  "mean_sec": 3.53,
+  "median_sec": 3.58,
+  "total_sec": 141.2,
+  "tok_per_sec": 40.2,
+  "peak_rss_mb": 2273,
+  "breakdown": "0/40",
+  "fact_retention": 1.0,
+  "rows_with_lost_fact": 0
+ },
+ {
+  "name": "plamo3-8b",
+  "rows": 40,
+  "mean_sec": 9.48,
+  "median_sec": 9.23,
+  "total_sec": 379.3,
+  "tok_per_sec": 15.1,
+  "peak_rss_mb": 3738,
+  "breakdown": "0/40",
+  "fact_retention": 1.0,
+  "rows_with_lost_fact": 0
+ },
+ {
+  "name": "tgemma-12b",
+  "rows": 40,
+  "mean_sec": 21.67,
+  "median_sec": 18.05,
+  "total_sec": 866.8,
+  "tok_per_sec": 8.5,
+  "peak_rss_mb": 4508,
+  "breakdown": "0/40",
+  "fact_retention": 0.984,
+  "rows_with_lost_fact": 1
+ },
+ {
+  "name": "tgemma-4b",
+  "rows": 40,
+  "mean_sec": 8.36,
+  "median_sec": 8.22,
+  "total_sec": 334.2,
+  "tok_per_sec": 20.8,
+  "peak_rss_mb": 3346,
+  "breakdown": "0/40",
+  "fact_retention": 0.976,
+  "rows_with_lost_fact": 3
+ }
+]

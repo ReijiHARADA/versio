@@ -1,0 +1,381 @@
+[
+ {
+  "id": "arxiv-2510.00489:b-2df1221f",
+  "annotations": {
+   "A": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "マルチプロセシングと表記ゆれ"
+    }
+   ],
+   "B": [],
+   "C": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "time complexityの「時間」脱落"
+    }
+   ],
+   "D": [],
+   "E": [
+    {
+     "cat": "omission",
+     "sev": "major",
+     "note": "冒頭の1文が欠落"
+    }
+   ],
+   "F": [],
+   "G": []
+  }
+ },
+ {
+  "id": "arxiv-2510.00407:b-a58cd0a9",
+  "annotations": {
+   "A": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "PTをパーソナルトレーニングと誤訳"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "「誤」の脱字"
+    }
+   ],
+   "B": [],
+   "C": [
+    {
+     "cat": "fluency",
+     "sev": "critical",
+     "note": "参加者記述文が崩壊し意味不明"
+    },
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "participantをパーティクルと誤訳"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "前科など誤訳"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "近代的な熟知と誤訳"
+    },
+    {
+     "cat": "fact",
+     "sev": "major",
+     "note": "μ値が項目と対応していない"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "§7の参照が欠落"
+    }
+   ],
+   "D": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "HCIを人間情報学と誤訳"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "運動能力を自信と訳した"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "extendを検証と訳した"
+    }
+   ],
+   "E": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "recruited理由が将来方針に変化"
+    }
+   ],
+   "F": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "HCIを人間工学と誤訳"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "ARの低経験の含意が欠落"
+    }
+   ],
+   "G": []
+  }
+ },
+ {
+  "id": "epmc-PMC13652345:b-57d69b98",
+  "annotations": {
+   "A": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "neuroimagingを神経加齢と誤訳"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "健康的な寿命の加齢が不自然"
+    }
+   ],
+   "B": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "healthy lifespan agingを健康寿命の老化"
+    }
+   ],
+   "C": [
+    {
+     "cat": "untranslated",
+     "sev": "major",
+     "note": "第1文が英語のまま"
+    },
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "neuroimagingを神経老化と誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "signedを符号化されたと訳した"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "「におけるの」など不自然"
+    }
+   ],
+   "D": [
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "「との関連付ける」文法誤り"
+    }
+   ],
+   "E": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "パワーラウンドな分布特性は意味不明"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "signed/detrendedが欠落"
+    }
+   ],
+   "F": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "neuroimagingを神経加齢と誤訳"
+    }
+   ],
+   "G": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "healthy agingを健康な高齢と訳した"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "lifespan aging・脳疾患との関連づけが歪む"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "signedが欠落"
+    }
+   ]
+  }
+ },
+ {
+  "id": "epmc-PMC13627437:b-530c251c",
+  "annotations": {
+   "A": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "FODを拡散テンソル画像と誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "FDを拡散係数と誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "FCを機能結合と誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "PVSを脳小血管性変化と誤訳"
+    }
+   ],
+   "B": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "FODをFiber Displacementと誤記"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "FDの推定をFODの推定と誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "FCをFiber Connectivityと誤記"
+    },
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "PVSを視床下部視床領域と誤訳"
+    }
+   ],
+   "C": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "fixelを固定と誤訳"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "全角英数字で読みにくい"
+    }
+   ],
+   "D": [],
+   "E": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "FODを機能的MRIと誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "FCを機能的接続性と誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "fixelをFODと誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "PVSを脳卒中後変化と誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "tractogramをトレースと誤訳"
+    },
+    {
+     "cat": "omission",
+     "sev": "major",
+     "note": "SIFTの名称が欠落"
+    },
+    {
+     "cat": "fact",
+     "sev": "major",
+     "note": "2000万本を200万本と誤記"
+    }
+   ],
+   "F": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "fixelを固定子/固定点と誤訳"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "FDとFCを文献に乗じると誤訳"
+    },
+    {
+     "cat": "untranslated",
+     "sev": "minor",
+     "note": "括弧内が英語のまま"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "metricを計量と訳した"
+    }
+   ],
+   "G": []
+  }
+ },
+ {
+  "id": "arxiv-2510.04493:b-e211b24d",
+  "annotations": {
+   "A": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "検索強化生成は非標準訳"
+    }
+   ],
+   "B": [],
+   "C": [],
+   "D": [],
+   "E": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "質問応答をクエリ応答と訳した"
+    },
+    {
+     "cat": "untranslated",
+     "sev": "minor",
+     "note": "multi-hopが英語のまま"
+    },
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "当社は学術論文に不適"
+    }
+   ],
+   "F": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "enforceを規制と訳した"
+    }
+   ],
+   "G": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "大型言語モデル等が非標準訳"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "引用位置と読点が不自然"
+    }
+   ]
+  }
+ }
+]

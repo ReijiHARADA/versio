@@ -1,0 +1,425 @@
+[
+ {
+  "id": "arxiv-2510.01887:b-c68e4cb6",
+  "annotations": {
+   "A": [],
+   "B": [
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "domain-adaptedが欠落"
+    }
+   ],
+   "C": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "「のすべて」でboth/as wellが不正確"
+    },
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "「感度性」が不自然"
+    }
+   ],
+   "D": [
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "「当社」は不適切"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "Strict Matchingを訳出"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "domain-adaptedが欠落"
+    }
+   ],
+   "E": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "「両方」は不正確"
+    }
+   ],
+   "F": [
+    {
+     "cat": "fact",
+     "sev": "major",
+     "note": "Exact Matching等の名称が誤訳"
+    },
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "Phi-4-mini推論など名称誤り"
+    },
+    {
+     "cat": "fact",
+     "sev": "minor",
+     "note": "QweN3等の表記誤り"
+    },
+    {
+     "cat": "fluency",
+     "sev": "major",
+     "note": "英語混在で読みにくい"
+    }
+   ],
+   "G": [
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "全角英数字で読みにくい"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "variantを変形と訳した"
+    }
+   ]
+  }
+ },
+ {
+  "id": "epmc-PMC13312647:b-2b210cae",
+  "annotations": {
+   "A": [
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "「次のように進行する」を追加"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "folder explorationを管理と訳出"
+    }
+   ],
+   "B": [
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "folder explorationを閲覧と訳出"
+    },
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "「実際に」を追加"
+    }
+   ],
+   "C": [
+    {
+     "cat": "terminology",
+     "sev": "major",
+     "note": "schematicを回路図と誤訳"
+    },
+    {
+     "cat": "omission",
+     "sev": "major",
+     "note": "In a core facility setting欠落"
+    },
+    {
+     "cat": "fact",
+     "sev": "minor",
+     "note": "引用[7]の表記が崩れた"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "facilityを設備と訳出"
+    }
+   ],
+   "D": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "core facilityを基幹施設と訳出"
+    }
+   ],
+   "E": [
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "localhost Webアプリの意味が欠落"
+    },
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "「一時的な」を追加"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "core facilityを中央研究施設"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "スケジューリング機能の意味が変化"
+    }
+   ],
+   "F": [],
+   "G": [
+    {
+     "cat": "fluency",
+     "sev": "major",
+     "note": "Zurichが文字化けして不明"
+    },
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "「例：」を追加"
+    }
+   ]
+  }
+ },
+ {
+  "id": "arxiv-2509.25968:b-d2988571",
+  "annotations": {
+   "A": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "被験者は不適切"
+    },
+    {
+     "cat": "untranslated",
+     "sev": "minor",
+     "note": "Figureが未翻訳"
+    },
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "総持続時間が不自然"
+    }
+   ],
+   "B": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "写真用の絵の具は不正確"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "写真が身体に塗られたと訳出"
+    },
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "「当社」は不適切"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "at one's willを必要に応じて"
+    }
+   ],
+   "C": [],
+   "D": [],
+   "E": [
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "「当所」は不適切"
+    }
+   ],
+   "F": [
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "participantsを被写体と誤訳"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "experientiallyを実験的と誤訳"
+    },
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "「当社」は不適切"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "即写カメラ・塗装は不自然"
+    }
+   ],
+   "G": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "実体験的は不自然"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "写真が塗り付けられたと訳出"
+    },
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "室外は不自然"
+    }
+   ]
+  }
+ },
+ {
+  "id": "arxiv-2404.01485:b-cc6a4ad3",
+  "annotations": {
+   "A": [],
+   "B": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "encodeを処理と誤訳"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "処理する必要がある旨に変化"
+    }
+   ],
+   "C": [
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "「これにより」で因果が誤り"
+    },
+    {
+     "cat": "fluency",
+     "sev": "major",
+     "note": "OSMと[75]は等が崩れた"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "スケイル・スケーラ誤記"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "may be usedが断定に"
+    },
+    {
+     "cat": "omission",
+     "sev": "minor",
+     "note": "In our corpusが欠落"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "符号化は不自然"
+    }
+   ],
+   "D": [
+    {
+     "cat": "mistranslation",
+     "sev": "major",
+     "note": "most examplesの意味が変化"
+    },
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "「例えば」を追加"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "corpusをデータセットと訳出"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "encodingを表現方法と訳出"
+    }
+   ],
+   "E": [],
+   "F": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "符号化は不自然"
+    },
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "全角数字・文が硬い"
+    }
+   ],
+   "G": [
+    {
+     "cat": "style",
+     "sev": "minor",
+     "note": "「当社の」は不適切"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "encodingを表現と訳出"
+    },
+    {
+     "cat": "mistranslation",
+     "sev": "minor",
+     "note": "may/likelyのヘッジが欠落"
+    }
+   ]
+  }
+ },
+ {
+  "id": "manual-fashion-hybrid-cmf:b-ddec4bc8",
+  "annotations": {
+   "A": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "用語「多様なモデル」が曖昧"
+    }
+   ],
+   "B": [],
+   "C": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "用語「多様なモデル」が曖昧"
+    }
+   ],
+   "D": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "用語「多様なモデル」が曖昧"
+    }
+   ],
+   "E": [
+    {
+     "cat": "addition",
+     "sev": "minor",
+     "note": "「も」を追加"
+    }
+   ],
+   "F": [
+    {
+     "cat": "fluency",
+     "sev": "minor",
+     "note": "「特定のビジネスモデルに発展」不自然"
+    },
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "用語「多様なモデル」が曖昧"
+    }
+   ],
+   "G": [
+    {
+     "cat": "terminology",
+     "sev": "minor",
+     "note": "用語「多様なモデル」が曖昧"
+    }
+   ]
+  }
+ }
+]
