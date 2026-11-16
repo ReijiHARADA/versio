@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { reconstructDocument } from "../../services/pdfLayout";
+import { detectPageColumns, reconstructDocument } from "../../services/pdfLayout";
 import type { ExtractedPage, ExtractedTextItem } from "../../services/pdfService";
 
 // One justified body line per entry; `indent` shifts the first line of a typeset paragraph.
@@ -38,5 +38,28 @@ describe("paragraph breaks at sentence boundaries", () => {
     expect(paragraphs).toHaveLength(2);
     expect(paragraphs[0]).toMatch(/Whiting et al\. \(26\)\. To evaluate the level of bias/);
     expect(paragraphs[1]).toMatch(/^A second paragraph starts here/);
+  });
+});
+
+describe("column gutter on word-split two-column pages", () => {
+  it("keeps a line-final word of the left column in the left column", () => {
+    // Every word is its own text item, as in some publisher PDFs; columns at x 48–291 and 304–546.
+    const items: ExtractedTextItem[] = [];
+    const words = "the athletes combine a rapid run and twists and then land on the slope with care".split(" ");
+    for (let row = 0; row < 30; row += 1) {
+      for (const [start, end] of [[48, 291], [304, 546]] as const) {
+        let x = start;
+        for (const w of words) {
+          const width = Math.min(w.length * 5, end - x);
+          if (width <= 0) break;
+          items.push({ text: w, x, y: 100 + row * 12, width, height: 9, fontSize: 9, fontName: "Body", page: 2 });
+          x += width + 2.5;
+        }
+      }
+    }
+    const layout = detectPageColumns({ pageNumber: 2, width: 595, height: 842, textItems: items });
+    expect(layout.isMultiColumn).toBe(true);
+    expect(layout.gutterX).toBeGreaterThan(291);
+    expect(layout.gutterX).toBeLessThan(304);
   });
 });

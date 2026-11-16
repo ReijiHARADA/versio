@@ -464,7 +464,38 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
 
   const colWidth =
     median(longLines.map((item) => item.width)) || (rightX - leftX) * 0.8;
-  const gutterX = (leftX + colWidth + rightX) / 2;
+  // The gap between where left-column text actually ends and the right column starts. Word-split
+  // PDFs make `colWidth` (a median of long spans) too small, which put line-final words of the
+  // left column into the right one.
+  // Per row, the end of the run of words that starts at the left column (word gaps only, a gutter breaks it).
+  const leftEnds: number[] = [];
+  const rows = new Map<number, ExtractedTextItem[]>();
+  for (const item of usable) {
+    const key = Math.round(item.y / 3);
+    rows.set(key, [...(rows.get(key) ?? []), item]);
+  }
+  for (const row of rows.values()) {
+    const sorted = row.filter((item) => item.x >= leftX - 6).sort((a, b) => a.x - b.x);
+    if (!sorted.length || sorted[0].x > leftX + 20) continue;
+    let end = sorted[0].x + sorted[0].width;
+    for (const item of sorted.slice(1)) {
+      if (item.x - end > Math.max(item.fontSize, 6) * 0.8) break;
+      end = Math.max(end, item.x + item.width);
+    }
+    leftEnds.push(end);
+  }
+  const inColumn = leftEnds.filter((end) => end <= rightX - 2).sort((a, b) => a - b);
+  const leftEdge = inColumn[Math.floor((inColumn.length - 1) * 0.9)];
+  // Only on a real two-column page: most left-column rows stop before the right column.
+  // ... and the right column really starts at rightX (rows begin there), so the gutter is the gap before it.
+  const rightAnchored = usable.filter((item) => Math.abs(item.x - rightX) <= 4).length >= 8;
+  const medianGutter = (leftX + colWidth + rightX) / 2;
+  const edgeGutter = rightAnchored && inColumn.length >= 8 && inColumn.length >= leftEnds.length * 0.6 &&
+    leftEdge <= rightX - 6 && leftEdge > leftX + colWidth
+    ? (leftEdge + rightColumnStart(usable, leftEdge, rightX)) / 2
+    : medianGutter;
+  // Only a clear correction moves it: items sitting right at the gutter flip columns on a 1pt shift.
+  const gutterX = edgeGutter - medianGutter >= 4 ? edgeGutter : medianGutter;
 
   return {
     page: page.pageNumber,
@@ -476,6 +507,17 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     rightX,
     isAsymmetricRail: Boolean(asymmetricRail),
   };
+}
+
+/** The leftmost x after the left column's edge where several rows start (hanging indents start left of rightX). */
+function rightColumnStart(items: ExtractedTextItem[], leftEdge: number, rightX: number): number {
+  const starts = new Map<number, number>();
+  for (const item of items) {
+    if (item.x < leftEdge + 2 || item.x > rightX) continue;
+    const key = Math.round(item.x);
+    starts.set(key, (starts.get(key) ?? 0) + 1);
+  }
+  return Math.min(rightX, ...[...starts].filter(([, n]) => n >= 3).map(([x]) => x));
 }
 
 function findTwoXPeaks(
