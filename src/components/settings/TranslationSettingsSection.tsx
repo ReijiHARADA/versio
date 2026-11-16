@@ -1,25 +1,17 @@
-import type { TranslationEngineId, TranslationSettingsV2 } from "../../utils/translationSettings";
-import type { ServiceStatus } from "./settingsTypes";
+import type { TranslationSettingsV2 } from "../../utils/translationSettings";
 import { Toggle } from "../ui/Toggle";
 import { SettingsCard, SettingsRow, SettingsStatusRow } from "./SettingsPrimitives";
 import { TranslationMorphPreview } from "./TranslationMorphPreview";
-import { SettingsSelect } from "./SettingsSelect";
 import { usePlamoModel } from "./usePlamoModel";
 import styles from "./SettingsScreen.module.css";
 
 type Props = {
   settings: TranslationSettingsV2;
   onChange: (patch: Partial<TranslationSettingsV2>) => void;
-  madladStatus: ServiceStatus;
 };
 
 const speed = (value: number) =>
   value <= 2 ? "stable" : value >= 8 ? "fast" : "standard";
-
-const engineOptions = [
-  { value: "plamo", label: "PLaMo 3 Translate 2B（推奨）" },
-  { value: "madlad", label: "MADLAD-400 3B（旧エンジン・次版で削除）" },
-] as const;
 
 const modelLabel = {
   unavailable: "デスクトップ版でのみ利用できます",
@@ -39,26 +31,12 @@ const speedInfo = {
 export function TranslationSettingsSection({
   settings,
   onChange,
-  madladStatus,
 }: Props) {
   const selected = speed(settings.translationConcurrency);
   const plamo = usePlamoModel();
-  const usePlamo = settings.translationEngine === "plamo";
   const plamoReady = plamo.state === "present";
-  const engineState = usePlamo
-    ? plamoReady ? "ok" : plamo.state === "checking" ? "checking" : "error"
-    : madladStatus.checking
-    ? "checking"
-    : madladStatus.available
-      ? "ok"
-      : "error";
-  const engineLabel = usePlamo
-    ? plamoReady ? "準備完了" : modelLabel[plamo.state]
-    : madladStatus.checking
-    ? "確認中"
-    : madladStatus.available
-      ? "接続済み"
-      : "接続できません";
+  const engineState = plamoReady ? "ok" : plamo.state === "checking" ? "checking" : "error";
+  const engineLabel = plamoReady ? "準備完了" : modelLabel[plamo.state];
 
   return (
     <div className={styles.page}>
@@ -67,31 +45,17 @@ export function TranslationSettingsSection({
       <div className={styles.cardStack}>
         <SettingsCard title="翻訳">
           <SettingsRow
-            label="翻訳エンジン"
-            description={usePlamo ? "論文翻訳の品質と速度が最も高いエンジンです。" : "旧エンジンです。次のバージョンで削除します。"}
+            label="翻訳モデル"
+            description={plamo.state === "downloading" ? `ダウンロード中…（${plamo.percent}%）` : plamo.error ?? modelLabel[plamo.state]}
           >
-            <SettingsSelect<TranslationEngineId>
-              aria-label="翻訳エンジン"
-              value={settings.translationEngine}
-              options={engineOptions}
-              onChange={(translationEngine) => onChange({ translationEngine })}
-            />
+            {plamo.state === "absent" || plamo.state === "error" ? (
+              <button type="button" className={styles.button} onClick={() => void plamo.download()}>
+                {plamo.state === "error" ? "再試行" : "モデルをダウンロード（1.8 GB）"}
+              </button>
+            ) : plamo.state === "downloading" ? (
+              <progress max={100} value={plamo.percent} aria-label="ダウンロードの進捗" />
+            ) : null}
           </SettingsRow>
-
-          {usePlamo ? (
-            <SettingsRow
-              label="翻訳モデル"
-              description={plamo.state === "downloading" ? `ダウンロード中…（${plamo.percent}%）` : plamo.error ?? modelLabel[plamo.state]}
-            >
-              {plamo.state === "absent" || plamo.state === "error" ? (
-                <button type="button" className={styles.button} onClick={() => void plamo.download()}>
-                  {plamo.state === "error" ? "再試行" : "モデルをダウンロード（1.8 GB）"}
-                </button>
-              ) : plamo.state === "downloading" ? (
-                <progress max={100} value={plamo.percent} aria-label="ダウンロードの進捗" />
-              ) : null}
-            </SettingsRow>
-          ) : null}
 
           <SettingsRow
             label="用語集を自動生成"
@@ -142,9 +106,6 @@ export function TranslationSettingsSection({
             state={engineState}
             stateLabel={engineLabel}
           />
-          {!usePlamo && !madladStatus.checking && !madladStatus.available ? (
-            <p className={styles.hint}>詳細カテゴリで接続先を確認できます。</p>
-          ) : null}
         </SettingsCard>
       </div>
     </div>

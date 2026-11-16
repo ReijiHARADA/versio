@@ -38,19 +38,14 @@ export type ImportCallbacks = {
 };
 
 export type ImportConfig = {
-  /** Primary engine; PLaMo is the default, MADLAD is legacy for one release. */
-  translationEngine?: "plamo" | "madlad";
   /** Build-gated presentation fixture; never persisted to user settings. */
   presentationDemo?: boolean;
-  madladServerUrl?: string;
   ollamaServerUrl?: string;
   ollamaModel?: string;
   /** Optional ordered alternate-model candidates; used only with selective cascade. */
   ollamaModels?: string[];
   /** Opt-in alternate translation after a primary failure or high-impact quality risk. */
   enableSelectiveCascade?: boolean;
-  /** Use macOS Apple Translation for eligible clean prose, with MADLAD fallback. */
-  enableAppleTranslation?: boolean;
   generateGlossary?: boolean;
   translationConcurrency?: number;
   useCache?: boolean;

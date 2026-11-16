@@ -17,31 +17,16 @@ tags: [setup, development]
 npm run build:llama-server   # llama.cpp b12110 を静的ビルドして src-tauri/binaries/ に置く（数分、初回のみ）
 ```
 
-モデル（約 1.8 GB）はアプリの 設定 → 翻訳 →「モデルをダウンロード」、または最初の取り込み時に自動で取得されます。以下の Python 翻訳サーバーは旧 MADLAD エンジン用です（次版で削除）。
+モデル（約 1.8 GB）はアプリの 設定 → 翻訳 →「モデルをダウンロード」、または最初の取り込み時に自動で取得されます。
 
 
-### 1. 翻訳サーバー
-
-Homebrew の `python@3.12` は使わないでください。macOS 26 では `platform.mac_ver()` が空になり、venv 作成が失敗します。`uv` の公式 3.12 を使います。
-
-```bash
-brew install uv
-cd translation-server
-uv python install 3.12
-uv venv --python 3.12 .venv
-source .venv/bin/activate
-uv pip install -r requirements.txt
-```
-
-仮想環境が壊れたときだけ `./update_python_env.sh` を使います。日常の再起動には不要です。
-
-### 2. フロントエンド
+### 1. フロントエンド
 
 ```bash
 npm install
 ```
 
-### 3. 任意: Ollama（用語集）
+### 2. 任意: Ollama（用語集）
 
 ```bash
 brew install ollama
@@ -56,7 +41,7 @@ ollama pull gemma2:9b
 
 ### 推奨: Tauri 開発アプリ
 
-翻訳サーバーはアプリ側が `.venv` を見つけて起動します。
+翻訳用の `llama-server` はアプリが必要になった時点で起動し、ウィンドウを閉じると停止します。
 
 ```bash
 npm run tauri:dev
@@ -69,15 +54,7 @@ export DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer
 npm run tauri:dev
 ```
 
-### ブラウザ UI だけ（OCR なし）
-
-ターミナル 1:
-
-```bash
-./restart-translation-server.sh
-```
-
-ターミナル 2:
+### ブラウザ UI だけ（OCR・翻訳なし）
 
 ```bash
 npm run dev
@@ -89,13 +66,7 @@ http://localhost:5173 を開きます。エージェントから画面を確認�
 npm run verify:browser
 ```
 
-スクリーンショットは `test-results/browser-verify/` に出ます（gitignore）。翻訳サーバーの確認:
-
-```bash
-curl http://127.0.0.1:8765/health
-```
-
-`{"status":"ok","model_loaded":true}` なら準備完了です。
+スクリーンショットは `test-results/browser-verify/` に出ます（gitignore）。
 
 ### 一括起動（ブラウザ開発）
 
@@ -103,22 +74,22 @@ curl http://127.0.0.1:8765/health
 ./start.sh
 ```
 
-翻訳サーバーと `npm run dev` をまとめて起動します。Ollama も起動を試みます。
+`npm run dev` を起動します。ブラウザでは翻訳は動きません（PLaMo は `.app` / `tauri:dev` のみ）。Ollama も起動を試みます。
 
 ### リリース用 `.app`
 
 ```bash
-# 日常確認: cached Python + .app のみ
+# 日常確認: .app のみ
 npm run tauri:build:fast
 
-# リリース / CI: lock + patch Python から clean rebuild、.app + .dmg
+# リリース / CI: clean rebuild、.app + .dmg
 npm run tauri:build:clean
 # または npm run tauri:build（clean エイリアス）
 
 open "src-tauri/target/release/bundle/macos/Versio.app"
 ```
 
-`beforeBuildCommand`（`scripts/before-build.sh`）は content-hash cache 付きの Python 準備 → 最小 stage → frontend build。開発用 `.venv` はコピーしません。Tauri が同梱するのは `src-tauri/bundled-resources/translation-server` のみ（`models/` や `.venv*` は除外）。phase 時間は [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。
+`beforeBuildCommand`（`scripts/before-build.sh`）は frontend build。`llama-server` は `tauri-build.sh` が `npm run build:llama-server` で用意し、モデルは同梱しません。phase 時間は [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。
 
 ### テストと実論文 PDF
 
@@ -140,24 +111,9 @@ jewelry-first-computing 側のディレクトリやデータは変更しませ�
 
 ## トラブルシューティング
 
-### 翻訳サーバーに繋がらない
+### 翻訳が始まらない・進まない
 
-```bash
-curl http://127.0.0.1:8765/health
-./restart-translation-server.sh
-```
-
-`.app` ではポート **8765** を使います。UI が 8000 を見ている古いビルドは使わないでください。
-
-### `python -m venv` / ensurepip が失敗する
-
-Homebrew Python が原因です。上の `uv` 手順で `.venv` を作り直してください。
-
-### Segmentation fault / 500
-
-1. `.venv` が Python 3.12 か確認する（`source translation-server/.venv/bin/activate && python --version`）
-2. `./restart-translation-server.sh` で `PYTORCH_ENABLE_MPS_FALLBACK=1` 付き起動にする
-3. `cd translation-server && python test_mps_stages.py` で切り分ける
+`~/Library/Logs/com.harada.versio/plamo-server.log`（前回分は `plamo-server.prev.log`）を最初に見てください。モデル未取得なら 設定 → 翻訳 →「モデルをダウンロード」。
 
 ### PDF を開いた瞬間に落ちる
 
@@ -167,13 +123,6 @@ pdf.js 6 は Tauri の WKWebView で動きません。依存は **pdfjs-dist 3.1
 
 Apple Vision は `.app` または `npm run tauri:dev` だけです。ブラウザの `npm run dev` では動きません。
 
-### 翻訳が進まない
-
-```bash
-curl http://127.0.0.1:8765/health
-```
-
-サーバーログに `[DEVICE] Using MPS` と `[DTYPE] ... bfloat16` が出ているか見てください。
 
 ---
 
@@ -181,7 +130,7 @@ curl http://127.0.0.1:8765/health
 
 | プロセス | 目安 |
 |---|---|
-| MADLAD 翻訳サーバー | 8–10GB |
+| PLaMo llama-server（2B Q4_K_M） | 2–3GB |
 | Ollama gemma2:9b（任意） | 6–8GB |
 | UI | 0.5–1GB |
 
@@ -189,4 +138,4 @@ curl http://127.0.0.1:8765/health
 
 ## 速度
 
-複数文の段落は文バッチ（既定 24）で、論文全体は micro-batch 合流込みで段落ごとよりおおよそ 2 倍速いです。詳細は `translation-server/MPS_BATCH_OPTIMIZATION_REPORT.md` と `translation-server/SPEED_BENCH.md` です。
+論文全体の翻訳時間の計測は [docs/research/local-llm-translation-bench-2026-11.md](./docs/research/local-llm-translation-bench-2026-11.md) です。

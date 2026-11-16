@@ -1,22 +1,17 @@
 import { resumeIncompleteTranslation } from "./resume";
 import { classifyImportFailure } from "./classifyFailure";
 import { showToast } from "../../stores/toastStore";
-import { useImportJobStore, type ImportJob } from "../../stores/importJobStore";
+import { useImportJobStore } from "../../stores/importJobStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
 import type { Paper, PaperBlock, Section } from "../../types/paper";
 import { upsertBlock, upsertSection } from "../../utils/mergePaperData";
 import { createBlockUpdateBatcher } from "../../utils/batchBlockUpdates";
-import { waitForTranslationServer } from "../../utils/serverReady";
 import { ensurePlamoReady, isPlamoAvailable } from "../translation/plamoReadiness";
 import { getAllPapers, getPaper, getSetting, savePaper } from "../database";
 import { addPaperToWorkspace } from "../projectService";
 import { reextractPaper } from "../reextractPaper";
-import {
-  checkMADLADAvailability,
-  importPDFV2,
-  type ImportConfig,
-} from "../importServiceV2";
+import { importPDFV2, type ImportConfig } from "../importServiceV2";
 import { ImportCancelledError } from "./cancellation";
 import { resumeAbortControllers, resumingPapers } from "./session";
 import { v4 as uuidv4 } from "uuid";
@@ -33,7 +28,6 @@ const TERMINAL_IMPORT_STAGES = new Set([
   "cancelled",
   "cancel_requested",
 ]);
-export const SERVER_UNAVAILABLE_MESSAGE = "翻訳サーバーに接続できません";
 
 const blockBatcher = createBlockUpdateBatcher((id, batch) => {
   useLibraryCache
@@ -73,9 +67,6 @@ function fileKeyOf(file: File): string {
   return `${file.name}:${file.size}:${file.lastModified}`;
 }
 
-function isServerUnavailableMessage(message: string | undefined): boolean {
-  return Boolean(message && message.includes(SERVER_UNAVAILABLE_MESSAGE));
-}
 
 function libraryTranslationCallbacks() {
   return {
@@ -94,7 +85,7 @@ function libraryTranslationCallbacks() {
   };
 }
 
-export async function shouldResumePaperAfterServerReady(paper: Paper): Promise<boolean> {
+export async function shouldResumeSavedPaper(paper: Paper): Promise<boolean> {
   // Index metadata only — never open sections/blocks/package for completed papers.
   const { shouldResumeFromIndex } = await import("./resumeFlag");
   return shouldResumeFromIndex(paper);
@@ -111,47 +102,6 @@ async function attachToWorkspace(nodeId: string, paperId: string): Promise<void>
   }
 }
 
-/** Wait for MADLAD instead of failing the job while the sidecar is still booting. */
-async function ensureMadladReady(
-  jobId: string,
-  patch: (id: string, next: Partial<ImportJob>) => void,
-  signal?: AbortSignal
-): Promise<boolean> {
-  const first = await checkMADLADAvailability();
-  if (first.available) return true;
-
-  patch(jobId, {
-    stage: "reading",
-    message: "翻訳サーバーの起動を待っています...",
-    error: undefined,
-  });
-
-  try {
-    await waitForTranslationServer({
-      signal,
-      onProgress: (attempt, health) => {
-        const phaseMsg = health?.message;
-        patch(jobId, {
-          stage: "reading",
-          message:
-            phaseMsg ||
-            (attempt > 5
-              ? `翻訳サーバーの起動を待っています…（${attempt}秒）`
-              : "翻訳サーバーの起動を待っています..."),
-        });
-      },
-    });
-    const again = await checkMADLADAvailability();
-    return again.available;
-  } catch (error) {
-    if (signal?.aborted || (error instanceof Error && /abort/i.test(error.message))) {
-      throw new ImportCancelledError("Import cancelled while waiting for translation server", {
-        partialReady: true,
-      });
-    }
-    return false;
-  }
-}
 
 async function runImport(jobId: string, file: File, fileKey: string, workspaceNodeId?: string): Promise<void> {
   const patch = useImportJobStore.getState().patchJob;
@@ -168,16 +118,13 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
       file,
       {
         signal: controller.signal,
-        waitForTranslationEngine: async (signal) => {
+        waitForTranslationEngine: async () => {
           patch(jobId, {
             stage: "translating",
             message: "翻訳モデルの準備を待っています...",
             error: undefined,
           });
-          if ((settings?.translationEngine ?? "plamo") === "plamo") {
-            return ensurePlamoReady((message) => patch(jobId, { stage: "translating", message, error: undefined }));
-          }
-          return ensureMadladReady(jobId, patch, signal ?? controller.signal);
+          return ensurePlamoReady((message) => patch(jobId, { stage: "translating", message, error: undefined }));
         },
         onProgress: (next) => {
           if (
@@ -503,12 +450,9 @@ export function dismissBackgroundImport(jobId: string): void {
 
 /** Resume a saved paper whose translation was interrupted or failed. */
 export async function retryPaperTranslation(paperId: string): Promise<boolean> {
-  const saved = await getSetting<ImportConfig>("translationSettingsV2");
-  const available = (saved?.translationEngine ?? "plamo") === "plamo"
-    ? await isPlamoAvailable()
-    : (await checkMADLADAvailability()).available;
+  const available = await isPlamoAvailable();
   if (!available) {
-    showToast({ kind: "error", message: SERVER_UNAVAILABLE_MESSAGE });
+    showToast({ kind: "error", message: "翻訳モデルを準備できません。設定 → 翻訳 を確認してください" });
     return false;
   }
   const before = useLibraryCache.getState().papers.find((p) => p.id === paperId);
@@ -535,22 +479,9 @@ export async function retryPaperTranslation(paperId: string): Promise<boolean> {
 }
 
 /**
- * After the sidecar becomes reachable, retry imports that failed only because
- * the server was down, and quietly resume incomplete saved translations.
+ * Resume incomplete saved translations after the library index loads.
  */
-export function resumeAfterTranslationServerReady(): void {
-  const failedJobs = useImportJobStore
-    .getState()
-    .jobs.filter(
-      (job) =>
-        job.stage === "failed" &&
-        isServerUnavailableMessage(job.error ?? job.message) &&
-        importFiles.has(job.id)
-    );
-  for (const job of failedJobs) {
-    void retryBackgroundImport(job.id);
-  }
-
+export function resumeSavedTranslations(): void {
   const settingsPromise = getSetting<ImportConfig>("translationSettingsV2");
   const callbacks = libraryTranslationCallbacks();
   void (async () => {
@@ -560,7 +491,7 @@ export function resumeAfterTranslationServerReady(): void {
     const byId = new Map([...cached, ...saved].map((paper) => [paper.id, paper]));
     // Metadata-only filter: completed papers with needsTranslationResume=false never open packages.
     for (const paper of byId.values()) {
-      if (!(await shouldResumePaperAfterServerReady(paper))) continue;
+      if (!(await shouldResumeSavedPaper(paper))) continue;
       void resumeIncompleteTranslation(paper.id, callbacks, settings).catch((error) => {
         if (error instanceof ImportCancelledError) return;
         console.error(`Failed to resume translation for ${paper.id}:`, error);

@@ -1,8 +1,6 @@
 #!/bin/zsh
-# Sequential: MADLAD baseline (app server), then each GGUF: download -> serve -> run -> stop -> delete.
+# Sequential GGUF benchmarks: download -> serve -> run -> stop -> delete.
 S=${0:A:h}; cd $S; M=$S/models; mkdir -p $M
-TOK=$(ps eww -p $(pgrep -f "Versio.app/Contents/Resources/translation-server" | head -1) | tr ' ' '\n' | sed -n 's/^MADLAD_SERVER_TOKEN=//p')
-[ -f out-madlad-3b.json ] || python3 run.py --name madlad-3b --kind madlad --token "$TOK" --pid $(pgrep -f "Versio.app/Contents/Resources/translation-server" | head -1) > log-madlad.txt 2>&1
 run() { name=$1; repo=$2; file=$3; prompt=$4
   [ -f out-$name.json ] && return
   [ -s $M/$file ] || curl -sL -o $M/$file "https://huggingface.co/$repo/resolve/main/$file" || return

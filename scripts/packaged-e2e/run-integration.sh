@@ -38,17 +38,7 @@ fail() {
   exit 1
 }
 
-# Sending SIGTERM to the macOS app from a shell does not run the Tauri window
-# close callback. The bundled Python sidecar can therefore become orphaned
-# even though the app process has exited. Restrict cleanup to this exact app
-# bundle so a user's development server on 127.0.0.1:8765 is never touched.
 stop_bundled_sidecars() {
-  local prefix="$APP_PATH/Contents/Resources/translation-server/"
-  local pid
-  while read -r pid; do
-    [[ -n "$pid" ]] || continue
-    kill "$pid" 2>/dev/null || true
-  done < <(ps -axo pid=,command= | awk -v prefix="$prefix" 'index($0, prefix) { print $1 }')
   pkill -f "^$APP_PATH/Contents/MacOS/llama-server " 2>/dev/null || true
 }
 
@@ -187,11 +177,7 @@ PY
 
 launch_app() {
   step "launch app"
-  # Keep the user's HOME so the translation sidecar can reuse its already
-  # downloaded model cache.  Versio's Tauri storage is isolated by
-  # VERSIO_ACCEPTANCE_HOME itself; overriding HOME made every packaged
-  # extraction acceptance run download MADLAD again before the import could
-  # reach its partial-ready checkpoint.
+  # Keep the user's HOME so the PLaMo sidecar can reuse its downloaded model.
   VERSIO_ACCEPTANCE=1 \
   VERSIO_ACCEPTANCE_HOME="$ACCEPTANCE_HOME" \
   VERSIO_ACCEPTANCE_FIXTURE="$FIXTURE_PDF" \

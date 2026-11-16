@@ -4,13 +4,9 @@ import type { Paper, PaperBlock } from "../types/paper";
 import { getBlocksByPaper, getPaper, saveBlocks, savePaper } from "../services/database";
 import { resumeIncompleteTranslation } from "../services/import/resume";
 import { resetStorageForTests } from "../data/runtime";
-import * as madladEngine from "../services/translation/madladEngine";
 import * as createEngine from "../services/translation/createTranslationEngine";
-import {
-  markTranslationServerReady,
-  resetTranslationServerReadyForTests,
-  subscribeTranslationServerReady,
-} from "../utils/serverReady";
+import * as plamoReadiness from "../services/translation/plamoReadiness";
+import type { TranslationEngine, TranslationResult } from "../services/translation/types";
 
 function basePaper(id: string): Paper {
   return {
@@ -55,65 +51,35 @@ function baseBlock(paperId: string, blockId: string): PaperBlock {
 describe("resumeIncompleteTranslation", () => {
   afterEach(async () => {
     vi.restoreAllMocks();
-    resetTranslationServerReadyForTests();
     await resetStorageForTests();
   });
 
-  it("retries a block that failed while the translation server was unavailable", async () => {
+  it("retries a failed block with PLaMo", async () => {
     const paper = basePaper("retry-failed-paper");
     const block = baseBlock(paper.id, "retry-failed-block");
     await savePaper(paper);
     await saveBlocks([block]);
-    const createSpy = vi.spyOn(createEngine, "createTranslationEngine");
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: RequestInfo | URL) => {
-        const url = String(input);
-        if (url.includes("/health")) {
-          return new Response(JSON.stringify({ status: "ok", model_loaded: true }), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-        return new Response(
-          JSON.stringify({
-            text: "インタラクティブ・ジュエリーは、個人的な記憶とウェアラブル・コンピューティングを、意味のある日常的な相互作用を通じて結び付けます。",
-            source_language: "en",
-            target_language: "ja",
-            model: "madlad400-3b-mt",
-            model_version: "3b-mt-v4",
-            input_chars: 100,
-            output_chars: 60,
-            translation_time_ms: 10,
-            chars_per_sec: 100,
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        );
-      })
-    );
-
-    await resumeIncompleteTranslation(paper.id, {}, { translationEngine: "madlad", useCache: false });
+    vi.spyOn(plamoReadiness, "isPlamoAvailable").mockResolvedValue(true);
+    const engine = plamoEngine();
+    const createSpy = vi.spyOn(createEngine, "createTranslationEngine").mockReturnValue(bundle(engine));
+    await resumeIncompleteTranslation(paper.id, {}, { useCache: false });
 
     expect(createSpy).toHaveBeenCalled();
-    expect(createSpy.mock.results[0]?.value.appleRouter).not.toBeNull();
+    expect(createSpy.mock.results[0]?.value.primaryEngine).toBe(engine);
 
     const [result] = await getBlocksByPaper(paper.id);
     expect(result.translationStatus).toBe("completed");
     expect(result.translated).toContain("インタラクティブ");
   });
 
-  it("leaves pending work untouched when the translation server is still down", async () => {
+  it("leaves pending work untouched when PLaMo is unavailable", async () => {
     const paper = basePaper("pending-while-down");
     const block = { ...baseBlock(paper.id, "pending-while-down-block"), translationStatus: "pending" as const };
     await savePaper({ ...paper, processingStatus: "translating" });
     await saveBlocks([block]);
-    vi.spyOn(madladEngine, "checkMADLADServer").mockResolvedValue({
-      available: false,
-      modelLoaded: false,
-      error: "翻訳サーバーに接続できません",
-    });
+    vi.spyOn(plamoReadiness, "isPlamoAvailable").mockResolvedValue(false);
 
-    await resumeIncompleteTranslation(paper.id, {}, { translationEngine: "madlad", useCache: false });
+    await resumeIncompleteTranslation(paper.id, {}, { useCache: false });
 
     const [result] = await getBlocksByPaper(paper.id);
     expect(result.translationStatus).toBe("pending");
@@ -130,35 +96,21 @@ describe("resumeIncompleteTranslation", () => {
     };
     await savePaper(paper);
     await saveBlocks([block]);
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: RequestInfo | URL) => {
-        const url = String(input);
-        if (url.includes("/health")) {
-          return new Response(JSON.stringify({ status: "ok", model_loaded: true }), { status: 200 });
-        }
-        return new Response(JSON.stringify({
-          text: "前半の方法を説明する文。The second sentence is retained in English.",
-          source_language: "en",
-          target_language: "ja",
-          model: "madlad400-3b-mt",
-          model_version: "test",
-          fallback_stage: "partial_unit_fallback",
-          fallback_reason: "unit_1:translation_quality_rejected:ValueError",
-          unit_fallback_indices: [1],
-          translation_units: [
-            "The first sentence describes the method.",
-            "The second sentence is retained in English.",
-          ],
-          partial_unit_texts: [
-            "前半の方法を説明する文。",
-            "The second sentence is retained in English.",
-          ],
-        }), { status: 200, headers: { "Content-Type": "application/json" } });
-      }),
-    );
-
-    await resumeIncompleteTranslation(paper.id, {}, { translationEngine: "madlad", useCache: false });
+    vi.spyOn(plamoReadiness, "isPlamoAvailable").mockResolvedValue(true);
+    const engine = plamoEngine({
+      text: "前半の方法を説明する文。The second sentence is retained in English.",
+      unitFallbackIndices: [1],
+      translationUnits: [
+        "The first sentence describes the method.",
+        "The second sentence is retained in English.",
+      ],
+      partialUnitTexts: [
+        "前半の方法を説明する文。",
+        "The second sentence is retained in English.",
+      ],
+    });
+    vi.spyOn(createEngine, "createTranslationEngine").mockReturnValue(bundle(engine));
+    await resumeIncompleteTranslation(paper.id, {}, { useCache: false });
 
     const [result] = await getBlocksByPaper(paper.id);
     expect(result.translationStatus).toBe("completed");
@@ -169,25 +121,34 @@ describe("resumeIncompleteTranslation", () => {
   });
 });
 
-describe("translation server ready signaling", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-    resetTranslationServerReadyForTests();
-  });
+function plamoEngine(overrides: Partial<TranslationResult> = {}): TranslationEngine {
+  return {
+    name: "plamo",
+    translate: vi.fn(async (source: string) => ({
+      text: "インタラクティブ・ジュエリーは、個人的な記憶とウェアラブル・コンピューティングを、意味のある日常的な相互作用を通じて結び付けます。",
+      sourceLanguage: "en",
+      targetLanguage: "ja",
+      model: "plamo-3-translate-2b",
+      modelVersion: "test",
+      inputChars: source.length,
+      outputChars: 60,
+      translationTimeMs: 10,
+      charsPerSec: 100,
+      ...overrides,
+    })),
+    translateBatch: vi.fn(),
+    getStatus: vi.fn(),
+    loadModel: vi.fn(),
+    unloadModel: vi.fn(),
+  };
+}
 
-  it("notifies subscribers once when marked ready", async () => {
-    resetTranslationServerReadyForTests();
-    let notified = 0;
-    const unsubscribe = subscribeTranslationServerReady(() => {
-      notified += 1;
-    });
-    // Browser mode treats the server as ready and may microtask-notify on subscribe.
-    await Promise.resolve();
-    const baseline = notified;
-
-    markTranslationServerReady();
-    markTranslationServerReady();
-    expect(notified).toBe(baseline + 1);
-    unsubscribe();
-  });
-});
+function bundle(engine: TranslationEngine) {
+  return {
+    engine,
+    primaryEngine: engine,
+    cacheModel: "plamo-3-translate-2b",
+    cacheModelVersion: "test",
+    llmProviders: [],
+  };
+}

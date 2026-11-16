@@ -111,7 +111,7 @@ export function applyGlossary(
 /**
  * Small source-grounded terminology repair set.
  *
- * These are established cross-paper research terms for which MADLAD can emit
+ * These are established cross-paper research terms for which PLaMo can emit
  * a fluent but unrelated Japanese homophone. A replacement is allowed only
  * when the English source contains the corresponding term and the generated
  * Japanese contains a documented erroneous rendering. This is terminology

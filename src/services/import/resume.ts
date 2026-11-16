@@ -16,16 +16,13 @@ import {
   TranslationQueue,
   createTranslationEngine,
   setEngineGlossary,
-  setAppleEligibleSources,
   type TranslationPriorityValue,
 } from "../translation";
 import { localizeNamedFigureCaption, shouldTranslateTitle, titleTranslationComplete } from "../translation/quality";
 import { acceptFor, isPersistedTranslationUsable } from "../translation/acceptance";
-import { checkMADLADServer } from "../translation/madladEngine";
 import { isPlamoAvailable } from "../translation/plamoReadiness";
 import { projectSafeUnitTranslation } from "../translation/partialProjection";
 import {
-  collectAppleEligibleSources,
   finalizeJapaneseLayoutOnly,
   isJapaneseLayoutOnlyPaper,
   persistUntranslatableAsSkipped,
@@ -109,24 +106,12 @@ export async function resumeIncompleteTranslation(
     }
 
     const cfg = resolveImportConfig(config);
-    // Leave pending work untouched so a later server-ready resume can pick it up.
-    const engineAvailable = cfg.translationEngine === "plamo"
-      ? await isPlamoAvailable()
-      : (await checkMADLADServer(cfg.madladServerUrl)).available;
-    if (!engineAvailable) {
+    if (!(await isPlamoAvailable())) {
       paper.needsTranslationResume = true;
       await savePaper(paper);
       return;
     }
-    const { engine: translationEngine, appleRouter, primaryEngine } = createTranslationEngine(cfg);
-    setAppleEligibleSources(
-      appleRouter,
-      collectAppleEligibleSources(
-        pendingBlocks,
-        refSectionIds,
-        pendingTitle ? paper.titleOriginal : null
-      )
-    );
+    const { engine: translationEngine, primaryEngine } = createTranslationEngine(cfg);
     const queue = new TranslationQueue(translationEngine, {
       concurrency: cfg.translationConcurrency,
       retryFailed: true,
@@ -173,7 +158,7 @@ export async function resumeIncompleteTranslation(
         applyGlossary(task.result.text, glossaryEntries)
       );
       const figureCaption = localizeNamedFigureCaption(task.text);
-      const directTranslation = acceptFor(cfg.translationEngine)(translated, task.text)
+      const directTranslation = acceptFor()(translated, task.text)
         ? translated
         : undefined;
       // A server partial-unit result is safe to expose only when the backend

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Settings } from "lucide-react";
 import { getSetting, saveSetting, clearTranslationCache, restoreTranslationCache } from "../../services/database";
-import { checkMADLADServer } from "../../services/translation/madladEngine";
 import { checkOllamaAvailability } from "../../services/llm/ollamaProvider";
 import { addSamplePaper } from "../../services/samplePaper";
 import { useLibraryCache } from "../../stores/libraryCache";
@@ -85,7 +84,6 @@ export function SettingsScreen() {
   const [loaded, setLoaded] = useState(false);
   const [isAddingSample, setIsAddingSample] = useState(false);
   const [sampleMessage, setSampleMessage] = useState<string | null>(null);
-  const [madladStatus, setMadladStatus] = useState<ServiceStatus>(IDLE_STATUS);
   const [ollamaStatus, setOllamaStatus] = useState<ServiceStatus>({
     ...IDLE_STATUS,
     models: [],
@@ -166,17 +164,6 @@ export function SettingsScreen() {
     };
   }, [loaded]);
 
-  const checkMadlad = useCallback(async (url = settingsRef.current.madladServerUrl) => {
-    setMadladStatus((prev) => ({ ...prev, checking: true }));
-    const status = await checkMADLADServer(url);
-    setMadladStatus({
-      checking: false,
-      available: status.available,
-      modelLoaded: status.modelLoaded,
-      error: status.error,
-    });
-  }, []);
-
   const checkOllama = useCallback(async (url = settingsRef.current.ollamaServerUrl) => {
     setOllamaStatus((prev) => ({ ...prev, checking: true }));
     const status = await checkOllamaAvailability(url);
@@ -197,9 +184,8 @@ export function SettingsScreen() {
 
   useEffect(() => {
     if (!loaded) return;
-    void checkMadlad();
     void checkOllama();
-  }, [loaded, checkMadlad, checkOllama]);
+  }, [loaded, checkOllama]);
 
   const updateSettings = (patch: Partial<TranslationSettingsV2>) => {
     setSettings((prev) => ({ ...prev, ...patch }));
@@ -394,7 +380,6 @@ export function SettingsScreen() {
                 <TranslationSettingsSection
                   settings={settings}
                   onChange={updateSettings}
-                  madladStatus={madladStatus}
                 />
               </section>
               <section id={settingsSectionElementId("data")} className={styles.section}>
@@ -405,12 +390,10 @@ export function SettingsScreen() {
               </section>
               <section id={settingsSectionElementId("advanced")} className={styles.section}>
                 <DiagnosticsSettingsSection
-                  madladStatus={madladStatus}
                   ollamaStatus={ollamaStatus}
                   settings={settings}
                   onChange={updateSettings}
                   onRecheck={() => {
-                    void checkMadlad();
                     void checkOllama();
                   }}
                   sampleAlreadyAdded={sampleAlreadyAdded}

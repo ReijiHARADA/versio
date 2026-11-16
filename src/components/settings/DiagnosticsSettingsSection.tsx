@@ -7,7 +7,6 @@ import styles from "./SettingsScreen.module.css";
 type Props = {
   settings: TranslationSettingsV2;
   onChange: (patch: Partial<TranslationSettingsV2>) => void;
-  madladStatus: ServiceStatus;
   ollamaStatus: ServiceStatus;
   onRecheck: () => void;
   sampleAlreadyAdded: boolean;
@@ -30,7 +29,6 @@ function statusKind(status: ServiceStatus): "checking" | "ok" | "error" {
 export function DiagnosticsSettingsSection({
   settings,
   onChange,
-  madladStatus,
   ollamaStatus,
   onRecheck,
   sampleAlreadyAdded,
@@ -38,7 +36,7 @@ export function DiagnosticsSettingsSection({
   sampleMessage,
   onAddSample,
 }: Props) {
-  const checking = madladStatus.checking || ollamaStatus.checking;
+  const checking = ollamaStatus.checking;
 
   return (
     <div className={styles.page}>
@@ -46,12 +44,6 @@ export function DiagnosticsSettingsSection({
 
       <div className={styles.cardStack}>
         <SettingsCard title="サービス">
-          <SettingsStatusRow
-            label="翻訳エンジン"
-            detail="MADLAD"
-            state={statusKind(madladStatus)}
-            stateLabel={statusLabel(madladStatus)}
-          />
           <SettingsStatusRow
             label="用語解析"
             detail="Ollama"
@@ -70,14 +62,6 @@ export function DiagnosticsSettingsSection({
             </button>
           </div>
           <div className={styles.fieldStack} style={{ marginTop: "var(--spacing-lg)" }}>
-            <label className={styles.fieldLabel}>
-              MADLAD Server URL
-              <input
-                className={styles.input}
-                value={settings.madladServerUrl}
-                onChange={(e) => onChange({ madladServerUrl: e.target.value })}
-              />
-            </label>
             <label className={styles.fieldLabel}>
               Ollama Server URL
               <input

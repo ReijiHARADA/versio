@@ -17,7 +17,7 @@ if [[ ! -f "$FIXTURE_PDF" ]]; then
 fi
 ACCEPTANCE_HOME="${VERSIO_UI_E2E_HOME:-${VERSIO_ACCEPTANCE_HOME:-$ARTIFACT_DIR/app-data-$$}}"
 # The UI harness isolates application data by replacing HOME. Keep the model
-# cache outside that isolated home so every run does not redownload MADLAD
+# cache outside that isolated home so every run does not redownload PLaMo
 # before it can exercise the import UI. This is cache-only: library data,
 # packages, exports, and acceptance markers remain under ACCEPTANCE_HOME.
 HOST_HF_HOME="${VERSIO_UI_E2E_HF_HOME:-${HF_HOME:-$HOME/.cache/huggingface}}"

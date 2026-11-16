@@ -87,7 +87,7 @@ export function AppSidebar({
   }, [draggingPaperId, pointerX, pointerY]);
 
   // Defer streaming translation React patches while the user works in the shell
-  // so sidebar open / folder create stay responsive during MADLAD translation.
+  // so sidebar open / folder create stay responsive during PLaMo translation.
   useEffect(() => {
     const el = sidebarRef.current;
     if (!el) return;

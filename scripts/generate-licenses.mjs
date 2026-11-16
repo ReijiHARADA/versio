@@ -13,7 +13,6 @@
  * - Versio (LICENSE)
  * - npm production dependency closure (non-optional)
  * - Rust crates reachable for macOS targets via cargo tree (no-dev, no-build)
- * - Python packages in the bundled translation-server/venv
  * - Curated distributed assets / model weights (verified sources only)
  *
  * Does not invent license types. Missing metadata → status "unknown".
@@ -533,122 +532,6 @@ function collectMacosDistributedCrateKeys(manifest) {
 }
 
 // ---------------------------------------------------------------------------
-// Python (bundled venv)
-// ---------------------------------------------------------------------------
-
-function collectPython() {
-  const venv = path.join(ROOT, "translation-server", "venv");
-  if (!existsSync(venv)) {
-    warnings.push(
-      "translation-server/venv が無いため Python 依存を収集できませんでした（npm run bundle:python 後に再生成）"
-    );
-    return;
-  }
-
-  const sitePackages = findSitePackages(venv);
-  if (!sitePackages) {
-    warnings.push("translation-server/venv 内に site-packages が見つかりません");
-    return;
-  }
-
-  const distInfos = readdirSync(sitePackages)
-    .filter((name) => name.endsWith(".dist-info"))
-    .map((name) => path.join(sitePackages, name))
-    .filter((p) => statSync(p).isDirectory());
-
-  for (const distInfo of distInfos) {
-    const meta = parseDistInfoMetadata(path.join(distInfo, "METADATA"));
-    if (!meta.name) continue;
-
-    // Skip the editable / local project if any
-    if (meta.name.toLowerCase() === "versio") continue;
-
-    const version = meta.version ?? "?";
-    const license =
-      meta.licenseExpression ||
-      meta.license ||
-      null;
-    const { licenseText, noticeText } = resolvePythonLicenseTexts(distInfo, meta);
-    const textKey = storeText(licenseText);
-    const noticeKey = storeText(noticeText);
-    const copyright = extractCopyright(licenseText) ?? extractCopyright(noticeText);
-    const status = packageStatus(license, textKey);
-
-    addPackage({
-      id: `python:${meta.name}@${version}`,
-      name: meta.name,
-      version,
-      ecosystem: "python",
-      license,
-      copyright,
-      textKey,
-      noticeKey,
-      status,
-      notes: statusNotes(status, license, textKey),
-    });
-  }
-}
-
-function findSitePackages(venvRoot) {
-  const lib = path.join(venvRoot, "lib");
-  if (!existsSync(lib)) return null;
-  for (const entry of readdirSync(lib)) {
-    const candidate = path.join(lib, entry, "site-packages");
-    if (existsSync(candidate)) return candidate;
-  }
-  return null;
-}
-
-function parseDistInfoMetadata(filePath) {
-  const raw = readText(filePath) ?? "";
-  /** @type {Record<string, string>} */
-  const fields = {};
-  for (const line of raw.split("\n")) {
-    if (!line || line.startsWith(" ")) continue;
-    const idx = line.indexOf(":");
-    if (idx <= 0) continue;
-    const key = line.slice(0, idx).trim();
-    const value = line.slice(idx + 1).trim();
-    if (!(key in fields)) fields[key] = value;
-  }
-  return {
-    name: fields.Name ?? null,
-    version: fields.Version ?? null,
-    license: fields.License && fields.License !== "UNKNOWN" ? fields.License : null,
-    licenseExpression: fields["License-Expression"] ?? null,
-    licenseFile: fields["License-File"] ?? null,
-  };
-}
-
-function resolvePythonLicenseTexts(distInfo, meta) {
-  // Prefer licenses/ inside dist-info (PEP 639 layout).
-  let { licenseText, noticeText } = resolveLicenseFiles(distInfo);
-
-  const licenseFileCandidates = [];
-  if (meta.licenseFile) {
-    licenseFileCandidates.push(
-      path.join(distInfo, meta.licenseFile),
-      path.join(distInfo, "licenses", meta.licenseFile),
-      path.join(distInfo, "license_files", meta.licenseFile)
-    );
-  }
-  for (const candidate of licenseFileCandidates) {
-    if (!licenseText && existsSync(candidate) && statSync(candidate).isFile()) {
-      licenseText = readText(candidate);
-    }
-  }
-
-  const licensesSub = path.join(distInfo, "licenses");
-  if (existsSync(licensesSub)) {
-    const found = resolveLicenseFiles(licensesSub);
-    if (!licenseText) licenseText = found.licenseText;
-    if (!noticeText) noticeText = found.noticeText;
-  }
-
-  return { licenseText, noticeText };
-}
-
-// ---------------------------------------------------------------------------
 // Curated distributed assets / models (verified sources only)
 // ---------------------------------------------------------------------------
 
@@ -726,48 +609,11 @@ function collectCurated() {
     notes: "翻訳サイドカーとして同梱。cpp-httplib (MIT) と nlohmann/json (MIT) の表記を含む。",
   });
 
-  // MADLAD-400 weights are downloaded for the translation server (not MIT).
-  // License type confirmed from Hugging Face model card.
-  const apacheText = findApache20TextFromTree() ?? null;
-  const madladTextKey = storeText(apacheText);
-  addPackage({
-    id: "model:google/madlad400-3b-mt",
-    name: "MADLAD-400 3B MT (model weights)",
-    version: "google/madlad400-3b-mt",
-    ecosystem: "model",
-    license: "Apache-2.0",
-    copyright: null,
-    textKey: madladTextKey,
-    noticeKey: null,
-    status: packageStatus("Apache-2.0", madladTextKey),
-    notes: madladTextKey
-      ? "ライセンス種別は Hugging Face モデルカード（license: apache-2.0）で確認。全文は依存ツリー内の Apache-2.0 テキストを再利用。"
-      : "ライセンス種別はモデルカードで Apache-2.0 と確認済みだが、全文テキストを依存ツリーから取得できませんでした。",
-  });
 }
 
 function readInstalledVersion(name) {
   const pkg = readPackageJson(path.join(ROOT, "node_modules", ...name.split("/")));
   return pkg?.version ?? null;
-}
-
-function findApache20TextFromTree() {
-  const candidates = [
-    path.join(ROOT, "node_modules", "pdfjs-dist", "LICENSE"),
-    path.join(ROOT, "node_modules", "@tauri-apps", "api", "LICENSE_APACHE-2.0"),
-  ];
-  for (const c of candidates) {
-    const text = readText(c);
-    if (text && /Apache License/i.test(text) && /Version 2\.0/i.test(text)) {
-      return text;
-    }
-  }
-  for (const text of texts.values()) {
-    if (/Apache License/i.test(text) && /Version 2\.0/i.test(text) && text.length > 500) {
-      return text;
-    }
-  }
-  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -848,19 +694,7 @@ function main() {
   collectApp();
   collectNpm();
   collectRust();
-  collectPython();
   collectCurated();
-  // Re-run curated apache text pickup after tree texts exist
-  const madlad = packagesById.get("model:google/madlad400-3b-mt");
-  if (madlad && !madlad.textKey) {
-    const apache = findApache20TextFromTree();
-    if (apache) {
-      madlad.textKey = storeText(apache);
-      madlad.status = packageStatus(madlad.license, madlad.textKey);
-      madlad.notes =
-        "ライセンス種別は Hugging Face モデルカード（license: apache-2.0）で確認。全文は依存ツリー内の Apache-2.0 テキストを再利用。";
-    }
-  }
   writeOutput();
 }
 

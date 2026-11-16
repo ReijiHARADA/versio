@@ -3,7 +3,7 @@
  * 
  * This module defines the abstraction layer for translation engines,
  * allowing easy switching between different translation backends
- * (MADLAD, OpenAI, etc.)
+ * (PLaMo, OpenAI, etc.)
  */
 
 /**

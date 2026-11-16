@@ -53,12 +53,9 @@ jobs:
         working-directory: src-tauri
     steps:
       - uses: actions/checkout@v5
-      # tauri.conf.json bundles these macOS build outputs; Linux CI only needs
-      # the paths to exist for the Tauri resource check (working dir: src-tauri).
+      # Linux CI only needs the sidecar path to exist for the Tauri check (working dir: src-tauri).
       - name: Stub bundled resources for Tauri resource check
         run: |
-          mkdir -p bundled-resources/translation-server
-          touch bundled-resources/apple-translation
           # externalBin sidecar (PLaMo llama-server); Tauri requires the target-suffixed file.
           mkdir -p binaries
           touch binaries/llama-server-x86_64-unknown-linux-gnu
@@ -90,20 +87,3 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
-
-  python:
-    name: Lightweight Python tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: translation-server
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12.14"
-      - name: Run unit tests (no MADLAD / torch)
-        run: |
-          python -m unittest tests.test_citation_protect -v
-        env:
-          SKIP_MODEL_DOWNLOAD: "1"

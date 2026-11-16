@@ -4,7 +4,6 @@ import {
   resumeIncompleteTranslation,
   type ImportConfig,
 } from "../../../services/importServiceV2";
-import { subscribeTranslationServerReady } from "../../../utils/serverReady";
 import { upsertSection } from "../../../utils/mergePaperData";
 import type { Paper, PaperBlock, Section } from "../../../types/paper";
 
@@ -45,20 +44,14 @@ export function useReaderTranslationResume(opts: {
       );
     };
 
-    // First open: try immediately (no-ops if the sidecar is still down).
+    // First open: PLaMo starts lazily when the translation request is made.
     if (resumeStartedFor.current !== paperId) {
       resumeStartedFor.current = paperId;
       void runResume();
     }
 
-    // When the sidecar becomes ready after a paper was opened early, resume again.
-    const unsubscribe = subscribeTranslationServerReady(() => {
-      if (!cancelled) void runResume();
-    });
-
     return () => {
       cancelled = true;
-      unsubscribe();
     };
   }, [paperId, isLoading, blockBatcherRef, updatePaper, setSectionsInStore]);
 }

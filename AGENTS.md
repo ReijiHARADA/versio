@@ -9,7 +9,7 @@
 | [CURRENT_STATE.md](./CURRENT_STATE.md) | **user-visible な現在状態**が変わったとき（機能の追加・削除・制限の変化、検証状況の更新） |
 | [ROADMAP.md](./ROADMAP.md) | **プロダクト目標・優先度・スコープ**が変わったときだけ。通常の実装修正では触らない |
 | [README.md](./README.md) | **製品の定義・対応環境・セットアップ・主要導線・ドキュメント入口**が変わったときだけ |
-| [QUICKSTART.md](./QUICKSTART.md) | 起動手順・venv・トラブルシュートが変わったとき |
+| [QUICKSTART.md](./QUICKSTART.md) | 起動手順・トラブルシュートが変わったとき |
 | 本ファイル (AGENTS.md) | エージェント向け制約・ビルド／OCR／翻訳／データルールが変わったとき |
 
 - 通常のバグ修正・リファクタ・小さな UX 調整で README / ROADMAP を書き換えない
@@ -19,13 +19,12 @@
 ## Tauri macOS アプリ
 
 - Versio の基本動作確認は **Tauri macOS 実機を基準**にする。ブラウザ／Playwright確認は補助であり、取り込み・PDF抽出・翻訳・永続化・書き出し・macOS固有UIは最新の `.app` または `tauri:dev` で最終確認する。
-- UI を変えたら `npm run dev` または preview を上げ、`npm run verify:browser` で Library / 設定 / Reader を実ブラウザ確認する。このセッションの Cursor に Browser MCP は無いので Playwright（`@playwright/test`）を使う。翻訳サーバーは `http://127.0.0.1:8765/health`。
+- UI を変えたら `npm run dev` または preview を上げ、`npm run verify:browser` で Library / 設定 / Reader を実ブラウザ確認する。このセッションの Cursor に Browser MCP は無いので Playwright（`@playwright/test`）を使う。
 - 新しい UI は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md) に従う。局所操作は Popover、一時的な大きい作業は Sheet / Overlay、論文全体の一覧は Inspector。本文操作で Notes を自動で開かない。別 route は Library / Reader / Workspace / Settings だけ。同一対象の場所・サイズ変化（図の拡大など）は Shared Element Transition でビューを切らない。
-- `src-tauri/` が Tauri v2 のシェル。`npm run tauri:dev` で開発。日常の `.app` 確認は `npm run tauri:build:fast`（cached Python / `.app` のみ）。リリース確認は `npm run tauri:build:clean`（clean Python / `.app` + `.dmg`）。`npm run tauri:build` は clean のエイリアス。
+- `src-tauri/` が Tauri v2 のシェル。`npm run tauri:dev` で開発。日常の `.app` 確認は `npm run tauri:build:fast`（`.app` のみ）。リリース確認は `npm run tauri:build:clean`（`.app` + `.dmg`）。`npm run tauri:build` は clean のエイリアス。
 - 生成物: `src-tauri/target/release/bundle/macos/Versio.app`
 - Xcode は `/Applications/Xcode-beta.app` を使用。ビルド時は `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer` を設定すること。
-- 翻訳サーバーはアプリが spawn し、終了時に停止する。
-- Python runtime は `scripts/bundle-python.sh` が `uv` + `requirements.lock` + `.python-version`（patch 固定）から `translation-server/venv/` を作る（開発者 `.venv` のコピーはしない）。content-hash が一致し validation が通れば reuse。`clean` のみゼロから再構築。Tauri 同梱は lite の `src-tauri/bundled-resources/translation-server`（server / engines、venv なし）＋別 stage の `translation-venv`。`.app` への venv 注入は `scripts/inject-translation-venv.sh`（APFS clone）。`npm run tauri:build:fast` / `clean` が注入まで行う。`models/` や開発用 `.venv*` は入れない。phase 時間は `scripts/tauri-build.sh` と `.build-timings` / [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。
+- phase 時間は `scripts/tauri-build.sh` と `.build-timings` / [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。
 - 本番 CSP は有効。WKWebView 向けに `script-src` は nonce のみにしない（`'self' 'unsafe-inline' 'wasm-unsafe-eval'`）。変更時は `.app` で白画面にならないか確認する。
 - PDF 解析は **pdfjs-dist 3.11（legacy build）**。6.x は WKWebView で Iterator Helpers が無く即クラッシュするので上げない。日本語 CID フォントは `pdfjs-dist/cmaps`（Adobe-Japan1 など）をアプリに同梱してデコードする。
 - ユーザー領域への書き出しは Rust の save dialog コマンドで完結させる。フロントから任意 absolute path への write API を復活させない。
@@ -46,11 +45,7 @@
 - Sidecar log: `~/Library/Logs/com.harada.versio/plamo-server.log` (previous launch: `plamo-server.prev.log`). Check it first when a packaged `.app` cannot translate.
 - Frontend translation concurrency default is 8, matching the 8 server slots.
 
-### Legacy MADLAD (selectable for one release, then removed)
-
-- MADLAD-400 3B on MPS + bfloat16 via the Python `translation-server` (port 8765) remains selectable in Settings → 翻訳. Do not tune it further.
-- Sentence-level `generate()` batching (default 24, `MADLAD_BATCH_SIZE=1` to disable) and `MicroBatchScheduler` (25ms, `MADLAD_MICROBATCH=0`) apply only to this path. Measurements: `translation-server/MPS_BATCH_OPTIMIZATION_REPORT.md`, `translation-server/SPEED_BENCH.md`, `translation-server/MLX_BF16_BENCH_REPORT.md`.
-- Do not run `update_python_env.sh` unless the pinned Python venv is broken. Restart the server with `./restart-translation-server.sh`. Its log is `translation-server.log` in the same Logs dir.
+- MADLAD-400 (Python `translation-server`, port 8765) and the Apple short-item router were removed in 2026-11. Old `translation_cache` rows and saved `translationEngine` / `madladServerUrl` keys are ignored, not migrated. Do not reintroduce a Python translation runtime.
 
 ## Licenses (Settings)
 

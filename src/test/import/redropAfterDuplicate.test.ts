@@ -2,13 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const importPDFV2 = vi.fn(async () => null);
 
-vi.mock("../../utils/serverReady", () => ({
-  waitForTranslationServer: vi.fn(async () => true),
-  isTauriApp: () => false,
-}));
-
 vi.mock("../../services/importServiceV2", () => ({
-  checkMADLADAvailability: vi.fn(async () => ({ available: true })),
   importPDFV2: (...args: unknown[]) => importPDFV2(...args),
 }));
 

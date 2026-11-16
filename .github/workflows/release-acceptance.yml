@@ -1,5 +1,4 @@
 # Reminder + optional macOS gate for packaged .app acceptance.
-# Full MADLAD download stays out of PR CI — use nightly or manual runs.
 
 name: Release acceptance
 
@@ -17,16 +16,13 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12.14"
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
       - run: npm ci
       - name: Automated pre-release gates
         run: npm run release:acceptance
-      - name: Packaged app build (clean, no MADLAD)
+      - name: Packaged app build
         run: npm run tauri:build:clean
       - name: Packaged integration E2E (Layer A)
         run: npm run packaged:e2e:integration

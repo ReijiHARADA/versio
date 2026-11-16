@@ -26,7 +26,7 @@ type BlockInput = Omit<
  * obvious typos such as "Aatlas"/"trapezes" repaired). Section
  * headings below level 1 follow the paper's own guideline list. The Japanese
  * is a hand-written presentation translation. This is never an extraction
- * result, a MADLAD output, or a benchmark input.
+ * result, a PLaMo output, or a benchmark input.
  */
 export function createPresentationDemoProjection(paperId: string, fileHash: string, fileName: string): {
   paper: Paper;

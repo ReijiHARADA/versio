@@ -7,7 +7,6 @@ const importPDFV2 = vi.fn();
 const translationCancel = vi.fn();
 
 vi.mock("../services/importServiceV2", () => ({
-  checkMADLADAvailability: vi.fn(async () => ({ available: true })),
   importPDFV2: (...args: unknown[]) => importPDFV2(...args),
 }));
 

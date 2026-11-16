@@ -8,7 +8,6 @@ import { applyGlossary, normalizeSourceGroundedTerminology } from "../llm/glossa
 import {
   createTranslationEngine,
   setEngineGlossary,
-  setAppleEligibleSources,
 } from "../translation/createTranslationEngine";
 import { projectSafeUnitTranslation } from "../translation/partialProjection";
 import {
@@ -38,8 +37,7 @@ export async function retryBlockTranslation(
     (await getSetting<ImportConfig>("translationSettingsV2")) ??
     {};
   const cfg = resolveImportConfig(saved);
-  const { engine, appleRouter, primaryEngine } = createTranslationEngine(cfg);
-  setAppleEligibleSources(appleRouter, [source]);
+  const { engine, primaryEngine } = createTranslationEngine(cfg);
 
   const glossary = await getGlossary(block.paperId);
   setEngineGlossary({ primaryEngine }, glossary);

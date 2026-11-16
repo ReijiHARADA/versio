@@ -1,9 +1,6 @@
 #!/bin/bash
 # Packaged Tauri build with fast (daily) vs clean (release) modes + phase timings.
 #
-#   bash scripts/tauri-build.sh fast   # cached Python, .app only (never signed)
-#   bash scripts/tauri-build.sh clean  # clean Python, .app then DMG
-#
 # Clean + signing (optional):
 #   VERSIO_SIGN=1 bash scripts/tauri-build.sh clean
 #     → build unsigned .app
@@ -46,18 +43,7 @@ export PATH="${HOME}/.cargo/bin:/opt/homebrew/bin:${PATH}"
 # shellcheck disable=SC1091
 source "${HOME}/.cargo/env" 2>/dev/null || true
 
-# The fast path skips Tauri's beforeBuildCommand, so compile native resources
-# explicitly here as well.
-bash "$SCRIPT_DIR/compile-apple-translation.sh"
-
 export VERSIO_BUILD_TIMINGS="$TIMING_FILE"
-if [[ "$MODE" == "clean" ]]; then
-  export VERSIO_PYTHON_BUNDLE_MODE="clean"
-  PYTHON_ARG="clean"
-else
-  export VERSIO_PYTHON_BUNDLE_MODE="cache"
-  PYTHON_ARG="cache"
-fi
 
 now_ms() {
   python3 -c 'import time; print(int(time.time() * 1000))'
@@ -89,17 +75,10 @@ WALL0="$(now_ms)"
 : >"$TIMING_FILE"
 
 t0="$(now_ms)"
-bash "$SCRIPT_DIR/bundle-python.sh" "$PYTHON_ARG"
 bash "$SCRIPT_DIR/build-llama-server.sh"
-python_s="$(elapsed_s "$t0")"
-echo "python_prep_s=$python_s" >>"$TIMING_FILE"
-echo "⏱  Python runtime: ${python_s}s"
-
-t0="$(now_ms)"
-bash "$SCRIPT_DIR/stage-translation-bundle.sh"
-stage_s="$(elapsed_s "$t0")"
-echo "stage_s=$stage_s" >>"$TIMING_FILE"
-echo "⏱  Stage resources: ${stage_s}s"
+llama_s="$(elapsed_s "$t0")"
+echo "llama_server_s=$llama_s" >>"$TIMING_FILE"
+echo "⏱  llama-server: ${llama_s}s"
 
 t0="$(now_ms)"
 npm run build
@@ -126,32 +105,6 @@ echo "⏱  Rust compile + .app bundle: ${rust_bundle_s}s"
 
 APP_PATH="src-tauri/target/release/bundle/macos/Versio.app"
 DMG_PATH="src-tauri/target/release/bundle/dmg/Versio_0.1.0_aarch64.dmg"
-STAGE_MODE_FILE="src-tauri/bundled-resources/translation-server/.versio-bundle-mode"
-if [[ -f "$STAGE_MODE_FILE" ]]; then
-  STAGED_MODE="$(tr -d '[:space:]' < "$STAGE_MODE_FILE")"
-else
-  STAGED_MODE="unknown"
-fi
-
-if [[ "$MODE" == "clean" && "$STAGED_MODE" != "clean" ]]; then
-  echo "エラー: clean build なのに staged mode=$STAGED_MODE"
-  exit 1
-fi
-
-t0="$(now_ms)"
-bash "$SCRIPT_DIR/inject-translation-venv.sh" "$APP_PATH"
-inject_s="$(elapsed_s "$t0")"
-# inject script may also append venv_inject_s; keep a stable key for summary.
-if ! grep -q '^venv_inject_s=' "$TIMING_FILE" 2>/dev/null; then
-  echo "venv_inject_s=$inject_s" >>"$TIMING_FILE"
-fi
-echo "⏱  Venv inject: $(read_timing venv_inject_s)s"
-
-if [[ ! -x "$APP_PATH/Contents/Resources/translation-server/venv/bin/python3" ]]; then
-  echo "エラー: .app に translation-server/venv がありません（inject 失敗）"
-  exit 1
-fi
-
 SIGNED_RELEASE="no"
 dmg_s="skipped"
 
@@ -185,11 +138,9 @@ echo "wall_s=$wall_s" >>"$TIMING_FILE"
 
 echo
 echo "========== Build timings ($MODE) =========="
-printf "  Python runtime prep : %ss\n" "$(read_timing python_prep_s)"
-printf "  Stage resources     : %ss\n" "$(read_timing stage_s)"
+printf "  llama-server        : %ss\n" "$(read_timing llama_server_s)"
 printf "  Frontend build      : %ss\n" "$(read_timing frontend_s)"
 printf "  Rust + .app bundle  : %ss\n" "$(read_timing rust_s)"
-printf "  Venv inject         : %ss\n" "$(read_timing venv_inject_s)"
 printf "  DMG / sign phase    : %s\n" "$(read_timing dmg_s)"
 printf "  Wall clock          : %ss\n" "$wall_s"
 echo "==========================================="
@@ -197,7 +148,6 @@ echo "✓ .app: $APP_PATH"
 if [[ "$MODE" == "clean" ]]; then
   echo "✓ .dmg: $DMG_PATH"
 fi
-echo "  staged python mode: $STAGED_MODE"
 echo "  signed release: $SIGNED_RELEASE"
 echo "  timings file: $TIMING_FILE"
 if [[ "$MODE" == "clean" && "$SIGNED_RELEASE" != "yes" ]]; then
