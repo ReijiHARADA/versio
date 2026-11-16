@@ -7,8 +7,8 @@ import path from "node:path";
 import { gunzipSync } from "node:zlib";
 import { tokenizeGrobid, isGrobidWhitespace } from "./tokenize";
 
-export type Lexicons = Record<"journals" | "abbrevJournals" | "proceedings" | "publishers" | "location" | "collaborations" | "inspireCollaborations" | "firstNames" | "lastNames", Set<string>>;
-const names = { journals: "journals", abbrevJournals: "abbrev_journals", proceedings: "proceedings", publishers: "publishers", location: "location", collaborations: "collaborations", inspireCollaborations: "inspire_collaborations", firstNames: "firstname_5k", lastNames: "lastname_5k" } as const;
+export type Lexicons = Record<"journals" | "abbrevJournals" | "proceedings" | "publishers" | "location" | "collaborations" | "inspireCollaborations" | "firstNames" | "lastNames" | "commonWords", Set<string>>;
+const names = { journals: "journals", abbrevJournals: "abbrev_journals", proceedings: "proceedings", publishers: "publishers", location: "location", collaborations: "collaborations", inspireCollaborations: "inspire_collaborations", firstNames: "firstname_5k", lastNames: "lastname_5k", commonWords: "english_words" } as const;
 let loaded: Lexicons | undefined;
 
 export function loadLexicons(): Lexicons {
@@ -19,8 +19,10 @@ export function loadLexicons(): Lexicons {
     // ablation, but loading it as a JS Set costs >1 GiB for a marginal feature.
     if (key === "location") { result.location = new Set(); continue; }
     const bytes = fs.readFileSync(path.resolve((import.meta as ImportMeta & { dirname: string }).dirname, "assets", `${file}.json.gz`));
-    result[key] = new Set((JSON.parse(gunzipSync(bytes).toString("utf8")) as string[]).map((x) => x.toLowerCase()));
+    result[key] = new Set((JSON.parse(gunzipSync(bytes).toString("utf8")) as string[]).map((x) => x.split(/\s+/)[0].toLowerCase()));
   }
+  for (const file of ["names_family"]) for (const value of JSON.parse(gunzipSync(fs.readFileSync(path.resolve((import.meta as ImportMeta & { dirname: string }).dirname, "assets", `${file}.json.gz`))).toString("utf8")) as string[]) result.lastNames.add(value.toLowerCase());
+  for (const file of ["names_female", "names_male"]) for (const value of JSON.parse(gunzipSync(fs.readFileSync(path.resolve((import.meta as ImportMeta & { dirname: string }).dirname, "assets", `${file}.json.gz`))).toString("utf8")) as string[]) result.firstNames.add(value.split(/[\t\n-]/)[0].toLowerCase());
   loaded = result; return result;
 }
 

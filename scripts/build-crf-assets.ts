@@ -28,8 +28,10 @@ for (const name of ["citation", "reference-segmenter"] as const) {
 }
 const lexicons: Record<string, string> = {
   journals: "journals/journals.txt", abbrev_journals: "journals/abbrev_journals.txt", proceedings: "journals/proceedings.txt",
-  publishers: "publishers/publishers.txt", location: "places/location.txt", collaborations: "organisations/collaborations.txt",
+  publishers: "publishers/publishers.txt", collaborations: "organisations/collaborations.txt",
   inspire_collaborations: "organisations/inspire_collaborations.txt", firstname_5k: "names/firstname.5k", lastname_5k: "names/lastname.5k",
+  english_words: "wordforms/english.wf",
+  names_family: "names/names.family", names_female: "names/names.female", names_male: "names/names.male",
 };
 for (const [name, relative] of Object.entries(lexicons)) {
   const values = fs.readFileSync(path.join(grobidHome, "lexicon", relative), "utf8").split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
