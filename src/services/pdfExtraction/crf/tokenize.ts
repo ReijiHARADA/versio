@@ -18,4 +18,7 @@ export function tokenizeGrobid(text: string): string[] {
   return out.flatMap((token) => /^\s$/u.test(token) || DELIMITERS.has(token) ? [token] : token.split(/(?<=\p{L})(?=\p{N})|(?<=\p{N})(?=\P{N})/u));
 }
 
+/** TextUtilities.delimiters as one string (FastMatcher tests `delimiters.indexOf(token)`). */
+export const GROBID_DELIMITERS = [...DELIMITERS].join("");
+
 export const isGrobidWhitespace = (token: string) => /^\s+$/u.test(token);

@@ -30,11 +30,13 @@ const lexicons: Record<string, string> = {
   journals: "journals/journals.txt", abbrev_journals: "journals/abbrev_journals.txt", proceedings: "journals/proceedings.txt",
   publishers: "publishers/publishers.txt", collaborations: "organisations/collaborations.txt",
   inspire_collaborations: "organisations/inspire_collaborations.txt", firstname_5k: "names/firstname.5k", lastname_5k: "names/lastname.5k",
-  english_words: "wordforms/english.wf",
+  english_words: "wordforms/english.wf", location: "places/location.txt",
   names_family: "names/names.family", names_female: "names/names.female", names_male: "names/names.male",
 };
 for (const [name, relative] of Object.entries(lexicons)) {
-  const values = fs.readFileSync(path.join(grobidHome, "lexicon", relative), "utf8").split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
+  let values = fs.readFileSync(path.join(grobidHome, "lexicon", relative), "utf8").split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
+  // english.wf is "form<TAB>lemma<TAB>tag"; Lexicon.addDictionary keeps only the form.
+  if (name === "english_words") values = [...new Set(values.map((line) => line.split("\t")[0]))];
   total += write(name, values);
 }
 console.log(`total gzip ${(total / 1024 / 1024).toFixed(2)} MiB`);
