@@ -1,8 +1,15 @@
+---
+type: Reference
+title: Third-party notices
+description: Versio が同梱・配布するサードパーティのライセンス表記方針。
+tags: [license, notices]
+---
+
 # Third-party notices
 
 Versio 本体のソースコードは [MIT License](./LICENSE) です。
 
-このライセンスは **Versio のソースコードにだけ** 適用されます。翻訳に使う MADLAD-400 のモデル重み、PyTorch、pdf.js、その他の依存ライブラリ／同梱バイナリには、それぞれのライセンスが適用されます。
+このライセンスは **Versio のソースコードにだけ** 適用されます。翻訳に使う PLaMo 3 Translate と MADLAD-400 のモデル重み、llama.cpp（llama-server）、PyTorch、pdf.js、その他の依存ライブラリ／同梱バイナリには、それぞれのライセンスが適用されます。
 
 ## アプリ内の一覧（正）
 
@@ -30,7 +37,7 @@ npm run generate:licenses
 | npm | `package-lock.json` の本番依存クロージャ（`optionalDependencies` は除外） |
 | Rust | `cargo tree --target {aarch64,x86_64}-apple-darwin -e no-dev,no-build` |
 | Python | 配布用 `translation-server/venv` の dist-info |
-| モデル / アセット | 検証済みの同梱物のみ（MADLAD-400 モデルカード、pdfjs CMaps など） |
+| モデル / アセット | 検証済みの同梱物のみ（PLaMo Community License 全文と MADLAD-400 モデルカード、llama.cpp の MIT 表記、pdfjs CMaps など）。PLaMo と llama.cpp の全文は `licenses/` に置き、`generate-licenses.mjs` が手動エントリとして読み込む |
 
 ライセンス種別はパッケージメタデータまたは同梱 LICENSE から確認できたものだけを記載します。確認できない項目はアプリ上で「要確認」または「一部未確認」と表示し、推測で SPDX を埋めません。
 

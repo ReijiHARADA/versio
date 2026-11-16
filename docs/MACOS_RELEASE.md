@@ -1,8 +1,19 @@
+---
+type: Playbook
+title: macOS Developer ID signing & notarization
+description: Versio のクリーンリリースの署名・公証手順と配布条件。
+tags: [release, macos, signing]
+---
+
 # macOS Developer ID signing & notarization
 
 Versio is distributed outside the Mac App Store (Developer ID).
 This document covers **clean release** signing only. Fast development builds
 (`npm run tauri:build:fast`) stay unsigned on purpose.
+
+## PLaMo license condition (commercial distribution)
+
+The translation model is PLaMo 3 Translate (PLaMo Community License). Commercial distribution requires registering with Preferred Networks, and the licensee's annual revenue must be ≤ ¥1B (10億円). Ship the license text (`licenses/plamo-community-license.txt`, shown in Settings → ライセンス) and keep the "Built with PLaMo" notice. The `llama-server` sidecar (`src-tauri/binaries/`) is signed as part of the `.app`.
 
 ## Correct order
 

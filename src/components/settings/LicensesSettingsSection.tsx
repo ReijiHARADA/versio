@@ -96,6 +96,7 @@ export function LicensesSettingsSection() {
         ) : null}
 
         <SettingsCard title="サードパーティ">
+          <p className={licenseStyles.hint}>Built with PLaMo — 翻訳エンジンに Preferred Networks の PLaMo 3 Translate を使っています。</p>
           {!inventory && !loadError ? (
             <p className={licenseStyles.empty}>読み込み中…</p>
           ) : null}
