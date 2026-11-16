@@ -18,7 +18,8 @@ import {
   setAppleEligibleSources,
   type TranslationPriorityValue,
 } from "../translation";
-import { isPlausibleJaTranslation, localizeNamedFigureCaption, shouldTranslateTitle, titleTranslationComplete } from "../translation/quality";
+import { localizeNamedFigureCaption, shouldTranslateTitle, titleTranslationComplete } from "../translation/quality";
+import { isAcceptableTranslation } from "../translation/translationCheck";
 import { checkMADLADServer } from "../translation/madladEngine";
 import { projectSafeUnitTranslation } from "../translation/partialProjection";
 import {
@@ -77,7 +78,7 @@ export async function resumeIncompleteTranslation(
       ) {
         return false;
       }
-      return !block.translated || !isPlausibleJaTranslation(block.translated, block.original || "");
+      return !block.translated || !isAcceptableTranslation(block.translated, block.original || "");
     });
     const pendingTitle = Boolean(
       paper.titleOriginal &&
@@ -90,7 +91,7 @@ export async function resumeIncompleteTranslation(
         section.originalTitle &&
         shouldTranslateSection(section) &&
         (!section.translatedTitle ||
-          !isPlausibleJaTranslation(section.translatedTitle, section.originalTitle))
+          !isAcceptableTranslation(section.translatedTitle, section.originalTitle))
     );
 
     if (!pendingBlocks.length && !pendingTitle && pendingSections.length === 0) {
@@ -167,7 +168,7 @@ export async function resumeIncompleteTranslation(
         applyGlossary(task.result.text, glossaryEntries)
       );
       const figureCaption = localizeNamedFigureCaption(task.text);
-      const directTranslation = isPlausibleJaTranslation(translated, task.text)
+      const directTranslation = isAcceptableTranslation(translated, task.text)
         ? translated
         : undefined;
       // A server partial-unit result is safe to expose only when the backend

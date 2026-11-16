@@ -17,3 +17,14 @@ describe("checkTranslation", () => {
     expect(checkTranslation(src60, ja60.repeat(3)).breakdown.some((r) => r.startsWith("length_ratio:"))).toBe(true));
   it("accepts a good translation", () => expect(isAcceptableTranslation(ja60, src60)).toBe(true));
 });
+
+import { projectSafeUnitTranslation } from "../services/translation/partialProjection";
+
+describe("pipeline acceptance uses the deterministic check", () => {
+  it("keeps a unit that dropped a number as source text", () => {
+    const a = "Accuracy improved by 4.7% over the baseline model.";
+    const b = "The proposed model improves robustness on every dataset.";
+    const r = projectSafeUnitTranslation({ translationUnits: [a, b], partialUnitTexts: ["精度がベースラインより向上した。", "提案モデルはすべてのデータセットで頑健性を向上させる。"] });
+    expect(r?.failedIndices).toEqual([0]);
+  });
+});

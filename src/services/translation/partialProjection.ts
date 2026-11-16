@@ -1,5 +1,5 @@
 import type { TranslationResult } from "./types";
-import { isPlausibleJaTranslation } from "./quality";
+import { isAcceptableTranslation } from "./translationCheck";
 
 export interface PartialProjectionCandidate {
   text: string;
@@ -34,7 +34,7 @@ export function projectSafeUnitTranslation(
   const failedIndices: number[] = [];
   const units = texts.map((text, index) => {
     const source = sources[index];
-    if (isPlausibleJaTranslation(text, source)) return text;
+    if (isAcceptableTranslation(text, source)) return text;
     failedIndices.push(index);
     return source;
   });
