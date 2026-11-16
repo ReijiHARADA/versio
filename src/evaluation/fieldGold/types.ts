@@ -24,7 +24,7 @@ export type FieldGold = {
   fields: FieldRecord;
 };
 
-export type ParserId = "versio" | "grobid" | "apple";
+export type ParserId = "versio" | "grobid" | "apple" | "crfport";
 
 export type FieldPrediction = {
   id: string;

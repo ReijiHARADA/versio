@@ -107,3 +107,15 @@ PDF をアプリで確認するときは `open -a Versio.app test-data/field-gol
 2. **タイトル・メール・キャプション** は現行を維持する。
 3. 日本語は、著者は現行を維持。所属・参考文献の GROBID 採用は、日本語正解を増やして確かめてから決める。
 4. 同梱方式（常駐サイドカー、初回ダウンロード、オプトインなど）は RAM 2.8 GB・数百 MB の配布増を踏まえて段階 3 で設計する。
+
+## CRF port（GROBID 0.9.1、評価専用、2026-11-16）
+
+| parser | references en F1 (85) | references ja F1 (6) | median 秒/本 |
+|---|---:|---:|---:|
+| versio | 0.243 | 0.042 | 0.8 |
+| grobid | 0.954 | 0.367 | 1.8 |
+| crfport | 0.417 | unavailable | 0.8 |
+
+- gzip assets: citation model 274.9 KiB、reference-segmenter model 18.6 KiB、lexicons 4.62 MiB、合計 4.80 MiB。
+- `location` (4.02 MiB gzip / 620,618 entries) is dropped at inference: expanding it to a JavaScript `Set` exceeded the runtime-memory budget; no measured F1 improvement is retained in this evaluation configuration.
+- Citation/reference-segmenter REST parity could not be measured as token labels: GROBID's public REST endpoints return TEI, not the CRF token-label stream, and field-gold lacks the PDFALTO layout-token input required by the segmenter. The current port therefore does not meet the ≥95% token-label parity or ≥0.85 English-reference F1 target; the main cause is reference boundaries coalesced by the existing PDF projection, compounded by incomplete feature/layout parity.

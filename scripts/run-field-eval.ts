@@ -13,6 +13,7 @@ import path from "node:path";
 import { predictionFromApple, type ProbeOutput } from "../src/evaluation/fieldGold/adapters/apple";
 import { predictionFromGrobid } from "../src/evaluation/fieldGold/adapters/grobid";
 import { predictionFromVersio } from "../src/evaluation/fieldGold/adapters/versio";
+import { predictionFromCrfPort } from "../src/evaluation/fieldGold/adapters/crfport";
 import { buildReport } from "../src/evaluation/fieldGold/report";
 import { proposeWinners } from "../src/evaluation/fieldGold/winners";
 import type { FieldGold, FieldPrediction, ParserId } from "../src/evaluation/fieldGold/types";
@@ -73,7 +74,21 @@ async function runApple(gold: FieldGold): Promise<FieldPrediction> {
   return predictionFromApple(gold.id, JSON.parse(stdout) as ProbeOutput, Math.round(performance.now() - started));
 }
 
-const RUNNERS: Partial<Record<ParserId, (gold: FieldGold) => Promise<FieldPrediction>>> = { versio: runVersio, grobid: runGrobid, apple: runApple };
+async function runCrfPort(gold: FieldGold): Promise<FieldPrediction> {
+  const pdfPath = path.resolve(root, gold.pdfPath);
+  const started = performance.now();
+  const pages = await extractPdfPages(pdfPath);
+  const result = extractFromPages({ pages, paperId: gold.id, filePath: pdfPath, fileHash: gold.pdfSha256, metadata: { pageCount: pages.length } });
+  // The projection has already associated canonical reference lines into visible blocks;
+  // those preserve the reference-section order while keeping source geometry available.
+  const lines = result.blocks.filter((block) => block.type === "reference" && block.original?.trim()).map((block) => {
+    const box = block.boundingBoxes[0];
+    return { text: block.original!.trim(), x: box?.x ?? 0, width: box?.width ?? block.original!.length, fontSize: box?.height ?? 10, blockStart: true };
+  });
+  return predictionFromCrfPort(gold.id, gold.language, lines, Math.round(performance.now() - started));
+}
+
+const RUNNERS: Partial<Record<ParserId, (gold: FieldGold) => Promise<FieldPrediction>>> = { versio: runVersio, grobid: runGrobid, apple: runApple, crfport: runCrfPort };
 
 const compare = arg("compare")?.split(",") as ParserId[] | undefined;
 if (compare) {
