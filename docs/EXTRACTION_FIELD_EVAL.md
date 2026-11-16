@@ -114,8 +114,8 @@ PDF をアプリで確認するときは `open -a Versio.app test-data/field-gol
 |---|---:|---:|---:|
 | versio | 0.243 | 0.042 | 0.8 |
 | grobid | 0.954 | 0.367 | 1.8 |
-| crfport | 0.417 | unavailable | 0.8 |
+| crfport | 0.491 | unavailable | 0.8 |
 
-- gzip assets: citation model 274.9 KiB、reference-segmenter model 18.6 KiB、lexicons 4.62 MiB、合計 4.80 MiB。
-- `location` (4.02 MiB gzip / 620,618 entries) is dropped at inference: expanding it to a JavaScript `Set` exceeded the runtime-memory budget; no measured F1 improvement is retained in this evaluation configuration.
-- Citation/reference-segmenter REST parity could not be measured as token labels: GROBID's public REST endpoints return TEI, not the CRF token-label stream, and field-gold lacks the PDFALTO layout-token input required by the segmenter. The current port therefore does not meet the ≥95% token-label parity or ≥0.85 English-reference F1 target; the main cause is reference boundaries coalesced by the existing PDF projection, compounded by incomplete feature/layout parity.
+- gzip assets: citation model 274.9 KiB、reference-segmenter model 18.6 KiB、lexicons 0.92 MiB、合計 1.22 MiB。
+- `location` (4.02 MiB gzip / 620,618 entries) is dropped after ablation because its JavaScript `Set` exceeded the runtime-memory budget. The added English wordform and complete first/last-name lists improve raw-citation title diagnosis from 0.340 to 0.471 (year 0.880→0.852).
+- The local Java parity harness obtains GROBID's internal Wapiti stream directly: 60 gold references / 2,650 tokens currently give 43.4% exact feature-row agreement and 52.5% label agreement. The real pdf.js visual-line input fixes crfport count-ratio median from 0.26 to 1.06 and English references F1 from 0.417 to 0.491, but the ≥95% parity and ≥0.85 F1 targets remain blocked by incomplete FastMatcher/identifier-URL feature parity and segmenter layout parity.
