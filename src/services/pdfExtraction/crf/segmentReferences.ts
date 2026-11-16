@@ -42,9 +42,29 @@ export function segmentReferenceLines(lines: RefLine[]): ReferenceSegment[] {
   return boundaries
     .map((start, i) => {
       const part = visualLines.slice(start, boundaries[i + 1] ?? visualLines.length);
-      return { text: part.map((line) => line.text.trim()).filter(Boolean).join(" ").replace(/\s+/g, " ").trim(), lines: part };
+      return { text: joinLines(part.map((line) => line.text)), lines: part };
     })
     .filter((segment) => segment.text);
+}
+
+/**
+ * Join the lines of one entry, undoing line-end hyphenation: "learn- ing" →
+ * "learning" when the joined word is in the English word list, otherwise the
+ * hyphen stays and the space goes ("large-scale", "Out-of-Distribution").
+ */
+export function joinLines(texts: string[], words: Set<string> = crfRuntime().lexicons.commonWords): string {
+  let out = "";
+  for (const raw of texts) {
+    const text = raw.replace(/\s+/g, " ").trim();
+    if (!text) continue;
+    const hyphen = /(\p{L}+)-$/u.exec(out);
+    if (hyphen) {
+      const next = /^\p{L}+/u.exec(text)?.[0] ?? "";
+      const joined = (hyphen[1] + next).toLowerCase();
+      out = next && /^\p{Ll}/u.test(next) && words.has(joined) ? out.slice(0, -1) + text : out + text;
+    } else out = out ? `${out} ${text}` : text;
+  }
+  return out;
 }
 
 /** Segment a reference section into raw entry strings. */

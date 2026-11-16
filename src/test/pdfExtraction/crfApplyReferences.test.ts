@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { applyCrfReferences, referencesEnd, wantsCrfReferences } from "../../services/pdfExtraction/crf/applyReferences";
 import { loadNodeCrfRuntime } from "../../services/pdfExtraction/crf/nodeRuntime";
+import { trimZone } from "../../services/pdfExtraction/crf/referenceZone";
 import type { PaperBlock, Section } from "../../types/paper";
 
 beforeAll(async () => {
@@ -71,5 +72,13 @@ describe("referencesEnd with web references", () => {
   it("keeps numbered entries that only carry a URL", () => {
     const web = (n: number) => ({ raw: `${n}. GitHub - tool [https://github.com/x/y]` });
     expect(referencesEnd([{ raw: "1. A B. Title. 2020.", year: "2020" }, web(2), web(3), web(4), web(5)])).toBe(5);
+  });
+});
+
+describe("trimZone", () => {
+  const l = (text: string, fontSize = 8) => ({ text, fontSize });
+  it("ends at a larger numbered section heading but not at a numbered reference", () => {
+    const lines = [l("1. Smith J, Lee K. Title. 2020."), l("2. Doe A. Other title. 2019."), l("3. Roe B, Poe C. Third. 2018.", 9), l("4. Kim D. Fourth. 2017."), l("A Tool Module", 10), l("Body of the appendix.")];
+    expect(trimZone(lines).map((x) => x.text)).toEqual(lines.slice(0, 4).filter((x) => x.fontSize === 8).map((x) => x.text));
   });
 });

@@ -52,7 +52,8 @@ function toLines(groups: Item[][], page: number): Line[] {
       text: joinItems(ordered),
       x,
       width: Math.max(...ordered.map((it) => it.x + it.width)) - x,
-      fontSize: ordered.reduce((s, it) => s + it.fontSize, 0) / ordered.length,
+      // Weighted by characters, so a bold label or a superscript barely moves the line's size.
+      fontSize: ordered.reduce((s, it) => s + it.fontSize * it.text.length, 0) / Math.max(1, ordered.reduce((n, it) => n + it.text.length, 0)),
       blockStart: i === 0 || group[0].y - groups[i - 1][0].y > medianPitch * 1.35,
       page,
       y,
@@ -120,7 +121,7 @@ function computeZone(pages: ExtractedPage[]): Line[] | null {
 const AFTER_REFERENCES = /^(?:[A-Z]\.?\s+)?(?:appendix|appendices|supplementary (?:material|information|materials)|supporting information|publisher.?s note|author biograph|about the authors?)\b/i;
 
 /**
- * The zone proper: it ends at an appendix-type heading, and lines set in a
+ * The zone proper: it ends at an appendix-type or numbered section heading, and lines set in a
  * font other than the reference text (tables, captions, figure labels, an
  * appendix in body type) are left out. The reference font is the median of
  * the early lines that carry a year.
@@ -130,12 +131,26 @@ export function trimZone<T extends { text: string; fontSize: number }>(lines: T[
   const withYear = lines.slice(0, 200).filter((l) => /\b(?:19|20)\d{2}\b/.test(l.text));
   const sample = (withYear.length >= 3 ? withYear : lines.slice(0, 40)).map((l) => l.fontSize).sort((a, b) => a - b);
   const refFont = sample[sample.length >> 1] ?? 0;
+  const sameFont = (l: { fontSize: number }) => Math.abs(l.fontSize - refFont) <= refFont * 0.05;
+  const hasYear = (l: { text: string }) => /\b(?:19|20)\d{2}\b/.test(l.text);
+  // Back matter can sit between two parts of the list (Frontiers: notes in the right column,
+  // references continuing on the next page): a heading ends the zone only when no reference
+  // text follows it.
+  // Entry openings ("[3] ", "12. Smith", "Adaimi, R.", "Ajisoko, P."), not prose that cites a year.
+  const ENTRY_START = /^(?:\[\d+\]|\d{1,3}\.\s+\p{Lu}|\p{Lu}[\p{L}'’-]+,\s+\p{Lu})/u;
+  const referencesFollow = (i: number) => lines.slice(i + 1, i + 41).filter((l) => sameFont(l) && ENTRY_START.test(l.text)).length >= 3;
   let end = lines.length;
   for (let i = 2; i < lines.length; i += 1) {
-    if (lines[i].text.length <= 80 && AFTER_REFERENCES.test(lines[i].text)) {
+    const { text, fontSize } = lines[i];
+    // An appendix-type heading, or a numbered section heading ("A Tool Module", "B.2 Setup", "7 Proofs")
+    // set larger than the references. Captions do not start with a section number, and a numbered
+    // reference ("1. Smith J, ... 2020") carries a comma or a year.
+    const numberedHeading =
+      fontSize >= refFont * 1.1 && /^(?:[A-Z]|\d{1,2})(?:\.\d+)*\.?\s+\p{Lu}/u.test(text) && !/,/.test(text) && !hasYear(lines[i]);
+    if (text.length <= 80 && (AFTER_REFERENCES.test(text) || numberedHeading) && !referencesFollow(i)) {
       end = i;
       break;
     }
   }
-  return lines.slice(0, end).filter((l) => Math.abs(l.fontSize - refFont) <= refFont * 0.05);
+  return lines.slice(0, end).filter(sameFont);
 }

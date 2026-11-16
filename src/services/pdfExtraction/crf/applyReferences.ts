@@ -42,14 +42,11 @@ const inBox = (line: RefLine, box: BoundingBox) =>
   line.page === box.page && line.y !== undefined && line.x + 2 >= box.x - 2 && line.x <= box.x + box.width && line.y + 1 >= box.y - 3 && line.y <= box.y + box.height + 1;
 const compact = (text: string | null | undefined) => (text ?? "").replace(/\s+/g, "").length;
 
-/** Blocks the accepted reference lines stand for: at least half of a block's characters sit on those lines. */
-function coveredBlocks(blocks: PaperBlock[], lines: RefLine[]): PaperBlock[] {
-  const replaceable = new Set(["reference", "paragraph", "footnote"]);
-  return blocks.filter((block) => {
-    if (!replaceable.has(block.type) || block.boundingBoxes.length === 0) return false;
-    const covered = lines.filter((line) => block.boundingBoxes.some((box) => inBox(line, box))).reduce((n, line) => n + compact(line.text), 0);
-    return covered >= 0.5 * compact(block.original);
-  });
+/** Share of a block's characters that sit on the given lines (0 for blocks that are never replaced). */
+function coverage(block: PaperBlock, lines: RefLine[]): number {
+  if (!["reference", "paragraph", "footnote"].includes(block.type) || block.boundingBoxes.length === 0) return 0;
+  const covered = lines.filter((line) => block.boundingBoxes.some((box) => inBox(line, box))).reduce((n, line) => n + compact(line.text), 0);
+  return covered / Math.max(1, compact(block.original));
 }
 
 function boxesOf(lines: RefLine[]): BoundingBox[] {
@@ -116,7 +113,12 @@ export function applyCrfReferences(input: {
   const segments = all.slice(0, tail);
   const citations = parsed.slice(0, tail);
   const accepted = segments.flatMap((segment, i) => (citations[i].rejected ? [] : segment.lines));
-  const removed = new Set(coveredBlocks(input.blocks, accepted));
+  // Blocks the accepted lines stand for (80% of their characters) are replaced.
+  const share = new Map(input.blocks.map((b) => [b, coverage(b, accepted)] as const));
+  const removed = new Set(input.blocks.filter((b) => (share.get(b) ?? 0) >= 0.8));
+  // Once the CRF has rebuilt the list it is the only source of reference blocks: leftovers of the
+  // heuristic typing (outside the zone, or mixed with other text) become paragraphs, text kept.
+  const demoted = new Set(input.blocks.filter((b) => b.type === "reference" && !removed.has(b)));
 
   const anchor = input.blocks.findIndex((b) => removed.has(b));
   const firstPage = segments[0].lines.find((l) => l.page !== undefined)?.page ?? 0;
@@ -175,7 +177,7 @@ export function applyCrfReferences(input: {
       if (i === anchor) out.push(...rebuilt);
       return;
     }
-    out.push(block);
+    out.push(demoted.has(block) ? { ...block, type: "paragraph", translationStatus: "pending" } : block);
   });
   if (anchor < 0 && before >= input.blocks.length) out.push(...rebuilt);
   out.forEach((block, i) => {
