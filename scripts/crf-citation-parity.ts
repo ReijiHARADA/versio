@@ -3,12 +3,12 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { citationFeatureRows } from "../src/services/pdfExtraction/crf/citationFeatures";
-import { loadLexicons } from "../src/services/pdfExtraction/crf/lexicon";
-import { loadCrfModel } from "../src/services/pdfExtraction/crf/model";
+import { loadNodeCrfRuntime } from "../src/services/pdfExtraction/crf/nodeRuntime";
 import { decode } from "../src/services/pdfExtraction/crf/wapiti";
 import { isGrobidWhitespace, tokenizeGrobid } from "../src/services/pdfExtraction/crf/tokenize";
 
 const root = path.resolve(import.meta.dirname, "..");
+const runtime = await loadNodeCrfRuntime();
 const manifest = JSON.parse(fs.readFileSync(path.join(root, "test-fixtures/field-gold/manifest.json"), "utf8")) as { documents: Array<{ id: string; language: string }> };
 const raws = manifest.documents.filter((d) => d.language === "en").flatMap((d) => {
   const file = path.join(root, "test-data/field-gold", d.id, "gold.json");
@@ -24,9 +24,9 @@ const direction = new Map<string, number>();
 const mismatches: Array<{ raw: string; token: string; columns: number[]; ours: string[]; grobid: string[] }> = [];
 for (let i = 0; i < Math.min(raws.length, groups.length); i += 1) {
   const tokens = tokenizeGrobid(raws[i]);
-  const ours = citationFeatureRows(tokens, loadLexicons());
+  const ours = citationFeatureRows(tokens, runtime.lexicons);
   const theirs = groups[i];
-  const oursLabels = decode(loadCrfModel("citation"), ours);
+  const oursLabels = decode(runtime.citation, ours);
   for (let n = 0; n < Math.min(ours.length, theirs.length); n += 1) {
     // Wapiti preserves the `0` training-label placeholder supplied by printVector,
     // then appends its predicted label; neither belongs to our decoder input rows.

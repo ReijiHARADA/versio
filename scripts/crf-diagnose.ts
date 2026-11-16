@@ -1,7 +1,10 @@
+import path from "node:path";
 import fs from "node:fs";
-import { parseCitation } from "/Users/harada/Desktop/MyProjects/projects/versio/app/src/services/pdfExtraction/crf/citation";
-import { similarity, normalizeText } from "/Users/harada/Desktop/MyProjects/projects/versio/app/src/evaluation/fieldGold/normalize";
-const root = "/Users/harada/Desktop/MyProjects/projects/versio/app";
+import { parseCitation } from "../src/services/pdfExtraction/crf/citation";
+import { loadNodeCrfRuntime } from "../src/services/pdfExtraction/crf/nodeRuntime";
+import { similarity, normalizeText } from "../src/evaluation/fieldGold/normalize";
+const root = path.resolve(import.meta.dirname, "..");
+await loadNodeCrfRuntime();
 const m = JSON.parse(fs.readFileSync(`${root}/test-fixtures/field-gold/manifest.json`, "utf8"));
 let n = 0, ok = 0, yOk = 0, yN = 0;
 for (const d of m.documents.filter((d: any) => d.language === "en" && d.source === "europepmc")) {

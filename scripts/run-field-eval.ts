@@ -14,6 +14,8 @@ import { predictionFromApple, type ProbeOutput } from "../src/evaluation/fieldGo
 import { predictionFromGrobid } from "../src/evaluation/fieldGold/adapters/grobid";
 import { predictionFromVersio } from "../src/evaluation/fieldGold/adapters/versio";
 import { predictionFromCrfPort } from "../src/evaluation/fieldGold/adapters/crfport";
+import { enhanceReferencesWithCrf } from "../src/services/pdfExtraction/crf/applyReferences";
+import { loadNodeCrfRuntime } from "../src/services/pdfExtraction/crf/nodeRuntime";
 import { referenceLinesFromPages, selectReferenceBlocks } from "../src/services/pdfExtraction/crf/referenceLines";
 import { buildReport } from "../src/evaluation/fieldGold/report";
 import { proposeWinners } from "../src/evaluation/fieldGold/winners";
@@ -49,6 +51,8 @@ async function runVersio(gold: FieldGold): Promise<FieldPrediction> {
   const pages = await extractPdfPages(pdfPath);
   const info = await pdfInfo(pdfPath);
   const result = extractFromPages({ pages, paperId: gold.id, filePath: pdfPath, fileHash: gold.pdfSha256, metadata: { ...info, pageCount: pages.length } });
+  // Same post-projection step as extractAcademicPdf (CRF references).
+  await enhanceReferencesWithCrf(result, pages, loadNodeCrfRuntime);
   return predictionFromVersio(result, Math.round(performance.now() - started), gold.id);
 }
 
@@ -76,6 +80,7 @@ async function runApple(gold: FieldGold): Promise<FieldPrediction> {
 }
 
 async function runCrfPort(gold: FieldGold): Promise<FieldPrediction> {
+  await loadNodeCrfRuntime();
   const pdfPath = path.resolve(root, gold.pdfPath);
   const started = performance.now();
   const pages = await extractPdfPages(pdfPath);

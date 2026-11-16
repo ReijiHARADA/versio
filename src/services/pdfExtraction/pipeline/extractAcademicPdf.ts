@@ -15,6 +15,8 @@ import { projectCanonicalToPaper } from "../projection/toPaper";
 import { applyVisionOcr, visionOcrEnricher } from "../enrichers/ocr";
 import { grobidEnricher } from "../enrichers/grobid";
 import { doclingEnricher } from "../enrichers/docling";
+import { enhanceReferencesWithCrf } from "../crf/applyReferences";
+import { loadBundledCrfRuntime } from "../crf/browserRuntime";
 import type { CanonicalDocument } from "../canonical/types";
 import type { ExtractionEvidence, PageTextKind } from "../types";
 import type { StructuralRegionEvidence } from "../types";
@@ -261,6 +263,10 @@ export async function extractAcademicPdf(
     pageKind,
     previousBlocks: input.previousBlocks,
   });
+
+  // Reference entries: ported GROBID CRF (English/Latin script only, heuristics as fallback).
+  const references = await enhanceReferencesWithCrf(result, pages, loadBundledCrfRuntime);
+  if (references.applied) console.info(`[references] CRF rebuilt ${references.references} references`);
 
   if (input.file && input.extractFigures !== false) {
     input.onProgress?.({

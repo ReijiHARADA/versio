@@ -75,12 +75,13 @@ export function referenceLinesFromPages(pages: ExtractedPage[], referenceBlocks:
         const fontSize = ordered.reduce((sum, item) => sum + item.fontSize, 0) / ordered.length;
         const prev = output.at(-1);
         const blockStart = first || !prev || y - prev.y > medianPitch * 1.35;
-        output.push({ text: joinItems(ordered), x, width, fontSize, blockStart, y });
+        const height = Math.max(...ordered.map((item) => item.y + item.height)) - y;
+        output.push({ text: joinItems(ordered), x, width, fontSize, blockStart, y, page: page.pageNumber, height });
         first = false;
       }
     }
   }
-  return output.filter((line) => line.text).map(({ y: _y, ...line }) => line);
+  return output.filter((line) => line.text);
 }
 
 /**

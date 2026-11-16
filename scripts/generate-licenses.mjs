@@ -676,6 +676,26 @@ function collectCurated() {
     warnings.push("node_modules/pdfjs-dist/cmaps/LICENSE が見つかりません");
   }
 
+  // GROBID 0.9.1 CRF models, lexicons and feature code ported to TypeScript
+  // (src/services/pdfExtraction/crf). License text copied from the GROBID repository.
+  const grobidLicense = path.join(ROOT, "src", "services", "pdfExtraction", "crf", "GROBID-LICENSE.txt");
+  if (existsSync(grobidLicense)) {
+    addPackage({
+      id: "asset:grobid-crf-models",
+      name: "GROBID CRF models, lexicons and feature extraction (ported)",
+      version: "0.9.1",
+      ecosystem: "asset",
+      license: "Apache-2.0",
+      copyright: null,
+      textKey: storeText(readText(grobidLicense)),
+      noticeKey: null,
+      status: "ok",
+      notes: "GROBID (https://github.com/grobidOrg/grobid) の reference-segmenter / citation モデル（重みを刈り込み）、辞書、特徴量計算を TypeScript に移植・改変して同梱しています。",
+    });
+  } else {
+    warnings.push("src/services/pdfExtraction/crf/GROBID-LICENSE.txt が見つかりません");
+  }
+
   // MADLAD-400 weights are downloaded for the translation server (not MIT).
   // License type confirmed from Hugging Face model card.
   const apacheText = findApache20TextFromTree() ?? null;

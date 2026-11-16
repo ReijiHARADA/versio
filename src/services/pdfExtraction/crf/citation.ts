@@ -1,7 +1,6 @@
 /** Ported from GROBID 0.9.1 CitationParser.java (Apache-2.0), modified. */
 import { decode } from "./wapiti";
-import { loadCrfModel } from "./model";
-import { loadLexicons } from "./lexicon";
+import { crfRuntime } from "./runtime";
 import { citationFeatureRows } from "./citationFeatures";
 import { tokenizeGrobid, isGrobidWhitespace } from "./tokenize";
 
@@ -11,7 +10,7 @@ const clean = (value: string) => value.replace(/\s+([,.;:)\]])/g, "$1").replace(
 export function parseCitation(raw: string): Citation {
   const all = tokenizeGrobid(raw); const tokens = all.filter((token) => !isGrobidWhitespace(token));
   if (!tokens.length) return { raw };
-  const labels = decode(loadCrfModel("citation"), citationFeatureRows(all, loadLexicons()));
+  const labels = decode(crfRuntime().citation, citationFeatureRows(all, crfRuntime().lexicons));
   const fields = new Map<string, string[]>();
   labels.forEach((label, i) => { const key = label.replace(/^I-/, "").replace(/[<>]/g, ""); if (key && key !== "other") (fields.get(key) ?? fields.set(key, []).get(key)!).push(tokens[i]); });
   const get = (...keys: string[]) => clean(keys.flatMap((key) => fields.get(key) ?? []).join(" ")) || undefined;

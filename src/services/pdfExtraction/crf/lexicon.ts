@@ -1,10 +1,4 @@
 /** Ported from GROBID 0.9.1 Lexicon.java / FastMatcher.java / Utilities.java (Apache-2.0), modified. */
-// @ts-ignore Node-only evaluator helper; browser loading belongs to stage 3a-2.
-import fs from "node:fs";
-// @ts-ignore Node-only evaluator helper; browser loading belongs to stage 3a-2.
-import path from "node:path";
-// @ts-ignore Node-only evaluator helper; browser loading belongs to stage 3a-2.
-import { gunzipSync } from "node:zlib";
 import { GROBID_DELIMITERS, tokenizeGrobid } from "./tokenize";
 
 /**
@@ -170,32 +164,24 @@ export function inDictionary(lex: Lexicons, token: string): boolean {
   return lex.commonWords.has(s);
 }
 
-let loaded: Lexicons | undefined;
-
-function readAsset(file: string): string[] {
-  const dir = path.resolve((import.meta as ImportMeta & { dirname: string }).dirname, "assets");
-  return JSON.parse(gunzipSync(fs.readFileSync(path.join(dir, `${file}.json.gz`))).toString("utf8")) as string[];
-}
-
-export function loadLexicons(): Lexicons {
-  if (loaded) return loaded;
+/** Build matchers from the asset lists (`read(name)` returns the JSON array of one asset). */
+export function buildLexicons(read: (name: string) => string[]): Lexicons {
   const firstNames = new Set<string>();
   const lastNames = new Set<string>();
-  for (const v of readAsset("firstname_5k")) firstNames.add(v.split(/\s+/)[0].toLowerCase());
-  for (const v of readAsset("lastname_5k")) lastNames.add(v.split(/\s+/)[0].toLowerCase());
-  for (const v of readAsset("names_family")) lastNames.add(v.toLowerCase());
-  for (const f of ["names_female", "names_male"]) for (const v of readAsset(f)) firstNames.add(v.split(/[\t\n-]/)[0].toLowerCase());
-  loaded = {
-    journals: buildPhraseMatcher(readAsset("journals")),
-    abbrevJournals: buildPhraseMatcher(readAsset("abbrev_journals")),
-    conferences: buildPhraseMatcher(readAsset("proceedings")),
-    publishers: buildPhraseMatcher(readAsset("publishers")),
+  for (const v of read("firstname_5k")) firstNames.add(v.split(/\s+/)[0].toLowerCase());
+  for (const v of read("lastname_5k")) lastNames.add(v.split(/\s+/)[0].toLowerCase());
+  for (const v of read("names_family")) lastNames.add(v.toLowerCase());
+  for (const f of ["names_female", "names_male"]) for (const v of read(f)) firstNames.add(v.split(/[\t\n-]/)[0].toLowerCase());
+  return {
+    journals: buildPhraseMatcher(read("journals")),
+    abbrevJournals: buildPhraseMatcher(read("abbrev_journals")),
+    conferences: buildPhraseMatcher(read("proceedings")),
+    publishers: buildPhraseMatcher(read("publishers")),
     // Lexicon.java loads only inspire_collaborations.txt for the collaboration matcher.
-    collaborations: buildPhraseMatcher(readAsset("inspire_collaborations")),
-    locations: buildPhraseMatcher(readAsset("location")),
-    commonWords: new Set(readAsset("english_words").map((line) => line.split("\t")[0])),
+    collaborations: buildPhraseMatcher(read("inspire_collaborations")),
+    locations: buildPhraseMatcher(read("location")),
+    commonWords: new Set(read("english_words").map((line) => line.split("\t")[0])),
     firstNames,
     lastNames,
   };
-  return loaded;
 }

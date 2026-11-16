@@ -7,6 +7,7 @@ export type EvidenceSource =
   | "format-profile"
   | "grobid"
   | "layout-model"
+  | "crf"
   | "ocr";
 
 export type ExtractionEvidence = {

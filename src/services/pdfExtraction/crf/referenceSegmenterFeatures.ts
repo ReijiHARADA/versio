@@ -1,5 +1,6 @@
 /** Ported from GROBID 0.9.1 FeaturesVectorReferenceSegmenter.java and ReferenceSegmenterParser.java (Apache-2.0), modified. */
-import { inDictionary, loadLexicons, type Lexicons } from "./lexicon";
+import { inDictionary, type Lexicons } from "./lexicon";
+import { crfRuntime } from "./runtime";
 import type { RefLine } from "./segmentReferences";
 import { isGrobidWhitespace, tokenizeGrobid } from "./tokenize";
 
@@ -36,7 +37,7 @@ function profileColumn(line: string): string {
 
 export type SegmenterFeatures = { rows: string[][]; tokens: string[]; lineForToken: number[] };
 
-export function referenceSegmenterFeatureRows(lines: RefLine[], lex: Lexicons = loadLexicons()): SegmenterFeatures {
+export function referenceSegmenterFeatureRows(lines: RefLine[], lex: Lexicons = crfRuntime().lexicons): SegmenterFeatures {
   const rows: string[][] = [];
   const tokens: string[] = [];
   const lineForToken: number[] = [];
