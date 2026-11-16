@@ -35,16 +35,37 @@ export function segmentReferenceLines(lines: RefLine[]): ReferenceSegment[] {
   });
   // GROBID's labels often start after a label token. Keep explicit numbering as a conservative PDF-layout fallback.
   visualLines.forEach((line, index) => {
-    if (/^\s*(?:\[\s*\d+\s*\]|\d+[.)])\s+/.test(line.text)) starts.add(index);
+    // At most 3 digits: "2025. URL ..." is the tail of an entry, not label 2025.
+    if (/^\s*(?:\[\s*\d+\s*\]|\d{1,3}[.)])\s+/.test(line.text)) starts.add(index);
   });
   starts.add(0);
   const boundaries = [...starts].filter((index) => index >= 0 && index < visualLines.length).sort((a, b) => a - b);
   return boundaries
     .map((start, i) => {
       const part = visualLines.slice(start, boundaries[i + 1] ?? visualLines.length);
-      return { text: part.map((line) => line.text.trim()).filter(Boolean).join(" ").replace(/\s+/g, " ").trim(), lines: part };
+      return { text: joinLines(part.map((line) => line.text)), lines: part };
     })
     .filter((segment) => segment.text);
+}
+
+/**
+ * Join the lines of one entry, undoing line-end hyphenation: "learn- ing" →
+ * "learning" when the joined word is in the English word list, otherwise the
+ * hyphen stays and the space goes ("large-scale", "Out-of-Distribution").
+ */
+export function joinLines(texts: string[], words: Set<string> = crfRuntime().lexicons.commonWords): string {
+  let out = "";
+  for (const raw of texts) {
+    const text = raw.replace(/\s+/g, " ").trim();
+    if (!text) continue;
+    const hyphen = /(\p{L}+)-$/u.exec(out);
+    if (hyphen) {
+      const next = /^\p{L}+/u.exec(text)?.[0] ?? "";
+      const joined = (hyphen[1] + next).toLowerCase();
+      out = next && /^\p{Ll}/u.test(next) && words.has(joined) ? out.slice(0, -1) + text : out + text;
+    } else out = out ? `${out} ${text}` : text;
+  }
+  return out;
 }
 
 /** Segment a reference section into raw entry strings. */

@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { loadNodeCrfRuntime } from "../../services/pdfExtraction/crf/nodeRuntime";
-import { segmentReferences } from "../../services/pdfExtraction/crf/segmentReferences";
+import { joinLines, segmentReferences } from "../../services/pdfExtraction/crf/segmentReferences";
 
 const line = (text: string) => ({ text, x: 20, width: 300, fontSize: 10, blockStart: true });
 beforeAll(async () => {
@@ -13,5 +13,11 @@ describe("reference segmenter", () => {
   });
   it("keeps unnumbered wrapped lines together", () => {
     expect(segmentReferences([line("Smith, J. A long title"), line("continued across lines."), line("Journal, 2020.")])).toHaveLength(1);
+  });
+});
+
+describe("joinLines", () => {
+  it("undoes line-end hyphenation only for dictionary words", () => {
+    expect(joinLines(["Deep learn-", "ing for large-", "scale data and Out-of-", "Distribution images."])).toBe("Deep learning for large-scale data and Out-of-Distribution images.");
   });
 });

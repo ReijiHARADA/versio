@@ -37,7 +37,18 @@ export function predictionFromVersio(result: VersioResultSlice, elapsedMs: numbe
       text: caption.replace(CAPTION_LABEL, ""),
     });
   }
-  const references = blocks.filter((b) => b.type === "reference" && b.original?.trim()).map((b) => ({ raw: b.original!.trim() }));
+  // Parsed fields come from the CRF step (block metadata), as the app stores them.
+  const references = blocks
+    .filter((b) => b.type === "reference" && b.original?.trim())
+    .map((b) => {
+      const citation = (b.metadata?.citation ?? {}) as { title?: string; year?: string; doi?: string };
+      return {
+        raw: b.original!.trim(),
+        ...(citation.title ? { title: citation.title } : {}),
+        ...(citation.year ? { year: citation.year } : {}),
+        ...(citation.doi ? { doi: citation.doi } : {}),
+      };
+    });
   const firstPage = canonical.nodes.filter((n) => n.pageStart <= 2 && n.text).map((n) => n.text).join("\n");
   return {
     id,
