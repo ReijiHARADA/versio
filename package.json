@@ -85,6 +85,7 @@
     "eval:fields": "vite-node --script scripts/run-field-eval.ts",
     "build:crf-assets": "vite-node --script scripts/build-crf-assets.ts",
     "eval:crf-parity": "vite-node --script scripts/crf-parity.ts"
+    ,"eval:crf-citation-parity": "vite-node --script scripts/crf-citation-parity.ts"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",
