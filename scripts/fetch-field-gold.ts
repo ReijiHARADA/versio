@@ -113,7 +113,12 @@ async function firstPagesText(pdf: Buffer): Promise<string> {
 
 function goldOf(c: Omit<Candidate, "gold">, fields: FieldRecord, trustedFields: FieldName[], pdfPath: string, pdf: Buffer): FieldGold {
   // An empty reference list means the source lacked it, not that the paper has none.
-  const trusted = fields.references.length ? trustedFields : trustedFields.filter((f) => f !== "references");
+  const trusted = trustedFields.filter(
+    (f) =>
+      (f !== "references" || fields.references.length > 0) &&
+      // Without any author→affiliation link the pairing gold is unknown.
+      (f !== "authorAffiliation" || fields.authors.some((a) => a.affiliationKeys.length > 0)),
+  );
   return { id: c.id, source: c.source, language: c.language, discipline: c.discipline, pdfPath: path.relative(root, pdfPath), pdfSha256: sha256(pdf), trustedFields: trusted, fields };
 }
 
@@ -272,6 +277,18 @@ function unpackSource(id: string, archive: Buffer): { mainTex: string; bbl: stri
   return { mainTex: expandInputs(main, srcDir), bbl: bblPath ? fs.readFileSync(bblPath, "utf8") : null };
 }
 
+/**
+ * LaTeX author blocks vary by template; when the parsed list contains
+ * institutions, places or emails, the author gold is not trusted for that paper.
+ */
+const NOT_A_NAME = /\b(univ|universit|institut|school|department|dept|lab|laborator|college|inc|corp|center|centre|academy|of|and|ph\.?d)\b|@|\d/i;
+function plausibleAuthors(fields: FieldRecord): boolean {
+  return fields.authors.length > 0 && fields.authors.every(({ name }) => {
+    const tokens = name.trim().split(/\s+/);
+    return tokens.length >= 2 && tokens.length <= 5 && !NOT_A_NAME.test(name) && /^\p{Lu}/u.test(name);
+  });
+}
+
 async function arxiv(): Promise<void> {
   const candidates = await arxivCandidates();
   const hc = candidates.filter((c) => c.primary === "cs.HC").length;
@@ -295,7 +312,7 @@ async function arxiv(): Promise<void> {
     fs.writeFileSync(pdfPath, pdf);
     await consider(
       { id, source: "arxiv", language: "en", discipline, license: c.license, sourceUrl: `https://arxiv.org/abs/${c.id}` },
-      fields, fields.references.length ? ARXIV_TRUSTED : ARXIV_TRUSTED.filter((f) => f !== "references"), pdf, pdfPath,
+      fields, ARXIV_TRUSTED.filter((f) => (f !== "authors" || plausibleAuthors(fields)) && (f !== "references" || fields.references.length > 0)), pdf, pdfPath,
     );
   }
 }

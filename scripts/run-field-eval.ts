@@ -14,6 +14,7 @@ import { predictionFromApple, type ProbeOutput } from "../src/evaluation/fieldGo
 import { predictionFromGrobid } from "../src/evaluation/fieldGold/adapters/grobid";
 import { predictionFromVersio } from "../src/evaluation/fieldGold/adapters/versio";
 import { buildReport } from "../src/evaluation/fieldGold/report";
+import { proposeWinners } from "../src/evaluation/fieldGold/winners";
 import type { FieldGold, FieldPrediction, ParserId } from "../src/evaluation/fieldGold/types";
 import { processFulltextDocument } from "../src/services/pdfExtraction/grobid/client";
 import { extractFromPages } from "../src/services/pdfExtraction/pipeline/extractAcademicPdf";
@@ -73,6 +74,33 @@ async function runApple(gold: FieldGold): Promise<FieldPrediction> {
 }
 
 const RUNNERS: Partial<Record<ParserId, (gold: FieldGold) => Promise<FieldPrediction>>> = { versio: runVersio, grobid: runGrobid, apple: runApple };
+
+const compare = arg("compare")?.split(",") as ParserId[] | undefined;
+if (compare) {
+  // Combine saved predictions of several parsers and propose per-field winners.
+  const manifestDocs = JSON.parse(fs.readFileSync(path.join(root, "test-fixtures/field-gold/manifest.json"), "utf8")).documents as Array<{ id: string }>;
+  const allGolds: FieldGold[] = manifestDocs.map((d) => path.join(dataDir, d.id, "gold.json")).filter((p) => fs.existsSync(p)).map((p) => JSON.parse(fs.readFileSync(p, "utf8")));
+  const preds: FieldPrediction[] = compare.flatMap((p) => {
+    const dir = path.join(root, "test-data/field-gold/runs", p, "predictions");
+    const ids = new Set(allGolds.map((g) => g.id));
+    return fs.existsSync(dir) ? fs.readdirSync(dir).map((f) => JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")) as FieldPrediction).filter((x) => ids.has(x.id)) : [];
+  });
+  const { markdown, json } = buildReport({ golds: allGolds, predictions: preds });
+  const winners = proposeWinners(json, { minMargin: 0.05 });
+  const speed = compare.map((p) => {
+    const ms = preds.filter((x) => x.parser === p).map((x) => x.elapsedMs).sort((a, b) => a - b);
+    return `| ${p} | ${ms.length} | ${(ms[Math.floor(ms.length / 2)] / 1000).toFixed(1)} | ${(ms.reduce((a, b) => a + b, 0) / ms.length / 1000).toFixed(1)} |`;
+  });
+  const out = path.join(root, "test-data/field-gold/runs/compare");
+  fs.mkdirSync(out, { recursive: true });
+  const winnerTable = ["| 項目 | 言語 | 勝者 | 差（対の平均） | 理由 |", "|---|---|---|---|---|", ...winners.map((w) => `| ${w.field} | ${w.language} | ${w.winner} | ${w.margin >= 0 ? "+" : ""}${w.margin.toFixed(3)} | ${w.reason} |`)];
+  const speedTable = ["| 方式 | 本数 | 中央値 秒/本 | 平均 秒/本 |", "|---|---|---|---|", ...speed];
+  fs.writeFileSync(path.join(out, "report.md"), `${markdown}\n\n## 勝者提案（minMargin 0.05、主指標: title=完全一致・他=F1）\n\n${winnerTable.join("\n")}\n\n## 速度\n\n${speedTable.join("\n")}\n`);
+  fs.writeFileSync(path.join(out, "scores.json"), JSON.stringify({ ...json, winners }, null, 2));
+  console.log(winnerTable.join("\n"));
+  console.log(speedTable.join("\n"));
+  process.exit(0);
+}
 
 const runner = RUNNERS[parser];
 if (!runner) throw new Error(`unknown parser: ${parser}`);

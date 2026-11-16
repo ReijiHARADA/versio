@@ -57,4 +57,10 @@ describe("parseJatsFields", () => {
     const xml = `<article><front><article-meta><title-group><article-title>T</article-title></title-group></article-meta></front><body><p>x</p><ref-list><ref id="r1"><mixed-citation>Smith J. <article-title>Only ref</article-title>. 2021.</mixed-citation></ref></ref-list></body></article>`;
     expect(parseJatsFields(xml).references).toHaveLength(1);
   });
+  it("drops institution ids and links a lone affiliation to every author", () => {
+    const xml = `<article><front><article-meta><contrib-group><contrib contrib-type="author"><name><surname>Lee</surname><given-names>Ann</given-names></name></contrib><contrib contrib-type="author"><name><surname>Kim</surname><given-names>Bo</given-names></name></contrib></contrib-group><aff id="a1"><institution-wrap><institution-id institution-id-type="ror">https://ror.org/027m9bs27</institution-id><institution>Kyoto University</institution></institution-wrap></aff></article-meta></front></article>`;
+    const r = parseJatsFields(xml);
+    expect(r.affiliations).toEqual([{ key: "a1", text: "Kyoto University" }]);
+    expect(r.authors.map((a) => a.affiliationKeys)).toEqual([["a1"], ["a1"]]);
+  });
 });

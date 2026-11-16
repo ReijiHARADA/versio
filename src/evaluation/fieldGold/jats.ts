@@ -48,8 +48,12 @@ export function parseJatsFields(xml: string): FieldRecord {
 
   const affiliations = elements(meta, "aff").map((a, i) => ({
     key: a.attrs.id ?? `aff${i + 1}`,
-    text: text(removeElements(a.inner, "label")).replace(/\s+([,.;])/g, "$1"),
+    text: text(removeElements(removeElements(a.inner, "label"), "institution-id")).replace(/\s+([,.;])/g, "$1"),
   }));
+  // No author→aff links and a single affiliation: it applies to every author.
+  if (affiliations.length === 1 && authors.every((a) => a.affiliationKeys.length === 0)) {
+    for (const a of authors) a.affiliationKeys = [affiliations[0].key];
+  }
 
   const emails = [...new Set(elements(meta, "email").map((e) => text(e.inner).toLowerCase()).filter(Boolean))];
 
