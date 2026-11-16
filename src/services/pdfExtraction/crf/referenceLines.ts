@@ -84,13 +84,19 @@ export function referenceLinesFromPages(pages: ExtractedPage[], referenceBlocks:
   return output.filter((line) => line.text);
 }
 
+const REFERENCES_TITLE = /^(?:references?|bibliography|literature cited|works cited|reference list|参考文献|引用文献|文献)$/i;
+
 /**
- * Blocks that delimit the references section. When the document has a section
- * classified as references, only blocks inside it are used, so body paragraphs
- * mislabelled as references elsewhere do not reach the CRF.
+ * Blocks that delimit the references section. Only sections whose title is a
+ * references heading (numbering stripped) count, so a subsection such as
+ * "4.2.1 Better Access to References" is never treated as the bibliography.
+ * Falls back to blocks typed as references when no such section exists.
  */
-export function selectReferenceBlocks(blocks: PaperBlock[], sections: Array<{ id: string; normalizedKind: string }>): PaperBlock[] {
-  const referenceSections = new Set(sections.filter((s) => s.normalizedKind === "references").map((s) => s.id));
+export function selectReferenceBlocks(blocks: PaperBlock[], sections: Array<{ id: string; normalizedKind: string; originalTitle?: string }>): PaperBlock[] {
+  const titled = (s: { originalTitle?: string }) => REFERENCES_TITLE.test((s.originalTitle ?? "").replace(/^[\s\dIVXivx.\-–:)]+/, "").trim());
+  const kinds = sections.filter((s) => s.normalizedKind === "references");
+  const strict = kinds.filter(titled);
+  const referenceSections = new Set((strict.length > 0 ? strict : kinds).map((s) => s.id));
   const inSection = blocks.filter((b) => b.sectionId !== null && referenceSections.has(b.sectionId) && (b.type === "reference" || b.type === "paragraph"));
   return inSection.length > 0 ? inSection : blocks.filter((b) => b.type === "reference");
 }

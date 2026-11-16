@@ -108,13 +108,13 @@ PDF をアプリで確認するときは `open -a Versio.app test-data/field-gol
 3. 日本語は、著者は現行を維持。所属・参考文献の GROBID 採用は、日本語正解を増やして確かめてから決める。
 4. 同梱方式（常駐サイドカー、初回ダウンロード、オプトインなど）は RAM 2.8 GB・数百 MB の配布増を踏まえて段階 3 で設計する。
 
-## CRF port（GROBID 0.9.1 の参考文献 CRF を TypeScript に移植、評価専用、2026-11-16）
+## CRF port（GROBID 0.9.1 の参考文献 CRF を TypeScript に移植、2026-11-16）
 
-設計: [specs/2026-11-16-crf-references-port-design.md](./superpowers/specs/2026-11-16-crf-references-port-design.md)。本番パイプラインは未接続（`npm run eval:fields -- --parser crfport`）。
+設計: [specs/2026-11-16-crf-references-port-design.md](./superpowers/specs/2026-11-16-crf-references-port-design.md)。本番パイプラインに接続済み: `extractAcademicPdf` が投影後に英語の参考文献セクションを CRF で 1 件ずつ再構成する（日本語・参考文献セクション無し・本文の 15% 超が失われる場合・失敗時は従来のブロックのまま）。`--parser versio` が本番と同じ経路、`--parser crfport` は区切り単体の評価。
 
 | 指標 | 値 |
 |---|---|
-| references F1（英語） | **0.829**（現行 0.243、本家 GROBID 0.954） |
+| references F1（英語） | **0.829**（本番経路 `versio` も 0.829。移植前 0.243、本家 GROBID 0.954） |
 | references F1（日本語） | 未実行（英語専用） |
 | citation モデルの本家一致率（60 件・2,650 トークン） | 特徴量 97.7%、ラベル 99.7% |
 | 正しく区切った参考文献での題名正解率 / 年正解率 | 0.869 / 0.993 |
@@ -123,7 +123,7 @@ PDF をアプリで確認するときは `open -a Versio.app test-data/field-gol
 | 辞書の読み込み | 約 1 秒。句の照合は 53 bit ハッシュの整列配列（JS ヒープ 4 MB＋配列） |
 | 処理時間 | 中央値 0.8 秒/本（Versio の抽出込み） |
 
-経緯（英語 references F1）: 初回 0.417 → 実際の行を入力 0.491 → 辞書照合と bigram の向きを本家どおりに修正 0.565 → 段ごとに行を再構成 0.659〜0.750 → 区切り特徴量を本家どおりに 0.758 → 参考文献セクションに限定 0.799 → 本家の除外規則 0.808 → 範囲判定の修正 0.829。
+経緯（英語 references F1）: 初回 0.417 → 実際の行を入力 0.491 → 辞書照合と bigram の向きを本家どおりに修正 0.565 → 段ごとに行を再構成 0.659〜0.750 → 区切り特徴量を本家どおりに 0.758 → 参考文献セクションに限定 0.799 → 本家の除外規則 0.808 → 範囲判定の修正 0.829。本番接続後、題に References を含む小節を参考文献扱いしないよう見出しを厳密に照合（本番経路 0.825 → 0.829）。
 
 残っている差の主因:
 

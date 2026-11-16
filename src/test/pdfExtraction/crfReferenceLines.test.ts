@@ -17,3 +17,18 @@ describe("referenceLinesFromPages", () => {
     expect(lines.map((line) => line.text)).toEqual(["Antal M. (2025). Molecular", "Bardoni R. (2013). Role"]);
   });
 });
+
+describe("selectReferenceBlocks", () => {
+  it("ignores a subsection whose title merely mentions references", async () => {
+    const { selectReferenceBlocks } = await import("../../services/pdfExtraction/crf/referenceLines");
+    const blocks = [
+      { id: "a", sectionId: "s1", type: "paragraph" },
+      { id: "b", sectionId: "s2", type: "reference" },
+    ] as never;
+    const sections = [
+      { id: "s1", normalizedKind: "references", originalTitle: "4.2.1 Quicker and Better Access to References" },
+      { id: "s2", normalizedKind: "references", originalTitle: "References" },
+    ];
+    expect(selectReferenceBlocks(blocks, sections).map((b) => b.id)).toEqual(["b"]);
+  });
+});
