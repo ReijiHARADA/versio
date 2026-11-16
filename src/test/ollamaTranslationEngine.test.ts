@@ -7,7 +7,7 @@ const result: TranslationResult = {
   text: "参加者は制御された条件で結果を比較した。",
   sourceLanguage: "en",
   targetLanguage: "ja",
-  model: "madlad",
+  model: "plamo-3-translate-2b",
   modelVersion: "test",
   inputChars: 10,
   outputChars: 20,

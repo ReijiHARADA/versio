@@ -24,7 +24,7 @@
     "security": {
       "csp": {
         "default-src": "'self' customprotocol: asset:",
-        "connect-src": "'self' ipc: http://ipc.localhost https://ipc.localhost http://127.0.0.1:* http://localhost:8765",
+        "connect-src": "'self' ipc: http://ipc.localhost https://ipc.localhost http://127.0.0.1:*",
         "img-src": "'self' asset: http://asset.localhost blob: data: https:",
         "media-src": "'self' blob: data:",
         "font-src": "'self' data:",
@@ -56,10 +56,6 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": {
-      "bundled-resources/translation-server": "translation-server",
-      "bundled-resources/apple-translation": "apple-translation"
-    },
     "fileAssociations": [
       {
         "ext": ["pdf"],

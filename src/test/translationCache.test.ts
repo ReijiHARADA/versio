@@ -82,7 +82,6 @@ describe("clearTranslationCache", () => {
     await saveSections([section()]);
     await saveBlocks([block()]);
     await saveSetting("translationSettingsV2", {
-      madladServerUrl: "http://127.0.0.1:8765",
       useCache: true,
     });
     await saveGlossary("cache-clear-paper", [

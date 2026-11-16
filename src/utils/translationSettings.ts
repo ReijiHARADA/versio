@@ -1,8 +1,4 @@
-export type TranslationEngineId = "plamo" | "madlad";
-
 export type TranslationSettingsV2 = {
-  translationEngine: TranslationEngineId;
-  madladServerUrl: string;
   ollamaServerUrl: string;
   ollamaModel: string;
   generateGlossary: boolean;
@@ -11,8 +7,6 @@ export type TranslationSettingsV2 = {
 };
 
 export const DEFAULT_TRANSLATION_SETTINGS_V2: TranslationSettingsV2 = {
-  translationEngine: "plamo",
-  madladServerUrl: "http://127.0.0.1:8765",
   ollamaServerUrl: "http://localhost:11434",
   ollamaModel: "gemma2:9b",
   generateGlossary: true,
@@ -21,9 +15,10 @@ export const DEFAULT_TRANSLATION_SETTINGS_V2: TranslationSettingsV2 = {
 };
 
 export function mergeTranslationSettingsV2(
-  saved: Partial<TranslationSettingsV2> | null | undefined
+  saved: (Partial<TranslationSettingsV2> & Record<string, unknown>) | null | undefined
 ): TranslationSettingsV2 {
-  const merged = { ...DEFAULT_TRANSLATION_SETTINGS_V2, ...saved };
+  const { translationEngine: _translationEngine, madladServerUrl: _madladServerUrl, ...current } = saved ?? {};
+  const merged = { ...DEFAULT_TRANSLATION_SETTINGS_V2, ...current };
   const previous = saved?.translationConcurrency ?? 1;
   if (previous <= 3) {
     merged.translationConcurrency = 8;

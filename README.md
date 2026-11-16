@@ -1,3 +1,10 @@
+---
+type: Reference
+title: Versio
+description: 製品の定義・対応環境・セットアップ・ドキュメント入口。
+tags: [readme]
+---
+
 <p align="center">
   <img src="./docs/assets/versio-hero.jpg" alt="Versio — 論文を、もっと気軽に読む" width="720">
 </p>
@@ -25,7 +32,7 @@ Versio は、誌面の見た目を複製するのではなく、タイトル・�
 
 **取り込む → 読みやすく変換 → 読む・訳す → メモを残す → 持ち歩く** までを、ひとつのアプリで完結させます。
 
-- **ローカル完結** — 翻訳は端末内の MADLAD-400 3B（MPS / bfloat16）で実行し、外部 API を必須にしません
+- **ローカル完結** — 翻訳は端末内の PLaMo 3 Translate 2B（同梱 llama-server）で実行し、外部 API を必須にしません
 - **誤読を防ぐ設計** — 翻訳後に数値・引用・否定表現などの不整合を点検し、問題があれば警告や原文表示に切り替えます
 - **スマホでも読める** — 論文を EPUB に変換して持ち歩けます。実在する論文 PDF 1,432 本で変換を試し、1,423 本（99.4%）で成功しました
 
@@ -53,24 +60,23 @@ Versio は、誌面の見た目を複製するのではなく、タイトル・�
 ```bash
 npm install
 
-# 推奨: Tauri 開発アプリ（翻訳サーバーはアプリが起動）
+# 推奨: Tauri 開発アプリ（翻訳用 llama-server はアプリが起動）
 npm run tauri:dev
 
-# ブラウザ UI のみ
-./restart-translation-server.sh   # 別ターミナル
-npm run dev                       # http://localhost:5173
+# ブラウザ UI のみ（翻訳なし）
+npm run dev   # http://localhost:5173
 ```
 
 ```bash
-# 日常確認用 .app（cached Python、dmg なし）
+# 日常確認用 .app（dmg なし）
 npm run tauri:build:fast
 
-# リリース確認（clean Python + .app + .dmg）
+# リリース確認（clean + .app + .dmg）
 npm run tauri:build:clean
 open "src-tauri/target/release/bundle/macos/Versio.app"
 ```
 
-Python 環境の準備やトラブルシュートは [QUICKSTART.md](./QUICKSTART.md)、ビルド時間の目安は [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md) にあります。
+セットアップやトラブルシュートは [QUICKSTART.md](./QUICKSTART.md)、ビルド時間の目安は [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md) にあります。
 
 ```bash
 npm test

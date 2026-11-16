@@ -20,12 +20,12 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 | メモ・用語 | 訳文上のインラインメモ（block ID アンカー）、用語集 |
 | 書き出し | 訳文 Markdown / Notion 用 ZIP / EPUB（スマホ同期）、フォルダ単位 ZIP。保存先は Rust save dialog |
 | 元 PDF | 読んでいる付近のページを Preview で開く（macOS のみ） |
-| 翻訳 | 既定は PLaMo 3 Translate 2B（同梱 `llama-server`、`127.0.0.1:8766`、起動ごとのトークン）。モデル（1.8 GB）は初回利用時に設定画面または取り込み時にダウンロード。旧 MADLAD-400 3B は設定で選べる（次版で削除）。根拠: [docs/research/local-llm-translation-bench-2026-11.md](./docs/research/local-llm-translation-bench-2026-11.md) |
+| 翻訳 | 既定は PLaMo 3 Translate 2B（同梱 `llama-server`、`127.0.0.1:8766`、起動ごとのトークン）。モデル（1.8 GB）は初回利用時に設定画面または取り込み時にダウンロード。旧 MADLAD-400 3B と Python 翻訳サーバーは削除済み（2026-11-17）。根拠: [docs/research/local-llm-translation-bench-2026-11.md](./docs/research/local-llm-translation-bench-2026-11.md) |
 | 設定 | 表示設定、ライセンス一覧（Versio MIT + 必須 third-party notices） |
 
 ## 検証状況
 
-- CI（`main`）: TypeScript test / lint / build、Rust fmt / clippy / test（Ubuntu）、Python 軽量テスト すべて green。
+- CI（`main`）: TypeScript test / lint / build、Rust fmt / clippy / test（Ubuntu）すべて green。
 - `src/test`: 110 files / 1124 tests pass、typecheck pass（2026-11-15）。oxlint 警告 0 は #6 マージ後。
 - 実 PDF 依存テストはローカル fixture（gitignored）が無い環境では検証されない。CI ではこれらは実質未検証。
 - `test:extraction-corpus`（CI 非ゲート）: 13 fail / 215 pass（2026-11-08 時点）。baselineRealPapers 11 件（title 誤選択・author/format 期待値差）と realPapers reading-order 2 件。
@@ -54,7 +54,7 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 
 ## 診断の入口
 
-- 配布 `.app` の PLaMo サイドカー出力: `~/Library/Logs/com.harada.versio/plamo-server.log`。旧 MADLAD サーバー出力（#5 マージ後）: `~/Library/Logs/com.harada.versio/translation-server.log`（前回起動分 `.prev.log`）。Rust 側は同ディレクトリの `Versio.log`。
+- 配布 `.app` の PLaMo サイドカー出力: `~/Library/Logs/com.harada.versio/plamo-server.log`。Rust 側は同ディレクトリの `Versio.log`。
 
 ## 保守リファクタリング記録
 

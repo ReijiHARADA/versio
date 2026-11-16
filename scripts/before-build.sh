@@ -1,7 +1,6 @@
 #!/bin/bash
 # Tauri beforeBuildCommand entrypoint.
-# Prepares cached/clean Python runtime, stages minimal resources, builds frontend.
-# When VERSIO_SKIP_BEFORE_BUILD=1, no-ops (wrapper already ran phases).
+# Builds frontend. When VERSIO_SKIP_BEFORE_BUILD=1, no-ops (wrapper already ran phases).
 
 set -euo pipefail
 
@@ -16,13 +15,6 @@ fi
 
 cd "$PROJECT_DIR"
 
-# Compile the macOS-native Apple Translation adapter when the matching Xcode
-# toolchain is available. The app remains MADLAD-capable if it is not.
-bash "$SCRIPT_DIR/compile-apple-translation.sh"
-
-MODE="${VERSIO_PYTHON_BUNDLE_MODE:-cache}"
-export VERSIO_PYTHON_BUNDLE_MODE="$MODE"
-
 now_ms() {
   python3 -c 'import time; print(int(time.time() * 1000))'
 }
@@ -36,20 +28,13 @@ elapsed_s() {
 
 : >"$TIMING_FILE"
 
-echo "=== before-build (python mode=$MODE) ==="
+echo "=== before-build ==="
 
 t0="$(now_ms)"
-bash "$SCRIPT_DIR/bundle-python.sh" "$MODE"
-python_s="$(elapsed_s "$t0")"
-echo "python_prep_s=$python_s" >>"$TIMING_FILE"
-echo "⏱  Python runtime: ${python_s}s"
-
-t0="$(now_ms)"
-bash "$SCRIPT_DIR/stage-translation-bundle.sh"
-stage_s="$(elapsed_s "$t0")"
-echo "stage_s=$stage_s" >>"$TIMING_FILE"
-echo "⏱  Stage resources: ${stage_s}s"
-echo "note: translation venv is staged separately; run scripts/inject-translation-venv.sh after the .app bundle (npm run tauri:build:fast does this)."
+bash "$SCRIPT_DIR/build-llama-server.sh"
+llama_s="$(elapsed_s "$t0")"
+echo "llama_server_s=$llama_s" >>"$TIMING_FILE"
+echo "⏱  llama-server: ${llama_s}s"
 
 t0="$(now_ms)"
 npm run build

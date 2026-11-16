@@ -11,7 +11,7 @@ import { diagnoseCitationAlignment } from "./audit/citationAlignment";
 import type { EngineStatus, TranslationEngine, TranslationResult } from "./types";
 
 /**
- * Audit/opt-in translation fallback for blocks rejected by MADLAD.
+ * Audit/opt-in translation fallback for blocks rejected by PLaMo.
  *
  * The alternate model is deliberately behind a source-integrity gate and the
  * same invariant/quality checks as the primary path. It must never turn a
@@ -165,7 +165,7 @@ export class OllamaTranslationEngine implements TranslationEngine {
       modelName: alternate.currentModel ?? primary.modelName,
       modelVersion: `${primary.modelVersion}+ollama-selective-v4-multi-candidate-semantic-units`,
       device: primary.device,
-      error: primary.available || alternates.some((status) => status.available) ? undefined : `${primary.error ?? "MADLAD unavailable"}; ${alternates.map((status) => status.error ?? "Ollama unavailable").join("; ")}`,
+      error: primary.available || alternates.some((status) => status.available) ? undefined : `${primary.error ?? "PLaMo unavailable"}; ${alternates.map((status) => status.error ?? "Ollama unavailable").join("; ")}`,
     };
   }
 
@@ -239,7 +239,7 @@ export class AlternateTranslationQualityError extends Error {
 /** Split alternate-model input at semantic sentence boundaries. This is a
  * deliberately conservative rescue splitter: it never splits inside balanced
  * citation/parenthesis spans, and keeps short fragments attached to the next
- * unit. The primary MADLAD path remains the canonical segmenter. */
+ * unit. The primary PLaMo path remains the canonical segmenter. */
 function splitAlternateUnits(text: string): string[] {
   const units: string[] = [];
   let start = 0;

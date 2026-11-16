@@ -91,20 +91,22 @@ describe("settings pull-to-navigate", () => {
 });
 
 describe("mergeTranslationSettingsV2", () => {
-  it("merge fills translationEngine=plamo for old saves", () => {
-    expect(mergeTranslationSettingsV2({ madladServerUrl: "http://127.0.0.1:8765" }).translationEngine).toBe("plamo");
-    expect(mergeTranslationSettingsV2({ translationEngine: "madlad" }).translationEngine).toBe("madlad");
+  it("drops legacy engine settings", () => {
+    const merged = mergeTranslationSettingsV2({
+      translationEngine: "madlad",
+      madladServerUrl: "http://127.0.0.1:8765",
+    });
+    expect(merged).not.toHaveProperty("translationEngine");
+    expect(merged).not.toHaveProperty("madladServerUrl");
   });
 
-  it("keeps default concurrency 8 and existing URLs", () => {
+  it("keeps default concurrency 8 and existing Ollama settings", () => {
     const merged = mergeTranslationSettingsV2({
-      madladServerUrl: "http://127.0.0.1:9000",
       ollamaModel: "gemma2:9b",
       generateGlossary: false,
       translationConcurrency: 8,
       useCache: false,
     });
-    expect(merged.madladServerUrl).toBe("http://127.0.0.1:9000");
     expect(merged.generateGlossary).toBe(false);
     expect(merged.useCache).toBe(false);
     expect(merged.translationConcurrency).toBe(8);

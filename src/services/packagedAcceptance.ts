@@ -39,7 +39,7 @@ async function writeMarker(result: AcceptanceResult): Promise<void> {
 /**
  * Packaged acceptance only: when launched with VERSIO_ACCEPTANCE=1 and
  * VERSIO_ACCEPTANCE_FIXTURE=<pdf>, import the fixture once, then exercise
- * annotation / search / export against real app-data without MADLAD download.
+ * annotation / search / export against real app-data without a PLaMo download.
  * No effect in normal production launches.
  */
 export async function maybeRunPackagedAcceptanceImport(): Promise<void> {

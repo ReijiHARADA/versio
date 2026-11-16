@@ -1,7 +1,7 @@
 /**
  * Paper Import Service V2
  * 
- * Uses MADLAD for translation and Ollama for LLM analysis.
+ * Uses PLaMo for translation and Ollama for LLM analysis.
  * Implements priority-based translation queue for fast Time to First Read.
  */
 
@@ -36,7 +36,6 @@ import {
   translationManager,
   createTranslationEngine,
   setEngineGlossary,
-  setAppleEligibleSources,
   type TranslationPriorityValue,
 } from "./translation";
 import {
@@ -48,7 +47,6 @@ import {
 import { projectSafeUnitTranslation } from "./translation/partialProjection";
 import { generateGlossary } from "./llm";
 import type { GlossaryEntry } from "./llm/types";
-import { resolveMadladServerUrl } from "./translation/madladEngine";
 import { finalizedTranslationStatus } from "./paperStatus";
 import {
   isRetryableTranslationFailure,
@@ -58,7 +56,6 @@ import {
 } from "./import/policy";
 import {
   DEFAULT_IMPORT_CONFIG,
-  collectAppleEligibleSources,
   finalizeJapaneseLayoutOnly,
   isJapaneseLayoutOnlyPaper,
   persistUntranslatableAsSkipped,
@@ -89,7 +86,7 @@ export { retryBlockTranslation } from "./import/retryBlockTranslation";
 // ============================================================
 
 /**
- * Import a PDF with MADLAD translation and Ollama analysis.
+ * Import a PDF with PLaMo translation and Ollama analysis.
  */
 export async function importPDFV2(
   file: File,
@@ -103,7 +100,6 @@ export async function importPDFV2(
 
   const {
     engine: translationEngine,
-    appleRouter,
     llmProviders,
     primaryEngine,
     cacheModel,
@@ -411,10 +407,6 @@ export async function importPDFV2(
     // Track translation progress
     let translatedCount = 0;
     const refSectionIds = referenceSectionIds(sections);
-    setAppleEligibleSources(
-      appleRouter,
-      collectAppleEligibleSources(blocks, refSectionIds, paper.titleOriginal)
-    );
     const totalTranslatable =
       blocks.filter((b) => shouldTranslateBlock(b, refSectionIds)).length +
       sections.filter(shouldTranslateSection).length +
@@ -607,7 +599,6 @@ export async function importPDFV2(
               "ja"
             ),
             paper.titleOriginal,
-            cfg.translationEngine
           )
         : null;
 
@@ -633,7 +624,6 @@ export async function importPDFV2(
               "ja"
             ),
             section.originalTitle,
-            cfg.translationEngine
           )
         : null;
 
@@ -669,7 +659,6 @@ export async function importPDFV2(
               "ja"
             ),
             translationSource,
-            cfg.translationEngine
           )
         : null;
 
@@ -783,35 +772,5 @@ export async function importPDFV2(
     releaseImportHash?.();
     translationManager.detach(paperId);
     activeImportPaperIds.delete(paperId);
-  }
-}
-
-/**
- * Check if MADLAD server is available.
- */
-export async function checkMADLADAvailability(
-  serverUrl: string = DEFAULT_IMPORT_CONFIG.madladServerUrl
-): Promise<{ available: boolean; modelLoaded: boolean; error?: string }> {
-  const resolved = resolveMadladServerUrl(serverUrl);
-  try {
-    const response = await fetch(`${resolved}/health`);
-    if (!response.ok) {
-      return {
-        available: false,
-        modelLoaded: false,
-        error: `Server returned ${response.status}`,
-      };
-    }
-    const data = await response.json();
-    return {
-      available: true,
-      modelLoaded: data.model_loaded,
-    };
-  } catch {
-    return {
-      available: false,
-      modelLoaded: false,
-      error: "翻訳サーバーに接続できません。サーバーを起動してください。",
-    };
   }
 }

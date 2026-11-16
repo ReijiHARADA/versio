@@ -1,24 +1,29 @@
+---
+type: Report
+title: Build timings
+description: Packaged Tauri build phases and measured timings.
+tags: [build, tauri]
+---
+
 # Build timings
 
 Versio packaged builds use `scripts/tauri-build.sh` and write `.build-timings` at the repo root.
 
 ## Commands
 
-| Command | Python | Artifacts | Use |
-| --- | --- | --- | --- |
-| `npm run tauri:build:fast` | content-hash cache | `.app` only | daily check |
-| `npm run tauri:build:clean` / `tauri:build` | always rebuild from lock | `.app` + `.dmg` | release / CI acceptance |
+| Command | Artifacts | Use |
+| --- | --- | --- |
+| `npm run tauri:build:fast` | `.app` only | daily check |
+| `npm run tauri:build:clean` / `tauri:build` | `.app` + `.dmg` | release / CI acceptance |
 
 ## Phases
 
-1. Python runtime prep (`scripts/bundle-python.sh`)
-2. Stage resources (`scripts/stage-translation-bundle.sh`)
-   - lite `bundled-resources/translation-server/` (no venv) for Tauri
-   - `bundled-resources/translation-venv/` injected after bundle
-3. Frontend (`npm run build`)
-4. Rust compile + Tauri `.app` bundle（**単一** `tauri build --bundles app`）
-5. Venv inject (`scripts/inject-translation-venv.sh`, APFS clonefile when possible)
-6. DMG generation（clean only）
+1. PLaMo `llama-server` sidecar (`scripts/build-llama-server.sh`, cached in `src-tauri/binaries/`)
+2. Frontend (`npm run build`)
+3. Rust compile + Tauri `.app` bundle（**単一** `tauri build --bundles app`）
+4. DMG generation（clean only）
+
+The Python runtime / venv phases below were removed with MADLAD (2026-11-17); the sections that follow are historical measurements.
 
 ## Before（2026-09-14, prior pipeline）
 

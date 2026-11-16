@@ -53,7 +53,7 @@ function jaResult(text: string, source: string): TranslationResult {
     text,
     sourceLanguage: "en",
     targetLanguage: "ja",
-    model: "madlad400-3b-mt",
+    model: "plamo-3-translate-2b",
     modelVersion: "test",
     inputChars: source.length,
     outputChars: text.length,
@@ -68,7 +68,7 @@ describe("retryBlockTranslation", () => {
     await resetStorageForTests();
   });
 
-  it("uses the shared Apple→MADLAD engine stack", async () => {
+  it("uses the shared PLaMo engine stack", async () => {
     const paper = basePaper("retry-engine-paper");
     const block = baseBlock(paper.id, "retry-engine-block");
     await savePaper(paper);
@@ -77,29 +77,26 @@ describe("retryBlockTranslation", () => {
     const translate = vi.fn(async (text: string) =>
       jaResult("インタラクティブなジュエリーは日常の相互作用を結び付けます。", text)
     );
-    const appleRouter = {
-      name: "selective-apple",
-      setEligibleSources: vi.fn(),
+    const engine = {
+      name: "plamo",
       translate,
       translateBatch: vi.fn(),
       getStatus: vi.fn(),
       loadModel: vi.fn(),
       unloadModel: vi.fn(),
-    } as unknown as TranslationEngine & {
-      setEligibleSources: (sources: ReadonlySet<string>) => void;
-    };
+    } as unknown as TranslationEngine;
 
     vi.spyOn(createEngine, "createTranslationEngine").mockReturnValue({
-      engine: appleRouter,
-      appleRouter: appleRouter as never,
-      madladEngine: { name: "madlad" } as never,
+      engine,
+      primaryEngine: engine,
+      cacheModel: "plamo-3-translate-2b",
+      cacheModelVersion: "test",
       llmProviders: [],
     });
 
-    await retryBlockTranslation(block, { config: { enableAppleTranslation: true } });
+    await retryBlockTranslation(block);
 
     expect(createEngine.createTranslationEngine).toHaveBeenCalled();
-    expect(appleRouter.setEligibleSources).toHaveBeenCalled();
     expect(translate).toHaveBeenCalledWith(block.original, "en", "ja");
 
     const [saved] = await getBlocksByPaper(paper.id);
@@ -114,7 +111,7 @@ describe("retryBlockTranslation", () => {
     await saveBlocks([block]);
 
     const engine = {
-      name: "madlad",
+      name: "plamo",
       translate: vi.fn(async () => {
         throw new TranslationQualityError();
       }),
@@ -126,12 +123,13 @@ describe("retryBlockTranslation", () => {
 
     vi.spyOn(createEngine, "createTranslationEngine").mockReturnValue({
       engine,
-      appleRouter: null,
-      madladEngine: engine as never,
+      primaryEngine: engine,
+      cacheModel: "plamo-3-translate-2b",
+      cacheModelVersion: "test",
       llmProviders: [],
     });
 
-    await retryBlockTranslation(block, { config: { enableAppleTranslation: false } });
+    await retryBlockTranslation(block);
 
     const [saved] = await getBlocksByPaper(paper.id);
     expect(saved.translationStatus).toBe("completed");

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Packaged .app release acceptance helper (macOS).
-# Does NOT download MADLAD weights — run model warmup separately on nightly/release.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -21,8 +20,6 @@ run_gate "TypeScript lint" npm run lint
 run_gate "TypeScript tests" npm test
 run_gate "TypeScript build" npm run build
 
-run_gate "Python bundle cache smoke" npm run test:bundle-python
-
 if command -v cargo >/dev/null 2>&1; then
   (
     cd src-tauri
@@ -32,15 +29,6 @@ if command -v cargo >/dev/null 2>&1; then
   )
 else
   echo "skip Rust (cargo not found)"
-fi
-
-if command -v python3 >/dev/null 2>&1; then
-  (
-    cd translation-server
-    run_gate "Python citation_protect" python3 -m unittest tests.test_citation_protect -v
-  )
-else
-  echo "skip Python (python3 not found)"
 fi
 
 echo "-- Library benchmark (100 papers)"
@@ -79,6 +67,5 @@ cat <<'EOF'
 1. Source PDF open / Preview page jump (Accessibility-dependent)
 2. Full Reader navigation feel (scroll / outline / glossary)
 3. Gatekeeper first-launch experience on a clean Mac (after signed build)
-4. (Nightly) MADLAD ready → translation resume
 Daily unsigned check: npm run tauri:build:fast
 EOF

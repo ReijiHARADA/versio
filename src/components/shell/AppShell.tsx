@@ -13,10 +13,9 @@ import { NewWorkspaceNodeModal } from "../workspace/NewWorkspaceNodeModal";
 import { setPaperDropHandler, INBOX_DROP_ID, usePaperDragStore } from "../../stores/paperDragStore";
 import { showToast, useToastStore } from "../../stores/toastStore";
 import { restoreWorkspaceFolderFromTrash, purgeExpiredTrash } from "../../services/trashService";
-import { resumeAfterTranslationServerReady } from "../../services/import/startBackgroundImport";
+import { resumeSavedTranslations } from "../../services/import/startBackgroundImport";
 import { createPresentationCaptureSeed } from "../../services/presentationDemo";
 import { useImportJobStore } from "../../stores/importJobStore";
-import { isTranslationServerReady, subscribeTranslationServerReady } from "../../utils/serverReady";
 import { setTranslationUiDeferReason } from "../../utils/batchBlockUpdates";
 import styles from "./AppShell.module.css";
 
@@ -85,21 +84,15 @@ export function AppShell() {
         void purgeExpiredTrash().catch((error) => {
           console.warn("Failed to purge expired trash:", error);
         });
-        if (!cancelled && isTranslationServerReady()) {
-          resumeAfterTranslationServerReady();
-        }
+        if (!cancelled) resumeSavedTranslations();
       } catch (error) {
         console.error("Failed to load library:", error);
       } finally {
         if (!cancelled) setLoaded(true);
       }
     })();
-    const unsubscribe = subscribeTranslationServerReady(() => {
-      if (!cancelled) resumeAfterTranslationServerReady();
-    });
     return () => {
       cancelled = true;
-      unsubscribe();
     };
   // oxlint-disable-next-line react-hooks/exhaustive-deps -- one-shot demo seed; navigate identity must not re-run it
   }, [isPresentationDemo, mergeWorkspaceNodes, setLoaded, setMemberships, setPapers]);

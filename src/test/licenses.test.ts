@@ -6,7 +6,7 @@ import {
 } from "../data/licenses";
 
 describe("license inventory", () => {
-  it("includes Versio MIT and production ecosystems", async () => {
+  it("includes Versio MIT and bundled production ecosystems", async () => {
     const inventory = await loadLicenseInventory();
     expect(inventory.generatorVersion).toBe(2);
     expect(inventory.packages.length).toBeGreaterThan(10);
@@ -18,7 +18,7 @@ describe("license inventory", () => {
     const ecosystems = new Set(inventory.packages.map((pkg) => pkg.ecosystem));
     expect(ecosystems.has("npm")).toBe(true);
     expect(ecosystems.has("rust")).toBe(true);
-    expect(ecosystems.has("python")).toBe(true);
+    expect(ecosystems.has("python")).toBe(false);
   });
 
   it("omits non-distributed and no-attribution-electable packages", async () => {

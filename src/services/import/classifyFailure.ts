@@ -75,7 +75,6 @@ export function classifyImportFailure(
   if (
     includesAny(text, [
       "翻訳サーバー",
-      "madlad",
       "model not ready",
       "server unavailable",
       "接続できません",

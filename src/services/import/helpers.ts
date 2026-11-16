@@ -1,42 +1,16 @@
 import type { Paper, PaperBlock, Section } from "../../types/paper";
 import { saveBlocks, savePaper, saveSections } from "../database";
 import { isJapaneseSourcePaper } from "../sourceLanguage";
-import { shouldTranslateTitle } from "../translation/quality";
 import { acceptFor } from "../translation/acceptance";
-import { resolveMadladServerUrl } from "../translation/madladEngine";
 import { shouldTranslateBlock } from "./policy";
 import type { ImportConfig } from "./types";
 
-/** Paragraph (+ title) sources registered for Apple on import/resume. */
-export function collectAppleEligibleSources(
-  blocks: PaperBlock[],
-  refSectionIds: Set<string>,
-  titleOriginal?: string | null
-): string[] {
-  const sources = blocks
-    .filter(
-      (block) =>
-        block.type === "paragraph" &&
-        block.original &&
-        block.extractionConfidence !== 0 &&
-        shouldTranslateBlock(block, refSectionIds)
-    )
-    .map((block) => block.original as string);
-  if (titleOriginal && shouldTranslateTitle(titleOriginal)) {
-    sources.push(titleOriginal);
-  }
-  return sources;
-}
-
 export const DEFAULT_IMPORT_CONFIG: Required<ImportConfig> = {
   presentationDemo: false,
-  translationEngine: "plamo",
-  madladServerUrl: "http://127.0.0.1:8765",
   ollamaServerUrl: "http://localhost:11434",
   ollamaModel: "gemma2:9b",
   ollamaModels: [],
   enableSelectiveCascade: false,
-  enableAppleTranslation: true,
   generateGlossary: true,
   translationConcurrency: 8,
   useCache: true,
@@ -45,10 +19,9 @@ export const DEFAULT_IMPORT_CONFIG: Required<ImportConfig> = {
 export function usableCachedJa(
   cached: string | null | undefined,
   source: string,
-  engine?: "plamo" | "madlad"
 ): string | null {
   if (!cached) return null;
-  return acceptFor(engine)(cached, source) ? cached : null;
+  return acceptFor()(cached, source) ? cached : null;
 }
 
 export async function persistUntranslatableAsSkipped(
@@ -99,8 +72,8 @@ export async function finalizeJapaneseLayoutOnly(
 }
 
 export function resolveImportConfig(config: ImportConfig): Required<ImportConfig> {
-  const merged = { ...DEFAULT_IMPORT_CONFIG, ...config };
-  merged.madladServerUrl = resolveMadladServerUrl(merged.madladServerUrl);
+  const { translationEngine: _translationEngine, madladServerUrl: _madladServerUrl, enableAppleTranslation: _enableAppleTranslation, ...current } = config as ImportConfig & Record<string, unknown>;
+  const merged = { ...DEFAULT_IMPORT_CONFIG, ...current };
   if (!merged.ollamaServerUrl?.trim()) {
     merged.ollamaServerUrl = DEFAULT_IMPORT_CONFIG.ollamaServerUrl;
   }
