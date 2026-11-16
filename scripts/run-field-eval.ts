@@ -14,6 +14,7 @@ import { predictionFromApple, type ProbeOutput } from "../src/evaluation/fieldGo
 import { predictionFromGrobid } from "../src/evaluation/fieldGold/adapters/grobid";
 import { predictionFromVersio } from "../src/evaluation/fieldGold/adapters/versio";
 import { predictionFromCrfPort } from "../src/evaluation/fieldGold/adapters/crfport";
+import { referenceLinesFromPages } from "../src/services/pdfExtraction/crf/referenceLines";
 import { buildReport } from "../src/evaluation/fieldGold/report";
 import { proposeWinners } from "../src/evaluation/fieldGold/winners";
 import type { FieldGold, FieldPrediction, ParserId } from "../src/evaluation/fieldGold/types";
@@ -81,10 +82,7 @@ async function runCrfPort(gold: FieldGold): Promise<FieldPrediction> {
   const result = extractFromPages({ pages, paperId: gold.id, filePath: pdfPath, fileHash: gold.pdfSha256, metadata: { pageCount: pages.length } });
   // The projection has already associated canonical reference lines into visible blocks;
   // those preserve the reference-section order while keeping source geometry available.
-  const lines = result.blocks.filter((block) => block.type === "reference" && block.original?.trim()).map((block) => {
-    const box = block.boundingBoxes[0];
-    return { text: block.original!.trim(), x: box?.x ?? 0, width: box?.width ?? block.original!.length, fontSize: box?.height ?? 10, blockStart: true };
-  });
+  const lines = referenceLinesFromPages(pages, result.blocks.filter((block) => block.type === "reference"));
   return predictionFromCrfPort(gold.id, gold.language, lines, Math.round(performance.now() - started));
 }
 
