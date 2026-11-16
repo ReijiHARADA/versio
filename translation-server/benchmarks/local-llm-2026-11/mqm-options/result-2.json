@@ -1,0 +1,12 @@
+[
+{"id":"manual-marketing-consumer-response:b-b8b40f14","annotations":{"A":[],"B":[{"cat":"fluency","sev":"minor","note":"「2点D1xを表す」が不自然で曲線との関係が曖昧"}],"C":[]}},
+{"id":"epmc-PMC13596825:b-d1727f1d","annotations":{"A":[{"cat":"mistranslation","sev":"minor","note":"studies(複数)が「本研究」に"}],"B":[{"cat":"mistranslation","sev":"minor","note":"studies(複数)が「本研究」に"}],"C":[]}},
+{"id":"arxiv-2509.24913:b-af7e1f90","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"epmc-PMC12885475:b-468f63e5","annotations":{"A":[{"cat":"mistranslation","sev":"minor","note":"seemsの推量が失われ断定的"},{"cat":"addition","sev":"minor","note":"「低下」は原文にない"}],"B":[{"cat":"mistranslation","sev":"minor","note":"seemsの推量が失われ断定的"},{"cat":"addition","sev":"minor","note":"「低下」は原文にない"}],"C":[{"cat":"mistranslation","sev":"minor","note":"seemsの推量が失われ断定的"}]}},
+{"id":"arxiv-2501.10568:b-15609cab","annotations":{"A":[],"B":[{"cat":"mistranslation","sev":"minor","note":"worseが「悪化」で変化の意味に"}],"C":[]}},
+{"id":"epmc-PMC13185203:b-588341b0","annotations":{"A":[],"B":[],"C":[{"cat":"fluency","sev":"minor","note":"文が名詞句で途切れ不自然"}]}},
+{"id":"manual-medical-deep-learning-meta-review:b-dff51ad3","annotations":{"A":[],"B":[],"C":[]}},
+{"id":"epmc-PMC13613203:b-fbccc540","annotations":{"A":[{"cat":"terminology","sev":"minor","note":"citation generationを引用文の生成に"}],"B":[{"cat":"terminology","sev":"minor","note":"citation generationを引用文の生成に"},{"cat":"style","sev":"minor","note":"です・ます調が論文文体に不適"}],"C":[{"cat":"terminology","sev":"minor","note":"citation generationを引用文の生成に"}]}},
+{"id":"arxiv-2509.25504:b-41024f23","annotations":{"A":[{"cat":"style","sev":"minor","note":"です・ます調が論文文体に不適"},{"cat":"mistranslation","sev":"minor","note":"our modelが「当社の」に"}],"B":[],"C":[{"cat":"mistranslation","sev":"minor","note":"our modelが「当社の」に"}]}},
+{"id":"arxiv-2510.02017:b-016c803c","annotations":{"A":[],"B":[{"cat":"terminology","sev":"major","note":"sensitive bitsを「感度の高い」と誤訳"}],"C":[{"cat":"terminology","sev":"major","note":"sensitive bitsを「感度の高い」と誤訳"}]}}
+]

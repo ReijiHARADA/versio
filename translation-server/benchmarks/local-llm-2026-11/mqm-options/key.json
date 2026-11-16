@@ -1,0 +1,202 @@
+{
+ "arxiv-2510.01887:b-c68e4cb6": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b",
+  "C": "plamo3-2b-plain"
+ },
+ "epmc-PMC13312647:b-2b210cae": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b"
+ },
+ "arxiv-2509.25968:b-d2988571": {
+  "A": "plamo3-2b",
+  "B": "plamo3-2b-ctx",
+  "C": "plamo3-2b-plain"
+ },
+ "arxiv-2404.01485:b-cc6a4ad3": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b",
+  "C": "plamo3-2b-plain"
+ },
+ "manual-fashion-hybrid-cmf:b-ddec4bc8": {
+  "A": "plamo3-2b",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b-ctx"
+ },
+ "epmc-PMC13551842:b-db8cade5": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b"
+ },
+ "arxiv-2510.04786:b-eda79601": {
+  "A": "plamo3-2b-plain",
+  "B": "plamo3-2b-ctx",
+  "C": "plamo3-2b"
+ },
+ "arxiv-2509.24008:b-76c953b8": {
+  "A": "plamo3-2b",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b-ctx"
+ },
+ "epmc-PMC13345230:b-724a2eb7": {
+  "A": "plamo3-2b-plain",
+  "B": "plamo3-2b-ctx",
+  "C": "plamo3-2b"
+ },
+ "epmc-PMC13613328:b-2ed86204": {
+  "A": "plamo3-2b-plain",
+  "B": "plamo3-2b-ctx",
+  "C": "plamo3-2b"
+ },
+ "arxiv-2510.00019:b-c59163e9": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b"
+ },
+ "arxiv-2510.02836:b-1d945737": {
+  "A": "plamo3-2b-plain",
+  "B": "plamo3-2b-ctx",
+  "C": "plamo3-2b"
+ },
+ "arxiv-2510.00245:b-26785901": {
+  "A": "plamo3-2b-plain",
+  "B": "plamo3-2b",
+  "C": "plamo3-2b-ctx"
+ },
+ "manual-wear-scale:b-36045918": {
+  "A": "plamo3-2b-plain",
+  "B": "plamo3-2b",
+  "C": "plamo3-2b-ctx"
+ },
+ "epmc-PMC13643957:b-b8e25663": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b",
+  "C": "plamo3-2b-plain"
+ },
+ "arxiv-2411.01344:b-79caf32f": {
+  "A": "plamo3-2b",
+  "B": "plamo3-2b-ctx",
+  "C": "plamo3-2b-plain"
+ },
+ "arxiv-2510.00222:b-4fe4fc13": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b"
+ },
+ "epmc-PMC11997001:b-20f27d95": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b"
+ },
+ "epmc-PMC13630993:b-9e416092": {
+  "A": "plamo3-2b",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b-ctx"
+ },
+ "arxiv-2508.16612:b-3776d79b": {
+  "A": "plamo3-2b",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b-ctx"
+ },
+ "manual-marketing-consumer-response:b-b8b40f14": {
+  "A": "plamo3-2b",
+  "B": "plamo3-2b-ctx",
+  "C": "plamo3-2b-plain"
+ },
+ "epmc-PMC13596825:b-d1727f1d": {
+  "A": "plamo3-2b",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b-ctx"
+ },
+ "arxiv-2509.24913:b-af7e1f90": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b"
+ },
+ "epmc-PMC12885475:b-468f63e5": {
+  "A": "plamo3-2b",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b-ctx"
+ },
+ "arxiv-2501.10568:b-15609cab": {
+  "A": "plamo3-2b",
+  "B": "plamo3-2b-ctx",
+  "C": "plamo3-2b-plain"
+ },
+ "epmc-PMC13185203:b-588341b0": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b"
+ },
+ "manual-medical-deep-learning-meta-review:b-dff51ad3": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b",
+  "C": "plamo3-2b-plain"
+ },
+ "epmc-PMC13613203:b-fbccc540": {
+  "A": "plamo3-2b-plain",
+  "B": "plamo3-2b",
+  "C": "plamo3-2b-ctx"
+ },
+ "arxiv-2509.25504:b-41024f23": {
+  "A": "plamo3-2b",
+  "B": "plamo3-2b-ctx",
+  "C": "plamo3-2b-plain"
+ },
+ "arxiv-2510.02017:b-016c803c": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b",
+  "C": "plamo3-2b-plain"
+ },
+ "epmc-PMC13445422:b-7096ea85": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b"
+ },
+ "manual-ozchi-finger-specific-touch:b-88c136ad": {
+  "A": "plamo3-2b",
+  "B": "plamo3-2b-ctx",
+  "C": "plamo3-2b-plain"
+ },
+ "epmc-PMC13331908:b-6fc4388e": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b",
+  "C": "plamo3-2b-plain"
+ },
+ "arxiv-2509.25293:b-3e2761a4": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b",
+  "C": "plamo3-2b-plain"
+ },
+ "arxiv-2510.04825:b-14baf22d": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b"
+ },
+ "arxiv-2510.00489:b-2df1221f": {
+  "A": "plamo3-2b",
+  "B": "plamo3-2b-ctx",
+  "C": "plamo3-2b-plain"
+ },
+ "arxiv-2510.00407:b-a58cd0a9": {
+  "A": "plamo3-2b-plain",
+  "B": "plamo3-2b-ctx",
+  "C": "plamo3-2b"
+ },
+ "epmc-PMC13652345:b-57d69b98": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b",
+  "C": "plamo3-2b-plain"
+ },
+ "epmc-PMC13627437:b-530c251c": {
+  "A": "plamo3-2b",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b-ctx"
+ },
+ "arxiv-2510.04493:b-e211b24d": {
+  "A": "plamo3-2b-ctx",
+  "B": "plamo3-2b-plain",
+  "C": "plamo3-2b"
+ }
+}

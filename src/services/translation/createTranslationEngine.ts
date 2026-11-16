@@ -8,6 +8,7 @@ import { AppleTranslationEngine, SelectiveAppleTranslationEngine } from "./apple
 import { MADLADEngine, MADLAD_MODEL_VERSION } from "./madladEngine";
 import { PLAMO_MODEL, PLAMO_MODEL_VERSION, PlamoEngine } from "./plamoEngine";
 import { OllamaTranslationEngine } from "./ollamaTranslationEngine";
+import type { GlossaryEntry } from "../llm/types";
 import type { TranslationEngine } from "./types";
 
 export type TranslationEngineConfig = {
@@ -70,4 +71,9 @@ export function setAppleEligibleSources(
 ): void {
   if (!appleRouter) return;
   appleRouter.setEligibleSources(new Set(sources));
+}
+
+/** Pass the paper glossary to engines that take term constraints (PLaMo); others keep post-hoc applyGlossary only. */
+export function setEngineGlossary(bundle: Pick<TranslationEngineBundle, "primaryEngine">, entries: GlossaryEntry[]): void {
+  if (bundle.primaryEngine instanceof PlamoEngine) bundle.primaryEngine.setGlossary(entries);
 }

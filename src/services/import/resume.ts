@@ -15,6 +15,7 @@ import {
   translationManager,
   TranslationQueue,
   createTranslationEngine,
+  setEngineGlossary,
   setAppleEligibleSources,
   type TranslationPriorityValue,
 } from "../translation";
@@ -117,7 +118,7 @@ export async function resumeIncompleteTranslation(
       await savePaper(paper);
       return;
     }
-    const { engine: translationEngine, appleRouter } = createTranslationEngine(cfg);
+    const { engine: translationEngine, appleRouter, primaryEngine } = createTranslationEngine(cfg);
     setAppleEligibleSources(
       appleRouter,
       collectAppleEligibleSources(
@@ -141,6 +142,7 @@ export async function resumeIncompleteTranslation(
     callbacks.onPaperUpdated?.(paper);
 
     const glossaryEntries = await getGlossary(paperId);
+    setEngineGlossary({ primaryEngine }, glossaryEntries);
 
     let outstanding = 0;
     let settleAll: () => void = () => {};

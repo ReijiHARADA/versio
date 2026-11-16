@@ -31,3 +31,17 @@ describe("createTranslationEngine", () => {
     expect(b.cacheModelVersion).toBe(MADLAD_MODEL_VERSION);
   });
 });
+
+import { setEngineGlossary } from "../../services/translation/createTranslationEngine";
+import { glossaryForText } from "../../services/translation/plamoEngine";
+
+describe("setEngineGlossary", () => {
+  it("hands the paper glossary to PLaMo and is a no-op for MADLAD", () => {
+    const entries = [{ term: "RR", translation: "呼吸数" }];
+    const plamo = createTranslationEngine(base);
+    setEngineGlossary(plamo, entries);
+    expect((plamo.primaryEngine as PlamoEngine)["glossary"]).toEqual(entries);
+    expect(() => setEngineGlossary(createTranslationEngine({ ...base, translationEngine: "madlad" }), entries)).not.toThrow();
+    expect(glossaryForText("HR and RR", entries)).toEqual([{ source: "RR", target: "呼吸数" }]);
+  });
+});

@@ -35,6 +35,7 @@ import {
   TranslationPriority,
   translationManager,
   createTranslationEngine,
+  setEngineGlossary,
   setAppleEligibleSources,
   type TranslationPriorityValue,
 } from "./translation";
@@ -104,6 +105,7 @@ export async function importPDFV2(
     engine: translationEngine,
     appleRouter,
     llmProviders,
+    primaryEngine,
     cacheModel,
     cacheModelVersion,
   } = createTranslationEngine(cfg);
@@ -304,6 +306,7 @@ export async function importPDFV2(
     }
 
     let glossaryEntries: GlossaryEntry[] = await getGlossary(paperId);
+    setEngineGlossary({ primaryEngine }, glossaryEntries);
 
     // Stage 4: Glossary in the background — never block translation
     if (cfg.generateGlossary && llmProviders[0]) {
@@ -336,6 +339,7 @@ export async function importPDFV2(
           );
           await saveGlossary(paperId, glossary);
           glossaryEntries = glossary;
+          setEngineGlossary({ primaryEngine }, glossary);
           const updated = await reapplyGlossary(paperId);
           if (updated.paper) {
             Object.assign(paper, updated.paper);
