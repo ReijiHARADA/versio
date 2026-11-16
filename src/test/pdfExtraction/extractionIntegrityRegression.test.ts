@@ -47,12 +47,13 @@ describe("extraction integrity on real papers", () => {
     expect(warned).toBeLessThanOrEqual(10);
   }, 60_000);
 
-  it.each([
+  for (const [id, ceiling] of [
     ["epmc-PMC12094662", 5],
     ["epmc-PMC13551842", 27],
     ["arxiv-2509.25460", 9],
-  ])("%s keeps warned paragraphs at or below %i", async (id, ceiling, ctx) => {
-    if (!pdfOf(id)) ctx.skip();
-    expect((await extract(id)).warned).toBeLessThanOrEqual(ceiling);
-  }, 60_000);
+  ] as const) {
+    it.skipIf(!pdfOf(id))(`${id} keeps warned paragraphs at or below ${ceiling}`, async () => {
+      expect((await extract(id)).warned).toBeLessThanOrEqual(ceiling);
+    }, 60_000);
+  }
 });
