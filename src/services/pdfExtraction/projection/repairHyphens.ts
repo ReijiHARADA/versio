@@ -12,7 +12,7 @@ import type { PaperBlock } from "../../../types/paper";
  */
 const SUFFIX_FRAGMENT =
   /^(?:tions?|sions?|ations?|itions?|ments?|ness|ity|ities|ive|ives|ively|ances?|ences?|enced|ency|encies|ancy|ancies|ated|ating|ical|ically|ous|ously|ably|ibly|ism|ized|izing|ised|ising|ial|ially|ular|ures?|ogy|ings?|ed|ly|ers?|est|ics?|al|ies|ipants?|ists?)$/;
-const TEXT_TYPES = new Set<PaperBlock["type"]>(["paragraph", "heading", "caption", "footnote"]);
+const TEXT_TYPES = new Set<PaperBlock["type"]>(["paragraph", "heading", "footnote"]);
 const HYPHENATED = /\b([A-Za-z]{2,})-([a-z]{2,})\b/g;
 
 export function repairLineBreakHyphens(blocks: PaperBlock[]): PaperBlock[] {
