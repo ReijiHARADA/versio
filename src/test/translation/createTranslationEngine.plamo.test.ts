@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createTranslationEngine, type TranslationEngineConfig } from "../../services/translation/createTranslationEngine";
 import { MADLADEngine, MADLAD_MODEL_VERSION } from "../../services/translation/madladEngine";
-import { PLAMO_MODEL_VERSION, PlamoEngine } from "../../services/translation/plamoEngine";
+import { PLAMO_MODEL, PLAMO_MODEL_VERSION, PlamoEngine } from "../../services/translation/plamoEngine";
 
 const base: TranslationEngineConfig = {
   translationEngine: "plamo",
@@ -20,6 +20,7 @@ describe("createTranslationEngine", () => {
     expect(b.primaryEngine).toBe(b.engine);
     expect(b.appleRouter).toBeNull();
     expect(b.cacheModelVersion).toBe(PLAMO_MODEL_VERSION);
+    expect(b.cacheModel).toBe(PLAMO_MODEL);
   });
 
   it("madlad config yields previous bundle shape", () => {

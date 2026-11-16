@@ -2,7 +2,7 @@ import type { Paper, PaperBlock, Section } from "../../types/paper";
 import { saveBlocks, savePaper, saveSections } from "../database";
 import { isJapaneseSourcePaper } from "../sourceLanguage";
 import { shouldTranslateTitle } from "../translation/quality";
-import { isAcceptableTranslation } from "../translation/translationCheck";
+import { acceptFor } from "../translation/acceptance";
 import { resolveMadladServerUrl } from "../translation/madladEngine";
 import { shouldTranslateBlock } from "./policy";
 import type { ImportConfig } from "./types";
@@ -42,9 +42,13 @@ export const DEFAULT_IMPORT_CONFIG: Required<ImportConfig> = {
   useCache: true,
 };
 
-export function usableCachedJa(cached: string | null | undefined, source: string): string | null {
+export function usableCachedJa(
+  cached: string | null | undefined,
+  source: string,
+  engine?: "plamo" | "madlad"
+): string | null {
   if (!cached) return null;
-  return isAcceptableTranslation(cached, source) ? cached : null;
+  return acceptFor(engine)(cached, source) ? cached : null;
 }
 
 export async function persistUntranslatableAsSkipped(

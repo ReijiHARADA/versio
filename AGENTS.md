@@ -39,7 +39,7 @@
 
 ## Translation
 
-- Production engine is **PLaMo 3 Translate 2B (GGUF Q4_K_M)** served by a bundled static `llama-server` sidecar (llama.cpp `b12110`, `src-tauri/src/plamo.rs`). Rust starts it lazily on `127.0.0.1:8766` with a per-launch `--api-key`, `-np 8 -c 65536`, and stops it on window close. Frontend: `src/services/translation/plamoEngine.ts`.
+- Production engine is **PLaMo 3 Translate 2B (GGUF Q4_K_M)** served by a bundled static `llama-server` sidecar (llama.cpp `b12110`, `src-tauri/src/plamo.rs`). Rust starts it lazily on `127.0.0.1:8766` (a free port if taken; readiness requires an authenticated `/v1/models` 200) with a per-launch `--api-key`, kills orphaned sidecar/curl via pid files in `<AppData>/models/`, `-np 8 -c 65536`, and stops it on window close. Frontend: `src/services/translation/plamoEngine.ts`.
 - The model is **downloaded on first use** to `<AppData>/models/` (pinned HF revision + SHA-256, resumable `.part`). Do not bundle it in the `.app`. Build the sidecar with `npm run build:llama-server` (also run by `tauri-build.sh`); `src-tauri/binaries/` is gitignored and must link only system libraries.
 - Translations are accepted by the deterministic check in `src/services/translation/translationCheck.ts` (breakdown + numbers/citations/URLs). Do not reintroduce `quality.ts` gates on the PLaMo path; those heuristics were tuned to MADLAD failures.
 - Engine choice and evidence: `docs/research/local-llm-translation-bench-2026-11.md` (blind MQM + fact checks + whole-paper timing). Re-run `translation-server/scripts/local_llm_bench/` before switching models.

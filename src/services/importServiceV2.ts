@@ -104,6 +104,7 @@ export async function importPDFV2(
     engine: translationEngine,
     appleRouter,
     llmProviders,
+    cacheModel,
     cacheModelVersion,
   } = createTranslationEngine(cfg);
 
@@ -596,12 +597,13 @@ export async function importPDFV2(
         ? usableCachedJa(
             await getCachedTranslation(
               titleHash,
-              translationEngine.name,
+              cacheModel,
               cacheModelVersion,
               "en",
               "ja"
             ),
-            paper.titleOriginal
+            paper.titleOriginal,
+            cfg.translationEngine
           )
         : null;
 
@@ -621,12 +623,13 @@ export async function importPDFV2(
         ? usableCachedJa(
             await getCachedTranslation(
               sectionHash,
-              translationEngine.name,
+              cacheModel,
               cacheModelVersion,
               "en",
               "ja"
             ),
-            section.originalTitle
+            section.originalTitle,
+            cfg.translationEngine
           )
         : null;
 
@@ -656,12 +659,13 @@ export async function importPDFV2(
         ? usableCachedJa(
             await getCachedTranslation(
               blockHash,
-              translationEngine.name,
+              cacheModel,
               cacheModelVersion,
               "en",
               "ja"
             ),
-            translationSource
+            translationSource,
+            cfg.translationEngine
           )
         : null;
 

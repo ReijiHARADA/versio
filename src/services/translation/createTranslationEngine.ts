@@ -6,7 +6,7 @@
 import { OllamaProvider } from "../llm";
 import { AppleTranslationEngine, SelectiveAppleTranslationEngine } from "./appleTranslationEngine";
 import { MADLADEngine, MADLAD_MODEL_VERSION } from "./madladEngine";
-import { PLAMO_MODEL_VERSION, PlamoEngine } from "./plamoEngine";
+import { PLAMO_MODEL, PLAMO_MODEL_VERSION, PlamoEngine } from "./plamoEngine";
 import { OllamaTranslationEngine } from "./ollamaTranslationEngine";
 import type { TranslationEngine } from "./types";
 
@@ -26,6 +26,8 @@ export type TranslationEngineBundle = {
   madladEngine: MADLADEngine;
   /** Base engine before the optional Ollama cascade. */
   primaryEngine: TranslationEngine;
+  /** model used for translation_cache lookups; must equal TranslationResult.model the engine saves under. */
+  cacheModel: string;
   /** model_version used for translation_cache lookups. */
   cacheModelVersion: string;
   /** Same ordered providers used for selective cascade / glossary. */
@@ -56,6 +58,7 @@ export function createTranslationEngine(
     appleRouter,
     madladEngine,
     primaryEngine: baseEngine,
+    cacheModel: usePlamo ? PLAMO_MODEL : engine.name,
     cacheModelVersion: usePlamo ? PLAMO_MODEL_VERSION : MADLAD_MODEL_VERSION,
     llmProviders,
   };
