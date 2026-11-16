@@ -29,7 +29,8 @@ export function jatsParagraphs(xml: string): GoldParagraph[] {
     for (const p of containers.flatMap((c) => elements(removeElements(removeElements(c, "list"), "boxed-text"), "p"))) {
       if (/<p[\s>]/.test(p.inner)) continue;
       const hasDisplayFormula = /<disp-formula/.test(p.inner);
-      const plain = decodeEntities(text(removeElements(p.inner, "disp-formula"))).replace(/\s+/g, " ").trim();
+      // Inline formulas carry their LaTeX source next to the MathML; the PDF prints only the formula.
+      const plain = decodeEntities(text(removeElements(removeElements(p.inner, "disp-formula"), "tex-math"))).replace(/\s+/g, " ").trim();
       if (plain) out.push({ index: out.length, part, text: plain, hasDisplayFormula });
     }
   }

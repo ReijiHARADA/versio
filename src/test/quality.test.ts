@@ -2254,3 +2254,12 @@ describe("technical name audit diagnostics", () => {
     expect(reasons.some((reason) => /invariant|unexpected|citation|year/i.test(reason))).toBe(true);
   });
 });
+
+describe("unsafeParagraphStructureReason sentence ends", () => {
+  it("accepts a full stop before a closing quotation mark or several superscript citations", () => {
+    expect(unsafeParagraphStructureReason("One participant said that programs should incorporate traditional healers as treatment resources [25].”")).toBeNull();
+    expect(unsafeParagraphStructureReason("Pain was interpreted with the conventional cutoffs reported in the literature.13,14")).toBeNull();
+    expect(unsafeParagraphStructureReason("Several studies confirmed the association in older adults.10–15")).toBeNull();
+    expect(unsafeParagraphStructureReason("The results across different musical repertoires are detailed in")).toMatch(/末尾/);
+  });
+});

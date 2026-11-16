@@ -74,12 +74,13 @@ describe("reconcileTranslationWarnings", () => {
     expect(reconcileTranslationWarnings([repaired])[0].metadata.translationInputWarning).toBeUndefined();
   });
 
-  it("treats a colon lead-in as complete only when an equation, table or list item follows", () => {
+  it("treats a colon lead-in as complete unless a lower-case paragraph continues it", () => {
     const lead = () => block("a", "paragraph", "Under the Poisson objective, the loss function is defined in Eq. 2:", 1, { translationInputWarning: TAIL });
     expect(reconcileTranslationWarnings([lead(), block("eq", "equation", "L = sum")])[0].metadata.translationInputWarning).toBeUndefined();
     expect(reconcileTranslationWarnings([lead(), block("i", "paragraph", "• first item", 1, { listRole: "item" })])[0].metadata.translationInputWarning).toBeUndefined();
-    expect(reconcileTranslationWarnings([lead(), block("h", "heading", "Results")])[0].metadata.translationInputWarning).toBe(TAIL);
-    expect(reconcileTranslationWarnings([lead()])[0].metadata.translationInputWarning).toBe(TAIL);
+    expect(reconcileTranslationWarnings([lead(), block("q", "paragraph", "“I could not have afforded the fees otherwise,” one student said.")])[0].metadata.translationInputWarning).toBeUndefined();
+    expect(reconcileTranslationWarnings([lead(), block("h", "heading", "Results")])[0].metadata.translationInputWarning).toBeUndefined();
+    expect(reconcileTranslationWarnings([lead(), block("c", "paragraph", "the sum of squared errors over every tree in the ensemble.")])[0].metadata.translationInputWarning).toBe(TAIL);
   });
 
   it("keeps other defects of an introduced lead-in and leaves context warnings and list items alone", () => {
@@ -121,5 +122,38 @@ describe("stitchParagraphContinuations after a paragraph that cannot end", () =>
     for (const text of ["Results of the forgetting rate differed between the groups.", "(i) the noise is normally distributed", "3 Results and discussion", "7 https://example.org/library/page"]) {
       expect(stitchParagraphContinuations([a, block("b", "paragraph", text)], sections)).toHaveLength(2);
     }
+  });
+});
+
+describe("stitchParagraphContinuations across mistyped blocks", () => {
+  const sections = [{ id: "s-body", normalizedKind: "body" }];
+  it("takes back prose typed as an equation and a table reference read as a caption", () => {
+    const a = block("a", "paragraph", "Digital tools span 12 categories and 87 subcategories, with applications spanning prevention,");
+    const eq = block("eq", "equation", "diagnosis, treatment, and long-term disease management (3).");
+    expect(stitchParagraphContinuations([a, eq], sections)[0].original).toMatch(/prevention, diagnosis, treatment/);
+    const b = block("b", "paragraph", "The ten most cited articles, published between 2014 and 2024, are listed in");
+    const t = block("t", "table", "Table 7. For instance, Dubey S et al. from the Institute of Post");
+    const c = block("c", "paragraph", "Graduate Medical Education reported the largest trial.");
+    const out = stitchParagraphContinuations([b, t, c], sections);
+    expect(out).toHaveLength(1);
+    expect(out[0].original).toMatch(/listed in Table 7\. For instance, .* Institute of Post Graduate Medical/);
+  });
+
+  it("keeps real equations and captions", () => {
+    const a = block("a", "paragraph", "The loss is minimised with respect to the parameters of");
+    expect(stitchParagraphContinuations([a, block("eq", "equation", "x = y + z (3)")], sections)).toHaveLength(2);
+    const b = block("b", "paragraph", "Participants were recruited from three clinics and");
+    expect(stitchParagraphContinuations([b, block("t", "table", "Table 2. Baseline characteristics", 1, { tableRows: [["a"]] })], sections)).toHaveLength(2);
+  });
+});
+
+describe("stitchParagraphContinuations past full-page figures", () => {
+  it("reaches a continuation two pages on when only figures lie between", () => {
+    const sections = [{ id: "s-body", normalizedKind: "body" }];
+    const a = block("a", "paragraph", "The link between supportive leadership and personal hope is strengthened in the presence", 4);
+    const b = block("b", "paragraph", "of a high psychosocial safety climate in the workplace.", 6);
+    const figs = [block("f1", "figure", "Fig. 1", 5), block("f2", "figure", "Fig. 2", 5), block("f3", "figure", "Fig. 3", 6)];
+    expect(stitchParagraphContinuations([a, ...figs, b], sections)[0].original).toMatch(/presence of a high/);
+    expect(stitchParagraphContinuations([a, block("p", "paragraph", "Short label", 5), b], sections)).toHaveLength(3);
   });
 });

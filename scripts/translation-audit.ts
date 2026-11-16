@@ -3,8 +3,9 @@
  *
  *   npx vite-node --script scripts/translation-audit.ts -- --run fix4-fieldgold [--split dev|test] [--n 120] [--released base-run]
  *
- * --released base-run: sample only paragraphs that were warned in base-run and
- * are not warned here (the blocks a change newly sends to translation).
+ * --released base-run: sample only paragraphs whose block was warned in base-run
+ * and is not warned here (the blocks a change newly sends to translation, joined
+ * or not).
  *
  * Samples translatable, unwarned paragraph blocks from an extraction audit
  * run (English Europe PMC papers, so each block also has a JATS verdict),
@@ -49,9 +50,9 @@ for (const doc of docs) {
   const jats = path.join(cacheDir, `${doc.id.slice(5)}.xml`);
   const verdicts = new Map(doc.id.startsWith("epmc-") && fs.existsSync(jats) ? alignParagraphs(jatsParagraphs(fs.readFileSync(jats, "utf8")), paragraphs).blocks.map((b) => [b.id, b.verdict]) : []);
   const baseWarned = released
-    ? new Set((JSON.parse(fs.readFileSync(path.join(root, "test-data/extraction-audit", released, "docs", `${doc.id}.json`), "utf8")) as Dump).blocks.filter((b) => b.warning).map((b) => `${b.id}\u0000${b.text}`))
+    ? new Set((JSON.parse(fs.readFileSync(path.join(root, "test-data/extraction-audit", released, "docs", `${doc.id}.json`), "utf8")) as Dump).blocks.filter((b) => b.warning).map((b) => b.id))
     : null;
-  const pool = paragraphs.filter((b) => b.translatable && !b.warning && b.text.split(/\s+/).length >= 8 && (!baseWarned || baseWarned.has(`${b.id}\u0000${b.text}`)));
+  const pool = paragraphs.filter((b) => b.translatable && !b.warning && b.text.split(/\s+/).length >= 8 && (!baseWarned || baseWarned.has(b.id)));
   for (const b of pool.map((x) => [rand(), x] as const).sort((a, c) => a[0] - c[0]).slice(0, perDoc).map(([, x]) => x)) {
     sample.push({ doc: doc.id, id: b.id, text: b.text, verdict: verdicts.get(b.id) ?? "?" });
   }

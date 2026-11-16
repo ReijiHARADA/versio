@@ -1,5 +1,7 @@
 import { extractPDFContent, extractFigureImages, graphicsToExtractionEvidence, type ExtractedPage } from "../../pdfService";
 import { figureLookupKey, formatReadingOrderLog } from "../../pdfLayout";
+import { repairLineBreakHyphens } from "../projection/repairHyphens";
+import { collapseTableCellRuns } from "../projection/tableCellRuns";
 import { reconcileTranslationWarnings, stitchParagraphContinuations } from "../projection/stitchParagraphs";
 import type { Paper, Section, PaperBlock } from "../../../types/paper";
 import type { LayoutBlock, PageColumnLayout } from "../../pdfLayout";
@@ -394,7 +396,7 @@ export function extractFromPages(input: {
     paper: projected.paper,
     sections: projected.sections,
     // Paragraphs interrupted by figures, tables, footnotes or page breaks are rejoined.
-    blocks: reconcileTranslationWarnings(stitchParagraphContinuations(projected.blocks, projected.sections)),
+    blocks: reconcileTranslationWarnings(repairLineBreakHyphens(stitchParagraphContinuations(collapseTableCellRuns(projected.blocks, projected.sections), projected.sections))),
     layoutBlocks: generic.blocks,
     layouts: generic.layouts,
     pageKind,

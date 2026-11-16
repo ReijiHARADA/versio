@@ -37,13 +37,33 @@ const hasOpenParenthesis = (text: string) => (text.match(/\(/g)?.length ?? 0) > 
  * (`(Open Science` + `Collaboration, 2015). …`). List items, numbered
  * headings, footnote marks, captions and symbol-only debris are not.
  */
-function looseContinuation(open: string, text: string): boolean {
+function looseContinuation(open: string, text: string, anyStart = false): boolean {
   if (words(text) < 3 || !/\p{L}{4,}/u.test(text)) return false;
   if (/^(?:[•‣▪∙*–-]\s|\(?\d{1,2}[.)]\s|\(?[a-z]{1,3}\)\s|\d{1,2}\s+(?:\p{Lu}|https?:)|(?:Fig\.?|Figure|Table|TABLE|FIGURE|Supplementary)\s*\d)/u.test(text)) return false;
-  if (!/^\p{L}/u.test(text)) return true;
+  if (!/^\p{L}/u.test(text) || anyStart) return true;
   const head = text.slice(0, 120);
   const close = head.indexOf(")");
   return hasOpenParenthesis(open) && close >= 0 && (head.indexOf("(") < 0 || head.indexOf("(") > close);
+}
+/**
+ * Prose wrongly typed as an equation (`diagnosis, treatment, and long-term
+ * disease management (3).`: the citation looks like an equation number).
+ */
+function isProseEquation(block: PaperBlock): boolean {
+  const text = (block.original ?? "").trim();
+  if (block.type !== "equation" || !/^\p{Ll}/u.test(text) || words(text) < 4) return false;
+  if (/[=<>≤≥±×÷∑∫√^_{}\\]/.test(text)) return false;
+  return (text.match(/\p{L}{4,}/gu)?.length ?? 0) >= 3;
+}
+/**
+ * A sentence that refers to a table or figure at a line start, read as its
+ * caption: `… are listed in` + table block `Table 7. For instance, …`.
+ */
+function isInlineReferenceCaption(open: string, block: PaperBlock): boolean {
+  if (block.type !== "table" && block.type !== "figure") return false;
+  if (block.metadata.tableRows || block.metadata.imageUrl) return false;
+  const text = (block.original ?? "").trim();
+  return /\b(?:in|see|of|from|to|and|with|by|on)$/i.test(open) && /^(?:Table|Fig\.?|Figure)\s*\d+[A-Za-z]?\b/.test(text) && text.length <= 240;
 }
 /** A complete prose paragraph between the pieces means they do not belong together. */
 const isCompleteProse = (text: string) => words(text) >= 20 && /^[\p{Lu}"“(]/u.test(text) && TERMINAL.test(text);
@@ -72,30 +92,40 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
   const out = [...blocks];
   for (let i = 0; i < out.length; i += 1) {
     if (!eligible(out[i])) continue;
+    // A caption-like line taken back mid-sentence ("Table 7. For instance, … of Post") ends anywhere.
+    let afterReferenceCaption = false;
     for (;;) {
       const current = out[i];
       const currentText = current.original?.trim() ?? "";
       if (!isOpenEnded(currentText) || words(currentText) < 6) break;
       let target = -1;
-      const hardOpen = isHardOpen(currentText);
+      const hardOpen = isHardOpen(currentText) || afterReferenceCaption;
       let skippedParagraph = false;
-      for (let j = i + 1; j < out.length && j <= i + 12 && out[j].pageStart <= current.pageEnd + 1; j += 1) {
+      // Full-page figures and tables can push the rest of a paragraph several pages on.
+      let onlyFloats = true;
+      for (let j = i + 1; j < out.length && j <= i + 12 && out[j].pageStart <= current.pageEnd + (onlyFloats && j > i + 1 ? 3 : 1); j += 1) {
         const candidate = out[j];
         const candidateText = candidate.original?.trim() ?? "";
         if (eligible(candidate) && words(candidateText) >= 2 && CONTINUATION_START.test(candidateText)) {
           target = j;
           break;
         }
+        if (j === i + 1 && (isProseEquation(candidate) || isInlineReferenceCaption(currentText, candidate))) {
+          target = j;
+          break;
+        }
         // Without a lower-case start, only the first paragraph after the interruption can be the continuation.
-        if (hardOpen && !skippedParagraph && eligible(candidate) && looseContinuation(currentText, candidateText)) {
+        if (hardOpen && !skippedParagraph && eligible(candidate) && looseContinuation(currentText, candidateText, afterReferenceCaption)) {
           target = j;
           break;
         }
         if (!interruptionAllowed(candidate)) break;
         if (candidate.type === "paragraph") skippedParagraph = true;
+        if (candidate.type !== "figure" && candidate.type !== "table") onlyFloats = false;
       }
       if (target < 0) break;
       const next = out[target];
+      afterReferenceCaption = isInlineReferenceCaption(currentText, next);
       const joined = joinTexts(currentText, next.original?.trim() ?? "");
       const warning = isExpectedNonProseParagraph(joined) ? null : unsafeParagraphStructureReason(joined);
       out[i] = {
@@ -156,8 +186,11 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     const current = block.metadata.translationInputWarning;
     if (typeof current === "string" && CONTEXT_WARNINGS.some((p) => p.test(current))) return block;
     const text = (block.original ?? "").trim();
-    // An introduced colon closes the lead-in like a full stop; every other check still applies.
-    const introduced = /:\s*$/.test(text) && (block.metadata.listRole === "intro" || adjacentDisplay(blocks.slice(index + 1, index + 6), block, true));
+    // A colon closes a lead-in like a full stop (`A student shared:` before a quotation,
+    // `defined in Eq. 2:` before an equation); every other check still applies. Only a
+    // lower-case paragraph right after it shows that the sentence itself goes on.
+    const nextText = blocks.slice(index + 1).find((b) => b.type === "paragraph" && !isEquationDebris(b))?.original?.trim() ?? "";
+    const introduced = /:\s*$/.test(text) && (block.metadata.listRole === "intro" || adjacentDisplay(blocks.slice(index + 1, index + 6), block, true) || !/^\p{Ll}/u.test(nextText));
     // `where θ denotes …` / `and measures …` right after a display equation continues the sentence the equation is part of.
     const afterEquation = /^\p{Ll}/u.test(text) && adjacentDisplay(blocks.slice(Math.max(0, index - 3), index).reverse(), block, false);
     let checked = introduced ? text.replace(/:\s*$/, ".") : text;

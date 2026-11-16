@@ -3066,9 +3066,21 @@ function groupLinesIntoBlocks(
       const normal = Math.max(previous.fontSize, line.fontSize) >= baseFont * 0.55;
       return tiny && normal;
     })();
+    // Publishers that separate paragraphs by a first-line indent instead of
+    // extra leading (BMC, Springer, many journals): a finished sentence
+    // followed by an indented, capitalised line starts a new paragraph.
+    const indentedParagraphStart = currentRole === "paragraph" && forcedRole === "paragraph" && !inReferences && (() => {
+      const previous = current[current.length - 1];
+      if (previous.page !== line.page || previous.column !== line.column) return false;
+      if (!/[.!?:][”"’')\]]*$/.test(previous.text.trim()) || !/^[A-Z“"(\[]/.test(line.text.trim())) return false;
+      const margin = Math.min(...current.map((l) => l.x));
+      const indent = line.x - margin;
+      return indent >= baseFont * 0.8 && indent <= baseFont * 4 && line.width >= baseFont * 8;
+    })();
     const mergeable =
       sameRole &&
       !atomic &&
+      !indentedParagraphStart &&
       authorKindOk &&
       currentRole !== "heading" &&
       currentRole !== "title" &&
