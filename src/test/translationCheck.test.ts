@@ -28,3 +28,11 @@ describe("pipeline acceptance uses the deterministic check", () => {
     expect(r?.failedIndices).toEqual([0]);
   });
 });
+
+describe("length ratio counts code points like the Python reference", () => {
+  it("does not double-count surrogate pairs", () => {
+    const source = "The model was evaluated on several large benchmarks.";
+    const output = "𠀀".repeat(26) + "。";
+    expect(checkTranslation(source, output).breakdown.filter((r) => r.startsWith("length_ratio"))).toEqual([]);
+  });
+});

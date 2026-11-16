@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { isTauriApp } from "../../utils/serverReady";
+import { describePlamoError } from "../../services/translation/plamoReadiness";
 
 type Progress = { present: boolean; downloadedBytes: number; totalBytes: number };
 export type PlamoModelState = "unavailable" | "checking" | "absent" | "downloading" | "present" | "error";
@@ -8,6 +9,7 @@ export type PlamoModelState = "unavailable" | "checking" | "absent" | "downloadi
 export function usePlamoModel() {
   const [state, setState] = useState<PlamoModelState>(isTauriApp() ? "checking" : "unavailable");
   const [percent, setPercent] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isTauriApp()) return;
@@ -34,13 +36,15 @@ export function usePlamoModel() {
   const download = useCallback(async () => {
     const { invoke } = await import("@tauri-apps/api/core");
     setState("downloading");
+    setError(null);
     try {
       await invoke("download_plamo_model");
       setState("present");
-    } catch {
+    } catch (e) {
+      setError(describePlamoError(e));
       setState("error");
     }
   }, []);
 
-  return { state, percent, download };
+  return { state, percent, error, download };
 }

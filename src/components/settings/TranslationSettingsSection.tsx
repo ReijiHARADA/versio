@@ -81,7 +81,7 @@ export function TranslationSettingsSection({
           {usePlamo ? (
             <SettingsRow
               label="翻訳モデル"
-              description={plamo.state === "downloading" ? `ダウンロード中…（${plamo.percent}%）` : modelLabel[plamo.state]}
+              description={plamo.state === "downloading" ? `ダウンロード中…（${plamo.percent}%）` : plamo.error ?? modelLabel[plamo.state]}
             >
               {plamo.state === "absent" || plamo.state === "error" ? (
                 <button type="button" className={styles.button} onClick={() => void plamo.download()}>

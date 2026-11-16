@@ -67,7 +67,8 @@ export function checkTranslation(source: string, output: string): TranslationChe
   if (!o) breakdown.push("empty");
   else if (ja < 0.5 * (ja + letters / 2)) breakdown.push("not_japanese");
   if (META.test(o)) breakdown.push("meta_preamble");
-  const ratio = o.length / Math.max(1, source.length);
+  // Code points, like Python len(); UTF-16 length would double-count surrogate pairs.
+  const ratio = [...o].length / Math.max(1, [...source].length);
   if (o && source.trim().length >= RATIO_MIN_SOURCE_CHARS && !(ratio >= 0.2 && ratio <= 1.0)) {
     breakdown.push(`length_ratio:${ratio.toFixed(2)}`);
   }
