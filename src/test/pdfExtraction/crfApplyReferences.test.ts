@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { applyCrfReferences, wantsCrfReferences } from "../../services/pdfExtraction/crf/applyReferences";
+import { applyCrfReferences, referencesEnd, wantsCrfReferences } from "../../services/pdfExtraction/crf/applyReferences";
 import { loadNodeCrfRuntime } from "../../services/pdfExtraction/crf/nodeRuntime";
 import type { PaperBlock, Section } from "../../types/paper";
 
@@ -40,5 +40,19 @@ describe("applyCrfReferences", () => {
     const { blocks: out, outcome } = applyCrfReferences({ paperId: "p", pages: [page], blocks, sections: [] });
     expect(outcome.applied).toBe(false);
     expect(out).toBe(blocks);
+  });
+});
+
+describe("referencesEnd", () => {
+  const ref = { year: "2020", authors: "A. B." };
+  const prose = {};
+  it("cuts an absorbed appendix after the last run of references", () => {
+    expect(referencesEnd([ref, ref, ref, prose, ref, prose, prose, prose, prose])).toBe(5);
+  });
+  it("keeps one or two trailing entries without fields", () => {
+    expect(referencesEnd([ref, ref, ref, prose, prose])).toBe(5);
+  });
+  it("does not cut when references continue after a few odd entries", () => {
+    expect(referencesEnd([ref, prose, prose, ref, ref, ref])).toBe(6);
   });
 });

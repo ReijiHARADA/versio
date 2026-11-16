@@ -47,6 +47,27 @@ function boxesOf(lines: RefLine[]): BoundingBox[] {
 }
 
 /**
+ * Where the reference list ends. Versio's section split can run the references
+ * section into an appendix; GROBID cuts that with its segmentation model. Score
+ * each segment +1 when it looks like a reference (accepted, with a year,
+ * authors or a DOI; appendix prose has none of them) and -1 otherwise, and cut where the prefix sum peaks. Only
+ * a tail of at least 3 segments is cut, so a last yearless entry stays.
+ */
+export function referencesEnd(citations: Array<{ rejected?: true; year?: string; authors?: string; doi?: string }>): number {
+  let sum = 0;
+  let best = 0;
+  let cut = citations.length;
+  citations.forEach((c, i) => {
+    sum += !c.rejected && (c.year || c.authors || c.doi) ? 1 : -1;
+    if (sum >= best) {
+      best = sum;
+      cut = i + 1;
+    }
+  });
+  return citations.length - cut >= 3 ? cut : citations.length;
+}
+
+/**
  * Replace the reference blocks in `blocks` (in place order-wise; returns a new
  * array) with one block per CRF reference. Falls back (no change) when the
  * section is missing, non-Latin, or yields no references.
@@ -69,8 +90,12 @@ export function applyCrfReferences(input: {
   const usedIds = new Set(input.blocks.filter((b) => !removed.has(b)).map((b) => b.id));
   const rebuilt: PaperBlock[] = [];
   let references = 0;
+  const citations = segments.map((segment) => parseCitation(segment.text));
+  const tail = referencesEnd(citations);
   segments.forEach((segment, index) => {
-    const citation = parseCitation(segment.text);
+    const parsed = citations[index];
+    // Past the end of the list (appendix absorbed into the section): keep the text as paragraphs.
+    const citation = index >= tail ? { ...parsed, rejected: true as const } : parsed;
     const boxes = boxesOf(segment.lines);
     const pages = boxes.map((b) => b.page);
     const pageStart = pages.length ? Math.min(...pages) : referenceBlocks[0].pageStart;
