@@ -61,6 +61,8 @@ for (const [i, b] of sample.entries()) {
   } catch (error) {
     outcomes.push({ ...b, outcome: "request_failed", source: b.text, output: String(error).slice(0, 120) });
   }
+  // Saved after every block: a long run that is stopped keeps what it measured.
+  fs.writeFileSync(path.join(runDir, `translation-${split}.json`), JSON.stringify(outcomes, null, 1));
   process.stdout.write(`\r${i + 1}/${sample.length}`);
 }
 fs.writeFileSync(path.join(runDir, `translation-${split}.json`), JSON.stringify(outcomes, null, 1));
