@@ -189,12 +189,19 @@ export class TranslationQueue {
    * Start the queue processing.
    */
   start(): void {
+    if (this.isRunning) return;
     this.isRunning = true;
-    this.processNext();
+    // Fill every free slot; processNext starts at most one task per call.
+    const free = Math.max(0, this.config.concurrency - this.activeCount);
+    for (let i = 0; i < free; i++) this.processNext();
+  }
+
+  isStarted(): boolean {
+    return this.isRunning;
   }
 
   /**
-   * Stop the queue processing.
+   * Stop starting new tasks. In-flight tasks finish; queued tasks wait for start().
    */
   stop(): void {
     this.isRunning = false;
