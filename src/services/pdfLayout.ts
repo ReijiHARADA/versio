@@ -15,6 +15,7 @@ import {
   toHalfwidthAscii,
 } from "./translation/quality";
 import * as publisherPredicates from "./pdfExtraction/formats/publisherChrome";
+import { detectPageRegions, lineInRegion, type PageRegion } from "./pdfExtraction/layout/pageRegions";
 
 /** Browser-safe env read — bare `process` is undefined in WKWebView / Vite. */
 function layoutEnv(name: string): string | undefined {
@@ -2403,6 +2404,40 @@ function orderPageLines(lines: LayoutLine[], layout: PageColumnLayout): LayoutLi
   return result;
 }
 
+function orderWithRegions(
+  lines: LayoutLine[],
+  layout: PageColumnLayout,
+  regions: PageRegion[]
+): LayoutLine[] {
+  const deduped = regions.filter((region, index) => !regions.slice(0, index).some((other) => {
+    const overlap = rectOverlapArea(region.rect, other.rect);
+    return overlap > Math.min(region.rect.width * region.rect.height, other.rect.width * other.rect.height) * 0.5;
+  }));
+  const members = new Map<PageRegion, LayoutLine[]>();
+  for (const region of deduped) members.set(region, []);
+  for (const line of lines) {
+    if (isTableCaption(line.text) || isFigureCaption(line.text) || deduped.some((region) => region.captionLine === line)) continue;
+    const region = deduped.find((candidate) => lineInRegion(line, candidate));
+    if (region) members.get(region)?.push(line);
+  }
+  const ordered = orderPageLines(lines.filter((line) => ![...members.values()].some((memberLines) => memberLines.includes(line))), layout);
+  const insertedAt = new Map<LayoutLine | undefined, number>();
+  for (const region of deduped) {
+    const regionLines = members.get(region) ?? [];
+    if (regionLines.length === 0) continue;
+    const anchor = ordered.includes(region.captionLine as LayoutLine)
+      ? region.captionLine
+      : [...ordered].filter((line) => line.y < region.rect.y).sort((a, b) => b.y - a.y || b.x - a.x)[0];
+    const offset = insertedAt.get(anchor) ?? 0;
+    const index = anchor ? ordered.indexOf(anchor) + 1 + offset : offset;
+    ordered.splice(index, 0, ...regionLines
+      .sort((a, b) => a.y - b.y || a.x - b.x)
+      .map((line) => ({ ...line, roleHint: region.kind === "table" ? "table" : "chrome" })));
+    insertedAt.set(anchor, offset + regionLines.length);
+  }
+  return ordered;
+}
+
 function splitSameBaselineNameRuns(lines: LayoutLine[]): LayoutLine[] {
   return lines.flatMap((line) => {
     const significant = line.items.filter((item) => item.fontSize >= line.fontSize * 0.7);
@@ -2528,6 +2563,9 @@ function buildPageLines(
   }
 
   const visible = figureSeparated.filter((line) => !isEdgeChrome(line, layout, patterns));
+  const bodyFontSize = median(visible.filter((line) => line.text.length > 40).map((line) => line.fontSize)) ||
+    median(visible.map((line) => line.fontSize)) || 10;
+  const regions = detectPageRegions(page, visible, bodyFontSize);
   const splitCandidates = visible.filter((line) => isBodyStartHeading(line.text));
   const splitAt =
     splitCandidates.length > 0
@@ -2537,10 +2575,10 @@ function buildPageLines(
     const masthead = visible.filter((line) => line.y < splitAt.y);
     const body = visible.filter((line) => line.y >= splitAt.y);
     const mastheadLayout = layout.isAsymmetricRail ? { ...layout, isMultiColumn: false } : layout;
-    return [...orderPageLines(masthead, mastheadLayout), ...orderPageLines(body, layout)];
+    return [...orderWithRegions(masthead, mastheadLayout, regions), ...orderWithRegions(body, layout, regions)];
   }
 
-  return orderPageLines(visible, layout);
+  return orderWithRegions(visible, layout, regions);
 }
 
 function isLongBodyLine(text: string): boolean {
@@ -3209,6 +3247,7 @@ function groupLinesIntoBlocks(
 
     const captionContinue =
       (currentRole === "figure_caption" || currentRole === "table_caption") &&
+      !line.roleHint &&
       sameTextOrientation(current[current.length - 1].rotation, line.rotation) &&
       line.page === current[0].page &&
       (line.column === current[0].column ||
