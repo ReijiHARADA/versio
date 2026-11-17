@@ -1475,7 +1475,8 @@ function isStandalonePageNumber(text: string, role: CanonicalNode["role"]): bool
   // a low-confidence paragraph.  A bare short number has no readable prose
   // value; preserve numeric tables/headings, but never expose this marker as
   // a translation unit.
-  return role !== "table" && role !== "heading" && /^\d{1,3}$/.test(text.trim());
+  // Proceedings number pages continuously (ACL `16235`), so allow five digits.
+  return role !== "table" && role !== "heading" && /^\d{1,5}$/.test(text.trim());
 }
 
 function captionedTableAbsorption(canonical: CanonicalDocument): {
