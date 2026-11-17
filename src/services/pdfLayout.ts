@@ -1498,7 +1498,7 @@ function cjkCount(text: string): number {
 export function isFigureCaption(text: string): boolean {
   const caption = layoutPlain(text);
   // Panel suffix `2a` only when not the start of a glued word (`2lexico…`).
-  const figNumber = String.raw`(?:figure|fig\.?|図)\s*\d+(?:[a-z](?![a-z]))?`;
+  const figNumber = String.raw`(?:figure|fig\.?|図)\s*(?:[a-z]\.?)?\d+(?:[a-z](?![a-z]))?`;
   // Include `|` for Frontiers-style `FIGURE 1 | Experimental design…`.
   if (new RegExp(`^${figNumber}(?:\\s*,\\s*[a-z]\\b)*(?:\\s*[:.|：–—-]|\\s*$)`, "i").test(caption)) {
     return true;
@@ -1540,7 +1540,8 @@ export function isTableCaption(text: string): boolean {
   // Theses and technical reports commonly number tables hierarchically
   // (`Table 2.5`, `Table A.3.1`). Treat that numeric path as one structural
   // identifier instead of mistaking the first period for caption prose.
-  const tableNumber = "(?:[a-z]+\\.)?\\d+(?:\\.\\d+)*[a-z]?";
+  // Appendix / supplementary labels may omit the period (`Table A6`, `Table S2`).
+  const tableNumber = "(?:[a-z]+\\.|[a-z])?\\d+(?:\\.\\d+)*[a-z]?";
   if (new RegExp(`^(?:tables?|表)\\s*${tableNumber}\\s*\\(continued\\)\\.?$`, "i").test(caption)) return true;
   // Some journal templates separate the number and title with a vertical bar
   // (`TABLE 2 | Baseline characteristics`). This is a structural delimiter,

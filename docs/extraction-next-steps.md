@@ -26,8 +26,8 @@ status: draft
 ## 次にやること（効果の大きい順）
 
 1. **ACL・arXiv の段落の読み順**：段の続きが段の頭より前に並ぶ（例 `acl-2023.emnlp-main.479` の "With the availability of large-scale datasets…"）。原因は `pdfLayout.ts` 側。別セッションが layout-regions（表/図の中の文字を読み順から外す、`pdfExtraction/layout/pageRegions.ts`）を進めていたので、着手前にその進み具合を確認して重ねないこと。
-2. **ACL の段落の区切りの検出漏れ**：2 つの正解段落が 1 ブロックになる（ACL で約 70 件）。字下げによる段落区切りの判定を見る。
-3. **ACL の表の検出漏れ（69.7%）**：未調査。
+2. ~~ACL の段落の区切りの検出漏れ~~：dev の結合 41 件から 4 件を行座標で確認し、すべて PDF 上は 1 段落（正解が LaTeX 由来で余分に区切っている）。抽出器の問題ではない。正解側を直すなら採点の作業（Codex 向き）。なお結合は段落 intact の採点に影響しない。
+3. ~~ACL の表の検出漏れ~~：付録の番号（`Table A6:`）がキャプションと認識されていなかった。直して dev 69.3% → 79.2%。残り：付録ページの数式断片と見出し「A.6」が 1 つの表になる（`acl-2024.naacl-long.304` p14、`captionedRepeatedCellRow` 以外の経路）。
 4. **arXiv の著者（58.6%）**：上付きの所属番号付きの byline、`and` でつながる名前、ORCID の残りなど。arXiv のタイトル行がレイアウトの段階で丸ごと落ちる論文（2509.03774）もある。
 5. **Europe PMC の脚注（23.9%）**：正解の多くは JATS の fn-group（Author contributions など、紙面では節）。抽出器より先に、正解からそれらを外すか、見出し付きの節として数えるかを決める（採点側の修正、Codex 向き）。
 6. 後回し：表のセル、正解データの追加（計画どおり）。
@@ -41,7 +41,7 @@ npx vite-node --script scripts/element-gold-score.ts -- --run <run> --split dev
 ```
 
 - 試行は Europe PMC の dev から 106 本だけ `--ids` で流すと数分で済む。最後に全件を 1 回流す。
-- 基準 run：`f10-elementgold` / `t4-paragold`（ローカルの `test-data/extraction-audit/`、gitignore）。
+- 基準 run：`m0-elementgold` / `m0-paragold106`（main 6909889）、`t4-paragold`。`f10-*` は layout-regions（#45）より前なので比べない（ローカルの `test-data/extraction-audit/`、gitignore）。
 - 段落の採点は 5 語の連なりで照合するので、1 語の誤り（行末ハイフンなど）でも段落が不一致になる。行末ハイフンの結合を強める変更は、ACL の段落が 72.4% から 70.9% に下がったので戻した。
 
 ## 作業上の注意
