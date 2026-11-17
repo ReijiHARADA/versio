@@ -33,6 +33,10 @@ const grid = (x = 80, y = 160): PdfGraphicsPrimitive[] => [
   { kind: "line", orientation: "vertical", x: x + 220, y, width: 1, height: 61, confidence: 1 },
 ];
 
+const booktabs = (y: number, x = 60): PdfGraphicsPrimitive[] => [
+  ...[0, 96, 194, 292, 390].map((offset) => ({ kind: "line" as const, orientation: "horizontal" as const, x: x + offset, y, width: 88, height: 1, confidence: 1 })),
+];
+
 describe("detectPageRegions", () => {
   it("finds a ruled grid with a table caption above", () => {
     const regions = detectPageRegions(page({ graphicsPrimitives: grid() }), [line("Table 1. Results", 80, 142)], 10);
@@ -80,5 +84,32 @@ describe("detectPageRegions", () => {
     const caption = line("Table 1. Results", 80, 142);
     const [region] = detectPageRegions(page({ graphicsPrimitives: grid() }), [caption], 10);
     expect(lineInRegion(caption, region)).toBe(false);
+  });
+
+  it("finds booktabs segmented rules with a caption above", () => {
+    const regions = detectPageRegions(page({ graphicsPrimitives: [
+      ...booktabs(140), ...booktabs(165), ...booktabs(360),
+    ] }), [line("Table 1. Results", 60, 118, 440)], 10);
+    expect(regions).toMatchObject([{ kind: "table", evidence: "rule-bands" }]);
+    expect(regions[0].rect).toMatchObject({ x: 60, y: 140, width: 478, height: 221 });
+  });
+
+  it("splits two stacked booktabs tables at the second caption", () => {
+    const regions = detectPageRegions(page({ graphicsPrimitives: [
+      ...booktabs(140), ...booktabs(165), ...booktabs(360),
+      ...booktabs(424), ...booktabs(440), ...booktabs(542),
+    ] }), [line("Table 1. First", 60, 118, 440), line("Table 2. Second", 60, 400, 440)], 10);
+    expect(regions).toMatchObject([
+      { evidence: "rule-bands", rect: { y: 140, height: 221 } },
+      { evidence: "rule-bands", rect: { y: 424, height: 119 } },
+    ]);
+  });
+
+  it("ignores a single horizontal rule", () => {
+    expect(detectPageRegions(page({ graphicsPrimitives: booktabs(140) }), [line("Table 1. Results", 60, 118, 440)], 10)).toEqual([]);
+  });
+
+  it("ignores rule bands without a caption", () => {
+    expect(detectPageRegions(page({ graphicsPrimitives: [...booktabs(140), ...booktabs(165)] }), [], 10)).toEqual([]);
   });
 });

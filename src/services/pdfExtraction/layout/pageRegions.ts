@@ -5,7 +5,7 @@ import { captionAnchoredGraphicsGrids, isGraphicsRule } from "../generic/tableRe
 export type PageRegion = {
   kind: "table" | "figure";
   rect: LayoutRect;
-  evidence: "ruled-grid" | "image" | "vector";
+  evidence: "ruled-grid" | "rule-bands" | "image" | "vector";
   captionLine?: LayoutLine;
 };
 
@@ -49,6 +49,63 @@ const componentRects = (items: PdfGraphicsPrimitive[]): LayoutRect[] => {
   return components;
 };
 
+const horizontalRuleBands = (items: PdfGraphicsPrimitive[]): LayoutRect[] => {
+  const rows: PdfGraphicsPrimitive[][] = [];
+  for (const item of items
+    .filter((item) => item.height <= 2.5 && item.width >= 10)
+    .sort((a, b) => a.y - b.y || a.x - b.x)) {
+    const row = rows.at(-1);
+    if (row && Math.abs(row[0].y - item.y) <= 1) row.push(item);
+    else rows.push([item]);
+  }
+  return rows.flatMap((row) => {
+    const bands: LayoutRect[] = [];
+    for (const item of row.sort((a, b) => a.x - b.x)) {
+      const band = bands.at(-1);
+      if (band && item.x - (band.x + band.width) <= 12) {
+        const right = Math.max(band.x + band.width, item.x + item.width);
+        const bottom = Math.max(band.y + band.height, item.y + item.height);
+        band.y = Math.min(band.y, item.y);
+        band.width = right - band.x;
+        band.height = bottom - band.y;
+      } else {
+        bands.push(rectOf(item));
+      }
+    }
+    return bands.filter((band) => band.width >= 120);
+  });
+};
+
+const ruleBandRegion = (
+  caption: LayoutLine,
+  captions: LayoutLine[],
+  bands: LayoutRect[],
+  page: ExtractedPage,
+  captionGap: number,
+  below: boolean
+): LayoutRect | undefined => {
+  const captionRect = rectOf(caption);
+  const captionIndex = captions.indexOf(caption);
+  const boundary = below ? captions[captionIndex + 1] : captions[captionIndex - 1];
+  const candidates = bands.filter((band) => {
+    if (!overlapsX(band, captionRect)) return false;
+    if (below) return band.y >= captionRect.y + captionRect.height && (!boundary || band.y < boundary.y);
+    return band.y + band.height <= captionRect.y && (!boundary || band.y > boundary.y + boundary.height);
+  });
+  const first = below
+    ? candidates.find((band) => band.y - (captionRect.y + captionRect.height) <= captionGap)
+    : [...candidates].reverse().find((band) => captionRect.y - (band.y + band.height) <= captionGap);
+  if (!first) return undefined;
+  const firstRight = first.x + first.width;
+  const selected = candidates.filter((band) => {
+    const aligned = Math.abs(band.x - first.x) <= 6 && Math.abs(band.x + band.width - firstRight) <= 6;
+    return aligned && (below
+      ? band.y >= first.y && band.y <= first.y + page.height * 0.7
+      : band.y <= first.y && band.y >= first.y - page.height * 0.7);
+  });
+  return selected.length >= 2 ? union(selected) : undefined;
+};
+
 export function lineInRegion(line: LayoutLine, region: PageRegion): boolean {
   const box = line.bbox;
   const x = box.x + box.width / 2;
@@ -61,6 +118,7 @@ export function detectPageRegions(page: ExtractedPage, lines: LayoutLine[], body
   const captionGap = Math.max(24, bodyFontSize * 3);
   const tableCaptions = lines.filter((line) => isTableCaption(line.text));
   const figureCaptions = lines.filter((line) => isFigureCaption(line.text));
+  const captions = [...tableCaptions, ...figureCaptions].sort((a, b) => a.y - b.y || a.x - b.x);
   const nearbyCaption = (rect: LayoutRect, captions: LayoutLine[]) => captions.find((caption) => {
     const captionRect = rectOf(caption);
     return overlapsX(rect, captionRect) && gapTo(rect, captionRect) <= captionGap;
@@ -73,6 +131,14 @@ export function detectPageRegions(page: ExtractedPage, lines: LayoutLine[], body
         regions.push({ kind: "table", rect, evidence: "ruled-grid", captionLine });
       }
     }
+  }
+
+  const bands = horizontalRuleBands(page.graphicsPrimitives ?? []);
+  for (const captionLine of tableCaptions) {
+    if (regions.some((region) => region.evidence === "ruled-grid" && region.captionLine === captionLine)) continue;
+    const rect = ruleBandRegion(captionLine, captions, bands, page, captionGap, true) ??
+      ruleBandRegion(captionLine, captions, bands, page, captionGap, false);
+    if (rect) regions.push({ kind: "table", rect, evidence: "rule-bands", captionLine });
   }
 
   const pageArea = page.width * page.height;
