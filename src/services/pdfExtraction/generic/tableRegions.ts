@@ -8,19 +8,21 @@ const intersects = (a: { x: number; y: number; width: number; height: number }, 
 
 type Rect = { x: number; y: number; width: number; height: number };
 
+export function isGraphicsRule(item: Rect): boolean {
+  const horizontal = item.width >= 24 && item.height <= 2.5 && item.width / Math.max(item.height, 0.1) >= 8;
+  const vertical = item.height >= 8 && item.width <= 2.5 && item.height / Math.max(item.width, 0.1) >= 6;
+  return horizontal || vertical;
+}
+
 /** Locate a ruled grid near a caption. PDF drawing operators frequently emit
  * table rules as very thin rectangles rather than `line` primitives, so use
  * geometry instead of the primitive kind. Full-page/image rectangles are
  * excluded by the aspect/size constraints. */
-function captionAnchoredGraphicsGrids(
+export function captionAnchoredGraphicsGrids(
   page: ExtractedPage,
   captionBox: Rect,
 ): Rect[] {
-  const rules = (page.graphicsPrimitives ?? []).filter((item) => {
-    const horizontal = item.width >= 24 && item.height <= 2.5 && item.width / Math.max(item.height, 0.1) >= 8;
-    const vertical = item.height >= 8 && item.width <= 2.5 && item.height / Math.max(item.width, 0.1) >= 6;
-    return horizontal || vertical;
-  });
+  const rules = (page.graphicsPrimitives ?? []).filter(isGraphicsRule);
   if (rules.length < 3) return [];
   const touches = (a: Rect, b: Rect) =>
     a.x <= b.x + b.width + 3 && b.x <= a.x + a.width + 3 &&

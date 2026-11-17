@@ -15,6 +15,7 @@ import {
   toHalfwidthAscii,
 } from "./translation/quality";
 import * as publisherPredicates from "./pdfExtraction/formats/publisherChrome";
+import { detectPageRegions, lineInRegion, type PageRegion } from "./pdfExtraction/layout/pageRegions";
 
 /** Browser-safe env read — bare `process` is undefined in WKWebView / Vite. */
 function layoutEnv(name: string): string | undefined {
@@ -68,6 +69,8 @@ export type LayoutLine = {
   pageHeight?: number;
   pageWidth?: number;
   roleHint?: LayoutRole;
+  /** Groups emitted table/figure region lines into one atomic layout block. */
+  regionId?: number;
   /** Repeated multi-column geometry indicates a table row; never merge it into neighboring prose rows. */
   isGridRow?: boolean;
 };
@@ -2390,17 +2393,71 @@ function orderPageLines(lines: LayoutLine[], layout: PageColumnLayout): LayoutLi
 
   const cuts = spanningMid.map((l) => l.y).sort((a, b) => a - b);
   const result: LayoutLine[] = [...spanningTop];
-  let prevCut = -Infinity;
+  const emitted = new Set(result);
+  const emit = (items: LayoutLine[]) => {
+    for (const item of items) if (!emitted.has(item)) {
+      result.push(item);
+      emitted.add(item);
+    }
+  };
   for (const cut of cuts) {
-    result.push(...left.filter((l) => l.y > prevCut && l.y < cut - 4));
-    result.push(...right.filter((l) => l.y > prevCut && l.y < cut - 4));
-    result.push(...spanningMid.filter((l) => Math.abs(l.y - cut) < 1));
-    prevCut = cut;
+    emit(left.filter((line) => line.y < cut - 4));
+    emit(right.filter((line) => line.y < cut - 4));
+    emit([
+      ...spanningMid.filter((line) => Math.abs(line.y - cut) < 1),
+      ...left.filter((line) => Math.abs(line.y - cut) <= 4),
+      ...right.filter((line) => Math.abs(line.y - cut) <= 4),
+    ].sort((a, b) => a.x - b.x));
   }
-  result.push(...left.filter((l) => l.y > prevCut));
-  result.push(...right.filter((l) => l.y > prevCut));
-  result.push(...spanningBottom);
+  emit(left);
+  emit(right);
+  emit(spanningBottom);
   return result;
+}
+
+function orderWithRegions(
+  lines: LayoutLine[],
+  layout: PageColumnLayout,
+  regions: PageRegion[]
+): LayoutLine[] {
+  const deduped = regions.filter((region, index) => !regions.slice(0, index).some((other) => {
+    const overlap = rectOverlapArea(region.rect, other.rect);
+    return overlap > Math.min(region.rect.width * region.rect.height, other.rect.width * other.rect.height) * 0.5;
+  }));
+  const members = new Map<PageRegion, LayoutLine[]>();
+  for (const region of deduped) members.set(region, []);
+  for (const line of lines) {
+    if (isTableCaption(line.text) || isFigureCaption(line.text) || deduped.some((region) => region.captionLine === line)) continue;
+    const region = deduped.find((candidate) => lineInRegion(line, candidate));
+    if (region) members.get(region)?.push(line);
+  }
+  const ordered = orderPageLines(lines.filter((line) => ![...members.values()].some((memberLines) => memberLines.includes(line))), layout);
+  const insertedAt = new Map<LayoutLine | undefined, number>();
+  for (const [regionIndex, region] of deduped.entries()) {
+    const regionLines = members.get(region) ?? [];
+    if (regionLines.length === 0) continue;
+    const caption = region.captionLine && ordered.includes(region.captionLine) ? region.captionLine : undefined;
+    // Never split a multi-line caption: a table goes after the caption's last line when the
+    // caption is above it, before the caption when below; figure text (chrome) goes to the page end.
+    let anchor: LayoutLine | undefined;
+    let index: number;
+    if (region.kind === "figure") {
+      index = ordered.length;
+    } else if (caption && caption.y > region.rect.y) {
+      index = ordered.indexOf(caption);
+    } else {
+      anchor = [...ordered]
+        .filter((line) => line.y < region.rect.y && (!caption || line.column === caption.column))
+        .sort((a, b) => b.y - a.y || b.x - a.x)[0];
+      index = anchor ? ordered.indexOf(anchor) + 1 + (insertedAt.get(anchor) ?? 0) : 0;
+    }
+    const offset = insertedAt.get(anchor) ?? 0;
+    ordered.splice(index, 0, ...regionLines
+      .sort((a, b) => a.y - b.y || a.x - b.x)
+      .map((line): LayoutLine => ({ ...line, roleHint: region.kind === "table" ? "table" : "chrome", regionId: line.page * 1000 + regionIndex })));
+    insertedAt.set(anchor, offset + regionLines.length);
+  }
+  return ordered;
 }
 
 function splitSameBaselineNameRuns(lines: LayoutLine[]): LayoutLine[] {
@@ -2528,6 +2585,9 @@ function buildPageLines(
   }
 
   const visible = figureSeparated.filter((line) => !isEdgeChrome(line, layout, patterns));
+  const bodyFontSize = median(visible.filter((line) => line.text.length > 40).map((line) => line.fontSize)) ||
+    median(visible.map((line) => line.fontSize)) || 10;
+  const regions = detectPageRegions(page, visible, bodyFontSize);
   const splitCandidates = visible.filter((line) => isBodyStartHeading(line.text));
   const splitAt =
     splitCandidates.length > 0
@@ -2537,10 +2597,10 @@ function buildPageLines(
     const masthead = visible.filter((line) => line.y < splitAt.y);
     const body = visible.filter((line) => line.y >= splitAt.y);
     const mastheadLayout = layout.isAsymmetricRail ? { ...layout, isMultiColumn: false } : layout;
-    return [...orderPageLines(masthead, mastheadLayout), ...orderPageLines(body, layout)];
+    return [...orderWithRegions(masthead, mastheadLayout, regions), ...orderWithRegions(body, layout, regions)];
   }
 
-  return orderPageLines(visible, layout);
+  return orderWithRegions(visible, layout, regions);
 }
 
 function isLongBodyLine(text: string): boolean {
@@ -2966,7 +3026,25 @@ function groupLinesIntoBlocks(
     currentRole = null;
   };
 
-  for (const sourceLine of lines) {
+  for (let sourceIndex = 0; sourceIndex < lines.length; sourceIndex += 1) {
+    const sourceLine = lines[sourceIndex];
+    if (sourceLine.regionId !== undefined) {
+      flush();
+      const regionLines = [sourceLine];
+      while (sourceIndex + 1 < lines.length && lines[sourceIndex + 1].regionId === sourceLine.regionId) {
+        regionLines.push(lines[++sourceIndex]);
+      }
+      blocks.push({
+        role: sourceLine.roleHint ?? "paragraph",
+        text: joinLines(regionLines),
+        lines: regionLines,
+        pageStart: sourceLine.page,
+        pageEnd: regionLines.at(-1)?.page ?? sourceLine.page,
+        column: sourceLine.column,
+        bbox: blockBbox(regionLines),
+      });
+      continue;
+    }
     for (const doiLine of splitInlineDoi(sourceLine)) for (const licenseLine of splitInlineLicense(doiLine)) for (const authorCopyLine of splitInlineAuthorCopyNotice(licenseLine)) for (const line of splitInlineBibliographicBand(authorCopyLine)) {
     if (!line.text.trim()) continue;
     if (line.page !== copyrightPage || line.column !== copyrightColumn) {
@@ -3209,6 +3287,7 @@ function groupLinesIntoBlocks(
 
     const captionContinue =
       (currentRole === "figure_caption" || currentRole === "table_caption") &&
+      !line.roleHint &&
       sameTextOrientation(current[current.length - 1].rotation, line.rotation) &&
       line.page === current[0].page &&
       (line.column === current[0].column ||
