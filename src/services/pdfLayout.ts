@@ -2391,16 +2391,25 @@ function orderPageLines(lines: LayoutLine[], layout: PageColumnLayout): LayoutLi
 
   const cuts = spanningMid.map((l) => l.y).sort((a, b) => a - b);
   const result: LayoutLine[] = [...spanningTop];
-  let prevCut = -Infinity;
+  const emitted = new Set(result);
+  const emit = (items: LayoutLine[]) => {
+    for (const item of items) if (!emitted.has(item)) {
+      result.push(item);
+      emitted.add(item);
+    }
+  };
   for (const cut of cuts) {
-    result.push(...left.filter((l) => l.y > prevCut && l.y < cut - 4));
-    result.push(...right.filter((l) => l.y > prevCut && l.y < cut - 4));
-    result.push(...spanningMid.filter((l) => Math.abs(l.y - cut) < 1));
-    prevCut = cut;
+    emit(left.filter((line) => line.y < cut - 4));
+    emit(right.filter((line) => line.y < cut - 4));
+    emit([
+      ...spanningMid.filter((line) => Math.abs(line.y - cut) < 1),
+      ...left.filter((line) => Math.abs(line.y - cut) <= 4),
+      ...right.filter((line) => Math.abs(line.y - cut) <= 4),
+    ].sort((a, b) => a.x - b.x));
   }
-  result.push(...left.filter((l) => l.y > prevCut));
-  result.push(...right.filter((l) => l.y > prevCut));
-  result.push(...spanningBottom);
+  emit(left);
+  emit(right);
+  emit(spanningBottom);
   return result;
 }
 

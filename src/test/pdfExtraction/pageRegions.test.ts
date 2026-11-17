@@ -37,6 +37,14 @@ const booktabs = (y: number, x = 60): PdfGraphicsPrimitive[] => [
   ...[0, 96, 194, 292, 390].map((offset) => ({ kind: "line" as const, orientation: "horizontal" as const, x: x + offset, y, width: 88, height: 1, confidence: 1 })),
 ];
 
+const wideGapBooktabs = (y: number): PdfGraphicsPrimitive[] => [
+  { kind: "line", orientation: "horizontal", x: 57, y, width: 258, height: 1, confidence: 1 },
+  { kind: "line", orientation: "horizontal", x: 315, y, width: 33, height: 1, confidence: 1 },
+  { kind: "line", orientation: "horizontal", x: 405, y, width: 59, height: 1, confidence: 1 },
+  { kind: "line", orientation: "horizontal", x: 465, y, width: 30, height: 1, confidence: 1 },
+  { kind: "line", orientation: "horizontal", x: 495, y, width: 44, height: 1, confidence: 1 },
+];
+
 describe("detectPageRegions", () => {
   it("finds a ruled grid with a table caption above", () => {
     const regions = detectPageRegions(page({ graphicsPrimitives: grid() }), [line("Table 1. Results", 80, 142)], 10);
@@ -111,5 +119,19 @@ describe("detectPageRegions", () => {
 
   it("ignores rule bands without a caption", () => {
     expect(detectPageRegions(page({ graphicsPrimitives: [...booktabs(140), ...booktabs(165)] }), [], 10)).toEqual([]);
+  });
+
+  it("merges a repeated segment structure with a wide gap into one band", () => {
+    const regions = detectPageRegions(page({ graphicsPrimitives: [
+      ...wideGapBooktabs(140), ...wideGapBooktabs(165), ...wideGapBooktabs(360),
+    ] }), [line("Table 1. Results", 57, 118, 482)], 10);
+    expect(regions).toMatchObject([{ evidence: "rule-bands", rect: { x: 57, width: 482 } }]);
+  });
+
+  it("keeps a region for narrow body-size table cells", () => {
+    const cells = Array.from({ length: 3 }, (_, index) =>
+      line("I needed more time to acclimate to VR before entering the MC", 90, 170 + index * 16, 120));
+    expect(detectPageRegions(page({ graphicsPrimitives: grid() }), [line("Table 1. Results", 80, 142), ...cells], 10))
+      .toMatchObject([{ evidence: "ruled-grid" }]);
   });
 });

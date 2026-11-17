@@ -58,7 +58,7 @@ const horizontalRuleBands = (items: PdfGraphicsPrimitive[]): LayoutRect[] => {
     if (row && Math.abs(row[0].y - item.y) <= 1) row.push(item);
     else rows.push([item]);
   }
-  return rows.flatMap((row) => {
+  const rowBands = rows.map((row) => {
     const bands: LayoutRect[] = [];
     for (const item of row.sort((a, b) => a.x - b.x)) {
       const band = bands.at(-1);
@@ -72,7 +72,30 @@ const horizontalRuleBands = (items: PdfGraphicsPrimitive[]): LayoutRect[] => {
         bands.push(rectOf(item));
       }
     }
-    return bands.filter((band) => band.width >= 120);
+    return bands;
+  });
+  return rowBands.flatMap((bands) => {
+    const merged: LayoutRect[] = [];
+    for (let index = 0; index < bands.length; index += 1) {
+      const band = bands[index];
+      const next = bands[index + 1];
+      const repeatedPair = next && next.x - (band.x + band.width) <= 72 && rowBands.filter((other) =>
+        other.some((candidate, candidateIndex) => {
+          const neighbour = other[candidateIndex + 1];
+          return neighbour && Math.abs(candidate.x - band.x) <= 2 &&
+            Math.abs(candidate.x + candidate.width - (band.x + band.width)) <= 2 &&
+            Math.abs(neighbour.x - next.x) <= 2 &&
+            Math.abs(neighbour.x + neighbour.width - (next.x + next.width)) <= 2;
+        })
+      ).length >= 2;
+      if (repeatedPair) {
+        merged.push(union([band, next]));
+        index += 1;
+      } else {
+        merged.push(band);
+      }
+    }
+    return merged.filter((band) => band.width >= 120);
   });
 };
 
@@ -159,7 +182,7 @@ export function detectPageRegions(page: ExtractedPage, lines: LayoutLine[], body
 
   return regions.filter((region) => {
     const prose = lines
-      .filter((line) => lineInRegion(line, region) && Math.abs(line.fontSize - bodyFontSize) <= 0.5 && line.text.length > 40)
+      .filter((line) => lineInRegion(line, region) && Math.abs(line.fontSize - bodyFontSize) <= 0.5 && line.text.length > 40 && line.bbox.width >= region.rect.width * 0.85)
       .sort((a, b) => a.y - b.y);
     let consecutive = 0;
     for (let index = 0; index < prose.length; index += 1) {
