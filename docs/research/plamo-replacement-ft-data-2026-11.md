@@ -74,6 +74,8 @@ PLaMo 2B の本番と同じ条件（Q4_K_M、llama-server、`form: plain`）で�
 
 ## 進め方の案
 
+今後の方針は [論文翻訳特化モデル 開発方針](/docs/research/translation-ft-pipeline-plan-2026-11.md) にまとめました。下は当初案です。
+
 1. CAT-Translate 1.4B / 3.3B の GGUF を `translation-server/scripts/local_llm_bench/` で測ります。40 段落の MQM、事実保持、秒/段落を見ます。
 2. PLaMo 2B との差が小さければ、そのまま置き換えます（FT なし）。
 3. 差が大きければ、論文段落の合成データ（数万〜数十万件）で SFT します。評価用の 40 段落は学習データから除外します。
