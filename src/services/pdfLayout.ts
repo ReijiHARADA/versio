@@ -3349,7 +3349,14 @@ function groupLinesIntoBlocks(
 function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
   const bodyLines = blocks.filter((b) => b.role === "paragraph").flatMap((b) => b.lines);
   if (bodyLines.length === 0) return blocks;
-  const font = median(bodyLines.map((l) => l.fontSize));
+  // A line's fontSize averages its items, so superscript citations (`phonemes26,30`) pull it down;
+  // the size that carries most of the line's characters is the text size.
+  const textSize = (l: LayoutLine) => {
+    const chars = new Map<number, number>();
+    for (const item of l.items) chars.set(item.fontSize, (chars.get(item.fontSize) ?? 0) + item.text.length);
+    return [...chars].reduce((best, entry) => (entry[1] > best[1] ? entry : best), [l.fontSize, 0])[0];
+  };
+  const font = median(bodyLines.map(textSize));
   // Consecutive lines of the block on one page and column, starting at `from` and moving by `step`.
   const run = (block: LayoutBlock, from: number, step: 1 | -1) => {
     const anchor = block.lines[from];
@@ -3362,7 +3369,7 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     return out;
   };
   const isBody = (b: LayoutBlock) => b.role === "paragraph" && b.lines.length > 0 &&
-    Math.abs(median(b.lines.map((l) => l.fontSize)) - font) <= font * 0.08;
+    Math.abs(median(b.lines.map(textSize)) - font) <= font * 0.08;
   // First-line indent of a paragraph: its first line against the rest of its first run.
   const indentOf = (b: LayoutBlock) => {
     const first = run(b, 0, 1);
