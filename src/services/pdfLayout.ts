@@ -3392,7 +3392,9 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     const last = tail[0];
     const first = head[0];
     if (head.length < 2 || (tail.length < 2 && (head[0].column !== last.column || head[0].page !== last.page))) continue;
-    if (/^(?:[•‣▪∙*–-]\s|\(?\d{1,3}[.)]\s|\[\d+\]|\(?[a-z]{1,3}\)\s|(?:Fig\.?|Figure|Table)\s*\d)/i.test(b.text.trim())) continue;
+    // A sentence cut mid-way (`Supplementary` / `Table 8)`, `record` / `(EHR)`) is no list or caption start.
+    const midSentence = /[\p{L}\p{N},]$/u.test(a.text.trim());
+    if (!midSentence && /^(?:[•‣▪∙*–-]\s|\(?\d{1,3}[.)]\s|\[\d+\]|\(?[a-z]{1,3}\)\s|(?:Fig\.?|Figure|Table)\s*\d)/i.test(b.text.trim())) continue;
     const right = (l: LayoutLine) => l.x + l.width;
     // The column's right margin and line width, from A's last run or, when that is one line, from B's first.
     const ref = tail.length >= 2 ? tail.slice(1) : head;
