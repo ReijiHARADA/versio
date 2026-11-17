@@ -93,4 +93,19 @@ describe("scoreElements", () => {
     expect(s.tableCells).toEqual({ gold: 4, found: 4 });
     expect(s.figures).toEqual({ gold: 1, found: 0 });
   });
+
+  it("matches math tokens split around a subscript", () => {
+    const text = "A study reports results from repeated measurements across several conditions with careful controls and consistent analysis methods for all participants in the experiment.";
+    const gold = jatsElementGold(`<article><front><article-meta><abstract><p>${text} M irreg n improved accuracy in every evaluation setting.</p></abstract></article-meta></front></article>`, { id: "math-x", license: "", sourceUrl: "" });
+    const s = scoreElements(gold, [{ id: "p", type: "paragraph", text: `${text} Mirregn improved accuracy in every evaluation setting.` }], { title: null, authors: [], publication: null, doi: null }, `${text} Mirregn improved accuracy in every evaluation setting.`);
+    expect(s.paragraphs).toEqual({ gold: 1, found: 1 });
+  });
+
+  it("does not make different prose sentences match", () => {
+    const first = "The participants completed a series of tasks in a quiet room while their responses were recorded by the experimenter for later analysis of accuracy and speed.";
+    const second = "Researchers inspected the archived instruments during a separate calibration session and documented every discrepancy before releasing the final report to the laboratory staff.";
+    const gold = jatsElementGold(`<article><front><article-meta><abstract><p>${first}</p></abstract></article-meta></front></article>`, { id: "prose-x", license: "", sourceUrl: "" });
+    const s = scoreElements(gold, [{ id: "p", type: "paragraph", text: second }], { title: null, authors: [], publication: null, doi: null }, `${first} ${second}`);
+    expect(s.paragraphs).toEqual({ gold: 1, found: 0 });
+  });
 });
