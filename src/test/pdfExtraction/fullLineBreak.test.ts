@@ -3,7 +3,7 @@ import { detectPageColumns, reconstructDocument } from "../../services/pdfLayout
 import type { ExtractedPage, ExtractedTextItem } from "../../services/pdfService";
 
 // One justified body line per entry; `indent` shifts the first line of a typeset paragraph.
-function page(lines: Array<{ text: string; indent?: number; short?: boolean }>): ExtractedPage {
+function page(lines: Array<{ text: string; indent?: number; short?: boolean }>, pageNumber = 2): ExtractedPage {
   const textItems: ExtractedTextItem[] = lines.map((line, i) => ({
     text: line.text,
     x: 72 + (line.indent ?? 0),
@@ -12,9 +12,9 @@ function page(lines: Array<{ text: string; indent?: number; short?: boolean }>):
     height: 10,
     fontSize: 10,
     fontName: "Body",
-    page: 1,
+    page: pageNumber,
   }));
-  return { pageNumber: 2, width: 612, height: 792, textItems };
+  return { pageNumber, width: 612, height: 792, textItems };
 }
 
 const body = (n: number) => `sentence ${n} of the paragraph continues with ordinary words about the study and its measured outcomes`;
@@ -38,6 +38,16 @@ describe("paragraph breaks at sentence boundaries", () => {
     expect(paragraphs).toHaveLength(2);
     expect(paragraphs[0]).toMatch(/Whiting et al\. \(26\)\. To evaluate the level of bias/);
     expect(paragraphs[1]).toMatch(/^A second paragraph starts here/);
+  });
+
+  it("rejoins a sentence cut before a `Table 8)` reference on the next page", () => {
+    const { blocks } = reconstructDocument([
+      page([{ text: `Retinal staining was quantified and ${body(1)}`, indent: 14 }, { text: body(2) }, { text: `${body(3)} as listed in Supplementary` }], 2),
+      page([{ text: `Table 8). The infected group ${body(4)}` }, { text: body(5) }, { text: "and it ends here.", short: true }], 3),
+    ]);
+    const paragraphs = blocks.filter((b) => b.role === "paragraph").map((b) => b.text);
+    expect(paragraphs).toHaveLength(1);
+    expect(paragraphs[0]).toMatch(/Supplementary Table 8\)\. The infected group/);
   });
 });
 
