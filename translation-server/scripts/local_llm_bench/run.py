@@ -52,7 +52,7 @@ def main():
             body = {"messages": [{"role": "user", "content": PROMPTS[a.prompt].format(t=r["source"])}],
                     "temperature": 0, "max_tokens": 1200}
             if a.prompt == "plamo":
-                body["chat_template_kwargs"] = {"target_lang": "ja", "source_lang": "en"}
+                body["chat_template_kwargs"] = {"target_lang": "ja", "source_lang": "en", "form": "plain"}
                 body["stop"] = ["<|plamo:tag|>", "<|plamo:bos|>"]
             res = post(f"http://127.0.0.1:{a.port}/v1/chat/completions", body)
             text = res["choices"][0]["message"]["content"].strip()
