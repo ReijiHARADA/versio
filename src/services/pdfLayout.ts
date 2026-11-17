@@ -2454,7 +2454,7 @@ function orderWithRegions(
     const offset = insertedAt.get(anchor) ?? 0;
     ordered.splice(index, 0, ...regionLines
       .sort((a, b) => a.y - b.y || a.x - b.x)
-      .map((line) => ({ ...line, roleHint: region.kind === "table" ? "table" : "chrome", regionId: line.page * 1000 + regionIndex })));
+      .map((line): LayoutLine => ({ ...line, roleHint: region.kind === "table" ? "table" : "chrome", regionId: line.page * 1000 + regionIndex })));
     insertedAt.set(anchor, offset + regionLines.length);
   }
   return ordered;
