@@ -2425,11 +2425,22 @@ function orderWithRegions(
   for (const region of deduped) {
     const regionLines = members.get(region) ?? [];
     if (regionLines.length === 0) continue;
-    const anchor = ordered.includes(region.captionLine as LayoutLine)
-      ? region.captionLine
-      : [...ordered].filter((line) => line.y < region.rect.y).sort((a, b) => b.y - a.y || b.x - a.x)[0];
+    const caption = region.captionLine && ordered.includes(region.captionLine) ? region.captionLine : undefined;
+    // Never split a multi-line caption: a table goes after the caption's last line when the
+    // caption is above it, before the caption when below; figure text (chrome) goes to the page end.
+    let anchor: LayoutLine | undefined;
+    let index: number;
+    if (region.kind === "figure") {
+      index = ordered.length;
+    } else if (caption && caption.y > region.rect.y) {
+      index = ordered.indexOf(caption);
+    } else {
+      anchor = [...ordered]
+        .filter((line) => line.y < region.rect.y && (!caption || line.column === caption.column))
+        .sort((a, b) => b.y - a.y || b.x - a.x)[0];
+      index = anchor ? ordered.indexOf(anchor) + 1 + (insertedAt.get(anchor) ?? 0) : 0;
+    }
     const offset = insertedAt.get(anchor) ?? 0;
-    const index = anchor ? ordered.indexOf(anchor) + 1 + offset : offset;
     ordered.splice(index, 0, ...regionLines
       .sort((a, b) => a.y - b.y || a.x - b.x)
       .map((line) => ({ ...line, roleHint: region.kind === "table" ? "table" : "chrome" })));
