@@ -13,7 +13,7 @@
     "build:llama-server": "bash scripts/build-llama-server.sh",
     "prebuild": "npm run generate:licenses",
     "build": "tsc -b && vite build",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b",
     "lint": "oxlint",
     "test": "vitest run",
     "test:watch": "vitest",
