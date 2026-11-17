@@ -1741,7 +1741,7 @@ function isFootnoteLine(
   if (/^(?:accessed|lasts+visited|retrieved).*\d{1,4}[./-]\d{1,2}[./-]\d{2,4}/i.test(t)) {
     return true;
   }
-  if (line.fontSize > baseFont * 0.9 && line.fontSize > 9.2) return false;
+  if (line.fontSize > baseFont * 0.9 && line.fontSize > 8) return false;
   if (line.y < pageHeight * 0.7) return false;
   // Measurement/statistical lines can begin with a number but are body prose,
   // not footnotes (for example `180 bpm` or `94.25±4.63%`).

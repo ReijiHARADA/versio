@@ -20,6 +20,25 @@ function page(lines: Array<{ text: string; indent?: number; short?: boolean }>, 
 const body = (n: number) => `sentence ${n} of the paragraph continues with ordinary words about the study and its measured outcomes`;
 
 describe("paragraph breaks at sentence boundaries", () => {
+  it("keeps a body continuation with a leading numeric citation out of footnotes", () => {
+    const textItems: ExtractedTextItem[] = [
+      { text: "Despite the extensive literature on COVID-19 (3, 7, 8, 10", x: 50, y: 601, width: 241, height: 9, fontSize: 9, fontName: "Body", page: 2 },
+      { text: "13), there remains a gap in the systematic synthesis of data.", x: 50, y: 613, width: 241, height: 9, fontSize: 9, fontName: "Body", page: 2 },
+    ];
+    const { blocks } = reconstructDocument([{ pageNumber: 2, width: 595, height: 842, textItems }]);
+    expect(blocks.filter((block) => block.role === "footnote")).toHaveLength(0);
+    expect(blocks.find((block) => block.role === "paragraph")?.text).toContain("10 13), there remains");
+  });
+
+  it("keeps a smaller numbered note at the page bottom as a footnote", () => {
+    const textItems: ExtractedTextItem[] = [
+      { text: "The body paragraph ends before the source note.", x: 50, y: 700, width: 241, height: 9, fontSize: 9, fontName: "Body", page: 2 },
+      { text: "1) Source note for the reported outcome.", x: 50, y: 760, width: 241, height: 7, fontSize: 7, fontName: "Note", page: 2 },
+    ];
+    const { blocks } = reconstructDocument([{ pageNumber: 2, width: 595, height: 842, textItems }]);
+    expect(blocks.find((block) => block.role === "footnote")?.text).toContain("1) Source note");
+  });
+
   it("does not take a body line ending in a citation number for a numbered equation", () => {
     const { blocks } = reconstructDocument([page([
       { text: `The methodological quality was assessed and ${body(1)}`, indent: 14 },
