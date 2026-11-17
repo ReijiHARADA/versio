@@ -4372,20 +4372,91 @@ function projectEquationNode(context: BodyNodeContext, state: BodyProjectionStat
   return false;
 }
 
+const NOTE_LEAD =
+  /^(?:competing interests?|conflicts? of interest|corresponding authors?|these authors contributed|equal contribution|(?:this|the) (?:work|research|study) (?:was|is|has been) (?:partly |partially |financially )?(?:supported|funded)|(?:partly |partially )?(?:supported|funded) by)\b/i;
+
+/**
+ * Small-type prose that is a page note, not article body: a marked note
+ * (`*`, `∗`, `†`, `¶`…), a marker-less note at the page foot (URL / grant
+ * lines whose superscript marker is not in the text layer), or a
+ * correspondence / funding / competing-interest note. Body-size text never
+ * qualifies, so only the layout's small type is re-labelled.
+ */
+const INSTITUTION = /\b(?:universi|institut|department|college|school of|hospital|cent(?:er|re)\b|laborator|faculty|division of|academy|clinic)/gi;
+
+/** An affiliation list: two or more institution names, one per 12 words, and no sentence verbs. */
+export function isInstitutionList(text: string): boolean {
+  const hits = text.match(INSTITUTION)?.length ?? 0;
+  return hits >= 2 && hits * 12 >= text.split(/\s+/).length && !/\b(?:we|our|were|was|is|are|this|that|which|after|from the)\b/i.test(text);
+}
+
+export function isSmallTypeNote(text: string, fontRatio: number, topRatio: number, page = 0): boolean {
+  if (!text) return false;
+  // Page-one affiliation bands are set at body size by some templates (ACL).
+  if (page === 1 && isInstitutionList(text)) return true;
+  if (fontRatio > 0.88) return false;
+  if (isInstitutionList(text)) return true;
+  if (/^[*∗†‡§¶‖]\s*\S/.test(text) || NOTE_LEAD.test(text)) return true;
+  if (topRatio < 0.78 || text.length > 600) return false;
+  // Marker-less: a bare URL, or a finished sentence. Small-type table rows and
+  // equation fragments also sit at the page foot and must stay out.
+  if (/^(?:https?:\/\/|www\.)\S+(?:\s+(?:https?:\/\/|www\.)\S+)*$/i.test(text)) return true;
+  const words = text.match(/\p{L}{2,}/gu)?.length ?? 0;
+  const digits = text.match(/\d/g)?.length ?? 0;
+  return words >= 6 && /[.)]$/.test(text) && digits < text.length * 0.08;
+}
+
+function isNoteParagraph(context: BodyNodeContext, state: BodyProjectionState, node: CanonicalNode, roleLayout: LayoutBlock | undefined): boolean {
+  if (node.role !== "paragraph" || state.currentKind === "references") return false;
+  // `layoutForNode` needs a matching role; a resolver relabel or a merge loses it.
+  const first = node.boundingBoxes[0];
+  const layout = roleLayout ?? context.layoutBlocks.find((b) => b.pageStart === node.pageStart && b.text === node.text) ??
+    (first && context.layoutBlocks.find((b) => b.pageStart === first.page && b.lines.some((l) => Math.abs(l.bbox.x - first.x) < 1 && Math.abs(l.bbox.y - first.y) < 1)));
+  if (!layout) return false;
+  const sizes = layout.lines.map((line) => line.fontSize).sort((a, b) => a - b);
+  const fontRatio = (sizes[Math.floor(sizes.length / 2)] ?? context.baseFontSize) / context.baseFontSize;
+  const text = (node.text ?? "").trim();
+  // Long affiliation lists (consortia) run across pages.
+  if (node.pageStart !== node.pageEnd) return fontRatio <= 0.88 && isInstitutionList(text);
+  // Tiny type the layout called legal/sidebar text that the page-one prose
+  // demotion turned back into a paragraph (Frontiers affiliation sidebars).
+  if (layout.role === "copyright" && fontRatio <= 0.75) return true;
+  const topRatio = layout.bbox.y / (layout.lines[0]?.pageHeight ?? 792);
+  return isSmallTypeNote(text, fontRatio, topRatio, node.pageStart);
+}
+
+/**
+ * A page's footnotes often arrive as one run with each superscript number
+ * glued to its note (`6https://a 7https://b`, `3We focus…`). Split at the
+ * consecutive numbers and set each number apart from its text.
+ */
+export function splitFootnoteRun(text: string): string[] {
+  // Ordinals and units (`2nd`, `3D`, `4K`, `8x`) are not markers.
+  const marker = /(^|\s)(\d{1,2})(?!(?:st|nd|rd|th|[DdKkMGx])\b)(?=[A-Za-z(“"]|\s+https?:)/g;
+  const cuts: Array<{ at: number; num: number; len: number }> = [];
+  for (const m of text.matchAll(marker)) {
+    const num = Number(m[2]);
+    if (cuts.length ? num !== cuts.at(-1)!.num + 1 : m.index !== 0) continue;
+    cuts.push({ at: m.index + m[1].length, num, len: m[2].length });
+  }
+  if (!cuts.length) return [text];
+  return cuts.map((c, i) => `${c.num} ${text.slice(c.at + c.len, cuts[i + 1]?.at ?? text.length).trim()}`);
+}
+
 function projectFootnoteNode(context: BodyNodeContext, state: BodyProjectionState, node: CanonicalNode, layout: LayoutBlock | undefined, boxes: BoundingBox[], column: string): boolean {
-    if (node.role === "footnote") {
+    if (node.role === "footnote" || isNoteParagraph(context, state, node, layout)) {
       const text = node.text ?? "";
       // Running page indices are often labeled footnote by layout heuristics.
       if (isStandalonePageNumber(text, node.role)) return true;
-      context.pushBlock(node, layout, {
+      for (const note of splitFootnoteRun(text.trim())) context.pushBlock(node, layout, {
         sectionId: state.currentSectionId,
         type: "footnote",
         pageStart: node.pageStart,
         pageEnd: node.pageEnd,
         boundingBoxes: boxes,
-        original: text,
+        original: note,
         translated: null,
-        translationStatus: shouldTranslateParagraph(text) ? "pending" : "skipped",
+        translationStatus: shouldTranslateParagraph(note) ? "pending" : "skipped",
         parentBlockId: null,
         metadata: { column, role: "footnote" },
       });
