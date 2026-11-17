@@ -235,7 +235,7 @@ describe("author masthead projection", () => {
     if (!fs.existsSync(ieeeWrappedMastheadPdf)) ctx.skip();
     const pages = await extractPdfPages(ieeeWrappedMastheadPdf);
     const result = await extractFromPages({ pages, paperId: "ieee-wrapped-masthead", filePath: ieeeWrappedMastheadPdf, fileHash: "ieee-wrapped-masthead", metadata: { pageCount: pages.length } });
-    expect(result.paper.authors).toEqual(expect.arrayContaining(["ABDALLAH M. H. ABBAS", "KHAIRIL IMRAN GHAUTH", "CHOO-YEE TING"]));
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["Abdallah M. H. Abbas", "Khairil Imran Ghauth", "Choo-Yee Ting"]));
     expect(result.paper.authors.every((name) => !/Faculty|Multimedia|Malaysia|Corresponding/i.test(name))).toBe(true);
     expect(result.paper.affiliations.some((affiliation) => /Faculty of Computing.*Multimedia University/i.test(affiliation.name))).toBe(true);
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /associate editor coordinating/i.test(node.text ?? ""))).toBe(false);
@@ -1440,9 +1440,9 @@ describe("author masthead projection", () => {
     // The third editor wraps onto the dated PUBLISHED line; see "recovers dated
     // Frontiers editorial wrap after trailing and" for that recovery.
     expect(result.paper.authors).toEqual([
-      "Diana Patricia Guizar-S´anchez",
-      "Ana Fres´an-Orellana",
-      "Ra´ul Sampieri-Cabrera",
+      "Diana Patricia Guizar-Sánchez",
+      "Ana Fresán-Orellana",
+      "Raúl Sampieri-Cabrera",
     ]);
     expect(
       result.paper.authors.every(

@@ -42,6 +42,7 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 - 本文以外の要素（要素正解、Europe PMC dev 868 本 / ACL 20 本 / arXiv 20 本）: 所属・ライセンス・脚注が本文段落に混ざる割合 25.1% / 13.4% / 14.5% → 13.5% / 7.2% / 7.2%。脚注 2.8% / 44.0% / 70.0% → 23.9% / 68.1% / 83.3%。誌名/学会名を表示（88.6% / 90.0%、ACM 形式は未対応）。→ [docs/ELEMENT_GOLD.md](./docs/ELEMENT_GOLD.md)
 - タイトル（要素正解、Europe PMC dev 868 本 / ACL 20 本 / arXiv 20 本）: 折り返したタイトルを最大の字の行から組み直し、78.2% / 80.0% / 55.0% → 79.5% / 100% / 70.0%。→ [docs/ELEMENT_GOLD.md](./docs/ELEMENT_GOLD.md)
 - 付録・補足の図表番号（`Table A6:`、`Table S2.`、`Figure A3:`）をキャプションとして認識し、段の中のキャプションの近くで行を集めるときは同じ段の行だけを使う。要素正解 dev で ACL の表 69.3% → 79.2%、Europe PMC 106 本の表 89.6% → 90.7%（論文単位の悪化なし）。→ [docs/extraction-next-steps.md](./docs/extraction-next-steps.md)
+- LaTeX の分離したアクセント記号（`D´ıaz`、`N´u˜nez`、`Franc¸ois`）を行の段階で合成する。全大文字の著者名は `Edoardo Ballico` の形にそろえ、`AND` で区切り、`OF`・`ON` などを含む全大文字のタイトル行は著者に入れない。要素正解 dev で arXiv の著者 40.7% → 51.9%、Europe PMC 106 本の著者 73.1% → 73.7%（論文単位の悪化なし）。
 - 翻訳: fresh audit（113 本 / 954 units）で ordinary-body fallback 30.8%、目標 5% は未達。自動受理は品質達成とは扱わない。→ [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)、[docs/PDF_EXTRACTION_TRANSLATION_QUALITY_EVALUATION.md](./docs/PDF_EXTRACTION_TRANSLATION_QUALITY_EVALUATION.md)
 - CAT-Translate / Gemma / Qwen は監査比較のみで本番 routing 未統合。
 

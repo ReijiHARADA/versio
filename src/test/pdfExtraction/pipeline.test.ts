@@ -807,9 +807,9 @@ describe("canonical extraction pipeline", () => {
       metadata: { pageCount: pages.length },
     });
     expect(result.paper.authors).toEqual(expect.arrayContaining([
-      "ABDALLAH M. H. ABBAS",
-      "KHAIRIL IMRAN GHAUTH",
-      "CHOO-YEE TING",
+      "Abdallah M. H. Abbas",
+      "Khairil Imran Ghauth",
+      "Choo-Yee Ting",
     ]));
     expect(result.paper.affiliations.some((item) => /^This work was supported/i.test(item.name))).toBe(false);
     expect(result.canonical.nodes.some((node) =>

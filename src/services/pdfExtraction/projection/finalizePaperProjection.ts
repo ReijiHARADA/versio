@@ -482,7 +482,7 @@ export function finalizePaperProjection(
     titleTranslated: null,
     authors:
       authorNames.length > 0
-        ? authorNames
+        ? authorNames.map(titleCaseAllCapsName)
         : input.metadata.author
           ? [input.metadata.author]
           : [],
@@ -500,4 +500,13 @@ export function finalizePaperProjection(
   };
 
   return finalizeBlocks(input, paper, sections, splitReferenceEntries);
+}
+
+/**
+ * `EDOARDO BALLICO` → `Edoardo Ballico`; names with any lowercase stay as they are.
+ * shortcut: `MCDONALD` becomes `Mcdonald`; add a casing table if it matters.
+ */
+export function titleCaseAllCapsName(name: string): string {
+  if (/\p{Ll}/u.test(name)) return name;
+  return name.replace(/\p{L}+/gu, (word) => word.length > 1 ? word[0] + word.slice(1).toLowerCase() : word);
 }
