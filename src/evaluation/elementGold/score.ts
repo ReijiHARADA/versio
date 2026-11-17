@@ -26,6 +26,18 @@ export function containment(needle: string, hay: Set<string>): number {
   return g.length ? g.filter((x) => hay.has(x)).length / g.length : 0;
 }
 const setOf = (texts: string[]) => new Set(texts.flatMap(ngrams));
+// Element-gold only: PDF extraction can split a math token as `M irreg n`.
+const normalizeMathTokenSpacing = (s: string) => {
+  const t = tokens(s);
+  const out: string[] = [];
+  for (let i = 0; i < t.length; i += 1) {
+    if (t[i].length === 1 && t[i + 2]?.length === 1) {
+      out.push(t[i] + t[i + 1] + t[i + 2]);
+      i += 2;
+    } else out.push(t[i]);
+  }
+  return out.length >= 25 ? out.join(" ") : s;
+};
 /** Heading text without its section number ("2.1.", "II.", "A") so "2.1. Methods" matches "2.1 Methods". */
 const bareHeading = (s: string) => s.replace(/^\s*(?:[0-9]+(?:\.[0-9]+)*\.?|[IVX]+\.|[A-Z]\.?)\s+/, "").trim();
 const urlKey = (u: string) => u.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/[\s/.,;)]+$/, "");
@@ -70,7 +82,18 @@ export function scoreElements(gold: ElementGold, blocks: ScoredBlock[], paper: S
   const leaked = leakItems.filter((s) => containment(s, paraSet) >= 0.8 && containment(s, footSet) < 0.8);
 
   const scorable = gold.paragraphs.filter((p) => tokens(p).length >= 25 && isPrinted(p));
-  const aligned = alignParagraphs(scorable.map((text, index) => ({ index, part: "body" as const, text, hasDisplayFormula: false })), paragraphs.map((b) => ({ id: b.id, text: b.text, warning: b.warning ?? null })));
+  const goldBlocks = scorable.map((text, index) => ({ index, part: "body" as const, text, hasDisplayFormula: false }));
+  const extractedBlocks = paragraphs.map((b) => ({ id: b.id, text: b.text, warning: b.warning ?? null }));
+  const plainAligned = alignParagraphs(goldBlocks, extractedBlocks);
+  const normalizedAligned = alignParagraphs(
+    goldBlocks.map((p) => ({ ...p, text: normalizeMathTokenSpacing(p.text) })),
+    extractedBlocks.map((b) => ({ ...b, text: normalizeMathTokenSpacing(b.text) })),
+  );
+  const verdictRank = { missing: 0, partial: 1, split: 2, intact: 3 };
+  const aligned = {
+    paragraphs: plainAligned.paragraphs.map((p, i) => verdictRank[normalizedAligned.paragraphs[i].verdict] > verdictRank[p.verdict] ? normalizedAligned.paragraphs[i] : p),
+    blocks: plainAligned.blocks,
+  };
 
   const refBlocks = byType("reference").map((b) => setOf([b.text]));
   return {
