@@ -49,16 +49,16 @@ export function latexElementDraft(input: { mainTex: string; bbl: string | null }
   const textOnly = dropEnvironments(main, FLOATS);
   const equations = environments(textOnly, DISPLAY_MATH).length + (textOnly.match(/\\\[/g)?.length ?? 0) + Math.floor((textOnly.match(/(?<!\\)\$\$/g)?.length ?? 0) / 2);
 
-  // Paragraphs: blank lines, section commands and list items end a paragraph; display math stays inside it.
+  // Paragraphs: blank lines, section commands, list items and display math end a paragraph.
   const abstract = environments(main, ["abstract"])[0]?.body ?? "";
-  // A non-blank placeholder keeps "text \n<math>\n text" one paragraph, as LaTeX prints it.
+  // A blank placeholder boundary makes text on either side of a display equation separate paragraphs.
   let prose = dropEnvironments(dropEnvironments(textOnly, ["abstract"]), DISPLAY_MATH, "⟨eq⟩")
     .replace(/\\\[[\s\S]*?\\\]/g, "⟨eq⟩")
     .replace(/\$\$[\s\S]*?\$\$/g, "⟨eq⟩");
   prose = removeCommand(removeCommand(prose, "footnote"), "maketitle");
   prose = prose.replace(SECTION, "\n\n\\$1{").replace(/\\item\b(\s*\[[^\]]*\])?/g, "\n\n$1 ").replace(/\\(begin|end)\{(itemize|enumerate|description)\}/g, "\n\n");
   for (const name of ["title", "author", "date", "affiliation", "institute", "email", "section", "subsection", "subsubsection"]) prose = removeCommand(prose, name);
-  const paragraphs = [abstract, ...prose.split(/\n\s*\n/)]
+  const paragraphs = [abstract, ...prose.split(/\s*⟨eq⟩\s*|\n\s*\n/)]
     .map((p) => latexToText(p.replace(/⟨eq⟩/g, " ")))
     .filter((p) => (p.match(/[\p{L}]+/gu)?.length ?? 0) >= 8);
 
