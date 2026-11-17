@@ -55,9 +55,10 @@ continued after the equation without a blank line.
 \begin{table}\caption{Main results.}\begin{tabular}{ll}\toprule Model & F1 \\ \midrule Ours & 91.2 \\ \end{tabular}\end{table}
 \end{document}`;
   const d = latexElementDraft({ mainTex: tex, bbl: null }, { id: "arxiv-x", source: "arxiv", license: "CC BY 4.0", sourceUrl: "" });
-  it("splits paragraphs at blank lines and list items, keeping display math inside its paragraph", () => {
-    expect(d.paragraphs, JSON.stringify(d.paragraphs)).toHaveLength(4);
-    expect(d.paragraphs[2]).toMatch(/continued after the equation/);
+  it("splits paragraphs at blank lines, list items and display math", () => {
+    expect(d.paragraphs, JSON.stringify(d.paragraphs)).toHaveLength(5);
+    expect(d.paragraphs[2]).not.toMatch(/continued after the equation/);
+    expect(d.paragraphs[3]).toMatch(/continued after the equation/);
     expect(d.headings).toEqual([{ text: "Introduction", level: 1 }, { text: "Setup", level: 2 }]);
     expect(d.equations).toBe(1);
     expect(d.footnotes).toEqual(["Code at."]);
