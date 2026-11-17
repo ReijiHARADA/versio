@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { reconstructDocument, type LayoutBlock, hasSourceTextIntegrity, isEquationLine, isFigureCaption, isTableCaption } from "../../services/pdfLayout";
+import { reconstructDocument, type LayoutBlock, hasSourceTextIntegrity, isEquationLine, isFigureCaption, isTableCaption, composeSpacingAccents } from "../../services/pdfLayout";
 import type { ExtractedPage } from "../../services/pdfService";
 import { FIXTURES } from "./builders";
 
@@ -1783,5 +1783,13 @@ describe("PDF reading order regression", () => {
     ]);
     const title = blocks.find((b) => b.role === "title");
     expect(title?.text).toBe("Intelligent Human Computer Interaction");
+  });
+});
+
+describe("composeSpacingAccents", () => {
+  it("composes LaTeX spacing accents and cedillas", () => {
+    expect(composeSpacingAccents("D´ıaz and N´u˜nez-Barra, Qu´ebec, Franc¸ois")).toBe("Díaz and Núñez-Barra, Québec, François");
+    expect(composeSpacingAccents("``quoted'' text")).toBe("``quoted'' text");
+    expect(composeSpacingAccents("Hamiltonian H˜k")).toBe("Hamiltonian H˜k");
   });
 });

@@ -458,13 +458,18 @@ function expandAuthorLine(text: string): string[] {
     .replace(/\s+/g, " ")
     .trim();
   const names: string[] = [];
-  const uppercaseNames = [...cleaned.matchAll(/\b[A-Z][A-Z'’-]+(?:\s+[A-Z][A-Z'’-]+){1,3}\b/g)]
+  // Split on `AND` first so `EDOARDO BALLICO AND ELIZABETH GASPARIM` is two names, and drop
+  // all-caps title phrases (`IRREGULAR BUNDLES ON HOPF`) that carry function words.
+  const uppercaseNames = cleaned.split(/\s+AND\s+/)
+    .flatMap((segment) => [...segment.matchAll(/\b[A-Z][A-Z'’-]+(?:\s+[A-Z][A-Z'’-]+){1,3}\b/g)])
     .map((match) => match[0].trim())
+    .filter((name) => !ALL_CAPS_TITLE_WORD.test(name))
     .filter((name) => !/^(?:FACEBOOK|GOOGLE|MICROSOFT|AMAZON|APPLE|STANFORD|UNIVERSITY|DEPARTMENT|SCHOOL|INSTITUTE|COLLEGE)$/i.test(name));
   const initialUppercaseNames = [...cleaned.matchAll(/\b[A-Z][A-Z'’-]+(?:\s+[A-Z]\.){1,3}\s+[A-Z][A-Z'’-]+/g)]
     .map((match) => match[0].trim());
+  // Title-case so the name is not mistaken for an all-caps banner downstream.
   const uppercaseAuthorNames = [...new Set([...initialUppercaseNames, ...uppercaseNames])]
-    .map((name) => name.replace(/^AND\s+/i, "").trim());
+    .map((name) => titleCaseAllCapsName(name.replace(/^AND\s+/i, "").trim()));
   if (uppercaseAuthorNames.length >= 2 || (uppercaseAuthorNames.length === 1 && /[,·]/.test(cleaned))) {
     return uppercaseAuthorNames;
   }
@@ -614,9 +619,18 @@ function looksLikeFrontiersReviewerCredit(text: string): boolean {
   ).test(value);
 }
 
+/** Function words that occur in all-caps titles but never in an all-caps byline. */
+const ALL_CAPS_TITLE_WORD = /\b(?:OF|ON|THE|FOR|IN|WITH|VIA|FROM|TO|SOME)\b/;
+
+/** All-caps title lines (`ABS-ENERGY OF SOME GRAPHS`) that math/arXiv mastheads tag as author rows. */
+function isAllCapsTitleLine(text: string): boolean {
+  return !/\p{Ll}/u.test(text) && ALL_CAPS_TITLE_WORD.test(text);
+}
+
 function isNonAuthorMastheadLine(text: string): boolean {
   const value = text.replace(/\s+/g, " ").trim();
   if (!value) return true;
+  if (isAllCapsTitleLine(value)) return true;
   // Bare city crumbs peeled from postal/institution lines.
   if (
     /^(?:palo alto|tel aviv|albany|new york|san francisco|los angeles|san jose|mountain view|new delhi|kampala|nairobi)$/i.test(
@@ -2136,7 +2150,8 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
       .filter(looksLikePersonName);
     return names.length >= 2;
   });
-  const authorSourceNodes = [...authorNodes, ...authorContinuationNodes, ...markedAuthorParagraphs, ...pipeAuthorParagraphs];
+  const authorSourceNodes = [...authorNodes, ...authorContinuationNodes, ...markedAuthorParagraphs, ...pipeAuthorParagraphs]
+    .filter((n) => !isAllCapsTitleLine(n.text ?? ""));
   // Elsevier-like mastheads may split one wrapped author row into several
   // adjacent author nodes (`Jan Egger, Christina` / `Gsaxner, ...`). Merge
   // only contiguous page-1 author nodes in the masthead band; affiliation and
@@ -4951,7 +4966,7 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
   return { sections, blocks: finalizeBodyBlocks(blocks, layoutBlocks) };
 }
 
-import { finalizePaperProjection as finalizePaperProjectionImpl } from "./finalizePaperProjection";
+import { finalizePaperProjection as finalizePaperProjectionImpl, titleCaseAllCapsName } from "./finalizePaperProjection";
 
 export { finalizePaperProjection } from "./finalizePaperProjection";
 

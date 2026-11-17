@@ -695,6 +695,28 @@ function joinItemTexts(items: ExtractedTextItem[]): string {
   return normalizeNativeSpacing(out);
 }
 
+const SPACING_ACCENT_TO_COMBINING: Record<string, string> = {
+  "\u00b4": "\u0301", "\u02dc": "\u0303", "\u00a8": "\u0308", "\u02c6": "\u0302", "\u02c7": "\u030c",
+};
+
+/**
+ * LaTeX Type1 fonts paint accents as separate spacing glyphs before the letter
+ * (`D´ıaz`, `N´u˜nez`, `Qu´ebec`) and cedillas after it (`c¸`). Compose them.
+ * Grave is left alone because ``quotes`` use the same glyph.
+ */
+export function composeSpacingAccents(text: string): string {
+  if (!/[\u00b4\u02dc\u00a8\u02c6\u02c7\u00b8]/.test(text)) return text;
+  return text
+    // Only letters that take the accent, so math tildes (`H˜k`) stay as they are.
+    .replace(/\u00b4([aeiouyAEIOUYcnszCNSZ\u0131])|\u02dc([anoANO])|\u00a8([aeiouyAEIOUY\u0131])|\u02c6([aeiouAEIOU\u0131])|\u02c7([cszrenCSZREN])/g,
+      (match: string, ...letters: Array<string | undefined>) => {
+        const letter = letters.slice(0, 5).find(Boolean)!;
+        return (letter === "\u0131" ? "i" : letter) + SPACING_ACCENT_TO_COMBINING[match[0]!];
+      })
+    .replace(/([cCsS])\u00b8/g, "$1\u0327")
+    .normalize("NFC");
+}
+
 function itemsToLine(
   items: ExtractedTextItem[],
   column: LayoutColumn,
@@ -708,7 +730,7 @@ function itemsToLine(
   const bodyItems = items.filter((i) => i.fontSize >= fontSize * 0.82);
   const ySource = bodyItems.length > 0 ? bodyItems : items;
   return {
-    text: joinItemTexts(items),
+    text: composeSpacingAccents(joinItemTexts(items)),
     items,
     page,
     column,
