@@ -1137,6 +1137,8 @@ function captionedRepeatedCellRow(block: LayoutBlock, blocks: LayoutBlock[]): bo
     if (candidate.pageStart !== block.pageStart) continue;
     for (const line of candidate.lines) {
       if (line.y < top || line.y > bottom) continue;
+      // A caption inside one column labels a table in that column; the other column is prose.
+      if ((caption.column === "left" || caption.column === "right") && line.column !== caption.column) continue;
       const cells = line.items
         .map((item) => ({ x: Math.round(item.x / 10) * 10, text: item.text.trim() }))
         .filter((item) => item.text && item.text.split(/\s+/).length <= 14 && !/[.!?。！？]\s*$/.test(item.text));

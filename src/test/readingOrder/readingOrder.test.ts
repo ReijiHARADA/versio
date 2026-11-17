@@ -68,6 +68,11 @@ describe("Japanese figure and table captions", () => {
     expect(isTableCaption("Table 1 (Continued).")).toBe(true);
     expect(isTableCaption("Table 2.5: Light truck crash rates")).toBe(true);
     expect(isTableCaption("Table A.3.1 Nested appendix result")).toBe(true);
+    expect(isTableCaption("Table A6: Additional study on model size")).toBe(true);
+    expect(isTableCaption("Table S2. Primer sequences")).toBe(true);
+    expect(isFigureCaption("Figure A3: Error analysis")).toBe(true);
+    expect(isFigureCaption("Fig. S1. Study flow")).toBe(true);
+    expect(isTableCaption("Table A6 shows the full results")).toBe(false);
   });
 
   it("rejoins a visually shared caption whose native title has a broken vertical coordinate", () => {
