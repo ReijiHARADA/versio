@@ -1,3 +1,4 @@
+import type { LayoutBlock } from "../../pdfLayout";
 import type { Paper } from "../../../types/paper";
 import { reconcileBlockIds } from "../../../data/package/reconcile";
 import type { BodyProjection, FrontMatterProjection, PaperProjection, ProjectCanonicalToPaperInput } from "./toPaper";
@@ -177,6 +178,29 @@ function recoverEditorReviewerNames(
     }
   }
   return authorNames;
+}
+
+/**
+ * The page-one title as printed: the topmost run of lines set in the largest
+ * body-area type (≥ 1.3× body size), whatever role each line was given. A
+ * wrapped title's last line is often labelled author (`Rheumatoid Arthritis`)
+ * or paragraph (`anomaly`), which cuts the title and pollutes the byline.
+ */
+export function largestTypeTitle(layoutBlocks: LayoutBlock[], baseFontSize: number): string | null {
+  const lines = layoutBlocks
+    .filter((b) => b.pageStart === 1 && b.role !== "chrome" && b.role !== "header" && b.role !== "footer" && !b.rotation)
+    .flatMap((b) => b.lines)
+    .filter((l) => !l.rotation && l.y < (l.pageHeight ?? 792) * 0.45 && l.fontSize >= baseFontSize * 1.3 && /\p{L}{2,}/u.test(l.text));
+  if (!lines.length) return null;
+  const max = Math.max(...lines.map((l) => l.fontSize));
+  const run = lines.filter((l) => l.fontSize >= max * 0.97).sort((a, b) => a.y - b.y);
+  const title = [run[0]];
+  for (const line of run.slice(1)) {
+    if (line.y - title.at(-1)!.y > max * 2) break;
+    if (Math.abs(line.y - title.at(-1)!.y) > 1) title.push(line);
+  }
+  const text = title.map((l) => l.text.trim()).join(" ").replace(/\s+/g, " ");
+  return text.length >= 10 && text.length <= 300 ? text : null;
 }
 
 export function finalizePaperProjection(
@@ -428,13 +452,33 @@ export function finalizePaperProjection(
       );
     });
   });
+  // Extend a title cut at its first line(s) with the rest of its largest-type run.
+  const printedTitle = largestTypeTitle(layoutBlocks, input.baseFontSize);
+  const titleKey = (t: string) => t.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+  let finalTitle = titleForProjection;
+  const currentKey = titleKey(titleForProjection ?? "").slice(0, 24);
+  const currentLine = currentKey ? layoutBlocks.flatMap((b) => (b.pageStart === 1 ? b.lines : [])).find((l) => titleKey(l.text).startsWith(currentKey.slice(0, 12))) : undefined;
+  const printedSize = printedTitle ? Math.max(...layoutBlocks.flatMap((b) => (b.pageStart === 1 ? b.lines : [])).filter((l) => printedTitle.includes(l.text.trim())).map((l) => l.fontSize)) : 0;
+  // A journal banner repeats on later pages; a title does not.
+  const repeatsLater = printedTitle ? layoutBlocks.some((b) => b.pageStart >= 2 && titleKey(b.text).includes(titleKey(printedTitle))) : true;
+  const extendsCurrent = Boolean(printedTitle && titleForProjection && titleKey(printedTitle).startsWith(titleKey(titleForProjection)) && printedTitle.length > titleForProjection.length);
+  // The chosen title is not set in the title type at all (an affiliation, a body line).
+  const replacesSmaller = Boolean(printedTitle && !repeatsLater && printedTitle.split(/\s+/).length >= 4 && (!currentLine || currentLine.fontSize < printedSize * 0.9));
+  if (printedTitle && (extendsCurrent || replacesSmaller)) {
+    finalTitle = printedTitle;
+    authorNames = authorNames.filter((name) => !titleKey(printedTitle).includes(titleKey(name)));
+  }
+  // Institution names and submission notes are not people (`Lane Department`, `Submitted to ApJ`).
+  authorNames = authorNames
+    .map((name) => name.replace(/\s*\(ORC[^)]*\)?\s*$/i, "").trim())
+    .filter((name) => name && !/\b(?:departamento|department|universit\w*|institut\w*|[eé]cole|polytechnique|laborator\w*|school|college|faculty|cent(?:er|re)|submitted to)\b/i.test(name));
   const paper: Paper = {
     id: paperId,
     sourceFilePath: input.filePath,
     sourceFileName: input.filePath,
     sourceStoredPath: null,
     sourceFileHash: input.fileHash,
-    titleOriginal: pickPaperTitle(input.metadata.title, titleForProjection),
+    titleOriginal: pickPaperTitle(input.metadata.title, finalTitle),
     titleTranslated: null,
     authors:
       authorNames.length > 0
