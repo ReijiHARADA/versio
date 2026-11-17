@@ -1621,7 +1621,9 @@ function demotePageOneProseCopyrights(nodes: CanonicalNode[]): CanonicalNode[] {
     if (
       /^(?:the\s+)?(?:associate|handling|guest)\s+editor\b/i.test(t) ||
       /\bcoordinating the review of this manuscript\b/i.test(t) ||
-      /^(?:protected by copyright|downloaded from|to cite\s*:)/i.test(t)
+      /^(?:protected by copyright|downloaded from|to cite\s*:)/i.test(t) ||
+      // License grants are legal boilerplate even though they read as prose.
+      /\b(?:is|are) (?:licensed|distributed) under\b|\bcreative commons\b/i.test(t)
     ) {
       return node;
     }
