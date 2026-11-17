@@ -88,3 +88,6 @@ tools/grobid-parity/build/
 # llama.cpp sidecar build (scripts/build-llama-server.sh)
 .cache/llama.cpp/
 src-tauri/binaries/
+
+# Element gold (arXiv / ACL PDFs and LaTeX-derived gold; local only)
+test-data/element-gold/

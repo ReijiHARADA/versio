@@ -10,7 +10,8 @@
  * and a summary under the gitignored test-data/extraction-audit/<out>/.
  *
  * Corpora: fieldgold (CC-licensed field-gold PDFs), realpapers (local
- * test-data/real-papers). Nothing leaves the machine.
+ * test-data/real-papers), paragold (Europe PMC with JATS), elementgold (arXiv /
+ * ACL Anthology element gold, scripts/fetch-element-gold.ts). Nothing leaves the machine.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -56,6 +57,10 @@ function documents(): Doc[] {
     const list = JSON.parse(fs.readFileSync(path.join(root, "test-data/paragraph-gold/index.json"), "utf8")) as Array<{ id: string; pdf: string }>;
     return list.map((d) => ({ id: d.id, pdf: path.join(root, d.pdf), language: "en" }));
   }
+  if (corpus === "elementgold") {
+    const list = JSON.parse(fs.readFileSync(path.join(root, "test-data/element-gold/index.json"), "utf8")) as Array<{ id: string }>;
+    return list.map((d) => ({ id: d.id, pdf: path.join(root, "test-data/element-gold", d.id, "source.pdf"), language: "en" }));
+  }
   throw new Error(`unknown corpus ${corpus}`);
 }
 
@@ -68,6 +73,8 @@ export type AuditBlock = {
   text: string;
   warning: string | null;
   translatable: boolean;
+  /** Table blocks: native cell texts (metadata.tableRows) the Reader can show. */
+  cells?: string[];
 };
 
 // Text blocks carry the Reader's text; other blocks (figure, table, equation,
@@ -98,8 +105,9 @@ for (const [n, doc] of docs.entries()) {
         text: (b.original ?? "").replace(/\s+/g, " ").trim(),
         warning: typeof b.metadata.translationInputWarning === "string" ? b.metadata.translationInputWarning : null,
         translatable: b.translationStatus !== "skipped",
+        ...(Array.isArray(b.metadata.tableRows) ? { cells: (b.metadata.tableRows as Array<Array<{ text: string }>>).flat().map((c) => c.text) } : {}),
       }));
-    fs.writeFileSync(path.join(outDir, "docs", `${doc.id}.json`), JSON.stringify({ id: doc.id, language: doc.language ?? null, split: auditSplit(doc.id), pages: pages.length, blocks }, null, 1));
+    fs.writeFileSync(path.join(outDir, "docs", `${doc.id}.json`), JSON.stringify({ id: doc.id, language: doc.language ?? null, split: auditSplit(doc.id), pages: pages.length, paper: { title: result.paper.titleOriginal, authors: result.paper.authors, publication: result.paper.publication, doi: result.paper.doi ?? null }, blocks }, null, 1));
     const paragraphs = blocks.filter((b) => b.type === "paragraph");
     summary.push({
       id: doc.id,

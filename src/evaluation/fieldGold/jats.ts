@@ -2,7 +2,7 @@ import type { FieldRecord } from "./types";
 import { elements, first, removeElements, text } from "./xml";
 
 /** Block-ish JATS children get a space so words do not glue together. */
-function blockText(xml: string): string {
+export function blockText(xml: string): string {
   return text(xml.replace(/<\/(title|p|label|name|surname|given-names|institution|source|year|volume|article-title|person-group)>/g, "</$1> "))
     .replace(/\s+([,.;:])/g, "$1");
 }

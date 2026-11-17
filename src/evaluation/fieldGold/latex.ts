@@ -1,7 +1,7 @@
 import type { FieldRecord } from "./types";
 
 /** Index just past the brace group starting at `open` (s[open] === "{"), or -1. */
-function braceEnd(s: string, open: number): number {
+export function braceEnd(s: string, open: number): number {
   let depth = 0;
   for (let i = open; i < s.length; i += 1) {
     if (s[i] === "\\") { i += 1; continue; }
@@ -12,7 +12,7 @@ function braceEnd(s: string, open: number): number {
 }
 
 /** Arguments of every `\cmd[opt]{arg}`; returns the mandatory arg and its span. */
-function commandArgs(s: string, cmd: string): Array<{ arg: string; start: number; end: number }> {
+export function commandArgs(s: string, cmd: string): Array<{ arg: string; start: number; end: number }> {
   const out: Array<{ arg: string; start: number; end: number }> = [];
   const re = new RegExp(`\\\\${cmd}(?![A-Za-z])\\s*(?:\\[[^\\]]*\\]\\s*)*`, "g");
   for (const m of s.matchAll(re)) {
@@ -25,14 +25,14 @@ function commandArgs(s: string, cmd: string): Array<{ arg: string; start: number
   return out;
 }
 
-function removeCommand(s: string, cmd: string): string {
+export function removeCommand(s: string, cmd: string): string {
   let out = s;
   for (const c of commandArgs(s, cmd).reverse()) out = out.slice(0, c.start) + out.slice(c.end);
   return out;
 }
 
 /** Environments `\begin{name}...\end{name}` (outermost, nesting-aware). */
-function environments(s: string, names: string[]): Array<{ name: string; body: string; start: number; end: number }> {
+export function environments(s: string, names: string[]): Array<{ name: string; body: string; start: number; end: number }> {
   const alt = names.map((n) => n.replace("*", "\\*")).join("|");
   const re = new RegExp(`\\\\(begin|end)\\{(${alt})\\}`, "g");
   const out: Array<{ name: string; body: string; start: number; end: number }> = [];
