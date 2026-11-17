@@ -69,6 +69,8 @@ export type LayoutLine = {
   pageHeight?: number;
   pageWidth?: number;
   roleHint?: LayoutRole;
+  /** Groups emitted table/figure region lines into one atomic layout block. */
+  regionId?: number;
   /** Repeated multi-column geometry indicates a table row; never merge it into neighboring prose rows. */
   isGridRow?: boolean;
 };
@@ -2431,7 +2433,7 @@ function orderWithRegions(
   }
   const ordered = orderPageLines(lines.filter((line) => ![...members.values()].some((memberLines) => memberLines.includes(line))), layout);
   const insertedAt = new Map<LayoutLine | undefined, number>();
-  for (const region of deduped) {
+  for (const [regionIndex, region] of deduped.entries()) {
     const regionLines = members.get(region) ?? [];
     if (regionLines.length === 0) continue;
     const caption = region.captionLine && ordered.includes(region.captionLine) ? region.captionLine : undefined;
@@ -2452,7 +2454,7 @@ function orderWithRegions(
     const offset = insertedAt.get(anchor) ?? 0;
     ordered.splice(index, 0, ...regionLines
       .sort((a, b) => a.y - b.y || a.x - b.x)
-      .map((line) => ({ ...line, roleHint: region.kind === "table" ? "table" : "chrome" })));
+      .map((line) => ({ ...line, roleHint: region.kind === "table" ? "table" : "chrome", regionId: line.page * 1000 + regionIndex })));
     insertedAt.set(anchor, offset + regionLines.length);
   }
   return ordered;
@@ -3024,7 +3026,25 @@ function groupLinesIntoBlocks(
     currentRole = null;
   };
 
-  for (const sourceLine of lines) {
+  for (let sourceIndex = 0; sourceIndex < lines.length; sourceIndex += 1) {
+    const sourceLine = lines[sourceIndex];
+    if (sourceLine.regionId !== undefined) {
+      flush();
+      const regionLines = [sourceLine];
+      while (sourceIndex + 1 < lines.length && lines[sourceIndex + 1].regionId === sourceLine.regionId) {
+        regionLines.push(lines[++sourceIndex]);
+      }
+      blocks.push({
+        role: sourceLine.roleHint ?? "paragraph",
+        text: joinLines(regionLines),
+        lines: regionLines,
+        pageStart: sourceLine.page,
+        pageEnd: regionLines.at(-1)?.page ?? sourceLine.page,
+        column: sourceLine.column,
+        bbox: blockBbox(regionLines),
+      });
+      continue;
+    }
     for (const doiLine of splitInlineDoi(sourceLine)) for (const licenseLine of splitInlineLicense(doiLine)) for (const authorCopyLine of splitInlineAuthorCopyNotice(licenseLine)) for (const line of splitInlineBibliographicBand(authorCopyLine)) {
     if (!line.text.trim()) continue;
     if (line.page !== copyrightPage || line.column !== copyrightColumn) {

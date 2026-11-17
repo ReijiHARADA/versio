@@ -33,6 +33,32 @@ describe("page regions in reading order", () => {
     expect(blocks.filter((block) => block.role === "paragraph").map((block) => block.text).join(" ")).toContain("After two");
   });
 
+  it("keeps all lines of one region in exactly one table block", () => {
+    const cells = [
+      item("Measure  Value", 60, 215, 130),
+      item("hand washing stations immediately outside of the laboratory", 60, 227, 120),
+      item("were available to every participant", 60, 239, 120),
+    ];
+    const { blocks } = reconstructDocument([page([
+      item(prose("Before"), 50, 100), item("Table 1. Results", 50, 180), ...cells, item(prose("After"), 50, 280),
+    ], { graphicsPrimitives: grid() })]);
+    const tables = blocks.filter((block) => block.role === "table" && /hand washing stations/.test(block.text));
+    expect(tables).toHaveLength(1);
+    expect(tables[0].lines).toHaveLength(cells.length);
+  });
+
+  it("does not merge a region block with the paragraph before or after it", () => {
+    const { blocks } = reconstructDocument([page([
+      item(prose("Before"), 50, 100), item("Table 1. Results", 50, 180),
+      item("Metric  Value", 60, 215), item("hand washing stations immediately outside of the laboratory", 60, 227, 120),
+      item(prose("After"), 50, 280),
+    ], { graphicsPrimitives: grid() })]);
+    const table = blocks.find((block) => block.role === "table" && /hand washing stations/.test(block.text));
+    expect(table?.text).not.toContain("Before body");
+    expect(table?.text).not.toContain("After body");
+    expect(blocks.some((block) => block.role === "paragraph" && /hand washing stations/.test(block.text))).toBe(false);
+  });
+
   it("figure text becomes chrome", () => {
     const { blocks } = reconstructDocument([page([
       item("(a)", 100, 220, 20, 11), item("Accuracy", 120, 235, 50, 11), item("Figure 1: Outcome", 80, 290, 180, 11),
