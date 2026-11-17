@@ -102,7 +102,7 @@ for (const doc of docs) {
     const r = byReason.get(b.warning) ?? { complete: 0, fragment: 0, merged: 0, outside: 0 };
     r[b.verdict] += 1;
     byReason.set(b.warning, r);
-    if (examples && doc.split === "dev" && shown.length < examples) {
+    if (examples && doc.split === "dev" && shown.length < examples && (!arg("verdict") || arg("verdict") === b.verdict)) {
       const text = paragraphs.find((x) => x.id === b.id)!.text;
       const goldText = b.paragraphs[0] ? gold[b.paragraphs[0].index].text : "";
       shown.push(`[${b.verdict}] ${doc.id} p${paragraphs.find((x) => x.id === b.id)!.page} ${b.warning}\n  block: ${text.slice(0, 160)} … ${text.slice(-80)}\n  gold:  ${goldText.slice(0, 100)} … ${goldText.slice(-80)}`);
