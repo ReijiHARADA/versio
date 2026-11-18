@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
 import {
@@ -8,7 +8,6 @@ import {
   Folder,
   FolderOpen,
   FolderPlus,
-  MoreHorizontal,
   Pencil,
   Trash2,
 } from "lucide-react";
@@ -43,15 +42,12 @@ function subtreePaperCount(
   ).size;
 }
 
-function clampMenuPosition(button: DOMRect): MenuAnchor {
+function clampMenuPosition(x: number, y: number): MenuAnchor {
   const estimatedHeight = 220;
-  const left = Math.min(
-    Math.max(8, button.right - MENU_WIDTH),
-    window.innerWidth - MENU_WIDTH - 8
-  );
-  let top = button.bottom + MENU_GAP;
+  const left = Math.min(Math.max(8, x), window.innerWidth - MENU_WIDTH - 8);
+  let top = y + MENU_GAP;
   if (top + estimatedHeight > window.innerHeight - 8) {
-    top = Math.max(8, button.top - estimatedHeight - MENU_GAP);
+    top = Math.max(8, y - estimatedHeight - MENU_GAP);
   }
   return { top, left };
 }
@@ -91,7 +87,6 @@ export function WorkspaceTree({
   const [deleting, setDeleting] = useState(false);
   const treeRef = useRef<HTMLElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const menuButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   const drag = useWorkspaceDrag(nodes, (id) => {
     if (id) setCollapsed((current) => ({ ...current, [id]: false }));
@@ -111,28 +106,6 @@ export function WorkspaceTree({
     return () => window.clearTimeout(timer);
   }, [expandId]);
 
-  useLayoutEffect(() => {
-    if (!openMenuId) {
-      setMenuAnchor(null);
-      return;
-    }
-    const button = menuButtonRefs.current.get(openMenuId);
-    if (!button) {
-      setMenuAnchor(null);
-      return;
-    }
-    const place = () => setMenuAnchor(clampMenuPosition(button.getBoundingClientRect()));
-    place();
-    window.addEventListener("resize", place);
-    // Reposition if the sidebar scroll container moves.
-    const scrollRoot = treeRef.current?.closest(`.${styles.scroll}`) ?? treeRef.current;
-    scrollRoot?.addEventListener("scroll", place, { passive: true });
-    return () => {
-      window.removeEventListener("resize", place);
-      scrollRoot?.removeEventListener("scroll", place);
-    };
-  }, [openMenuId]);
-
   useEffect(() => {
     if (!openMenuId) return;
     const close = () => {
@@ -141,15 +114,20 @@ export function WorkspaceTree({
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
       if (menuRef.current?.contains(target)) return;
-      if (menuButtonRefs.current.get(openMenuId)?.contains(target)) return;
       close();
     };
+    // Fixed-position menu: close instead of following the sidebar scroll.
+    const scrollRoot = treeRef.current?.closest(`.${styles.scroll}`) ?? treeRef.current;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") close();
     };
     window.addEventListener("pointerdown", onPointerDown, true);
     window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", close);
+    scrollRoot?.addEventListener("scroll", close, { passive: true });
     return () => {
+      window.removeEventListener("resize", close);
+      scrollRoot?.removeEventListener("scroll", close);
       window.removeEventListener("pointerdown", onPointerDown, true);
       window.removeEventListener("keydown", onKeyDown);
     };
@@ -265,6 +243,12 @@ export function WorkspaceTree({
           data-project-drop-id={node.id}
           style={{ "--tree-indent": `${depth * 16}px` } as React.CSSProperties}
           onPointerDown={(event) => drag.onPointerDown(event, node.id)}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            setEditingId(null);
+            setMenuAnchor(clampMenuPosition(event.clientX, event.clientY));
+            setOpenMenuId(node.id);
+          }}
         >
           {hasNested ? (
             <button
@@ -293,6 +277,10 @@ export function WorkspaceTree({
                 if (draggingPaperId) event.preventDefault();
                 setOpenMenuId(null);
               }}
+              onDoubleClick={(event) => {
+                event.preventDefault();
+                setEditingId(node.id);
+              }}
             >
               <span className={styles.icon}>
                 {isOpen ? <FolderOpen size={16} /> : <Folder size={16} />}
@@ -300,23 +288,6 @@ export function WorkspaceTree({
               <span className={styles.itemLabel}>{node.name}</span>
             </NavLink>
           )}
-          <button
-            type="button"
-            ref={(element) => {
-              if (element) menuButtonRefs.current.set(node.id, element);
-              else menuButtonRefs.current.delete(node.id);
-            }}
-            className={`${styles.projectMenuButton} ${menuOpen ? styles.projectMenuButtonOpen : ""}`}
-            aria-label={`「${node.name}」のメニュー`}
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            onClick={(event) => {
-              event.stopPropagation();
-              setOpenMenuId(menuOpen ? null : node.id);
-            }}
-          >
-            <MoreHorizontal size={16} />
-          </button>
         </div>
         {isOpen && (
           <div className={styles.treeNested}>
