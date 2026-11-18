@@ -115,9 +115,7 @@ export function recoverEarlyMastheadAuthors(
   const acmReferenceText = canonical.nodes
     .map((node) => node.text ?? "")
     .find((text) => /^ACM Reference Format\s*:/i.test(text.trim()));
-  if (acmReferenceText && state.authorNames.some((name) =>
-    /@|\b(?:usa|university|department|engineering|seattle|washington)\b/i.test(name) ||
-    /[&]/.test(name))) {
+  if (acmReferenceText) {
     const authorPrefix = acmReferenceText.replace(/^ACM Reference Format\s*:\s*/i, "");
     const beforeYear = authorPrefix.split(/\b20\d{2}\b/)[0] ?? authorPrefix;
     const recoveredAuthors = beforeYear
@@ -125,7 +123,14 @@ export function recoverEarlyMastheadAuthors(
       .split(",")
       .map((name) => name.replace(/[.]+(?=\s*$)/g, "").replace(/\s+/g, " ").trim())
       .filter((name) => name.split(/\s+/).length >= 2 && name.split(/\s+/).length <= 6 && /^[\p{L} .()'’’-]+$/u.test(name));
-    if (recoveredAuthors.length >= 2) {
+    const contaminated = state.authorNames.some((name) =>
+      /@|\b(?:usa|university|department|engineering|seattle|washington)\b/i.test(name) ||
+      /[&]/.test(name));
+    // Author-card grids can lose a row of names; the reference line then lists every author.
+    const recovered = new Set(recoveredAuthors.map((name) => name.toLocaleLowerCase()));
+    const extendsMasthead = recoveredAuthors.length > state.authorNames.length &&
+      state.authorNames.every((name) => recovered.has(name.toLocaleLowerCase()));
+    if (recoveredAuthors.length >= 2 && (contaminated || extendsMasthead)) {
       state.authorNames.splice(0, state.authorNames.length, ...recoveredAuthors);
     }
   }
