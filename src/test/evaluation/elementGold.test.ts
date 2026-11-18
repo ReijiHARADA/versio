@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { jatsElementGold } from "../../evaluation/elementGold/jats";
 import { latexElementDraft } from "../../evaluation/elementGold/latex";
-import { scoreElements } from "../../evaluation/elementGold/score";
+import { scoreElements, squeezedContainment } from "../../evaluation/elementGold/score";
 import { printedWords, snapToPrinted } from "../../evaluation/elementGold/snap";
 
 const LONG = "The participants completed a series of tasks in a quiet room while their responses were recorded by the experimenter for later analysis of accuracy and speed.";
@@ -108,6 +108,11 @@ describe("scoreElements", () => {
     const gold = jatsElementGold(`<article><front><article-meta><abstract><p>${first}</p></abstract></article-meta></front></article>`, { id: "prose-x", license: "", sourceUrl: "" });
     const s = scoreElements(gold, [{ id: "p", type: "paragraph", text: second }], { title: null, authors: [], publication: null, doi: null }, `${first} ${second}`);
     expect(s.paragraphs).toEqual({ gold: 1, found: 0 });
+  });
+
+  it("matches captions whose LaTeX gold splits words the PDF prints joined", () => {
+    expect(squeezedContainment("Gap parameter Δ T in units of Δ 0 as a function of the 6 μ m feature by Garc ıa", "FIG. 2: Gap parameter Δ(𝑇), in units of Δ0, as a function of the 6 μm feature by García")).toBe(1);
+    expect(squeezedContainment("Reliability diagrams for validation and test", "Confusion matrix for the test split")).toBeLessThan(0.5);
   });
 
   it("counts a declaration note printed as a headed end section, but not ordinary notes", () => {
