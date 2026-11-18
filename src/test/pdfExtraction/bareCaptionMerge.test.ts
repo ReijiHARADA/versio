@@ -194,6 +194,20 @@ describe("mergeFigureCaptionContinuations page-boundary bare legend", () => {
 });
 
 describe("mergeFigureCaptionContinuations", () => {
+  it("keeps body-size column prose out of a smaller figure caption", () => {
+    const style = (fontSizeRatio: number) => ({
+      fontSizeRatio, boldScore: 0, indent: 0, spacingBefore: 0, spacingAfter: 0, uppercaseRatio: 0,
+    });
+    const merged = mergeFigureCaptionContinuations([
+      { ...node("caption", "FIGURE 9 Trend topics on SCFAs. (A) Trend topics based on", { id: "c1", page: 15, y: 515 }), style: style(0.61) },
+      {
+        ...node("paragraph", "harmful substances (e.g., lipopolysaccharide) into the brain and prevents neuronal damage (34).", { id: "p1", page: 15, y: 564 }),
+        style: style(1),
+      },
+    ] as CanonicalNode[]);
+    expect(merged.map((n) => n.role)).toEqual(["caption", "paragraph"]);
+  });
+
   it("merges a bare FIGURE N with a long panel-legend paragraph", () => {
     const merged = mergeFigureCaptionContinuations([
       {
