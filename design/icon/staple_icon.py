@@ -23,7 +23,7 @@ def mat_paper():
 def mat_steel():
     m = bpy.data.materials.new("steel"); m.use_nodes = True
     nt = m.node_tree; b = nt.nodes["Principled BSDF"]
-    b.inputs["Base Color"].default_value = (0.60, 0.625, 0.655, 1)  # electro-galvanized (zinc-plated) steel: dull silver, faint blue
+    b.inputs["Base Color"].default_value = (0.50, 0.52, 0.55, 1)  # electro-galvanized (zinc-plated) steel: dull grey, faint blue
     b.inputs["Metallic"].default_value = 1.0
     b.inputs["Anisotropic"].default_value = 0.45
     # fine drawn-wire streaks along the wire (local X of each leg)
@@ -33,6 +33,13 @@ def mat_steel():
     nt.links.new(tc.outputs["Object"], mp.inputs["Vector"]); nt.links.new(mp.outputs["Vector"], nz.inputs["Vector"])
     rr = nt.nodes.new("ShaderNodeMapRange"); rr.inputs["To Min"].default_value = 0.36; rr.inputs["To Max"].default_value = 0.50
     nt.links.new(nz.outputs["Fac"], rr.inputs["Value"]); nt.links.new(rr.outputs["Result"], b.inputs["Roughness"])
+    # mottled zinc coating: fine blotches between two greys
+    mo = nt.nodes.new("ShaderNodeTexNoise"); mo.inputs["Scale"].default_value = 40; mo.inputs["Detail"].default_value = 10
+    nt.links.new(tc.outputs["Object"], mo.inputs["Vector"])
+    cr = nt.nodes.new("ShaderNodeValToRGB")
+    cr.color_ramp.elements[0].position = 0.35; cr.color_ramp.elements[0].color = (0.40, 0.42, 0.45, 1)
+    cr.color_ramp.elements[1].position = 0.7; cr.color_ramp.elements[1].color = (0.56, 0.58, 0.61, 1)
+    nt.links.new(mo.outputs["Fac"], cr.inputs["Fac"]); nt.links.new(cr.outputs["Color"], b.inputs["Base Color"])
     tg = nt.nodes.new("ShaderNodeTangent"); tg.direction_type = "RADIAL"; tg.axis = "Z"
     tg2 = nt.nodes.new("ShaderNodeTangent"); tg2.direction_type = "UV_MAP"
     nt.links.new(tg2.outputs["Tangent"], b.inputs["Tangent"])
@@ -60,29 +67,39 @@ for p in paper.data.polygons: p.use_smooth = True
 paper.data.shade_smooth() if hasattr(paper.data, "shade_smooth") else None
 
 # --- staple leg: sweep a rounded-rect profile along a bent path -------------
-W, T, CR = 0.40, 0.26, 0.10    # wire width (in-plane), thickness, profile corner radius
-R = 0.32                       # bend radius (centerline)
+W, T, CR = 0.38, 0.22, 0.10    # wire width (in-plane), thickness, profile corner radius
+R = 0.75 * T                   # tight clinch: inner bend radius ~ 1/4 of thickness
 X, TIP = 3.75, 0.24            # bend x, tip x (gap = 2*TIP)
 
-def profile(n=48, e=3.2):
-    # superellipse cross-section: flat-ish but crowned faces so the metal catches gradients
+def profile(n=8):
+    # flattened drawn wire: flat faces, small edge fillet (~1/3 of thickness)
+    r = 0.35 * T
+    hw, ht = W / 2 - r, T / 2 - r
     out = []
-    for k in range(n):
-        t = 2 * math.pi * k / n
-        c, si = math.cos(t), math.sin(t)
-        out.append((W / 2 * math.copysign(abs(c) ** (2 / e), c), T / 2 * math.copysign(abs(si) ** (2 / e), si)))
+    for cx, cy, a0 in ((hw, ht, 0), (-hw, ht, 90), (-hw, -ht, 180), (hw, -ht, 270)):
+        for k in range(n + 1):
+            a = math.radians(a0 + 90 * k / n)
+            out.append((cx + r * math.cos(a), cy + r * math.sin(a)))
     return out  # (side, normal) offsets
 
+LIFT = 0.42  # bend crest height above the plate: thin paper lets the bend stand proud of the tip
+
 def leg_path():
-    zc = T / 2 + 0.002
-    path = [(X, -1.2), (X, zc - R)]
-    for k in range(1, 17):
-        a = math.radians(90 * k / 16)
-        path.append((X - R + R * math.cos(a), zc - R + R * math.sin(a)))
-    n = 24
-    x0 = X - R
-    for k in range(1, n + 1):
-        path.append((x0 + (TIP - x0) * k / n, zc))
+    # wire comes up through the sheet, arcs over at the bend, then slopes down to a tip resting on the sheet
+    z0 = T / 2 + 0.002
+    cx, cz = X - R, z0 + LIFT - R
+    al = 0.0
+    for _ in range(20):  # slope so the straight run lands exactly on the sheet at the tip
+        px, pz = cx - R * math.sin(al), cz + R * math.cos(al)
+        al = math.atan2(pz - z0, px - TIP)
+    path = [(X, -1.2), (X, cz)]
+    sweep = math.pi / 2 + al
+    for k in range(1, 25):
+        th = sweep * k / 24
+        path.append((cx + R * math.cos(th), cz + R * math.sin(th)))
+    for k in range(1, 31):
+        t = k / 30
+        path.append((px + (TIP - px) * t, pz + (z0 - pz) * t))
     return path
 
 def build_leg(name):
@@ -143,8 +160,8 @@ def area(name, loc, size, energy, color=(1, 1, 1)):
     d = Vector((0, 0, 0)) - Vector(loc); l.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
     return l
 
-area("key", (-3, 7, 16), 8, 2600)
-area("fill", (8, -10, 14), 24, 600, (0.92, 0.96, 1.0))
+area("key", (-21, 21, 27), 7.5, 18000)
+area("fill", (8, -10, 14), 24, 350, (0.92, 0.96, 1.0))
 area("strip", (6, 8, 16), 2, 700)
 
 w = bpy.data.worlds.new("w"); scn.world = w; w.use_nodes = True
