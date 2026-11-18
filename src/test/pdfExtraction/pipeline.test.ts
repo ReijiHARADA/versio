@@ -669,6 +669,15 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /Linda Cab Hospital|Toma Test Wason/.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 
+  it("keeps a small-caps prose line in its paragraph above a figure caption", async (ctx) => {
+    const pdf = path.resolve("test-data/element-gold/acl-2023.emnlp-main.479/source.pdf");
+    if (!fs.existsSync(pdf)) ctx.skip();
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({ pages, paperId: "acl-479", filePath: pdf, fileHash: "acl-479", metadata: { pageCount: pages.length } });
+    const block = result.blocks.find((b) => b.type === "paragraph" && /simple yet effective multi/.test(b.original ?? ""));
+    expect(block?.original).toMatch(/simple yet effective multi-?\s*modal dialogue framework/);
+  }, 60_000);
+
   it("does not absorb numbered procedure steps into a figure caption", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/linguistics-language-model-physics.pdf");
     if (!fs.existsSync(pdf)) ctx.skip();
