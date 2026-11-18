@@ -455,6 +455,24 @@ describe("canonical extraction pipeline", () => {
     expect(matching[0].original).toContain("accessed 29.9.2014)");
   }, 60_000);
 
+  it("keeps URL-only column footnotes out of body paragraphs", async (ctx) => {
+    const pdf = path.resolve("test-data/element-gold/acl-2024.naacl-long.104/source.pdf");
+    if (!fs.existsSync(pdf)) ctx.skip();
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "acl-url-footnote-regression",
+      filePath: pdf,
+      fileHash: "acl-url-footnote-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const urls = result.blocks.filter((block) =>
+      /github\.com\/(?:Lee-zix\/RE-GCN|JaySaligia\/PPT)/.test(block.original ?? "")
+    );
+    expect(urls).toHaveLength(2);
+    expect(urls.every((block) => block.type === "footnote")).toBe(true);
+  }, 60_000);
+
   it("keeps wrapped table-caption prose out of table cells", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
     if (!fs.existsSync(pdf)) ctx.skip();
