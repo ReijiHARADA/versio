@@ -45,11 +45,7 @@ PAPER, STEEL = mat_paper(), mat_steel()
 # --- paper squircle (macOS icon body: 824/1024 of canvas) ------------------
 A, N, THICK = 4.12, 5.0, 0.25
 bm = bmesh.new()
-pts = []
-for i in range(256):
-    t = 2 * math.pi * i / 256
-    c, s = math.cos(t), math.sin(t)
-    pts.append((A * math.copysign(abs(c) ** (2 / N), c), A * math.copysign(abs(s) ** (2 / N), s)))
+pts = [(A, A), (-A, A), (-A, -A), (A, -A)]  # plain square plate
 top = [bm.verts.new((x, y, 0)) for x, y in pts]
 f = bm.faces.new(top)
 ext = bmesh.ops.extrude_face_region(bm, geom=[f])
@@ -64,9 +60,9 @@ for p in paper.data.polygons: p.use_smooth = True
 paper.data.shade_smooth() if hasattr(paper.data, "shade_smooth") else None
 
 # --- staple leg: sweep a rounded-rect profile along a bent path -------------
-W, T, CR = 0.62, 0.34, 0.12    # wire width (in-plane), thickness, profile corner radius
-R = 0.42                       # bend radius (centerline)
-X, TIP = 2.75, 0.22            # bend x, tip x (gap = 2*TIP)
+W, T, CR = 0.40, 0.26, 0.10    # wire width (in-plane), thickness, profile corner radius
+R = 0.32                       # bend radius (centerline)
+X, TIP = 3.75, 0.24            # bend x, tip x (gap = 2*TIP)
 
 def profile(n=48, e=3.2):
     # superellipse cross-section: flat-ish but crowned faces so the metal catches gradients
@@ -169,18 +165,4 @@ scn.render.resolution_x = scn.render.resolution_y = RES
 scn.view_settings.view_transform = "Standard"; scn.view_settings.exposure = -0.25
 scn.render.image_settings.file_format = "PNG"; scn.render.image_settings.color_mode = "RGBA"
 scn.render.filepath = OUT
-# soft macOS-style drop shadow, composited from the icon's own alpha
-scn.use_nodes = True
-nt = scn.node_tree; nt.nodes.clear()
-rl = nt.nodes.new("CompositorNodeRLayers")
-blur = nt.nodes.new("CompositorNodeBlur"); blur.filter_type = "GAUSS"; blur.size_x = blur.size_y = int(RES * 0.03)
-tr = nt.nodes.new("CompositorNodeTranslate"); tr.inputs["Y"].default_value = -RES * 0.012
-mul = nt.nodes.new("CompositorNodeMath"); mul.operation = "MULTIPLY"; mul.inputs[1].default_value = 0.35
-sa = nt.nodes.new("CompositorNodeSetAlpha"); sa.inputs["Image"].default_value = (0, 0, 0, 1)
-ov = nt.nodes.new("CompositorNodeAlphaOver"); ov.use_premultiply = False
-out = nt.nodes.new("CompositorNodeComposite")
-L = nt.links.new
-L(rl.outputs["Alpha"], blur.inputs["Image"]); L(blur.outputs[0], tr.inputs["Image"])
-L(tr.outputs[0], mul.inputs[0]); L(mul.outputs[0], sa.inputs["Alpha"])
-L(sa.outputs[0], ov.inputs[1]); L(rl.outputs["Image"], ov.inputs[2]); L(ov.outputs[0], out.inputs["Image"])
 bpy.ops.render.render(write_still=True)
