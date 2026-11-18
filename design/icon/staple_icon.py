@@ -16,7 +16,7 @@ def mat_paper():
     # plain matte plate
     m = bpy.data.materials.new("plate"); m.use_nodes = True
     b = m.node_tree.nodes["Principled BSDF"]
-    b.inputs["Base Color"].default_value = (0.105, 0.115, 0.13, 1)  # matte slate
+    b.inputs["Base Color"].default_value = (1.0, 1.0, 1.0, 1)  # matte white
     b.inputs["Roughness"].default_value = 0.8
     return m
 
@@ -127,7 +127,7 @@ def build_leg(name):
     ob.data.materials.append(STEEL)
     return ob
 
-OFF = 0.17  # lateral offset between the two legs (they never line up perfectly)
+OFF = 0.0  # legs aligned on one line
 legs = bpy.data.objects.new("legs", None); scn.collection.objects.link(legs)
 la = build_leg("leg_a"); la.location.y = OFF
 lb = build_leg("leg_b"); lb.location.y = -OFF; lb.rotation_euler.z = math.pi
@@ -166,7 +166,7 @@ scn.cycles.device = "GPU"
 scn.cycles.samples = SAMPLES; scn.cycles.use_denoising = True
 scn.render.film_transparent = True
 scn.render.resolution_x = scn.render.resolution_y = RES
-scn.view_settings.view_transform = "AgX"; scn.view_settings.look = "AgX - Base Contrast"; scn.view_settings.exposure = 1.15
+scn.view_settings.view_transform = "Standard"; scn.view_settings.exposure = -0.25
 scn.render.image_settings.file_format = "PNG"; scn.render.image_settings.color_mode = "RGBA"
 scn.render.filepath = OUT
 # soft macOS-style drop shadow, composited from the icon's own alpha
