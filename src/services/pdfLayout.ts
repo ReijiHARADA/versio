@@ -15,6 +15,7 @@ import {
   toHalfwidthAscii,
 } from "./translation/quality";
 import * as publisherPredicates from "./pdfExtraction/formats/publisherChrome";
+import { captionAnchoredGraphicsGrids } from "./pdfExtraction/generic/tableRegions";
 import { detectPageRegions, lineInRegion, type PageRegion } from "./pdfExtraction/layout/pageRegions";
 
 /** Browser-safe env read — bare `process` is undefined in WKWebView / Vite. */
@@ -231,9 +232,25 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
   // those otherwise amplify the same false peaks. Genuine two-column pages
   // may have a spanning title or caption, but not a persistent majority of
   // midpoint-crossing body rows.
+  const pageArea = page.width * page.height;
+  // A rect covering (nearly) the whole page is a page frame or background, not a table or figure.
+  const midpointIgnoredRects = [
+    ...captionAnchoredGraphicsGrids(page, { x: 0, y: 0, width: page.width, height: page.height }),
+    ...(page.imagePlacements ?? []).map(({ x, y, width, height }) => ({ x, y, width, height })),
+  ].filter((rect) => {
+    const share = rect.width * rect.height / pageArea;
+    return share >= 0.02 && share <= 0.9;
+  });
+  const midpointItems = midpointIgnoredRects.length === 0
+    ? usable
+    : usable.filter((item) => !midpointIgnoredRects.some((rect) => {
+      const x = item.x + item.width / 2;
+      const y = item.y + item.height / 2;
+      return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
+    }));
   const midpointRows = (() => {
     const rows: ExtractedTextItem[][] = [];
-    for (const item of [...usable].sort((a, b) => a.y - b.y || a.x - b.x)) {
+    for (const item of [...midpointItems].sort((a, b) => a.y - b.y || a.x - b.x)) {
       const row = rows.find((candidate) =>
         Math.abs(candidate[0].y - item.y) <= Math.max(2.5, item.fontSize * 0.3)
       );
@@ -1746,7 +1763,7 @@ function isFootnoteLine(
   if (/^(?:accessed|lasts+visited|retrieved).*\d{1,4}[./-]\d{1,2}[./-]\d{2,4}/i.test(t)) {
     return true;
   }
-  if (line.fontSize > baseFont * 0.9 && line.fontSize > 9.2) return false;
+  if (line.fontSize > baseFont * 0.9 && line.fontSize > 8) return false;
   if (line.y < pageHeight * 0.7) return false;
   // Measurement/statistical lines can begin with a number but are body prose,
   // not footnotes (for example `180 bpm` or `94.25±4.63%`).

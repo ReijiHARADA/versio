@@ -103,6 +103,7 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
       let skippedParagraph = false;
       // Full-page figures and tables can push the rest of a paragraph several pages on.
       let onlyFloats = true;
+      let sawFloat = false;
       for (let j = i + 1; j < out.length && j <= i + 12 && out[j].pageStart <= current.pageEnd + (onlyFloats && j > i + 1 ? 3 : 1); j += 1) {
         const candidate = out[j];
         const candidateText = candidate.original?.trim() ?? "";
@@ -119,7 +120,9 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j;
           break;
         }
-        if (!interruptionAllowed(candidate)) break;
+        // After a figure or table, its notes and legend can be full sentences; a lower-case start still marks the continuation.
+        if (!interruptionAllowed(candidate) && !(sawFloat && candidate.type === "paragraph" && TERMINAL.test(candidateText))) break;
+        if (candidate.type === "figure" || candidate.type === "table") sawFloat = true;
         if (candidate.type === "paragraph") skippedParagraph = true;
         if (candidate.type !== "figure" && candidate.type !== "table") onlyFloats = false;
       }

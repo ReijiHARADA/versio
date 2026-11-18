@@ -20,6 +20,25 @@ function page(lines: Array<{ text: string; indent?: number; short?: boolean }>, 
 const body = (n: number) => `sentence ${n} of the paragraph continues with ordinary words about the study and its measured outcomes`;
 
 describe("paragraph breaks at sentence boundaries", () => {
+  it("keeps a body continuation with a leading numeric citation out of footnotes", () => {
+    const textItems: ExtractedTextItem[] = [
+      { text: "Despite the extensive literature on COVID-19 (3, 7, 8, 10", x: 50, y: 601, width: 241, height: 9, fontSize: 9, fontName: "Body", page: 2 },
+      { text: "13), there remains a gap in the systematic synthesis of data.", x: 50, y: 613, width: 241, height: 9, fontSize: 9, fontName: "Body", page: 2 },
+    ];
+    const { blocks } = reconstructDocument([{ pageNumber: 2, width: 595, height: 842, textItems }]);
+    expect(blocks.filter((block) => block.role === "footnote")).toHaveLength(0);
+    expect(blocks.find((block) => block.role === "paragraph")?.text).toContain("10 13), there remains");
+  });
+
+  it("keeps a smaller numbered note at the page bottom as a footnote", () => {
+    const textItems: ExtractedTextItem[] = [
+      { text: "The body paragraph ends before the source note.", x: 50, y: 700, width: 241, height: 9, fontSize: 9, fontName: "Body", page: 2 },
+      { text: "1) Source note for the reported outcome.", x: 50, y: 760, width: 241, height: 7, fontSize: 7, fontName: "Note", page: 2 },
+    ];
+    const { blocks } = reconstructDocument([{ pageNumber: 2, width: 595, height: 842, textItems }]);
+    expect(blocks.find((block) => block.role === "footnote")?.text).toContain("1) Source note");
+  });
+
   it("does not take a body line ending in a citation number for a numbered equation", () => {
     const { blocks } = reconstructDocument([page([
       { text: `The methodological quality was assessed and ${body(1)}`, indent: 14 },
@@ -52,6 +71,40 @@ describe("paragraph breaks at sentence boundaries", () => {
 });
 
 describe("column gutter on word-split two-column pages", () => {
+  it("keeps paired body columns below PMC12146323's ruled table", () => {
+    const items: ExtractedTextItem[] = [];
+    for (let row = 0; row < 16; row += 1) {
+      items.push({ text: `TABLE 2 search strategy row ${row}`, x: 50, y: 112 + row * 8, width: 496, height: 9, fontSize: 9, fontName: "Body", page: 5 });
+    }
+    for (let row = 0; row < 12; row += 1) {
+      const y = 360 + row * 10;
+      items.push({ text: `The study evidenced that older individuals exhibit ${row}`, x: 50, y, width: 241, height: 9, fontSize: 9, fontName: "Body", page: 5 });
+      items.push({ text: `The interplay of social and demographic factors ${row}`, x: 305, y, width: 241, height: 9, fontSize: 9, fontName: "Body", page: 5 });
+    }
+    const graphicsPrimitives = [
+      { kind: "line" as const, orientation: "horizontal" as const, x: 50, y: 100, width: 496, height: 1, confidence: 1 },
+      { kind: "line" as const, orientation: "horizontal" as const, x: 50, y: 240, width: 496, height: 1, confidence: 1 },
+      { kind: "line" as const, orientation: "horizontal" as const, x: 50, y: 250, width: 496, height: 1, confidence: 1 },
+      { kind: "line" as const, orientation: "vertical" as const, x: 50, y: 100, width: 1, height: 151, confidence: 1 },
+    ];
+    expect(detectPageColumns({ pageNumber: 5, width: 595, height: 842, textItems: items, graphicsPrimitives }).isMultiColumn).toBe(true);
+  });
+
+  it("keeps split-span single-column text single without a region rect", () => {
+    const items: ExtractedTextItem[] = [];
+    for (let row = 0; row < 16; row += 1) {
+      const y = 120 + row * 10;
+      if (row % 4) {
+        items.push({ text: `A single paragraph continues with ordinary prose to its line end ${row}`, x: 50, y, width: 496, height: 9, fontSize: 9, fontName: "Body", page: 5 });
+      } else {
+        items.push({ text: `A single paragraph begins ${row}`, x: 50, y, width: 110, height: 9, fontSize: 9, fontName: "Body", page: 5 });
+        items.push({ text: "with ordinary prose and", x: 150, y, width: 210, height: 9, fontSize: 9, fontName: "Body", page: 5 });
+        items.push({ text: "continues to the line end", x: 355, y, width: 191, height: 9, fontSize: 9, fontName: "Body", page: 5 });
+      }
+    }
+    expect(detectPageColumns({ pageNumber: 5, width: 595, height: 842, textItems: items }).isMultiColumn).toBe(false);
+  });
+
   it("keeps a line-final word of the left column in the left column", () => {
     // Every word is its own text item, as in some publisher PDFs; columns at x 48–291 and 304–546.
     const items: ExtractedTextItem[] = [];

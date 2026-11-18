@@ -78,6 +78,7 @@ export function hasStrongNativeTableRows(node: CanonicalNode, layout: LayoutBloc
   }
   const geometry = node.evidence.find((entry) => entry.label === "table-row-geometry" && entry.confidence >= 0.9);
   if (!geometry) return false;
+  if (looksLikeRunningProse(node.text ?? "", layout.lines)) return false;
   return layout.lines.filter((line) => line.items.length >= 2).length >= 3;
 }
 
@@ -130,7 +131,7 @@ export function looksLikeRunningProse(text: string, lines?: LayoutBlock["lines"]
   const letters = (trimmed.match(/[A-Za-z]/g) ?? []).length;
   if (digits / Math.max(1, letters + digits) >= 0.12) return false;
   const functionWords = words.filter((w) => /^(?:the|of|and|to|in|a|is|are|was|were|for|with|that|this|by|on|as)$/i.test(w)).length;
-  if (functionWords / words.length < 0.15) return false;
+  if (functionWords / words.length < 0.1) return false;
   if (!lines || lines.length < 2) return true;
   const xs = lines.map((l) => Math.round(l.x / 4));
   const mode = [...new Set(xs)].map((x) => xs.filter((y) => Math.abs(y - x) <= 1).length).sort((a, b) => b - a)[0];
