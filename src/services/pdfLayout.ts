@@ -91,6 +91,8 @@ export type LayoutBlock = {
   adjacentBandContinuation?: boolean;
   /** A bare caption identifier was rejoined with a detached native title. */
   detachedCaptionTitleRepaired?: boolean;
+  /** Small-font text on a table-only page (markTablePageText); never demoted back to prose. */
+  tablePageText?: boolean;
 };
 
 function lineUsesBoldFace(line: LayoutLine): boolean {
@@ -4521,6 +4523,27 @@ function splitInlineGridCellsFromProse(block: LayoutBlock, pageBlocks: LayoutBlo
   return [make(proseLine, "paragraph"), make(tableLine, "table")];
 }
 
+/**
+ * A page that carries a table caption but almost no body-size prose is a
+ * table page (often a landscape or continued review table without rules).
+ * Its small-font "paragraphs" are table rows the grid detectors missed, so
+ * they leave the paragraph stream instead of reaching translation as prose.
+ */
+function markTablePageText(blocks: LayoutBlock[], lines: LayoutLine[], bodyFont: number): LayoutBlock[] {
+  const tablePages = new Set(blocks.filter((block) => block.role === "table_caption").map((block) => block.pageStart));
+  for (const page of tablePages) {
+    const long = lines.filter((line) => line.page === page && line.text.length > 40);
+    const bodySize = long.filter((line) => Math.abs(line.fontSize - bodyFont) <= 0.6).length;
+    if (bodySize >= long.length * 0.3) tablePages.delete(page);
+  }
+  if (!tablePages.size) return blocks;
+  return blocks.map((block) =>
+    block.role === "paragraph" && block.pageStart === block.pageEnd && tablePages.has(block.pageStart) &&
+      median(block.lines.map((line) => line.fontSize)) < bodyFont * 0.92
+      ? { ...block, role: "table" as const, tablePageText: true }
+      : block);
+}
+
 function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
   const result: LayoutBlock[] = [];
   for (const block of blocks) {
@@ -6357,7 +6380,7 @@ export function reconstructDocument(pages: ExtractedPage[]): {
     title.text = joinLines(title.lines);
     title.bbox = blockBbox(title.lines);
   }
-  const displayMathResolvedBlocks = splitEmbeddedDisplayMathBlocks(resolvedBlocks, bodyFont);
+  const displayMathResolvedBlocks = markTablePageText(splitEmbeddedDisplayMathBlocks(resolvedBlocks, bodyFont), lines, bodyFont);
   return { layouts, lines, blocks: displayMathResolvedBlocks, baseFontSize: bodyFont };
 }
 

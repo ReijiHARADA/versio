@@ -1952,6 +1952,8 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       captionedNativeCellRow && "captioned-native-cell-row",
       captionedRepeatedNativeGrid && "captioned-repeated-native-grid",
       captionedDenseBand && "captioned-dense-band",
+      // Small-font text on a table-only page (pdfLayout markTablePageText), even when its cells hold sentences.
+      block.tablePageText && "table-page-text",
     ].filter((reason): reason is string => Boolean(reason));
     if (block.role !== "table_caption" && !narrativeTableConflict && highConfidenceTableEvidence.length > 0) scoreByRole.table = 0.96;
     const captionAnchoredTable = nearbyTableCaption || captionedCompactRows || captionedMultiCellText || captionedRepeatedRow ||
@@ -2100,6 +2102,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         bbox: block.bbox,
         reason: highConfidenceTableEvidence.join(", "),
       });
+    }
+    if (block.tablePageText) {
+      evidence.push({ source: "geometry" as EvidenceSource, label: "table-page-text", confidence: 0.96, page: block.pageStart, bbox: block.bbox, reason: "small-font text on a table-only page" });
     }
     if (cjkComparisonRow) {
       evidence.push({

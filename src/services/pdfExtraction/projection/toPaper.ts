@@ -3957,7 +3957,7 @@ function projectTableNode(context: BodyNodeContext, state: BodyProjectionState, 
     const proseGridClusterKeep = node.evidence.some((entry) =>
       entry.label === "repeated-prose-cell-grid" && entry.confidence >= 0.94
     ) && proseGridClusterPeerCount >= 3;
-    if (node.role === "table" && node.text && (!hasStrongTableMatrixEvidence(node) || wrappedSingleSpanNarrative) &&
+    if (node.role === "table" && node.text && !layout?.tablePageText && (!hasStrongTableMatrixEvidence(node) || wrappedSingleSpanNarrative) &&
         !multiBoxNativeGrid &&
         !strongNativeRowGrid &&
         !belongsToCaptionedTableRegion(node, tableAbsorption.regions) &&
