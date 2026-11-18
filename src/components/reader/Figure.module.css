@@ -1,17 +1,22 @@
 .figure {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   margin: var(--spacing-xl) 0;
   padding: var(--spacing-md);
-  background-color: var(--color-figure-bg);
-  border-radius: var(--radius-md);
+  --sq-bg: var(--color-figure-bg);
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
 }
 
 .imageWrapper {
+  composes: surface from "../../styles/squircle.module.css";
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: white;
-  border-radius: var(--radius-sm);
+  --sq-bg: white;
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
   overflow: hidden;
 }
 
@@ -45,6 +50,8 @@
 }
 
 .tableFallbackText {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   width: 100%;
   margin: 0;
   padding: var(--spacing-md);
@@ -54,18 +61,28 @@
   font-size: 0.875rem;
   line-height: 1.55;
   color: var(--color-text-secondary);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-sm);
+  --sq-bg: var(--color-bg);
+  border: 1px solid transparent;
+  --sq-line: var(--color-border-light);
+  --sq-bw: 1px;
+  --sq-fill: var(--sq-fill-sm);
+  --sq-ring: var(--sq-ring-sm);
+  border-radius: var(--sq-radius-sm);
 }
 
 .tableFallbackGrid {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   width: 100%;
   overflow-x: auto;
   padding: var(--spacing-sm);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-sm);
+  --sq-bg: var(--color-bg);
+  border: 1px solid transparent;
+  --sq-line: var(--color-border-light);
+  --sq-bw: 1px;
+  --sq-fill: var(--sq-fill-sm);
+  --sq-ring: var(--sq-ring-sm);
+  border-radius: var(--sq-radius-sm);
 }
 
 .tableFallbackRow {
@@ -94,14 +111,16 @@
 }
 
 .zoomButton {
+  composes: surface from "../../styles/squircle.module.css";
   position: absolute;
   top: var(--spacing-sm);
   right: var(--spacing-sm);
   padding: var(--spacing-sm);
   border: none;
-  background-color: rgba(0, 0, 0, 0.6);
+  --sq-bg: rgba(0, 0, 0, 0.6);
   color: white;
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
   cursor: pointer;
   opacity: 0;
   transition: opacity var(--transition-fast);
@@ -112,7 +131,7 @@
 }
 
 .zoomButton:hover {
-  background-color: rgba(0, 0, 0, 0.8);
+  --sq-bg: rgba(0, 0, 0, 0.8);
 }
 
 .caption {
@@ -133,15 +152,18 @@
 }
 
 .toggleOriginal {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: inline-flex;
   align-items: center;
   margin-left: var(--spacing-sm);
   padding: 2px var(--spacing-xs);
   border: none;
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-tertiary);
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
   vertical-align: middle;
   transition: color var(--transition-fast);
 }

@@ -82,7 +82,7 @@ export function TranslationSettingsSection({
                   type="button"
                   role="radio"
                   aria-checked={selected === id}
-                  className={selected === id ? styles.selected : ""}
+                  className={`${styles.segmentedButton} ${selected === id ? styles.selected : ""}`}
                   onClick={() =>
                     onChange({
                       translationConcurrency: id === "stable" ? 2 : id === "standard" ? 4 : 8,

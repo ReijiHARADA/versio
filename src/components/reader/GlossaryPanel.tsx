@@ -78,7 +78,7 @@ export function GlossaryPanel({ entries, onChange, onClose }: GlossaryPanelProps
           value={draftTranslation}
           onChange={(e) => setDraftTranslation(e.target.value)}
         />
-        <button type="button" onClick={addEntry}>
+        <button type="button" className={styles.addButton} onClick={addEntry}>
           追加
         </button>
       </div>

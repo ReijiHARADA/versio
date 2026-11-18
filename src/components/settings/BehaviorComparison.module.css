@@ -17,11 +17,14 @@
 }
 
 .stage {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   /* Wider top/left blue frame (matched); window still crops on the right and bottom. */
   overflow: hidden;
   padding: 36px 0 0 36px;
-  border-radius: 16px;
-  background: #1558ff;
+  --sq-fill: var(--sq-fill-16);
+  border-radius: var(--sq-radius-16);
+  --sq-bg: #1558ff;
 }
 
 .window {

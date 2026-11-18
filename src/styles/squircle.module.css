@@ -1,0 +1,53 @@
+/*
+ * Clothoid (G2) corners. CSS border-radius only draws circular arcs, so the
+ * host's background and border are painted by two masked pseudo-elements.
+ *
+ * Host rule:
+ *   composes: surface from "<path>/styles/squircle.module.css";
+ *   position: relative;            (or any non-static position)
+ *   border-radius: var(--sq-radius-md); circle inside the clothoid, for box-shadow / outline
+ *   --sq-fill: var(--sq-fill-md);  --sq-ring: var(--sq-ring-md);
+ *   --sq-bg: <background color>;   instead of background
+ *   border: 1px solid transparent; --sq-bw: 1px; --sq-line: <border color>;
+ * Hover/selected rules change --sq-bg / --sq-line (both animatable).
+ *
+ * Use .clip instead when content itself (images, media) must be cut.
+ */
+.surface {
+  isolation: isolate;
+}
+
+/* Defaults stop a nested surface inheriting its parent's colours (the
+   registered properties inherit so the pseudo-elements can read them).
+   :where() keeps specificity 0 so host rules win regardless of load order. */
+:where(.surface) {
+  /* The pseudo-element paints the fill; also clears the UA button background. */
+  background: none;
+  --sq-bg: transparent;
+  --sq-line: transparent;
+  --sq-bw: 0px;
+}
+
+.surface::before,
+.surface::after {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * var(--sq-bw, 0px));
+  border-radius: 0;
+  pointer-events: none;
+}
+
+.surface::before {
+  z-index: -1;
+  background: var(--sq-bg);
+  -webkit-mask-box-image: var(--sq-fill);
+}
+
+.surface::after {
+  background: var(--sq-line);
+  -webkit-mask-box-image: var(--sq-ring);
+}
+
+.clip {
+  -webkit-mask-box-image: var(--sq-fill);
+}

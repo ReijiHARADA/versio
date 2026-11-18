@@ -1,19 +1,25 @@
 .card {
+  composes: surface from "../../../styles/squircle.module.css";
+  position: relative;
   padding: 12px;
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-md);
-  background: var(--color-bg);
+  border: 1px solid transparent;
+  --sq-line: var(--color-border-light);
+  --sq-bw: 1px;
+  --sq-fill: var(--sq-fill-md);
+  --sq-ring: var(--sq-ring-md);
+  border-radius: var(--sq-radius-md);
+  --sq-bg: var(--color-bg);
   cursor: pointer;
 }
 
 .card:hover {
-  border-color: var(--color-accent);
-  background: var(--color-accent-light);
+  --sq-line: var(--color-accent);
+  --sq-bg: var(--color-accent-light);
 }
 
 .card.active {
-  border-color: var(--color-selection-bg);
-  background: var(--color-selection-bg);
+  --sq-line: var(--color-selection-bg);
+  --sq-bg: var(--color-selection-bg);
   color: var(--color-selection-fg);
 }
 

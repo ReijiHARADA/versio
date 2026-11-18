@@ -21,6 +21,7 @@
 }
 
 .toast {
+  composes: surface from "../../styles/squircle.module.css";
   position: fixed;
   left: 50%;
   bottom: 28px;
@@ -31,7 +32,8 @@
   gap: 12px;
   max-width: min(640px, calc(100vw - 32px));
   padding: 10px 16px;
-  border-radius: var(--radius-md);
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
   font-size: 0.875rem;
   font-weight: 500;
   box-shadow: 0 8px 24px var(--color-shadow);
@@ -72,6 +74,7 @@
 }
 
 .dragPreview {
+  composes: surface from "../../styles/squircle.module.css";
   position: fixed;
   top: 0;
   left: 0;
@@ -82,10 +85,14 @@
   gap: 8px;
   max-width: 220px;
   padding: 6px 10px;
-  border-radius: 8px;
-  background: var(--color-bg);
+  --sq-fill: var(--sq-fill-8);
+  --sq-ring: var(--sq-ring-8);
+  border-radius: var(--sq-radius-8);
+  --sq-bg: var(--color-bg);
   color: var(--color-text);
-  border: 1px solid var(--color-border);
+  border: 1px solid transparent;
+  --sq-line: var(--color-border);
+  --sq-bw: 1px;
   box-shadow: 0 10px 24px var(--color-shadow);
   font-size: 0.75rem;
   font-weight: 600;

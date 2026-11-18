@@ -1,11 +1,13 @@
 .panel {
+  composes: surface from "../../styles/squircle.module.css";
   position: fixed;
   top: var(--header-height);
   right: var(--spacing-lg);
   width: 400px;
   max-height: calc(100vh - var(--header-height) - var(--spacing-xl));
-  background-color: var(--color-bg);
-  border-radius: var(--radius-lg);
+  --sq-bg: var(--color-bg);
+  --sq-fill: var(--sq-fill-lg);
+  border-radius: var(--sq-radius-lg);
   box-shadow: 0 4px 24px var(--color-shadow);
   display: flex;
   flex-direction: column;
@@ -69,14 +71,16 @@
 }
 
 .clearButton {
+  composes: surface from "../../styles/squircle.module.css";
   position: absolute;
   right: var(--spacing-xs);
   padding: var(--spacing-xs);
   border: none;
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-tertiary);
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
 }
 
 .clearButton:hover {
@@ -84,16 +88,19 @@
 }
 
 .closeButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   padding: var(--spacing-xs);
   border: none;
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-secondary);
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
 }
 
 .closeButton:hover {
-  background-color: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
 }
 
 .results {
@@ -120,18 +127,21 @@
 }
 
 .resultItem {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-md);
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  transition: --sq-bg var(--transition-fast);
 }
 
 .resultItem:hover {
-  background-color: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
 }
 
 .resultItem.selected {
-  background-color: var(--color-selection-bg);
+  --sq-bg: var(--color-selection-bg);
   color: var(--color-selection-fg);
 }
 
@@ -163,13 +173,16 @@
 }
 
 .highlight {
-  background-color: #fff59d;
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-bg: #fff59d;
   padding: 0 1px;
-  border-radius: 2px;
+  --sq-fill: var(--sq-fill-2);
+  border-radius: var(--sq-radius-2);
 }
 
 [data-theme="dark"] .highlight {
-  background-color: #5d4037;
+  --sq-bg: #5d4037;
   color: #fff59d;
 }
 
@@ -191,22 +204,28 @@
 }
 
 .stepButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 22px;
   height: 22px;
   padding: 0;
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-secondary);
+  border: 1px solid transparent;
+  --sq-line: var(--color-border);
+  --sq-bw: 1px;
+  --sq-bg: var(--color-bg-secondary);
   color: var(--color-text-secondary);
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  --sq-ring: var(--sq-ring-sm);
+  border-radius: var(--sq-radius-sm);
   cursor: pointer;
 }
 
 .stepButton:hover:not(:disabled) {
   color: var(--color-text);
-  border-color: var(--color-accent);
+  --sq-line: var(--color-accent);
 }
 
 .stepButton:disabled {

@@ -1,11 +1,16 @@
 .popover {
+  composes: surface from "../../../styles/squircle.module.css";
   position: fixed;
   z-index: 50;
   width: min(320px, calc(100vw - 24px));
   padding: 12px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  --sq-bg: var(--color-bg);
+  border: 1px solid transparent;
+  --sq-line: var(--color-border);
+  --sq-bw: 1px;
+  --sq-fill: var(--sq-fill-md);
+  --sq-ring: var(--sq-ring-md);
+  border-radius: var(--sq-radius-md);
   box-shadow: 0 10px 28px var(--color-shadow);
   display: flex;
   flex-direction: column;
@@ -73,43 +78,47 @@
   gap: 8px;
 }
 
+.ghost { composes: surface from "../../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); }
+.primary { composes: surface from "../../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); }
+.danger { composes: surface from "../../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); }
+
 .ghost,
 .primary,
 .danger {
   appearance: none;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--sq-radius-sm);
   font-size: 0.8125rem;
   padding: 6px 10px;
   cursor: pointer;
 }
 
 .ghost {
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-secondary);
 }
 
 .ghost:hover {
-  background: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
   color: var(--color-text);
 }
 
 .primary {
-  background: var(--color-accent);
+  --sq-bg: var(--color-accent);
   color: #fff;
 }
 
 .primary:hover {
-  background: var(--color-accent-hover);
+  --sq-bg: var(--color-accent-hover);
 }
 
 .danger {
-  background: transparent;
+  --sq-bg: transparent;
   color: #c5221f;
 }
 
 .danger:hover {
-  background: #fce8e6;
+  --sq-bg: #fce8e6;
 }
 
 .ghost:disabled,

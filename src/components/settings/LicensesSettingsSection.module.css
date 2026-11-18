@@ -12,10 +12,13 @@
 }
 
 .filterChip {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   appearance: none;
   border: none;
-  border-radius: calc(var(--control-radius) - 2px);
-  background: var(--color-surface-control);
+  --sq-fill: var(--sq-fill-control-inner);
+  border-radius: var(--sq-radius-control-inner);
+  --sq-bg: var(--color-surface-control);
   color: var(--color-text-tertiary);
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-medium);
@@ -40,13 +43,16 @@
 }
 
 .search {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
   min-height: var(--control-height);
   padding: 0 var(--control-padding-x);
-  border-radius: var(--control-radius);
-  background: var(--color-surface-control);
+  --sq-fill: var(--sq-fill-control);
+  border-radius: var(--sq-radius-control);
+  --sq-bg: var(--color-surface-control);
   color: var(--color-text-tertiary);
 }
 
@@ -120,7 +126,7 @@
 .packageRow:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--sq-radius-sm);
 }
 
 .packageMain {
@@ -152,23 +158,26 @@
   font-size: var(--font-size-caption);
 }
 
+.badgeUnknown { composes: surface from "../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); }
+.badgePartial { composes: surface from "../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); }
+
 .badgeUnknown,
 .badgePartial {
   display: inline-flex;
   align-items: center;
   min-height: 20px;
   padding: 0 6px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--sq-radius-sm);
   font-size: 0.6875rem;
   font-weight: var(--font-weight-semibold);
 }
 
 .badgeUnknown {
-  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  --sq-bg: color-mix(in srgb, var(--color-danger) 14%, transparent);
   color: var(--color-danger);
 }
 
 .badgePartial {
-  background: color-mix(in srgb, var(--color-text-secondary) 12%, transparent);
+  --sq-bg: color-mix(in srgb, var(--color-text-secondary) 12%, transparent);
   color: var(--color-text-secondary);
 }

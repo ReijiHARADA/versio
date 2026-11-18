@@ -39,13 +39,16 @@
 }
 
 .addButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  background: var(--color-accent);
+  --sq-bg: var(--color-accent);
   color: white;
   border: none;
-  border-radius: var(--radius-md);
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
   font-size: 0.875rem;
   font-weight: 500;
@@ -54,16 +57,22 @@
   cursor: pointer;
 }
 
-.addButton:hover { background: var(--color-accent-hover); }
+.addButton:hover { --sq-bg: var(--color-accent-hover); }
 
 .exportButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  --sq-line: var(--color-border);
+  --sq-bw: 1px;
+  --sq-fill: var(--sq-fill-md);
+  --sq-ring: var(--sq-ring-md);
+  border-radius: var(--sq-radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
   font-size: 0.875rem;
   font-weight: 500;
@@ -73,7 +82,7 @@
 }
 
 .exportButton:hover:not(:disabled) {
-  background: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
 }
 
 .exportButton:disabled {

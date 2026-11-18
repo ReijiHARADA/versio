@@ -87,12 +87,18 @@
   margin-top: auto;
 }
 
-.add button {
+.addButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-fill: var(--sq-fill-sm);
+  --sq-ring: var(--sq-ring-sm);
   appearance: none;
-  border: 1px solid var(--color-accent);
-  background: transparent;
+  border: 1px solid transparent;
+  --sq-bw: 1px;
+  --sq-line: var(--color-accent);
+  --sq-bg: transparent;
   color: var(--color-accent);
-  border-radius: var(--radius-sm);
+  border-radius: var(--sq-radius-sm);
   cursor: pointer;
   font-size: 0.75rem;
 }

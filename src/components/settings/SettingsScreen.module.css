@@ -249,22 +249,28 @@
 }
 
 .segmented {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: inline-grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   min-height: var(--control-height);
   padding: 2px;
-  border-radius: var(--control-radius);
-  background: var(--color-surface-control);
+  --sq-fill: var(--sq-fill-control);
+  border-radius: var(--sq-radius-control);
+  --sq-bg: var(--color-surface-control);
   gap: 2px;
   max-width: 100%;
 }
 
-.segmented button {
+.segmentedButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-fill: var(--sq-fill-control-inner);
   appearance: none;
   border: none;
-  border-radius: calc(var(--control-radius) - 2px);
-  background: transparent;
+  border-radius: var(--sq-radius-control-inner);
+  --sq-bg: transparent;
   color: var(--color-text-tertiary);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
@@ -272,40 +278,46 @@
   min-height: calc(var(--control-height) - 4px);
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  transition: --sq-bg var(--transition-fast), color var(--transition-fast);
 }
 
-.segmented button:hover {
+.segmentedButton:hover {
   color: var(--color-text);
 }
 
-.segmented button.selected {
-  background: var(--color-selection-bg);
+.segmentedButton.selected {
+  --sq-bg: var(--color-selection-bg);
   color: var(--color-selection-fg);
   font-weight: var(--font-weight-semibold);
 }
 
-.segmented button:focus-visible {
+.segmentedButton:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 1px;
 }
 
 .themeButtons {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: inline-flex;
   gap: 2px;
   padding: 2px;
-  border-radius: var(--control-radius);
-  background: var(--color-surface-control);
+  --sq-fill: var(--sq-fill-control);
+  border-radius: var(--sq-radius-control);
+  --sq-bg: var(--color-surface-control);
 }
 
 .themeButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   appearance: none;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   border: none;
-  border-radius: calc(var(--control-radius) - 2px);
-  background: transparent;
+  --sq-fill: var(--sq-fill-control-inner);
+  border-radius: var(--sq-radius-control-inner);
+  --sq-bg: transparent;
   color: var(--color-text-tertiary);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
@@ -319,7 +331,7 @@
 }
 
 .themeButton.active {
-  background: var(--color-selection-bg);
+  --sq-bg: var(--color-selection-bg);
   color: var(--color-selection-fg);
   font-weight: var(--font-weight-semibold);
 }
@@ -327,6 +339,24 @@
 .themeButton:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 1px;
+}
+
+.button {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-fill: var(--sq-fill-control);
+}
+
+.ghostButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-fill: var(--sq-fill-control);
+}
+
+.dangerButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-fill: var(--sq-fill-control);
 }
 
 .button,
@@ -339,37 +369,37 @@
   gap: var(--spacing-xs);
   min-height: var(--control-height);
   padding: 0 var(--control-padding-x);
-  border-radius: var(--control-radius);
+  border-radius: var(--sq-radius-control);
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  transition: --sq-bg var(--transition-fast), color var(--transition-fast);
 }
 
 .button {
   border: none;
-  background: var(--color-surface-control);
+  --sq-bg: var(--color-surface-control);
   color: var(--color-text);
 }
 
 .button:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-surface-control) 80%, var(--color-text));
+  --sq-bg: color-mix(in srgb, var(--color-surface-control) 80%, var(--color-text));
 }
 
 .ghostButton {
   border: none;
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-secondary);
 }
 
 .ghostButton:hover:not(:disabled) {
-  background: var(--color-surface-hover);
+  --sq-bg: var(--color-surface-hover);
   color: var(--color-text);
 }
 
 .dangerButton {
   border: none;
-  background: var(--color-danger);
+  --sq-bg: var(--color-danger);
   color: #fff;
 }
 

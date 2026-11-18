@@ -29,6 +29,7 @@
 }
 
 .toggleButton {
+  composes: surface from "../../styles/squircle.module.css";
   position: absolute;
   top: 0;
   right: 0;
@@ -39,14 +40,15 @@
   height: 28px;
   padding: 0;
   border: none;
-  background: var(--color-bg);
+  --sq-bg: var(--color-bg);
   color: var(--color-text-tertiary);
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--transition-fast),
-    background-color var(--transition-fast),
+    --sq-bg var(--transition-fast),
     color var(--transition-fast);
 }
 
@@ -59,7 +61,7 @@
 
 .toggleButton:hover,
 .toggleButton:focus-visible {
-  background-color: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
   color: var(--color-text-secondary);
 }
 
@@ -132,21 +134,27 @@
 }
 
 .retryButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
   padding: var(--spacing-xs) var(--spacing-sm);
-  border: 1px solid #c5221f;
-  background: transparent;
+  border: 1px solid transparent;
+  --sq-line: #c5221f;
+  --sq-bw: 1px;
+  --sq-bg: transparent;
   color: #c5221f;
   font-size: 0.75rem;
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  --sq-ring: var(--sq-ring-sm);
+  border-radius: var(--sq-radius-sm);
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  transition: --sq-bg var(--transition-fast);
 }
 
 .retryButton:hover:not(:disabled) {
-  background-color: rgba(197, 34, 31, 0.1);
+  --sq-bg: rgba(197, 34, 31, 0.1);
 }
 
 .retryButton:disabled {
@@ -155,12 +163,12 @@
 }
 
 [data-theme="dark"] .retryButton {
-  border-color: #f28b82;
+  --sq-line: #f28b82;
   color: #f28b82;
 }
 
 [data-theme="dark"] .retryButton:hover:not(:disabled) {
-  background-color: rgba(242, 139, 130, 0.1);
+  --sq-bg: rgba(242, 139, 130, 0.1);
 }
 
 .spinning {
@@ -195,33 +203,39 @@
 
 /* Highlight */
 .highlight {
-  background-color: #fff59d;
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-bg: #fff59d;
   padding: 0 2px;
-  border-radius: 2px;
+  --sq-fill: var(--sq-fill-2);
+  border-radius: var(--sq-radius-2);
   scroll-margin-top: calc(var(--header-height) + 16px);
   scroll-margin-bottom: 16px;
 }
 
 .highlight[data-search-current] {
-  background-color: #ffb74d;
+  --sq-bg: #ffb74d;
   box-shadow: 0 0 0 2px #f57c00;
 }
 
 [data-theme="dark"] .highlight {
-  background-color: #5d4037;
+  --sq-bg: #5d4037;
   color: #fff59d;
 }
 
 [data-theme="dark"] .highlight[data-search-current] {
-  background-color: #e65100;
+  --sq-bg: #e65100;
   color: #fff8e1;
   box-shadow: 0 0 0 2px #ffb74d;
 }
 
 .annotationMark {
-  background-color: #fff59d;
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-bg: #fff59d;
   padding: 0 1px;
-  border-radius: 2px;
+  --sq-fill: var(--sq-fill-2);
+  border-radius: var(--sq-radius-2);
   cursor: pointer;
 }
 
@@ -231,13 +245,16 @@
 }
 
 .draftMark {
-  background-color: #fff59d;
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-bg: #fff59d;
   padding: 0 1px;
-  border-radius: 2px;
+  --sq-fill: var(--sq-fill-2);
+  border-radius: var(--sq-radius-2);
 }
 
 [data-theme="dark"] .annotationMark {
-  background-color: #5d4037;
+  --sq-bg: #5d4037;
   color: #fff59d;
 }
 
@@ -247,7 +264,7 @@
 }
 
 [data-theme="dark"] .draftMark {
-  background-color: #5d4037;
+  --sq-bg: #5d4037;
   color: #fff59d;
 }
 
@@ -291,6 +308,8 @@
 }
 
 .confidenceButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -298,15 +317,16 @@
   height: 20px;
   padding: 0;
   border: none;
-  border-radius: 4px;
-  background: transparent;
+  --sq-fill: var(--sq-fill-4);
+  border-radius: var(--sq-radius-4);
+  --sq-bg: transparent;
   color: #b45309;
   cursor: pointer;
 }
 
 .confidenceButton:hover,
 .confidenceButton:focus-visible {
-  background: rgba(180, 83, 9, 0.12);
+  --sq-bg: rgba(180, 83, 9, 0.12);
 }
 
 [data-theme="dark"] .confidenceButton {
