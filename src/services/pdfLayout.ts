@@ -2539,7 +2539,9 @@ function buildPageLines(
           Math.abs(span.fontSize - item.fontSize) > 0.6) return false;
       const tinyPunctuation = item.width <= item.fontSize * 0.8 &&
         /^[’'“”".,;:!?()[\]{}\-–—]$/.test(item.text.trim());
-      if (span.fontName !== item.fontName && !tinyPunctuation) return false;
+      // A bold caption label (`Figure 6.`) changes font but not line.
+      const captionLabel = /^(?:fig(?:ure)?\.?|table)\s*[A-Z]?\d+[.:]?$/i.test(item.text.trim()) && item.x < span.x;
+      if (span.fontName !== item.fontName && !tinyPunctuation && !captionLabel) return false;
       const gap = item.x >= span.x + span.width
         ? item.x - (span.x + span.width)
         : span.x >= item.x + item.width
