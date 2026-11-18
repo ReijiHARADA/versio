@@ -18,7 +18,7 @@ import { segmentTextWithGlossary } from "./glossary/glossaryTerms";
 import { GlossaryTermPopover } from "./glossary/GlossaryTermPopover";
 import { InfoPopover } from "./InfoPopover";
 import infoStyles from "./InfoPopover.module.css";
-import { rectToAnchor, type AnchorBox } from "./memo/popoverPosition";
+import type { AnchorBox } from "./memo/popoverPosition";
 import { resolveParagraphTranslationUi } from "./paragraphTranslationUi";
 import styles from "./Paragraph.module.css";
 
@@ -376,7 +376,7 @@ export function Paragraph({
                     return;
                   }
                   setConfidenceMenu({
-                    anchor: rectToAnchor(event.currentTarget.getBoundingClientRect()),
+                    anchor: anchorFromEventTarget(event.currentTarget),
                   });
                 }}
               >
