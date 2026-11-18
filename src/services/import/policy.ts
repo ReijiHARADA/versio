@@ -34,6 +34,12 @@ export function shouldTranslateSection(section: Section): boolean {
   return shouldTranslateHeading(section.originalTitle);
 }
 
+export function translationInputForBlock(block: PaperBlock): string {
+  return block.type === "figure" || block.type === "table"
+    ? String(block.metadata.captionOriginal ?? block.original ?? "")
+    : block.original ?? "";
+}
+
 export function shouldTranslateBlock(
   block: PaperBlock,
   refSectionIds: Set<string> = new Set()
@@ -69,8 +75,7 @@ export function shouldTranslateBlock(
     return shouldTranslateParagraph(block.original);
   }
   if (block.type === "figure" || block.type === "table") {
-    const caption = String(block.metadata.captionOriginal ?? block.original ?? "");
-    return shouldTranslateCaption(caption);
+    return shouldTranslateCaption(translationInputForBlock(block));
   }
   return false;
 }

@@ -24,6 +24,7 @@ import { analyzeStructure } from "../services/structureService";
 import {
   isRetryableTranslationFailure,
   shouldTranslateBlock,
+  translationInputForBlock,
 } from "../services/importServiceV2";
 
 describe("acronym expansion safety", () => {
@@ -1805,6 +1806,17 @@ describe("isRetryableTranslationFailure", () => {
       ...overrides,
     };
   }
+
+  it("uses only a native-row table caption as translation input", () => {
+    const block = makeBlock({
+      type: "table",
+      original: "Table 1. Participant characteristics. Age 34 42 Country Japan Canada",
+      translationStatus: "pending",
+      metadata: { captionOriginal: "Table 1. Participant characteristics.", tableRows: [[{ text: "Age" }, { text: "34" }]] },
+    });
+    expect(shouldTranslateBlock(block)).toBe(true);
+    expect(translationInputForBlock(block)).toBe("Table 1. Participant characteristics.");
+  });
 
   it("counts a failed body paragraph that the reader can retry", () => {
     const block = makeBlock({});
