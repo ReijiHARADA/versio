@@ -7,6 +7,7 @@ argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 OUT = argv[0] if argv else "/tmp/staple_icon.png"
 RES = int(argv[1]) if len(argv) > 1 else 1024
 SAMPLES = int(argv[2]) if len(argv) > 2 else 256
+DARK = len(argv) > 3 and argv[3] == "dark"  # macOS dark-appearance variant
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scn = bpy.context.scene
@@ -176,14 +177,19 @@ def area(name, loc, size, energy, color=(1, 1, 1)):
     d = Vector((0, 0, 0)) - Vector(loc); l.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
     return l
 
-area("key", (-21, 21, 27), 7.5, 18000)
-area("fill", (8, -10, 14), 24, 350, (0.92, 0.96, 1.0))
-area("strip", (6, 8, 16), 2, 700)
+if DARK:  # lower, cooler key; stronger strip so the wire edges still read on the dark plate
+    area("key", (-21, 21, 27), 7.5, 13000, (0.9, 0.95, 1.0))
+    area("fill", (8, -10, 14), 24, 200, (0.8, 0.88, 1.0))
+    area("strip", (6, 8, 16), 2, 1400)
+else:
+    area("key", (-21, 21, 27), 7.5, 18000)
+    area("fill", (8, -10, 14), 24, 350, (0.92, 0.96, 1.0))
+    area("strip", (6, 8, 16), 2, 700)
 
 w = bpy.data.worlds.new("w"); scn.world = w; w.use_nodes = True
 env = w.node_tree.nodes.new("ShaderNodeTexEnvironment")
 env.image = bpy.data.images.load(bpy.utils.system_resource("DATAFILES") + "/studiolights/world/studio.exr")
-bg = w.node_tree.nodes["Background"]; bg.inputs["Strength"].default_value = 0.35
+bg = w.node_tree.nodes["Background"]; bg.inputs["Strength"].default_value = 0.2 if DARK else 0.35
 w.node_tree.links.new(env.outputs["Color"], bg.inputs["Color"])
 
 # --- render ----------------------------------------------------------------
@@ -206,7 +212,7 @@ scn.use_nodes = True
 nt = scn.node_tree; nt.nodes.clear()
 rl = nt.nodes.new("CompositorNodeRLayers")
 idm = nt.nodes.new("CompositorNodeIDMask"); idm.index = 1; idm.use_antialiasing = True
-sa = nt.nodes.new("CompositorNodeSetAlpha"); sa.inputs["Image"].default_value = (1, 1, 1, 1)
+sa = nt.nodes.new("CompositorNodeSetAlpha"); sa.inputs["Image"].default_value = (0.007, 0.009, 0.017, 1) if DARK else (1, 1, 1, 1)
 ov = nt.nodes.new("CompositorNodeAlphaOver")
 out = nt.nodes.new("CompositorNodeComposite")
 nt.links.new(rl.outputs["IndexOB"], idm.inputs["ID value"]); nt.links.new(idm.outputs["Alpha"], sa.inputs["Alpha"])
