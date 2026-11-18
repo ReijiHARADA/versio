@@ -5630,6 +5630,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         !hardCrossColumnReferenceBoundary &&
         !isMathDisplayBoundary &&
         !isShortCaptionTitleBlock &&
+        !isBottomPageNumber(target) && !isBottomPageNumber(block) &&
         (joinsCompleteLeadingContinuation || joinsSameColumnContinuation || joinsSpanningBodyContinuation || joinsHyphenatedContinuation || geometrySameLineContinuation || rejoinAfterDetachedMargin || wrapsAcrossColumnsAtPageBottom || wrapsAcrossColumnsAtModerateTop || wrapsAcrossPhysicalColumns || wrapsAcrossAdjacentColumnTails ||
         (canContinueAcrossColumns && isSentenceContinuation(target.text, block.text)) ||
         crossesPageBoundaryAfterFigureBand || crossesPageBoundaryProperName ||
@@ -5687,6 +5688,12 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         ? { ...block, role: "header" as LayoutRole }
       : block
   );
+}
+
+/** A bare number in the bottom margin (`1890`) is a page number, never one side of a paragraph seam. */
+function isBottomPageNumber(block: LayoutBlock): boolean {
+  const line = block.lines[0];
+  return block.lines.length === 1 && /^\d{1,5}$/.test(block.text.trim()) && line.y > (line.pageHeight ?? 792) * 0.9;
 }
 
 function columnBand(

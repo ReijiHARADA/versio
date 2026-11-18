@@ -678,6 +678,15 @@ describe("canonical extraction pipeline", () => {
     expect(block?.original).toMatch(/simple yet effective multi-?\s*modal dialogue framework/);
   }, 60_000);
 
+  it("does not glue a bottom page number onto the next column's paragraph", async (ctx) => {
+    const pdf = path.resolve("test-data/element-gold/acl-2024.naacl-long.104/source.pdf");
+    if (!fs.existsSync(pdf)) ctx.skip();
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({ pages, paperId: "acl-104", filePath: pdf, fileHash: "acl-104", metadata: { pageCount: pages.length } });
+    const block = result.blocks.find((b) => b.type === "paragraph" && /baselines are reported in Table 12/.test(b.original ?? ""));
+    expect(block?.original).not.toMatch(/\b1890\b/);
+  }, 60_000);
+
   it("does not absorb numbered procedure steps into a figure caption", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/linguistics-language-model-physics.pdf");
     if (!fs.existsSync(pdf)) ctx.skip();
