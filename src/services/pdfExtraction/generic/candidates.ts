@@ -2013,6 +2013,8 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.2);
       scoreByRole.equation = Math.max(scoreByRole.equation ?? 0, 0.78);
     }
+    // Layout chrome with a contact address (`{a, b}@lab.edu`) has braces, not math.
+    if (block.role === "chrome" && /@[\w.-]+\.[A-Za-z]{2,}/.test(block.text)) scoreByRole.equation = 0;
     if (mathematicalClauseContinuation) {
       scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.2);
       scoreByRole.paragraph = Math.max(scoreByRole.paragraph ?? 0, 0.9);

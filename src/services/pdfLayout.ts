@@ -6103,7 +6103,9 @@ function joinMastheadGutterSplitLines(lines: LayoutLine[]): LayoutLine[] {
       if (line.page !== 1 || line.column !== "right" || line.y >= bodyStart) return false;
       const gap = line.x - (left.x + left.width);
       // Superscript markers shift a line's y, so allow about half a line.
-      return Math.abs(line.y - left.y) <= Math.max(2, left.fontSize * 0.55) && gap >= -1 && gap <= left.fontSize * 2;
+      // A half that already mixes in an affiliation (IEEE `ABBAS…Faculty of…`) would swallow the other half's names.
+      return Math.abs(line.y - left.y) <= Math.max(2, left.fontSize * 0.55) && gap >= -1 && gap <= left.fontSize * 2 &&
+        looksLikeAffiliation(left.text) === looksLikeAffiliation(line.text);
     });
     if (rightIndex < 0) continue;
     const right = out[rightIndex]!;
