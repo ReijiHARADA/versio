@@ -26,6 +26,16 @@ export function containment(needle: string, hay: Set<string>): number {
   return g.length ? g.filter((x) => hay.has(x)).length / g.length : 0;
 }
 const setOf = (texts: string[]) => new Set(texts.flatMap(ngrams));
+/** Letters and digits only, without accents: LaTeX gold splits `Δ_0` / `\\mu m` / `Garc\\'{\\i}a` where the PDF prints `Δ0` / `μm` / `García`. */
+const squeeze = (s: string) => s.normalize("NFKD").replace(/\p{M}/gu, "").replace(/ı/g, "i").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+const charGrams = (s: string, n = 6) => Array.from({ length: Math.max(0, s.length - n + 1) }, (_, i) => s.slice(i, i + n));
+/** Share of `needle`'s letter 6-grams present in `hay`, ignoring spacing and punctuation. */
+export function squeezedContainment(needle: string, hay: string): number {
+  const g = [...new Set(charGrams(squeeze(needle)))];
+  if (g.length === 0) return 0;
+  const h = squeeze(hay);
+  return g.filter((x) => h.includes(x)).length / g.length;
+}
 /**
  * Declaration notes print as a page footnote in some journals (PLOS `Competing Interests:`) and as a
  * headed end section in others (Frontiers `Author contributions`); either form reaches the reader.
@@ -65,7 +75,8 @@ export function scoreElements(gold: ElementGold, blocks: ScoredBlock[], paper: S
   const paragraphs = byType("paragraph");
   const paraSet = setOf(paragraphs.map((b) => b.text));
   const footSet = setOf(byType("footnote").map((b) => b.text));
-  const inOne = (needle: string, candidates: ScoredBlock[]) => candidates.find((b) => containment(needle, setOf([b.text])) >= 0.8);
+  const inOne = (needle: string, candidates: ScoredBlock[]) =>
+    candidates.find((b) => containment(needle, setOf([b.text])) >= 0.8 || squeezedContainment(needle, b.text) >= 0.9);
   const figureBlocks = byType("figure");
   const tableBlocks = byType("table");
   const allText = blocks.map((b) => b.text).join(" ").replace(/\s+/g, "").toLowerCase();

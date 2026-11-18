@@ -47,6 +47,7 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 - 責任著者の連絡先（`Correspondence: 名前, メール`）を脚注として Reader に残す。サイドバーのラベル・名前・メールは 1 つの注記にまとめる。Europe PMC 106 本の脚注 31.5% → 68.5%、ACL・arXiv は変化なし。
 - ACL の著者行で、名前の直後の上付き所属番号の位置に区切りを補う（`Zhenhua Liu¹ Tong Zhu¹`）。ACL dev の著者 71.1% → 82.9%、他は変化なし。
 - 太字のキャプション番号（`Figure 6.`）が、ページ幅のキャプションから左の段に取り残されないようにする。図 arXiv dev 63.6% → 68.2%、Europe PMC 106 本 86.3% → 87.2%。
+- 要素正解の採点で、図・表のキャプションは空白・記号・アクセントの違いを無視しても照合する（LaTeX 由来の `Δ 0`・`μ m` と PDF の `Δ0`・`μm`）。dev の図 ACL 89.1% → 92.2%、arXiv 68.2% → 83.3%、Europe PMC 106 本 87.2% → 88.6%（採点の変更のみ）。
 - 翻訳: fresh audit（113 本 / 954 units）で ordinary-body fallback 30.8%、目標 5% は未達。自動受理は品質達成とは扱わない。→ [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)、[docs/PDF_EXTRACTION_TRANSLATION_QUALITY_EVALUATION.md](./docs/PDF_EXTRACTION_TRANSLATION_QUALITY_EVALUATION.md)
 - CAT-Translate / Gemma / Qwen は監査比較のみで本番 routing 未統合。
 

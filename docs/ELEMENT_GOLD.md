@@ -46,6 +46,8 @@ npx vite-node --script scripts/extraction-audit.ts -- --corpus elementgold --out
 npx vite-node --script scripts/element-gold-score.ts -- --run <run> [--split dev|test]
 ```
 
+図・表のキャプションは、語の 3-gram 一致（0.8 以上）に加えて、空白・記号・アクセントを除いた文字 6-gram の一致（0.9 以上）でも見つかったとみなす。LaTeX 由来の正解が `Δ 0`・`μ m`・`Garc ıa` と分ける語を PDF は `Δ0`・`μm`・`García` と印字するため（2026-11-18 から。それ以前の図・表の数値はこの分だけ低い）。キャプション内の行末ハイフン（`cate-gories`）もこの照合では差にならないので、ハイフン修復は別に見ること。
+
 Europe PMC は `--corpus paragold` の run をそのまま採点できる（paper メタデータ入りの run が必要）。PDF のテキスト層に無い正解は採点から外す（版違い・JATS だけにある注記）。指標の意味は `src/evaluation/elementGold/score.ts` の型コメント。
 
 ## 基準値（2026-11-17、main 6176f36 相当の抽出器）
