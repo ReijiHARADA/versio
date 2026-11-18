@@ -16,27 +16,27 @@ def mat_paper():
     # plain matte plate
     m = bpy.data.materials.new("plate"); m.use_nodes = True
     b = m.node_tree.nodes["Principled BSDF"]
-    b.inputs["Base Color"].default_value = (0.93, 0.93, 0.93, 1)
-    b.inputs["Roughness"].default_value = 0.7
+    b.inputs["Base Color"].default_value = (0.105, 0.115, 0.13, 1)  # matte slate
+    b.inputs["Roughness"].default_value = 0.8
     return m
 
 def mat_steel():
     m = bpy.data.materials.new("steel"); m.use_nodes = True
     nt = m.node_tree; b = nt.nodes["Principled BSDF"]
-    b.inputs["Base Color"].default_value = (0.78, 0.79, 0.81, 1)
+    b.inputs["Base Color"].default_value = (0.60, 0.625, 0.655, 1)  # electro-galvanized (zinc-plated) steel: dull silver, faint blue
     b.inputs["Metallic"].default_value = 1.0
-    b.inputs["Anisotropic"].default_value = 0.6
+    b.inputs["Anisotropic"].default_value = 0.45
     # fine drawn-wire streaks along the wire (local X of each leg)
     tc = nt.nodes.new("ShaderNodeTexCoord")
     mp = nt.nodes.new("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (0.4, 60, 60)
     nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 6; nz.inputs["Detail"].default_value = 6
     nt.links.new(tc.outputs["Object"], mp.inputs["Vector"]); nt.links.new(mp.outputs["Vector"], nz.inputs["Vector"])
-    rr = nt.nodes.new("ShaderNodeMapRange"); rr.inputs["To Min"].default_value = 0.16; rr.inputs["To Max"].default_value = 0.30
+    rr = nt.nodes.new("ShaderNodeMapRange"); rr.inputs["To Min"].default_value = 0.36; rr.inputs["To Max"].default_value = 0.50
     nt.links.new(nz.outputs["Fac"], rr.inputs["Value"]); nt.links.new(rr.outputs["Result"], b.inputs["Roughness"])
     tg = nt.nodes.new("ShaderNodeTangent"); tg.direction_type = "RADIAL"; tg.axis = "Z"
     tg2 = nt.nodes.new("ShaderNodeTangent"); tg2.direction_type = "UV_MAP"
     nt.links.new(tg2.outputs["Tangent"], b.inputs["Tangent"])
-    bump = nt.nodes.new("ShaderNodeBump"); bump.inputs["Strength"].default_value = 0.08; bump.inputs["Distance"].default_value = 0.005
+    bump = nt.nodes.new("ShaderNodeBump"); bump.inputs["Strength"].default_value = 0.15; bump.inputs["Distance"].default_value = 0.005
     nt.links.new(nz.outputs["Fac"], bump.inputs["Height"]); nt.links.new(bump.outputs["Normal"], b.inputs["Normal"])
     return m
 
@@ -166,7 +166,7 @@ scn.cycles.device = "GPU"
 scn.cycles.samples = SAMPLES; scn.cycles.use_denoising = True
 scn.render.film_transparent = True
 scn.render.resolution_x = scn.render.resolution_y = RES
-scn.view_settings.view_transform = "AgX"; scn.view_settings.look = "AgX - Medium High Contrast"; scn.view_settings.exposure = 1.0
+scn.view_settings.view_transform = "AgX"; scn.view_settings.look = "AgX - Base Contrast"; scn.view_settings.exposure = 1.15
 scn.render.image_settings.file_format = "PNG"; scn.render.image_settings.color_mode = "RGBA"
 scn.render.filepath = OUT
 # soft macOS-style drop shadow, composited from the icon's own alpha
