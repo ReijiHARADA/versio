@@ -73,19 +73,28 @@ for p in paper.data.polygons: p.use_smooth = True
 paper.data.shade_smooth() if hasattr(paper.data, "shade_smooth") else None
 
 # --- staple leg: sweep a rounded-rect profile along a bent path -------------
-W, T, CR = 0.38, 0.22, 0.10    # wire width (in-plane), thickness, profile corner radius
+W, T, CR = 0.38, 0.27, 0.10    # wire width (in-plane), thickness, profile corner radius
 R = 0.75 * T                   # tight clinch: inner bend radius ~ 1/4 of thickness
 X, TIP = 3.75, 0.24            # bend x, tip x (gap = 2*TIP)
 
-def profile(n=8):
-    # flattened drawn wire: flat faces, small edge fillet (~1/3 of thickness)
-    r = 0.12 * T  # tiny real wire: edges read almost sharp
-    hw, ht = W / 2 - r, T / 2 - r
+def profile(n=12, m=8):
+    # staple wire section (from SEM): flat outer/inner faces, barrel-rounded sides, W:T ~ 1.4
+    c = 0.14 * W                      # how far the side bulges past the flat faces' ends
+    h = T / 2
+    ra = (h * h + c * c) / (2 * c)    # side arc radius from its sagitta
+    phi = math.asin(h / ra)
+    ax = W / 2 - ra                   # right arc centre (left is mirrored)
     out = []
-    for cx, cy, a0 in ((hw, ht, 0), (-hw, ht, 90), (-hw, -ht, 180), (hw, -ht, 270)):
-        for k in range(n + 1):
-            a = math.radians(a0 + 90 * k / n)
-            out.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+    for k in range(n + 1):            # right side, bottom -> top
+        a = -phi + 2 * phi * k / n
+        out.append((ax + ra * math.cos(a), ra * math.sin(a)))
+    for k in range(1, m):             # top (outer) face, right -> left
+        out.append((W / 2 - c - (W - 2 * c) * k / m, h))
+    for k in range(n + 1):            # left side, top -> bottom
+        a = math.pi - phi + 2 * phi * k / n
+        out.append((-ax + ra * math.cos(a), ra * math.sin(a)))
+    for k in range(1, m):             # bottom (inner) face, left -> right
+        out.append((-W / 2 + c + (W - 2 * c) * k / m, -h))
     return out  # (side, normal) offsets
 
 LIFT = 0.42  # bend crest height above the plate: thin paper lets the bend stand proud of the tip
