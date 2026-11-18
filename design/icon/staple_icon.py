@@ -52,7 +52,12 @@ PAPER, STEEL = mat_paper(), mat_steel()
 # --- paper squircle (macOS icon body: 824/1024 of canvas) ------------------
 A, N, THICK = 4.12, 5.0, 0.25
 bm = bmesh.new()
-pts = [(A, A), (-A, A), (-A, -A), (A, -A)]  # plain square plate
+# macOS masks app icons to a squircle; superellipse approximates that mask
+pts = []
+for i in range(512):
+    t = 2 * math.pi * i / 512
+    c, si = math.cos(t), math.sin(t)
+    pts.append((A * math.copysign(abs(c) ** (2 / N), c), A * math.copysign(abs(si) ** (2 / N), si)))
 top = [bm.verts.new((x, y, 0)) for x, y in pts]
 f = bm.faces.new(top)
 ext = bmesh.ops.extrude_face_region(bm, geom=[f])
@@ -73,7 +78,7 @@ X, TIP = 3.75, 0.24            # bend x, tip x (gap = 2*TIP)
 
 def profile(n=8):
     # flattened drawn wire: flat faces, small edge fillet (~1/3 of thickness)
-    r = 0.35 * T
+    r = 0.12 * T  # tiny real wire: edges read almost sharp
     hw, ht = W / 2 - r, T / 2 - r
     out = []
     for cx, cy, a0 in ((hw, ht, 0), (-hw, ht, 90), (-hw, -ht, 180), (hw, -ht, 270)):
@@ -190,7 +195,21 @@ scn.cycles.device = "GPU"
 scn.cycles.samples = SAMPLES; scn.cycles.use_denoising = True
 scn.render.film_transparent = True
 scn.render.resolution_x = scn.render.resolution_y = RES
-scn.view_settings.view_transform = "Standard"; scn.view_settings.exposure = -0.25
+scn.view_settings.view_transform = "Standard"; scn.view_settings.exposure = 0.0
 scn.render.image_settings.file_format = "PNG"; scn.render.image_settings.color_mode = "RGBA"
 scn.render.filepath = OUT
+# plate = shadow catcher (only the staple's shadow), composited over a flat white squircle
+paper.is_shadow_catcher = True
+paper.pass_index = 1
+scn.view_layers[0].use_pass_object_index = True
+scn.use_nodes = True
+nt = scn.node_tree; nt.nodes.clear()
+rl = nt.nodes.new("CompositorNodeRLayers")
+idm = nt.nodes.new("CompositorNodeIDMask"); idm.index = 1; idm.use_antialiasing = True
+sa = nt.nodes.new("CompositorNodeSetAlpha"); sa.inputs["Image"].default_value = (1, 1, 1, 1)
+ov = nt.nodes.new("CompositorNodeAlphaOver")
+out = nt.nodes.new("CompositorNodeComposite")
+nt.links.new(rl.outputs["IndexOB"], idm.inputs["ID value"]); nt.links.new(idm.outputs["Alpha"], sa.inputs["Alpha"])
+nt.links.new(sa.outputs["Image"], ov.inputs[1]); nt.links.new(rl.outputs["Image"], ov.inputs[2])
+nt.links.new(ov.outputs["Image"], out.inputs["Image"])
 bpy.ops.render.render(write_still=True)
