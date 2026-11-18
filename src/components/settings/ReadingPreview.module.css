@@ -5,8 +5,11 @@
 }
 
 .viewport {
-  border-radius: var(--radius-md);
-  background: var(--color-surface-page);
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
+  --sq-bg: var(--color-surface-page);
   outline: 1px solid var(--color-separator-subtle);
   padding: var(--spacing-lg);
   overflow: hidden;

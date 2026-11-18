@@ -44,16 +44,19 @@
 }
 
 .save {
+  composes: surface from "../../../styles/squircle.module.css";
+  position: relative;
   appearance: none;
   border: none;
-  background: var(--color-accent);
+  --sq-bg: var(--color-accent);
   color: #fff;
   font-size: 0.8125rem;
   padding: 8px 14px;
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
   cursor: pointer;
 }
 
 .save:hover {
-  background: var(--color-accent-hover);
+  --sq-bg: var(--color-accent-hover);
 }

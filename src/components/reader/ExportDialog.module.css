@@ -14,8 +14,11 @@
 }
 
 .modal {
-  background-color: var(--color-bg);
-  border-radius: var(--radius-lg);
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-bg: var(--color-bg);
+  --sq-fill: var(--sq-fill-lg);
+  border-radius: var(--sq-radius-lg);
   width: min(100%, 34rem);
   max-height: min(44rem, calc(100dvh - (var(--spacing-md) * 2)));
   overflow: hidden;
@@ -40,16 +43,19 @@
 }
 
 .closeButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   flex: none;
   padding: var(--spacing-xs);
   border: none;
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-secondary);
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
 }
 
 .closeButton:hover {
-  background-color: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
   color: var(--color-text);
 }
 
@@ -64,9 +70,15 @@
 }
 
 .fieldset {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   min-width: 0;
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  --sq-line: var(--color-border-light);
+  --sq-bw: 1px;
+  --sq-fill: var(--sq-fill-md);
+  --sq-ring: var(--sq-ring-md);
+  border-radius: var(--sq-radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
   display: flex;
   flex-direction: column;
@@ -125,10 +137,13 @@
   background-color: var(--color-bg);
 }
 
+.primary { composes: surface from "../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-md); }
+.secondary { composes: surface from "../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-md); }
+
 .primary,
 .secondary {
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--sq-radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
   font-size: 0.875rem;
   font-weight: 500;
@@ -136,12 +151,12 @@
 }
 
 .primary {
-  background-color: var(--color-accent);
+  --sq-bg: var(--color-accent);
   color: white;
 }
 
 .primary:hover:not(:disabled) {
-  background-color: var(--color-accent-hover);
+  --sq-bg: var(--color-accent-hover);
 }
 
 .primary:disabled,
@@ -150,12 +165,12 @@
 }
 
 .secondary {
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-secondary);
 }
 
 .secondary:hover:not(:disabled) {
-  background-color: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
 }
 
 @media (max-width: 480px) {
@@ -165,9 +180,12 @@
   }
 
   .modal {
+    composes: surface from "../../styles/squircle.module.css";
+    position: relative;
     width: 100%;
     max-height: calc(100dvh - (var(--spacing-sm) * 2));
-    border-radius: var(--radius-lg);
+    --sq-fill: var(--sq-fill-lg);
+    border-radius: var(--sq-radius-lg);
   }
 
   .header,

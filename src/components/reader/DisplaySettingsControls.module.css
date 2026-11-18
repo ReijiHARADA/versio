@@ -31,28 +31,34 @@
 }
 
 .themeButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--spacing-xs);
   padding: var(--spacing-sm) var(--spacing-md);
-  border: 1px solid var(--color-border);
-  background-color: var(--color-bg);
+  border: 1px solid transparent;
+  --sq-line: var(--color-border);
+  --sq-bw: 1px;
+  --sq-bg: var(--color-bg);
   color: var(--color-text-secondary);
-  border-radius: var(--radius-md);
+  --sq-fill: var(--sq-fill-md);
+  --sq-ring: var(--sq-ring-md);
+  border-radius: var(--sq-radius-md);
   font-size: 0.75rem;
   cursor: pointer;
-  transition: background-color var(--transition-fast),
-    border-color var(--transition-fast), color var(--transition-fast);
+  transition: --sq-bg var(--transition-fast),
+    --sq-line var(--transition-fast), color var(--transition-fast);
 }
 
 .themeButton:hover {
-  background-color: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
 }
 
 .themeButton.active {
-  background-color: var(--color-selection-bg);
-  border-color: var(--color-selection-bg);
+  --sq-bg: var(--color-selection-bg);
+  --sq-line: var(--color-selection-bg);
   color: var(--color-selection-fg);
 }

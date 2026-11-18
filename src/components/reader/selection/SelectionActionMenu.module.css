@@ -1,28 +1,36 @@
 .menu {
+  composes: surface from "../../../styles/squircle.module.css";
   position: fixed;
   z-index: 40;
   transform: translateX(-50%);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  --sq-bg: var(--color-bg);
+  border: 1px solid transparent;
+  --sq-line: var(--color-border);
+  --sq-bw: 1px;
+  --sq-fill: var(--sq-fill-md);
+  --sq-ring: var(--sq-ring-md);
+  border-radius: var(--sq-radius-md);
   box-shadow: 0 8px 24px var(--color-shadow);
   padding: 4px;
 }
 
 .button {
+  composes: surface from "../../../styles/squircle.module.css";
+  position: relative;
   appearance: none;
   border: none;
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text);
   font-size: 0.8125rem;
   padding: 6px 10px;
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
   cursor: pointer;
   white-space: nowrap;
 }
 
 .button:hover {
-  background: var(--color-accent-light);
+  --sq-bg: var(--color-accent-light);
   color: var(--color-accent);
 }
 

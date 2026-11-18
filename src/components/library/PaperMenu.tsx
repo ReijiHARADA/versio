@@ -171,6 +171,7 @@ export function PaperMenu({
         <div className={styles.menu} role="menu">
           <button
             type="button"
+            className={styles.menuItem}
             role="menuitem"
             disabled={favoriting}
             onClick={(event) => void toggleFavorite(event)}
@@ -190,6 +191,7 @@ export function PaperMenu({
           {variant === "library" && (
             <button
               type="button"
+              className={styles.menuItem}
               role="menuitem"
               onClick={(event) => {
                 event.stopPropagation();
@@ -200,13 +202,14 @@ export function PaperMenu({
               ワークスペースに追加…
             </button>
           )}
-          <button type="button" role="menuitem" disabled={reextracting} onClick={(event) => void reextract(event)}>
+          <button type="button" className={styles.menuItem} role="menuitem" disabled={reextracting} onClick={(event) => void reextract(event)}>
             <RefreshCw size={14} />
             {reextracting ? "抽出を更新中..." : "PDFを再抽出"}
           </button>
           {readiness === "translating" && (
             <button
               type="button"
+              className={styles.menuItem}
               role="menuitem"
               disabled={cancelling}
               onClick={(event) => pauseTranslation(event)}
@@ -216,7 +219,7 @@ export function PaperMenu({
             </button>
           )}
           {readiness === "needs_attention" && (
-            <button type="button" role="menuitem" disabled={retrying} onClick={(event) => void retryTranslation(event)}>
+            <button type="button" className={styles.menuItem} role="menuitem" disabled={retrying} onClick={(event) => void retryTranslation(event)}>
               <RotateCcw size={14} />
               {retrying
                 ? paper.processingStatus === "partial"
@@ -230,6 +233,7 @@ export function PaperMenu({
           {variant === "workspace" && onRemoveFromWorkspace && (
             <button
               type="button"
+              className={styles.menuItem}
               role="menuitem"
               onClick={(event) => {
                 event.stopPropagation();
@@ -247,7 +251,7 @@ export function PaperMenu({
               <button
                 type="button"
                 role="menuitem"
-                className={styles.menuDanger}
+                className={`${styles.menuItem} ${styles.menuDanger}`}
                 onClick={(event) => {
                   setOpen(false);
                   onDeleteRequest(event, paper.id);
@@ -273,6 +277,7 @@ export function PaperMenu({
                 <button
                   key={node.id}
                   type="button"
+                  className={styles.menuItem}
                   role="menuitem"
                   disabled={already}
                   onClick={(event) => void addToWorkspace(event, node.id)}

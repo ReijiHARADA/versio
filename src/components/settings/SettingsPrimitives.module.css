@@ -1,7 +1,10 @@
 .card {
-  background: var(--color-surface-grouped);
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-bg: var(--color-surface-grouped);
   border: none;
-  border-radius: var(--radius-lg);
+  --sq-fill: var(--sq-fill-lg);
+  border-radius: var(--sq-radius-lg);
   padding: var(--spacing-lg);
   box-shadow: none;
 }

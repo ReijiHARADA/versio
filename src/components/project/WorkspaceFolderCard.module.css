@@ -37,6 +37,8 @@
 }
 
 .icon {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   flex-shrink: 0;
   box-sizing: border-box;
   width: 40px;
@@ -44,8 +46,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-sm);
+  --sq-bg: var(--color-bg-secondary);
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
   color: var(--color-text-secondary);
 }
 

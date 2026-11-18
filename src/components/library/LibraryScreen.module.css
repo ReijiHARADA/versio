@@ -71,17 +71,20 @@
 }
 
 .settingsButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   padding: var(--spacing-sm);
   border: none;
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-secondary);
-  border-radius: var(--radius-md);
-  transition: background-color var(--transition-fast),
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
+  transition: --sq-bg var(--transition-fast),
     color var(--transition-fast);
 }
 
 .settingsButton:hover {
-  background-color: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
   color: var(--color-text);
 }
 
@@ -129,21 +132,24 @@
 }
 
 .primaryButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-md) var(--spacing-lg);
-  background-color: var(--color-accent);
+  --sq-bg: var(--color-accent);
   color: white;
   border: none;
-  border-radius: var(--radius-md);
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
   font-size: 1rem;
   font-weight: 500;
-  transition: background-color var(--transition-fast);
+  transition: --sq-bg var(--transition-fast);
 }
 
 .primaryButton:hover {
-  background-color: var(--color-accent-hover);
+  --sq-bg: var(--color-accent-hover);
 }
 
 .addButton {

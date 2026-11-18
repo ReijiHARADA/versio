@@ -12,22 +12,25 @@
 }
 
 .backButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
   border: none;
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-secondary);
   font-size: 0.875rem;
   cursor: pointer;
-  border-radius: var(--radius-md);
-  transition: background-color var(--transition-fast),
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
+  transition: --sq-bg var(--transition-fast),
     color var(--transition-fast);
 }
 
 .backButton:hover {
-  background-color: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
   color: var(--color-text);
 }
 
@@ -40,8 +43,11 @@
 }
 
 .card {
-  background-color: var(--color-bg);
-  border-radius: var(--radius-lg);
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-bg: var(--color-bg);
+  --sq-fill: var(--sq-fill-lg);
+  border-radius: var(--sq-radius-lg);
   padding: var(--spacing-2xl);
   max-width: 480px;
   width: 100%;
@@ -88,9 +94,12 @@
 }
 
 .progressBar {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   height: 6px;
-  background-color: var(--color-bg-tertiary);
-  border-radius: 3px;
+  --sq-bg: var(--color-bg-tertiary);
+  --sq-fill: var(--sq-fill-3);
+  border-radius: var(--sq-radius-3);
   overflow: hidden;
   margin-bottom: var(--spacing-lg);
 }
@@ -110,18 +119,21 @@
 }
 
 .stage {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
   font-size: 0.75rem;
   color: var(--color-text-tertiary);
   padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
 }
 
 .stage.active {
   color: var(--color-accent);
-  background-color: var(--color-accent-light);
+  --sq-bg: var(--color-accent-light);
 }
 
 .iconComplete {
@@ -160,37 +172,46 @@
 }
 
 .primaryButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-sm);
   width: 100%;
   padding: var(--spacing-md) var(--spacing-lg);
-  background-color: var(--color-accent);
+  --sq-bg: var(--color-accent);
   color: white;
   border: none;
-  border-radius: var(--radius-md);
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  transition: --sq-bg var(--transition-fast);
 }
 
 .primaryButton:hover {
-  background-color: var(--color-accent-hover);
+  --sq-bg: var(--color-accent-hover);
 }
 
 .secondaryButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   padding: var(--spacing-md) var(--spacing-lg);
-  background-color: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  --sq-line: var(--color-border);
+  --sq-bw: 1px;
+  --sq-fill: var(--sq-fill-md);
+  --sq-ring: var(--sq-ring-md);
+  border-radius: var(--sq-radius-md);
   font-size: 1rem;
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  transition: --sq-bg var(--transition-fast);
 }
 
 .secondaryButton:hover {
-  background-color: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
 }

@@ -170,6 +170,7 @@ export function WorkspaceTree({
         <>
             <button
               type="button"
+              className={styles.projectMenuItem}
               role="menuitem"
               onClick={() => {
                 setOpenMenuId(null);
@@ -182,6 +183,7 @@ export function WorkspaceTree({
             </button>
             <button
               type="button"
+              className={styles.projectMenuItem}
               role="menuitem"
               onClick={() => {
                 setOpenMenuId(null);
@@ -193,6 +195,7 @@ export function WorkspaceTree({
             </button>
             <button
               type="button"
+              className={styles.projectMenuItem}
               role="menuitem"
               onClick={() => {
                 setOpenMenuId(null);
@@ -204,6 +207,7 @@ export function WorkspaceTree({
             </button>
             <button
               type="button"
+              className={styles.projectMenuItem}
               role="menuitem"
               disabled={subtreePaperCount(node.id, nodes, memberships) === 0}
               onClick={() => {
@@ -218,7 +222,7 @@ export function WorkspaceTree({
             <button
               type="button"
               role="menuitem"
-              className={styles.projectMenuDanger}
+              className={`${styles.projectMenuItem} ${styles.projectMenuDanger}`}
               disabled={deleting}
               onClick={() => {
                 setDeleting(true);

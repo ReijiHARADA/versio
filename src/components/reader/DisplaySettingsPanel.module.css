@@ -14,9 +14,12 @@
 }
 
 .panel {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   width: 320px;
-  background-color: var(--color-bg);
-  border-radius: var(--radius-lg);
+  --sq-bg: var(--color-bg);
+  --sq-fill: var(--sq-fill-lg);
+  border-radius: var(--sq-radius-lg);
   box-shadow: 0 4px 24px var(--color-shadow);
   animation: slideIn 0.2s ease-out;
 }
@@ -47,17 +50,20 @@
 }
 
 .closeButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   padding: var(--spacing-xs);
   border: none;
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-secondary);
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  transition: --sq-bg var(--transition-fast);
 }
 
 .closeButton:hover {
-  background-color: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
 }
 
 .body {

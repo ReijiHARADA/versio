@@ -59,24 +59,26 @@
 }
 
 .closeButton {
+  composes: surface from "../../styles/squircle.module.css";
   position: fixed;
   top: var(--spacing-lg);
   right: var(--spacing-lg);
   z-index: 2;
   padding: var(--spacing-sm);
   border: none;
-  background-color: rgba(255, 255, 255, 0.12);
+  --sq-bg: rgba(255, 255, 255, 0.12);
   color: white;
-  border-radius: var(--radius-md);
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
   cursor: pointer;
   pointer-events: auto;
   transition:
-    background-color var(--transition-fast),
+    --sq-bg var(--transition-fast),
     opacity 0.2s ease-in;
 }
 
 .closeButton:hover {
-  background-color: rgba(255, 255, 255, 0.22);
+  --sq-bg: rgba(255, 255, 255, 0.22);
 }
 
 .image {

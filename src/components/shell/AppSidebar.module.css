@@ -239,9 +239,9 @@
   flex-shrink: 0;
   box-sizing: border-box;
   transition:
-    background-color var(--transition-fast),
+    --sq-bg var(--transition-fast),
     color var(--transition-fast),
-    border-color var(--transition-fast);
+    --sq-line var(--transition-fast);
 }
 
 .iconSlot,
@@ -258,9 +258,15 @@
    Search
 ──────────────────────────────────────────────── */
 .search {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-bg: var(--color-bg);
+  border: 1px solid transparent;
+  --sq-line: var(--color-border);
+  --sq-bw: 1px;
+  --sq-fill: var(--sq-fill-md);
+  --sq-ring: var(--sq-ring-md);
+  border-radius: var(--sq-radius-md);
   color: var(--color-text-tertiary);
   /* Center within the same --header-height band as the main pane header. */
   margin-top: calc((var(--header-height) - var(--sidebar-icon-box)) / 2);
@@ -357,6 +363,8 @@
 }
 
 .sectionAdd {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -366,14 +374,15 @@
   margin-right: -4px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
+  --sq-bg: transparent;
   color: var(--color-text-tertiary);
   cursor: pointer;
 }
 
 .sectionAdd:hover {
-  background: var(--color-bg-tertiary);
+  --sq-bg: var(--color-bg-tertiary);
   color: var(--color-text);
 }
 
@@ -406,27 +415,30 @@
    Nav items
 ──────────────────────────────────────────────── */
 .item {
-  border-radius: var(--radius-md);
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
   color: var(--color-text-secondary);
   font-size: 0.875rem;
   text-decoration: none;
 }
 
 .item:hover {
-  background: var(--color-bg-tertiary);
+  --sq-bg: var(--color-bg-tertiary);
   color: var(--color-text);
   text-decoration: none;
 }
 
 .item.active {
-  background: var(--color-selection-bg);
+  --sq-bg: var(--color-selection-bg);
   color: var(--color-selection-fg);
   font-weight: 500;
 }
 
 .item.dropTarget {
-  background: var(--color-accent-light);
-  border-radius: var(--radius-md);
+  --sq-bg: var(--color-accent-light);
+  border-radius: var(--sq-radius-md);
   box-shadow: inset 0 0 0 2px var(--color-accent);
   color: var(--color-accent);
 }
@@ -448,6 +460,7 @@
 }
 
 .projectMenuButton {
+  composes: surface from "../../styles/squircle.module.css";
   position: absolute;
   z-index: 5;
   top: 4px;
@@ -459,8 +472,9 @@
   justify-content: center;
   padding: 0;
   border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
+  --sq-bg: transparent;
   color: var(--color-text-secondary);
   opacity: 0;
   pointer-events: none;
@@ -479,7 +493,7 @@
 
 .projectMenuButton:hover,
 .projectMenuButtonOpen {
-  background: color-mix(in srgb, var(--color-bg) 72%, transparent);
+  --sq-bg: color-mix(in srgb, var(--color-bg) 72%, transparent);
   color: var(--color-text);
 }
 
@@ -489,39 +503,48 @@
 
 .treeRow:has(.item.active) .projectMenuButton:hover,
 .treeRow:has(.item.active) .projectMenuButtonOpen {
-  background: color-mix(in srgb, var(--color-selection-fg) 22%, transparent);
+  --sq-bg: color-mix(in srgb, var(--color-selection-fg) 22%, transparent);
   color: var(--color-selection-fg);
 }
 
 .projectMenu {
+  composes: surface from "../../styles/squircle.module.css";
   /* Portaled to document.body so nested tree overflow:hidden cannot clip it. */
   position: fixed;
   z-index: 1200;
   width: 190px;
   padding: 5px;
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-md);
-  background: var(--color-bg);
+  border: 1px solid transparent;
+  --sq-line: var(--color-border-light);
+  --sq-bw: 1px;
+  --sq-fill: var(--sq-fill-md);
+  --sq-ring: var(--sq-ring-md);
+  border-radius: var(--sq-radius-md);
+  --sq-bg: var(--color-bg);
   box-shadow: 0 8px 24px var(--color-shadow);
 }
 
-.projectMenu button {
+.projectMenuItem {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-fill: var(--sq-fill-sm);
+  width: 100%;
   width: 100%;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
   padding: 7px 8px;
   border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
+  border-radius: var(--sq-radius-sm);
+  --sq-bg: transparent;
   color: var(--color-text);
   font: inherit;
   font-size: 0.8125rem;
   text-align: left;
 }
 
-.projectMenu button:hover {
-  background: var(--color-bg-secondary);
+.projectMenuItem:hover {
+  --sq-bg: var(--color-bg-secondary);
 }
 
 .projectMenuSeparator {
@@ -623,6 +646,7 @@
  * clicking the name still opens the folder page.
  */
 .chevron {
+  composes: surface from "../../styles/squircle.module.css";
   position: absolute;
   top: 50%;
   left: var(--tree-indent, 0px);
@@ -630,13 +654,14 @@
   display: flex;
   width: var(--sidebar-icon-box);
   height: var(--sidebar-icon-box);
-  border-radius: var(--radius-md);
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
   cursor: pointer;
   align-items: center;
   justify-content: center;
   padding: 0;
   border: 0;
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-secondary);
   opacity: var(--sidebar-expand-t);
   pointer-events: none;
@@ -645,7 +670,7 @@
 }
 
 .chevron:hover {
-  background: color-mix(in srgb, currentColor 14%, transparent);
+  --sq-bg: color-mix(in srgb, currentColor 14%, transparent);
 }
 
 .chevron:focus-visible {
@@ -799,15 +824,21 @@
 }
 
 .dropinside {
-  background: var(--color-accent-light);
-  border-radius: var(--radius-md);
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-bg: var(--color-accent-light);
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
   box-shadow: inset 0 0 0 1px var(--color-accent);
 }
 .dropbefore { box-shadow: inset 0 2px var(--color-accent); }
 .dropafter { box-shadow: inset 0 -2px var(--color-accent); }
 .invalidDrop {
-  background: #c5221f18;
-  border-radius: var(--radius-md);
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-bg: #c5221f18;
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
   box-shadow: inset 0 0 0 1px #c5221f;
   cursor: not-allowed;
 }

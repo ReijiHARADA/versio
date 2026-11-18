@@ -129,59 +129,68 @@
 }
 
 .processingBanner {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-md) var(--spacing-lg);
-  background-color: #dbeafe;
+  --sq-bg: #dbeafe;
   color: #1e40af;
-  border-radius: var(--radius-md);
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
   margin-bottom: var(--spacing-xl);
   font-size: 0.875rem;
 }
 
 [data-theme="dark"] .processingBanner {
-  background-color: #1e3a5f;
+  --sq-bg: #1e3a5f;
   color: #93c5fd;
 }
 
 .partialBanner {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-md) var(--spacing-lg);
-  background-color: #fce8e6;
+  --sq-bg: #fce8e6;
   color: #c5221f;
-  border-radius: var(--radius-md);
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
   margin-bottom: var(--spacing-xl);
   font-size: 0.875rem;
 }
 
 [data-theme="dark"] .partialBanner {
-  background-color: #3c1f1e;
+  --sq-bg: #3c1f1e;
   color: #f28b82;
 }
 
 .attentionBanner {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: inline-flex;
   align-items: center;
   appearance: none;
   border: none;
   padding: var(--spacing-sm) var(--spacing-md);
-  background-color: #fef3c7;
+  --sq-bg: #fef3c7;
   color: #92400e;
-  border-radius: var(--radius-md);
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
   margin-bottom: var(--spacing-xl);
   font-size: 0.875rem;
   cursor: pointer;
 }
 
 .attentionBanner:hover {
-  background-color: #fde68a;
+  --sq-bg: #fde68a;
 }
 
 [data-theme="dark"] .attentionBanner {
-  background-color: #3f2d12;
+  --sq-bg: #3f2d12;
   color: #fbbf24;
 }
 

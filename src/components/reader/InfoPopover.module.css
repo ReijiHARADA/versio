@@ -33,20 +33,23 @@
 }
 
 .close {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   border: none;
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-tertiary);
   cursor: pointer;
   font-size: 1rem;
   line-height: 1;
   padding: 0 2px;
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
 }
 
 .close:hover,
 .close:focus-visible {
   color: var(--color-text);
-  background: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
 }
 
 .body {

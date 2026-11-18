@@ -55,6 +55,8 @@
 }
 
 .favoriteButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
@@ -64,14 +66,15 @@
   margin: 0;
   padding: 0;
   border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
+  --sq-bg: transparent;
   color: var(--color-text-tertiary);
   opacity: 0.55;
   cursor: pointer;
   transition:
     color var(--transition-fast),
-    background-color var(--transition-fast),
+    --sq-bg var(--transition-fast),
     opacity var(--transition-fast);
 }
 
@@ -82,7 +85,7 @@
 }
 
 .favoriteButton:hover:not(:disabled) {
-  background: var(--color-bg-tertiary, var(--color-bg));
+  --sq-bg: var(--color-bg-tertiary, var(--color-bg));
   color: var(--color-favorite);
 }
 
@@ -111,6 +114,8 @@
 }
 
 .epubSyncButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
@@ -119,8 +124,9 @@
   margin: 0;
   padding: 0 8px;
   border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
+  --sq-bg: transparent;
   color: var(--color-text-secondary);
   font: inherit;
   font-size: 0.75rem;
@@ -130,7 +136,7 @@
   opacity: 0.72;
   transition:
     color var(--transition-fast),
-    background-color var(--transition-fast),
+    --sq-bg var(--transition-fast),
     opacity var(--transition-fast);
 }
 
@@ -140,7 +146,7 @@
 }
 
 .epubSyncButton:hover:not(:disabled) {
-  background: var(--color-bg-tertiary, var(--color-bg));
+  --sq-bg: var(--color-bg-tertiary, var(--color-bg));
   color: var(--color-text);
 }
 
@@ -244,6 +250,8 @@
 }
 
 .menuButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -251,50 +259,59 @@
   height: 28px;
   padding: 0;
   border: none;
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-tertiary);
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
   cursor: pointer;
 }
 
 .menuButton:hover {
-  background-color: var(--color-bg-tertiary, var(--color-bg));
+  --sq-bg: var(--color-bg-tertiary, var(--color-bg));
   color: var(--color-text);
 }
 
 .menu {
+  composes: surface from "../../styles/squircle.module.css";
   position: absolute;
   top: 32px;
   right: 0;
   z-index: 20;
   min-width: 220px;
   padding: 6px;
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-md);
-  background: var(--color-bg);
+  border: 1px solid transparent;
+  --sq-line: var(--color-border-light);
+  --sq-bw: 1px;
+  --sq-fill: var(--sq-fill-md);
+  --sq-ring: var(--sq-ring-md);
+  border-radius: var(--sq-radius-md);
+  --sq-bg: var(--color-bg);
   box-shadow: 0 8px 24px var(--color-shadow);
 }
 
-.menu button {
+.menuItem {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-fill: var(--sq-fill-sm);
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
   padding: 8px 10px;
   border: none;
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text);
-  border-radius: var(--radius-sm);
+  border-radius: var(--sq-radius-sm);
   font-size: 0.8125rem;
   text-align: left;
   cursor: pointer;
 }
 
-.menu button:hover:not(:disabled) {
-  background: var(--color-bg-secondary);
+.menuItem:hover:not(:disabled) {
+  --sq-bg: var(--color-bg-secondary);
 }
 
-.menu button:disabled {
+.menuItem:disabled {
   opacity: 0.55;
   cursor: default;
 }
@@ -305,12 +322,12 @@
   background: var(--color-border-light);
 }
 
-.menu button.menuDanger {
+.menuItem.menuDanger {
   color: #c5221f;
 }
 
-.menu button.menuDanger:hover:not(:disabled) {
-  background: #fce8e6;
+.menuItem.menuDanger:hover:not(:disabled) {
+  --sq-bg: #fce8e6;
   color: #c5221f;
 }
 
@@ -322,6 +339,8 @@
 }
 
 .actionButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -330,21 +349,22 @@
   height: 28px;
   padding: 0;
   border: none;
-  background: transparent;
+  --sq-bg: transparent;
   color: var(--color-text-tertiary);
-  border-radius: var(--radius-sm);
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
   cursor: pointer;
   transition: color var(--transition-fast),
-    background-color var(--transition-fast);
+    --sq-bg var(--transition-fast);
 }
 
 .actionButton:hover {
-  background-color: #fce8e6;
+  --sq-bg: #fce8e6;
   color: #c5221f;
 }
 
 [data-theme="dark"] .actionButton:hover {
-  background-color: #3c1f1e;
+  --sq-bg: #3c1f1e;
   color: #f28b82;
 }
 
@@ -364,13 +384,25 @@
   text-align: right;
 }
 
+.deleteConfirmYes {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-fill: var(--sq-fill-sm);
+}
+
+.deleteConfirmNo {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-fill: var(--sq-fill-sm);
+}
+
 .deleteConfirmYes,
 .deleteConfirmNo {
   appearance: none;
   border: none;
   font-size: 0.75rem;
   padding: 4px 8px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--sq-radius-sm);
   cursor: pointer;
 }
 
@@ -415,8 +447,11 @@
   }
 
   .epubSyncButton {
+    composes: surface from "../../styles/squircle.module.css";
+    position: relative;
     width: 28px;
     padding: 0;
     justify-content: center;
+    --sq-fill: var(--sq-fill-sm);
   }
 }
