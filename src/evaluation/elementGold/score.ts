@@ -115,7 +115,7 @@ export function scoreElements(gold: ElementGold, blocks: ScoredBlock[], paper: S
   // shortcut: this also hides a kept line-end hyphen (`plau-sible`), which no paragraph metric tracks now.
   const blockText = new Map(paragraphs.map((b) => [b.id, b.text]));
   const isIntact = (p: (typeof aligned.paragraphs)[number]) =>
-    p.verdict === "intact" || (p.verdict === "partial" && squeezedContainment(scorable[p.index], blockText.get(p.blocks[0].id) ?? "", 20) >= 0.85);
+    p.verdict === "intact" || (p.verdict === "partial" && squeezedContainment(scorable[p.index], blockText.get(p.blocks[0]?.id ?? "") ?? "", 20) >= 0.85);
 
   const refBlocks = byType("reference").map((b) => setOf([b.text]));
   return {
