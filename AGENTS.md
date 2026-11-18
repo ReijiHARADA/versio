@@ -23,7 +23,8 @@
 - 新しい UI は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md) に従う。局所操作は Popover、一時的な大きい作業は Sheet / Overlay、論文全体の一覧は Inspector。本文操作で Notes を自動で開かない。別 route は Library / Reader / Workspace / Settings だけ。同一対象の場所・サイズ変化（図の拡大など）は Shared Element Transition でビューを切らない。
 - `src-tauri/` が Tauri v2 のシェル。`npm run tauri:dev` で開発。日常の `.app` 確認は `npm run tauri:build:fast`（`.app` のみ）。リリース確認は `npm run tauri:build:clean`（`.app` + `.dmg`）。`npm run tauri:build` は clean のエイリアス。
 - 生成物: `src-tauri/target/release/bundle/macos/Versio.app`
-- アプリアイコンは Icon Composer 形式 `src-tauri/icons/AppIcon.icon`（ライト/ダーク）を bundler が actool で `Assets.car` 化し、`icon.icns` はフォールバック。元データは `design/icon/staple_icon.py`（`-- out.png 1024 384 light|dark [layer]`）。ビルドが `actool did not generate Assets.car` で落ちたら `pkill -f ibtoold` して再ビルド（actool デーモンが時々壊れる）。
+- アプリアイコンは Icon Composer 形式 `src-tauri/icons/AppIcon.icon`（ライト/ダーク）。`npm run build:icon` で `src-tauri/icons/Assets.car` にコンパイルしてコミットし、bundler はその `.car` を同梱する（bundler 内の actool は ibtoold デーモンが壊れて失敗するため使わない）。`icon.icns` はフォールバック。元画像は `design/icon/staple_icon.py`（`-- out.png 1024 384 light|dark [layer]`）。
+- 日常使いの Versio は `npm run install:app`（main をビルドして `/Applications/Versio.app` に置く）の1本に統一する。worktree の `.app` は確認用の使い捨て。
 - Xcode は `/Applications/Xcode-beta.app` を使用。ビルド時は `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer` を設定すること。
 - phase 時間は `scripts/tauri-build.sh` と `.build-timings` / [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。
 - 本番 CSP は有効。WKWebView 向けに `script-src` は nonce のみにしない（`'self' 'unsafe-inline' 'wasm-unsafe-eval'`）。変更時は `.app` で白画面にならないか確認する。
