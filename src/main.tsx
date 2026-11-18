@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./polyfills/pdfjsCompat";
 import "./styles/variables.css";
+import "./styles/squircle.css";
 import App from "./App";
 
 function showBootError(error: unknown) {

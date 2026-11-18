@@ -147,13 +147,16 @@
 }
 
 .addButton {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  background: var(--color-accent);
+  --sq-bg: var(--color-accent);
+  --sq-fill: var(--sq-fill-md);
   color: white;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--sq-radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
   font-size: 0.875rem;
   font-weight: 500;
@@ -163,7 +166,7 @@
 }
 
 .addButton:hover {
-  background: var(--color-accent-hover);
+  --sq-bg: var(--color-accent-hover);
 }
 
 /* Paper List — compact rows, not cards */
