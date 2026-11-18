@@ -101,13 +101,10 @@ def profile(n=12, m=8):
         out.append((-W / 2 + c + (W - 2 * c) * k / m, -h))
     return out  # (side, normal) offsets
 
-# sheared point seen from above (X-ray photo): two angled flanks meeting off-centre, slightly blunt nose
-P0, K_IN, K_OUT, NOSE = 0.2 * W, 1.1, 1.6, 0.02
+# sheared point seen from the side: two flanks through the thickness meet near the paper side,
+# long flank on top (faces the viewer), slightly blunt nose
+P0, K_IN, K_OUT, NOSE = -0.2 * T, 1.2, 1.7, 0.03 * T
 
-def tip_offset(s):
-    d = s - P0
-    return max(0.0, abs(d) - NOSE) * (K_OUT if d > 0 else K_IN)
-LIFT = 0.42  # bend crest height above the plate: thin paper lets the bend stand proud of the tip
 
 def leg_path():
     # wire comes up through the sheet, arcs over at the bend, then slopes down to a tip resting on the sheet
@@ -122,12 +119,11 @@ def leg_path():
     for k in range(1, 25):
         th = sweep * k / 24
         path.append((cx + R * math.cos(th), cz + R * math.sin(th)))
-    xc = TIP + max(tip_offset(-W / 2), tip_offset(W / 2)) + 0.03  # run stops before the chisel face; last point is projected onto it
+    xc = TIP - 0.02  # run overshoots the tip; the point is cut by planes in build_leg
     for k in range(1, 121):
         t = k / 120
         x = px + (xc - px) * t
         path.append((x, pz + (z0 - pz) * (x - px) / (TIP - px)))
-    path.append((TIP, z0))
     return path
 
 def wobble(u, seed, amp, freqs=(0.6, 1.3, 2.9)):
@@ -155,8 +151,6 @@ def build_leg(name, seed):
             s, h = s * sw, h * sh
             s, h = s * math.cos(tw) - h * math.sin(tw), s * math.sin(tw) + h * math.cos(tw)
             p = Vector((px, dy, pz + dz)) + side * s + nrm * h
-            if i == len(path) - 1:
-                p.x = TIP + tip_offset(s)
             ring.append(bm.verts.new(p))
         rings.append(ring)
     faces = []
@@ -172,6 +166,14 @@ def build_leg(name, seed):
             vi = rings[i].index(loop.vert) if loop.vert in rings[i] else rings[i + 1].index(loop.vert)
             ri = i if loop.vert in rings[i] else i + 1
             loop[uv].uv = (uv_v[ri], vi / m)
+    # shear the point: top flank, bottom flank, blunt nose; each cut capped with a flat face
+    z0 = T / 2 + 0.002
+    for no, co in (((-1, 0, K_OUT), (TIP, 0, z0 + P0 + NOSE)),
+                   ((-1, 0, -K_IN), (TIP, 0, z0 + P0 - NOSE)),
+                   ((-1, 0, 0), (TIP, 0, 0))):
+        geom = bm.verts[:] + bm.edges[:] + bm.faces[:]
+        bmesh.ops.bisect_plane(bm, geom=geom, plane_co=co, plane_no=Vector(no).normalized(), clear_outer=True)
+        bmesh.ops.holes_fill(bm, edges=bm.edges[:], sides=0)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
     for p in me.polygons: p.use_smooth = True
