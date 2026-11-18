@@ -65,6 +65,19 @@ export function InfoPopover({
     };
   }, [onClose]);
 
+  // Follow the trigger as the reader scrolls instead of staying pinned to the viewport.
+  const [shift, setShift] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    const element = anchor.element;
+    if (!element) return;
+    const onScroll = () => {
+      const rect = element.getBoundingClientRect();
+      setShift({ x: rect.left - anchor.left, y: rect.top - anchor.top });
+    };
+    window.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    return () => window.removeEventListener("scroll", onScroll, { capture: true });
+  }, [anchor]);
+
   const placement = clampPopoverPosition(anchor, size);
 
   return createPortal(
@@ -76,7 +89,7 @@ export function InfoPopover({
       tabIndex={-1}
       data-info-popover="true"
       className={styles.popover}
-      style={{ top: placement.top, left: placement.left }}
+      style={{ top: placement.top + shift.y, left: placement.left + shift.x }}
     >
       <div className={styles.header}>
         <h3 className={styles.title}>{title}</h3>

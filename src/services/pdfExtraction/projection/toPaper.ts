@@ -33,6 +33,7 @@ import { scoreLayoutBlock } from "../../extractionConfidence";
 import type { CanonicalDocument, CanonicalNode } from "../canonical/types";
 import { topologicalOrder } from "../resolver/relationResolver";
 import { recoverBodyBylines } from "./frontMatter/bodyBylineRecovery";
+import { withCorrespondenceNotes } from "./frontMatter/correspondenceNotes";
 import { recoverEarlyMastheadAuthors, type FrontMatterState } from "./frontMatter/authorRecovery";
 import {
   hasStrongNativeTableRows,
@@ -4885,7 +4886,8 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
     node.boundingBoxes.length > 0 &&
     Math.max(...node.boundingBoxes.map((box) => box.height)) <= 9;
 
-  const readable = canonical.nodes.filter((n) => {
+  const sourceNodes = withCorrespondenceNotes(canonical.nodes);
+  const readable = sourceNodes.filter((n) => {
     // Radial diagrams and other dense infographics can be mistaken for a
     // captionless prose-cell grid. The figure caption is retained as the
     // readable representation; suppress only when page-level density and a
@@ -4904,7 +4906,7 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
     return true;
   });
   const fallbackIds = readable.map((n) => n.id);
-  const nodeById = new Map(canonical.nodes.map((n) => [n.id, n]));
+  const nodeById = new Map(sourceNodes.map((n) => [n.id, n]));
   const orderedIds =
     topologicalOrder(fallbackIds, canonical.relations, (id) => {
       const node = nodeById.get(id);

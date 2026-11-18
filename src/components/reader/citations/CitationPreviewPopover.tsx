@@ -41,7 +41,7 @@ export function CitationPreviewPopover({
               className={styles.action}
               onClick={() => void openExternalUrl(model.doiUrl!)}
             >
-              DOIを開く
+              ブラウザで開く
             </button>
           ) : null}
           {model.externalUrl && model.externalUrl !== model.doiUrl ? (

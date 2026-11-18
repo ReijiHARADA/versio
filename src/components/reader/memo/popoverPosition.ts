@@ -3,6 +3,8 @@ export type AnchorBox = {
   left: number;
   width: number;
   height: number;
+  /** Trigger element; lets a fixed popover follow it while the reader scrolls. */
+  element?: Element;
 };
 
 export type PopoverPlacement = {
