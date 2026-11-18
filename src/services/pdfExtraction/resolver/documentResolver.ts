@@ -59,6 +59,8 @@ import {
 
 function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; confidence: number } {
   const scores = candidate.roleScores;
+  // Small-font text on a table-only page: page-level evidence outranks the sentence shape of its cells.
+  if (candidate.evidence.some((entry) => entry.label === "table-page-text")) return { role: "table", confidence: Math.max(scores.table ?? 0, 0.95) };
   // In Frontiers-style mastheads, a numbered author continuation can be
   // emitted as an affiliation block when it sits in the adjacent column.
   // Preserve it as an author when the line is short, marker-bearing, and
@@ -3497,7 +3499,7 @@ function isGarbageTableFragment(node: CanonicalNode): boolean {
 function isWeakProseGridTableFragment(node: CanonicalNode): boolean {
   if (node.role !== "table") return false;
   const labels = new Set(node.evidence.map((entry) => entry.label));
-  if (!labels.has("repeated-prose-cell-grid")) return false;
+  if (!labels.has("repeated-prose-cell-grid") || labels.has("table-page-text")) return false;
   if (
     labels.has("table-row-geometry") ||
     labels.has("captioned-native-multicell-row") ||
@@ -3669,7 +3671,7 @@ export function mergeAdjacentTableRows(nodes: CanonicalNode[]): CanonicalNode[] 
 }
 
 function isProseMistakenTableRow(node: CanonicalNode): boolean {
-  if (node.role !== "table") return false;
+  if (node.role !== "table" || node.evidence.some((entry) => entry.label === "table-page-text")) return false;
   const text = (node.text ?? "").trim();
   if (!text || isNumberedTableCaptionText(text)) return false;
   if (/[√✓☑☒]/.test(text) || /\t/.test(text)) return false;
