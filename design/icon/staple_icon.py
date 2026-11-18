@@ -13,17 +13,11 @@ scn = bpy.context.scene
 
 # --- materials -------------------------------------------------------------
 def mat_paper():
-    m = bpy.data.materials.new("paper"); m.use_nodes = True
-    nt = m.node_tree; b = nt.nodes["Principled BSDF"]
-    b.inputs["Base Color"].default_value = (0.97, 0.95, 0.91, 1)
-    b.inputs["Roughness"].default_value = 0.85
-    b.inputs["Subsurface Weight"].default_value = 0.05
-    tex = nt.nodes.new("ShaderNodeTexNoise"); tex.inputs["Scale"].default_value = 180; tex.inputs["Detail"].default_value = 8
-    fib = nt.nodes.new("ShaderNodeTexNoise"); fib.inputs["Scale"].default_value = 25; fib.inputs["Detail"].default_value = 4
-    mix = nt.nodes.new("ShaderNodeMath"); mix.operation = "ADD"
-    nt.links.new(tex.outputs["Fac"], mix.inputs[0]); nt.links.new(fib.outputs["Fac"], mix.inputs[1])
-    bump = nt.nodes.new("ShaderNodeBump"); bump.inputs["Strength"].default_value = 0.06; bump.inputs["Distance"].default_value = 0.02
-    nt.links.new(mix.outputs[0], bump.inputs["Height"]); nt.links.new(bump.outputs["Normal"], b.inputs["Normal"])
+    # plain matte plate
+    m = bpy.data.materials.new("plate"); m.use_nodes = True
+    b = m.node_tree.nodes["Principled BSDF"]
+    b.inputs["Base Color"].default_value = (0.93, 0.93, 0.93, 1)
+    b.inputs["Roughness"].default_value = 0.7
     return m
 
 def mat_steel():
@@ -110,8 +104,7 @@ def build_leg(name):
         ring = []
         for s, h in prof:
             p = Vector((px, 0, pz)) + side * s + nrm * h
-            # chisel-cut tip: diagonal end in plan, top edge slightly further back
-            p.x = max(p.x, TIP + (s + W / 2) * 0.55 + max(h, 0) * 0.35)
+            p.x = max(p.x, TIP)  # square-cut tip
             ring.append(bm.verts.new(p))
         rings.append(ring)
     faces = []
@@ -141,16 +134,6 @@ lb = build_leg("leg_b"); lb.location.y = -OFF; lb.rotation_euler.z = math.pi
 la.parent = legs; lb.parent = legs
 legs.rotation_euler.z = math.radians(45)
 
-# punch holes where the legs come through, slightly torn/oversized
-for sgn, off in ((1, OFF), (-1, -OFF)):
-    h = bpy.data.objects.new("hole", bpy.data.meshes.new("holem"))
-    bm = bmesh.new(); bmesh.ops.create_cube(bm, size=1.0); bm.to_mesh(h.data); bm.free()
-    scn.collection.objects.link(h)
-    h.scale = (T + 0.16, W + 0.12, 1.0)
-    h.location = (sgn * (X + 0.02), off, -0.2)
-    h.parent = legs; h.hide_render = True; h.hide_viewport = True
-    hb = paper.modifiers.new("hole", "BOOLEAN"); hb.object = h; hb.operation = "DIFFERENCE"; hb.solver = "EXACT"
-paper.modifiers.move(0, len(paper.modifiers) - 1)  # bevel last
 
 # --- camera / light / world ------------------------------------------------
 cam = bpy.data.objects.new("cam", bpy.data.cameras.new("cam")); scn.collection.objects.link(cam)
