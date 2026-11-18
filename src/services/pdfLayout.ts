@@ -2192,9 +2192,11 @@ export function looksLikeAuthorList(text: string): boolean {
   ) {
     return false;
   }
-  const words = t.split(/\s+/).filter(Boolean);
+  // AASTeX bylines carry inline affiliation numbers (`Taniguchi,1 Lau,2, 3`); those are markers, not words.
+  const inlineMarkers = (t.match(/\p{Ll},\s?\d/gu) ?? []).length >= 3;
+  const words = t.split(/\s+/).filter((word) => word && !(inlineMarkers && /^[\d,;]+$/.test(word)));
   if (words.length < 4) return false;
-  const capitalized = words.filter((word) => /^[A-ZÀ-ÖØ-Ý][A-Za-zÀ-ÿ'’.-]{1,}$/.test(word.replace(/[,;]+$/g, "")));
+  const capitalized = words.filter((word) => /^[A-ZÀ-ÖØ-Ý][A-Za-zÀ-ÿ'’.-]{1,}$/.test((inlineMarkers ? word.replace(/(?<=\p{Ll}[,;]?)\d[\d,;]*$/u, "") : word).replace(/[,;]+$/g, "")));
   const separators = (text.match(/[,;·]|\band\b|&|♠|♣|♡|♢/gi) ?? []).length;
   // At least two separators or an explicit marker run is required. This
   // avoids promoting ordinary title/abstract fragments while covering
@@ -5999,6 +6001,62 @@ export function assignRectsToRegions<T extends LayoutRect>(
   return assigned;
 }
 
+/**
+ * A centered byline cut at the column gutter can end its left half on a spacing
+ * accent whose letter starts the right half (`Jos´` | `e Antonio Hernández`).
+ * Rejoin only that pair; the column split itself is left alone.
+ */
+function joinAccentSplitLines(lines: LayoutLine[]): LayoutLine[] {
+  const out = [...lines];
+  for (let i = 0; i < out.length; i += 1) {
+    const left = out[i]!;
+    if (left.column !== "left" || !/[\u00b4\u02dc\u00a8\u02c6\u02c7]$/.test(left.text.trim())) continue;
+    const rightIndex = out.findIndex((line) =>
+      line.column === "right" && line.page === left.page &&
+      Math.abs(line.y - left.y) <= Math.max(2, left.fontSize * 0.3) &&
+      /^\p{Ll}/u.test(line.text.trim()) &&
+      line.x >= left.x + left.width - left.fontSize &&
+      line.x - (left.x + left.width) <= left.fontSize * 2);
+    if (rightIndex < 0) continue;
+    const right = out[rightIndex]!;
+    out[i] = itemsToLine([...left.items, ...right.items], "spanning", left.page, left.pageHeight, left.pageWidth);
+    out.splice(rightIndex, 1);
+    if (rightIndex < i) i -= 1;
+  }
+  return out;
+}
+
+/**
+ * Bylines often drop the comma where an affiliation superscript sits
+ * (`Ganesh Mundhe²Mayur Kshirsagar`), and the superscripts land on their own
+ * line just above. Put the comma back where a marker fills the gap between two
+ * items and the next item starts a capitalised word.
+ */
+function commaAtSuperscriptMarkers(lines: LayoutLine[]): LayoutLine[] {
+  const markerLines = lines.filter((line) => /^[\d\s,*\u2217\u2020\u2021\u00a7\u00b6]+$/u.test(line.text.trim()));
+  if (markerLines.length === 0) return lines;
+  return lines.map((line) => {
+    if (markerLines.includes(line) || line.items.length < 2) return line;
+    const markers = markerLines
+      .filter((marker) => marker.page === line.page && marker.fontSize < line.fontSize * 0.9 &&
+        line.y - marker.y > 0 && line.y - marker.y <= line.fontSize * 0.8)
+      .flatMap((marker) => marker.items);
+    if (markers.length === 0) return line;
+    const items = [...line.items].sort((a, b) => a.x - b.x);
+    let changed = false;
+    const patched = items.map((item, index) => {
+      const next = items[index + 1];
+      if (!next || !/\p{L}$/u.test(item.text.trim()) || !/^\p{Lu}/u.test(next.text.trim()) || /^and\b/i.test(next.text.trim())) return item;
+      const end = item.x + item.width;
+      const marked = markers.some((m) => m.x >= end - 1.5 && m.x + m.width <= next.x + 1.5);
+      if (!marked) return item;
+      changed = true;
+      return { ...item, text: `${item.text.trimEnd()},` };
+    });
+    return changed ? itemsToLine(patched, line.column, line.page, line.pageHeight, line.pageWidth) : line;
+  });
+}
+
 export function reconstructDocument(pages: ExtractedPage[]): {
   layouts: PageColumnLayout[];
   lines: LayoutLine[];
@@ -6010,7 +6068,7 @@ export function reconstructDocument(pages: ExtractedPage[]): {
   const lines: LayoutLine[] = [];
 
   for (let i = 0; i < pages.length; i++) {
-    lines.push(...buildPageLines(pages[i], layouts[i], patterns));
+    lines.push(...commaAtSuperscriptMarkers(joinAccentSplitLines(buildPageLines(pages[i], layouts[i], patterns))));
   }
 
   const bodyFont = median(

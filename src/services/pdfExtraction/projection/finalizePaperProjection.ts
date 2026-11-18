@@ -348,7 +348,7 @@ export function finalizePaperProjection(
     return !canonical.nodes.some((node) => {
       if (node.pageStart !== 1 || !node.text) return false;
       const text = node.text.replace(/\s+/g, " ").trim();
-      if (looksLikeFrontiersReviewerCredit(text)) {
+      if (looksLikeFrontiersReviewerCredit(text) && !hasGluedBylineInstitution(text)) {
         return text.toLocaleLowerCase().startsWith(head);
       }
       const y = node.boundingBoxes[0]?.y ?? Infinity;
@@ -444,7 +444,7 @@ export function finalizePaperProjection(
     );
     return !affiliationTextsForAuthorFilter.some((raw) => {
       const affText = raw.replace(/\s+/g, " ");
-      if (!locationTail.test(affText)) return false;
+      if (hasGluedBylineInstitution(affText) || !locationTail.test(affText)) return false;
       // Require the affiliation to still look institutional so real authors
       // who share a campus city name are not dropped.
       return /\b(?:university|college|institute|hospital|school|faculty|department|laboratory)\b/i.test(
@@ -468,6 +468,12 @@ export function finalizePaperProjection(
     finalTitle = printedTitle;
     authorNames = authorNames.filter((name) => !titleKey(printedTitle).includes(titleKey(name)));
   }
+  // Fragments of a numbered affiliation line (`2NSF’s NOIRLab, 950 N Cherry Ave, …`) are not people.
+  const numberedAffiliationLines = canonical.nodes
+    .filter((node) => node.pageStart === 1 && /^\d{1,2}\p{Lu}/u.test(node.text?.trim() ?? ""))
+    .map((node) => node.text!.replace(/\s+/g, " "));
+  authorNames = authorNames.filter((name) => !numberedAffiliationLines.some((line) =>
+    line.includes(name) && /\b\d{3,}\b|\b(?:university|institute|department|observatory|laboratory|USA)\b/i.test(line)));
   // Institution names and submission notes are not people (`Lane Department`, `Submitted to ApJ`).
   authorNames = authorNames
     .map((name) => name.replace(/\s*\(ORC[^)]*\)?\s*$/i, "").trim())
@@ -482,7 +488,7 @@ export function finalizePaperProjection(
     titleTranslated: null,
     authors:
       authorNames.length > 0
-        ? authorNames.map(titleCaseAllCapsName)
+        ? authorNames.map((name) => titleCaseAllCapsName(name.replace(/[*\u2217\u2020\u2021\u00a7\u00b6]+$/u, "").trim()))
         : input.metadata.author
           ? [input.metadata.author]
           : [],
@@ -509,4 +515,9 @@ export function finalizePaperProjection(
 export function titleCaseAllCapsName(name: string): string {
   if (/\p{Ll}/u.test(name)) return name;
   return name.replace(/\p{L}+/gu, (word) => word.length > 1 ? word[0] + word.slice(1).toLowerCase() : word);
+}
+
+/** A byline glued onto its institution (`Shashi Raj PandeyDepartment of …`): the names are authors, not credits or place names. */
+export function hasGluedBylineInstitution(text: string): boolean {
+  return /\p{Ll}(?:Department|University|School|Institute|Faculty|Laboratory|College)\b/u.test(text);
 }

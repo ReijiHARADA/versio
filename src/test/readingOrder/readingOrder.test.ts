@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { reconstructDocument, type LayoutBlock, hasSourceTextIntegrity, isEquationLine, isFigureCaption, isTableCaption, composeSpacingAccents } from "../../services/pdfLayout";
+import { reconstructDocument, type LayoutBlock, hasSourceTextIntegrity, isEquationLine, isFigureCaption, isTableCaption, composeSpacingAccents, looksLikeAuthorList } from "../../services/pdfLayout";
 import type { ExtractedPage } from "../../services/pdfService";
 import { FIXTURES } from "./builders";
 
@@ -1791,5 +1791,12 @@ describe("composeSpacingAccents", () => {
     expect(composeSpacingAccents("D´ıaz and N´u˜nez-Barra, Qu´ebec, Franc¸ois")).toBe("Díaz and Núñez-Barra, Québec, François");
     expect(composeSpacingAccents("``quoted'' text")).toBe("``quoted'' text");
     expect(composeSpacingAccents("Hamiltonian H˜k")).toBe("Hamiltonian H˜k");
+  });
+});
+
+describe("looksLikeAuthorList", () => {
+  it("accepts AASTeX bylines with inline affiliation numbers", () => {
+    expect(looksLikeAuthorList("Kotomi Taniguchi,1 Ryan M. Lau,2, 3 Takashi Onaka,4 Macarena Garcia Marin,5 Hideo Matsuhara,6")).toBe(true);
+    expect(looksLikeAuthorList("IT30340 Mitacs Accelerate, and the Wallenberg AI, Autonomous Systems and Software Program (WASP), Sweden")).toBe(false);
   });
 });

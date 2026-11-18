@@ -1181,6 +1181,15 @@ function splitAffiliationNamePrefix(text: string): MastheadPair[] {
 function recoverNumberedTitleCaseAuthorRow(text: string): string[] {
   const trimmed = text.replace(/\s+/g, " ").trim();
   if (trimmed.length < 16 || trimmed.length > 420) return [];
+  // Unnumbered bylines glued straight onto the institution with no space
+  // (`Petar Popovski, Shashi Raj PandeyDepartment of Electronic Systems`).
+  const name = "[A-Z][\\p{Ll}'’-]+(?:\\s+[A-Z](?:\\.|[\\p{Ll}'’-]+)){1,3}";
+  const glued = trimmed.match(new RegExp(
+    `^(${name}(?:\\s*,\\s*${name})*(?:,?\\s+and\\s+${name})?)(?<=\\p{Ll})(?:Department|University|School|Institute|Faculty|Laboratory|College)\\b`, "u"));
+  if (glued) {
+    const names = glued[1]!.split(/\s*,\s*|\s+and\s+/).map((part) => part.trim()).filter(Boolean);
+    if (names.length >= 2) return names;
+  }
   // Require a person-shaped, digit-suffixed name run before the first
   // institution marker (`1Versiti…` / `1Department…`). Skip bare institution
   // rows (`2Data Science Institute… 3Department…`).
@@ -3763,7 +3772,7 @@ function dropFrontiersSidebarCreditNames(
       return !canonical.nodes.some((node) => {
         if (node.pageStart !== 1 || !node.text) return false;
         const text = node.text.replace(/\s+/g, " ").trim();
-        if (looksLikeFrontiersReviewerCredit(text)) {
+        if (looksLikeFrontiersReviewerCredit(text) && !hasGluedBylineInstitution(text)) {
           return text.toLocaleLowerCase().startsWith(head);
         }
         const y = node.boundingBoxes[0]?.y ?? Infinity;
@@ -4966,7 +4975,7 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
   return { sections, blocks: finalizeBodyBlocks(blocks, layoutBlocks) };
 }
 
-import { finalizePaperProjection as finalizePaperProjectionImpl, titleCaseAllCapsName } from "./finalizePaperProjection";
+import { finalizePaperProjection as finalizePaperProjectionImpl, hasGluedBylineInstitution, titleCaseAllCapsName } from "./finalizePaperProjection";
 
 export { finalizePaperProjection } from "./finalizePaperProjection";
 
