@@ -101,6 +101,7 @@ def profile(n=12, m=8):
         out.append((-W / 2 + c + (W - 2 * c) * k / m, -h))
     return out  # (side, normal) offsets
 
+CHISEL = 0.9  # sheared tip: cut face leans back ~42deg through the thickness
 LIFT = 0.42  # bend crest height above the plate: thin paper lets the bend stand proud of the tip
 
 def leg_path():
@@ -116,9 +117,12 @@ def leg_path():
     for k in range(1, 25):
         th = sweep * k / 24
         path.append((cx + R * math.cos(th), cz + R * math.sin(th)))
+    xc = TIP + T * CHISEL + 0.02  # run stops before the chisel face; last point is projected onto it
     for k in range(1, 121):
         t = k / 120
-        path.append((px + (TIP - px) * t, pz + (z0 - pz) * t))
+        x = px + (xc - px) * t
+        path.append((x, pz + (z0 - pz) * (x - px) / (TIP - px)))
+    path.append((TIP, z0))
     return path
 
 def wobble(u, seed, amp, freqs=(0.6, 1.3, 2.9)):
@@ -133,8 +137,7 @@ def build_leg(name, seed):
     for i, (px, pz) in enumerate(path):
         a = path[max(i - 1, 0)]; b = path[min(i + 1, len(path) - 1)]
         tng = Vector((b[0] - a[0], 0, b[1] - a[1])).normalized()
-        side = Vector((0, 1, 0)); nrm = tng.cross(side).normalized()
-        if nrm.z < 0 and abs(tng.z) < 0.5: nrm = -nrm
+        side = Vector((0, 1, 0)); nrm = side.cross(tng).normalized()  # continuous frame: no flip at the bend
         if i: L += (Vector((px, 0, pz)) - Vector((path[i-1][0], 0, path[i-1][1]))).length
         uv_v.append(L)
         ring = []
@@ -147,7 +150,8 @@ def build_leg(name, seed):
             s, h = s * sw, h * sh
             s, h = s * math.cos(tw) - h * math.sin(tw), s * math.sin(tw) + h * math.cos(tw)
             p = Vector((px, dy, pz + dz)) + side * s + nrm * h
-            p.x = max(p.x, TIP)  # square-cut tip
+            if i == len(path) - 1:
+                p.x = TIP + (h + T / 2) * CHISEL  # chisel face: inner face reaches furthest
             ring.append(bm.verts.new(p))
         rings.append(ring)
     faces = []
@@ -166,6 +170,7 @@ def build_leg(name, seed):
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
     for p in me.polygons: p.use_smooth = True
+    me.set_sharp_from_angle(angle=math.radians(50))  # crisp sheared tip, smooth wire body
     ob = bpy.data.objects.new(name, me); scn.collection.objects.link(ob)
     ob.data.materials.append(STEEL)
     return ob
