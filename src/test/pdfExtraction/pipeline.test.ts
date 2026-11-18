@@ -84,6 +84,31 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.id === rel?.to && node.role === "table")).toBe(true);
   }, 60_000);
 
+  it("rejoins an adjacent native grid with its table caption", async (ctx) => {
+    const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/epmc-a-review-on-over-sampling-techniques-in-classification-of-multi-class-im.pdf");
+    if (!fs.existsSync(pdf)) ctx.skip();
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "epmc-caption-grid-regression",
+      filePath: pdf,
+      fileHash: "epmc-caption-grid-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const table = result.blocks.find((block) =>
+      /^TABLE 1 Search strategy\./.test(String(block.metadata.captionOriginal ?? ""))
+    );
+    expect(table?.type).toBe("table");
+    expect(table?.metadata.tableRows?.flat().some((cell) => cell.text === "Search")).toBe(true);
+    expect(result.blocks.filter((block) =>
+      /^TABLE 1 Search strategy\./.test(String(block.metadata.captionOriginal ?? ""))
+    )).toHaveLength(1);
+    expect(result.blocks.some((block) =>
+      block.id !== table?.id && block.type === "table" &&
+      /^Search Database Search query/.test(block.original ?? "")
+    )).toBe(false);
+  }, 60_000);
+
   it("crops an empty image-backed gap below an above-table caption", () => {
     const layout: PageColumnLayout = {
       page: 4, pageWidth: 576, pageHeight: 783, isMultiColumn: true,

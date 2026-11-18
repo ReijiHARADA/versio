@@ -275,6 +275,57 @@ function mergeSequentialTableRows(blocks: PaperBlock[], layoutBlocks: LayoutBloc
   return merged;
 }
 
+/** Keep a numbered table caption and its immediately adjacent native grid on
+ * the same Reader surface. Layout-region ordering can otherwise project them
+ * as separate table blocks. */
+function rejoinCaptionedTableGrids(blocks: PaperBlock[]): PaperBlock[] {
+  const hasCaption = (block: PaperBlock) =>
+    block.type === "table" && isNumberedTableCaption(String(block.metadata.captionOriginal ?? ""));
+  const isGrid = (block: PaperBlock, caption: PaperBlock) =>
+    block.type === "table" &&
+    block.pageStart === caption.pageStart &&
+    !String(block.metadata.captionOriginal ?? "").trim() &&
+    Boolean(block.original?.trim() || (Array.isArray(block.metadata.tableRows) && block.metadata.tableRows.length));
+
+  const out: PaperBlock[] = [];
+  for (let index = 0; index < blocks.length; index += 1) {
+    const caption = blocks[index];
+    if (!hasCaption(caption)) {
+      out.push(caption);
+      continue;
+    }
+    const grids: PaperBlock[] = [];
+    while (out.at(-1) && isGrid(out.at(-1)!, caption)) grids.unshift(out.pop()!);
+    let cursor = index + 1;
+    while (cursor < blocks.length && isGrid(blocks[cursor], caption)) grids.push(blocks[cursor++]);
+    if (grids.length === 0) {
+      out.push(caption);
+      continue;
+    }
+    const tableRows = [caption, ...grids].flatMap((block) =>
+      Array.isArray(block.metadata.tableRows) ? block.metadata.tableRows : []
+    );
+    out.push({
+      ...caption,
+      original: [caption.original, ...grids.map((block) => block.original)]
+        .filter((text): text is string => Boolean(text?.trim()))
+        .join(" "),
+      pageEnd: Math.max(caption.pageEnd, ...grids.map((block) => block.pageEnd)),
+      boundingBoxes: [...caption.boundingBoxes, ...grids.flatMap((block) => block.boundingBoxes)],
+      translationStatus: "skipped",
+      metadata: {
+        ...caption.metadata,
+        role: "table",
+        tableSourceFallback: true,
+        ...(tableRows.length ? { tableRows } : {}),
+        rejoinedTableGridBlockIds: grids.map((block) => block.id),
+      },
+    });
+    index = cursor - 1;
+  }
+  return out;
+}
+
 function separateSwallowedAffiliation(text: string): string {
   // Some IEEE layouts emit the author row and the institution as one native
   // line. Preserve an all-caps author suffix after the institution while
@@ -4641,9 +4692,10 @@ function finalizeBodyBlocks(blocks: PaperBlock[], layoutBlocks: LayoutBlock[]): 
 
   const tableColumnMergedBlocks = mergeParallelTableColumns(rowAggregatedBlocks, layoutBlocks);
   const tableRowMergedBlocks = mergeSequentialTableRows(tableColumnMergedBlocks, layoutBlocks);
+  const captionRejoinedBlocks = rejoinCaptionedTableGrids(tableRowMergedBlocks);
 
   // After a page-break header is dropped, rejoin "30. Authors." + "2007. Title…".
-  const referenceCoalescedBlocks = tableRowMergedBlocks.reduce<PaperBlock[]>((acc, block) => {
+  const referenceCoalescedBlocks = captionRejoinedBlocks.reduce<PaperBlock[]>((acc, block) => {
     const last = acc.at(-1);
     const text = (block.original ?? "").trim();
     const lastText = (last?.original ?? "").trim();
