@@ -231,4 +231,6 @@ out = nt.nodes.new("CompositorNodeComposite")
 nt.links.new(rl.outputs["IndexOB"], idm.inputs["ID value"]); nt.links.new(idm.outputs["Alpha"], sa.inputs["Alpha"])
 nt.links.new(sa.outputs["Image"], ov.inputs[1]); nt.links.new(rl.outputs["Image"], ov.inputs[2])
 nt.links.new(ov.outputs["Image"], out.inputs["Image"])
+bpy.ops.file.pack_all()  # embed the HDRI so the .blend opens anywhere
+bpy.ops.wm.save_as_mainfile(filepath=OUT.rsplit(".", 1)[0] + ".blend")
 bpy.ops.render.render(write_still=True)
