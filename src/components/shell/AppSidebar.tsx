@@ -170,12 +170,13 @@ export function AppSidebar({
   const modeClass =
     sidebarMode === "expanded" ? styles.sidebarExpanded : styles.sidebarAuto;
 
-  const autoMode = sidebarMode === "auto";
-
   return (
     <div
       ref={sidebarRef}
       className={styles.rail}
+      data-sidebar-mode={sidebarMode}
+      data-sidebar-drop-ready={pointerOverSidebar || undefined}
+      data-sidebar-resizing={resizing || undefined}
       style={
         {
           "--sidebar-expanded-w": `${sidebarWidth}px`,
@@ -195,6 +196,10 @@ export function AppSidebar({
             onPointerDown={onResizePointerDown}
             onDoubleClick={onResizeDoubleClick}
           />
+
+          <div className={styles.brand} aria-hidden="true">
+            Versio
+          </div>
 
           <label className={styles.search} title="ライブラリを検索 (⌘K)">
             <span className={styles.iconSlot}>
@@ -280,9 +285,7 @@ export function AppSidebar({
             </div>
           ) : null}
         </aside>
-        {autoMode ? <div className={styles.fullBridge} aria-hidden="true" /> : null}
       </div>
-      {autoMode ? <div className={styles.peekBridge} aria-hidden="true" /> : null}
     </div>
   );
 }
