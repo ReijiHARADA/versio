@@ -6,25 +6,19 @@
   --sidebar-expanded-w: 220px;
   --sidebar-icon-box: 32px;
   --sidebar-motion: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  /* Full-open hit strip just outside the collapsed rail. */
-  --sidebar-hover-bridge: 14px;
-  /* Further-right approach zone → same expand motion, paused mid-way. */
-  --sidebar-peek-bridge: 40px;
-  /* 0–1 progress along the normal expand (peek uses a mid value). */
-  --sidebar-peek-t: 0.42;
   /* Shared content inset. Chevron hangs into this pad so icons share one left edge. */
   --sidebar-pad-x: 8px;
   --sidebar-chevron: 14px;
 }
 
-/* Animate expand progress as one continuous motion (peek = mid-point). */
+/* Animate expand progress as one continuous motion. */
 @property --sidebar-expand-t {
   syntax: "<number>";
   inherits: true;
   initial-value: 0;
 }
 
-/* Outer flex item: owns peek hit zone without counting as shell :hover. */
+/* Outer flex item. */
 .rail {
   position: relative;
   flex-shrink: 0;
@@ -32,7 +26,7 @@
   z-index: 2;
 }
 
-/* Width owner for collapsed / peek / expanded. */
+/* Width owner for collapsed / expanded. */
 .shell {
   --sidebar-expand-t: 0;
   position: relative;
@@ -53,56 +47,21 @@
   display: flex;
   flex-direction: column;
   gap: calc(2px + 2px * var(--sidebar-expand-t));
-  /* Grow left pad with expand so depth-0 chevrons sit on the parent row (not clipped). */
+  /* Keep both sides aligned as depth-0 chevrons gain room while expanding. */
   /* Top pad is 0 so the search can occupy the same vertical band as the page header. */
-  padding: 0 var(--sidebar-pad-x) var(--spacing-md);
-  padding-left: calc(
+  --sidebar-content-pad: calc(
     var(--sidebar-pad-x) +
       (var(--sidebar-chevron) - var(--sidebar-pad-x)) * var(--sidebar-expand-t)
   );
+  padding: 0 var(--sidebar-content-pad) var(--spacing-md);
   background-color: var(--color-bg-secondary);
-  border-right: 1px solid var(--color-border-light);
   overflow: visible;
   box-sizing: border-box;
-  transition: padding-left var(--sidebar-motion);
+  transition: padding var(--sidebar-motion);
 }
 
-/*
- * Hit strips are anchored to the collapsed edge so widening the shell
- * does not slide them out from under the cursor. z-index stays under
- * .sidebar so they only receive events where they extend past the rail.
- */
-.fullBridge,
-.peekBridge {
-  position: absolute;
-  top: 0;
-  z-index: 1;
-  height: 100%;
-}
-
-.fullBridge {
-  left: var(--sidebar-collapsed-w);
-  width: var(--sidebar-hover-bridge);
-}
-
-.peekBridge {
-  left: calc(var(--sidebar-collapsed-w) + var(--sidebar-hover-bridge));
-  width: var(--sidebar-peek-bridge);
-}
-
-/*
- * Outer zone: continue the same expand motion to ~42% (not a separate micro-open).
- * Full-open selectors below win when the cursor reaches the rail / near bridge.
- */
-.rail:has(.peekBridge:hover)
-  .sidebarAuto:not(:has(.sidebar:hover)):not(:has(.fullBridge:hover)):not(
-    :has([data-workspace-editing])
-  ):not(.sidebarDropReady):not(.sidebarResizing) {
-  --sidebar-expand-t: var(--sidebar-peek-t);
-}
-
-/* Auto: sidebar / near bridge / rename / drop expands fully */
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])),
+/* Auto: sidebar hover / rename / drop expands fully */
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])),
 .sidebarExpanded,
 .sidebarDropReady,
 .sidebarResizing {
@@ -118,38 +77,20 @@
   top: 0;
   right: 0;
   z-index: 6;
-  width: 6px;
+  /* Fully inside the sidebar: the raised main surface would cover any overhang. */
+  width: 10px;
   height: 100%;
-  translate: 50% 0;
   cursor: col-resize;
   touch-action: none;
   pointer-events: none;
 }
 
-.resizeHandle::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 2px;
-  translate: -50% 0;
-  border-radius: 1px;
-  background: transparent;
-  transition: background-color var(--transition-fast);
-}
-
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .resizeHandle,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .resizeHandle,
 .sidebarExpanded .resizeHandle,
 .sidebarDropReady .resizeHandle,
 .sidebarResizing .resizeHandle,
 .sidebar:has([data-workspace-editing]) .resizeHandle {
   pointer-events: auto;
-}
-
-.resizeHandle:hover::after,
-.sidebarResizing .resizeHandle::after {
-  background-color: var(--color-accent);
 }
 
 /* Collapsed mode ignores hover; drop + rename still open via rules above */
@@ -160,8 +101,9 @@
 .label,
 .itemLabel,
 .searchInput,
-.badge {
-  /* Follows --sidebar-expand-t so peek is mid-flight of the same fade/clip. */
+.badge,
+.brand {
+  /* Follows --sidebar-expand-t so labels fade/clip with the width. */
   opacity: var(--sidebar-expand-t);
   max-width: calc(160px * var(--sidebar-expand-t));
   white-space: nowrap;
@@ -173,10 +115,11 @@
   pointer-events: none;
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .label,
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .itemLabel,
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .searchInput,
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .badge,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .label,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .itemLabel,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .searchInput,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .badge,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .brand,
 .sidebarExpanded .label,
 .sidebarResizing .label,
 .sidebarExpanded .itemLabel,
@@ -185,19 +128,22 @@
 .sidebarResizing .searchInput,
 .sidebarExpanded .badge,
 .sidebarResizing .badge,
+.sidebarResizing .brand,
 .sidebarDropReady .label,
 .sidebarDropReady .itemLabel,
 .sidebarDropReady .searchInput,
 .sidebarDropReady .badge,
+.sidebarDropReady .brand,
 .sidebar:has([data-workspace-editing]) .label,
 .sidebar:has([data-workspace-editing]) .itemLabel,
 .sidebar:has([data-workspace-editing]) .searchInput,
-.sidebar:has([data-workspace-editing]) .badge {
+.sidebar:has([data-workspace-editing]) .badge,
+.sidebar:has([data-workspace-editing]) .brand {
   pointer-events: auto;
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .itemLabel,
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .searchInput,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .itemLabel,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .searchInput,
 .sidebarExpanded .itemLabel,
 .sidebarResizing .itemLabel,
 .sidebarExpanded .searchInput,
@@ -215,7 +161,7 @@
  * Badge sits beside the label — don't let the label grow and shove the count
  * to the far right edge of the rail.
  */
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .item:has(.badge) .itemLabel,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .item:has(.badge) .itemLabel,
 .sidebarExpanded .item:has(.badge) .itemLabel,
 .sidebarResizing .item:has(.badge) .itemLabel,
 .sidebarDropReady .item:has(.badge) .itemLabel,
@@ -257,10 +203,31 @@
 /* ────────────────────────────────────────────────
    Search
 ──────────────────────────────────────────────── */
+.brand {
+  height: 0;
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  transition: height var(--sidebar-motion), margin var(--sidebar-motion);
+}
+
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .brand,
+.sidebarExpanded .brand,
+.sidebarResizing .brand,
+.sidebarDropReady .brand,
+.sidebar:has([data-workspace-editing]) .brand {
+  height: 24px;
+  margin-top: 22px;
+  margin-left: 8px;
+}
+
 .search {
   composes: surface from "../../styles/squircle.module.css";
   position: relative;
-  --sq-bg: var(--color-bg);
+  --sq-bg: var(--color-bg-secondary);
   border: 1px solid transparent;
   --sq-line: var(--color-border);
   --sq-bw: 1px;
@@ -321,7 +288,7 @@
   margin-top: var(--sidebar-icon-box);
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .section,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .section,
 .sidebarExpanded .section,
 .sidebarResizing .section,
 .sidebarDropReady .section,
@@ -329,7 +296,7 @@
   margin-top: var(--spacing-sm);
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .section + .section,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .section + .section,
 .sidebarExpanded .section + .section,
 .sidebarResizing .section + .section,
 .sidebarDropReady .section + .section,
@@ -354,7 +321,7 @@
   pointer-events: none;
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .sectionTitle,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .sectionTitle,
 .sidebarExpanded .sectionTitle,
 .sidebarResizing .sectionTitle,
 .sidebarDropReady .sectionTitle,
@@ -397,7 +364,7 @@
   pointer-events: none;
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .empty,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .empty,
 .sidebarExpanded .empty,
 .sidebarResizing .empty,
 .sidebarDropReady .empty,
@@ -481,7 +448,7 @@
   transition: opacity var(--sidebar-motion);
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .projectMenuButton,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .projectMenuButton,
 .sidebarExpanded .projectMenuButton,
 .sidebarResizing .projectMenuButton,
 .sidebarDropReady .projectMenuButton,
@@ -565,7 +532,7 @@
   text-align: center;
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .badge,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .badge,
 .sidebarExpanded .badge,
 .sidebarResizing .badge,
 .sidebarDropReady .badge,
@@ -593,7 +560,7 @@
   transition: gap var(--sidebar-motion);
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .scroll,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .scroll,
 .sidebarExpanded .scroll,
 .sidebarResizing .scroll,
 .sidebarDropReady .scroll,
@@ -608,7 +575,7 @@
   transition: padding-top var(--sidebar-motion);
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .footer,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .footer,
 .sidebarExpanded .footer,
 .sidebarResizing .footer,
 .sidebarDropReady .footer,
@@ -682,7 +649,7 @@
   color: var(--color-selection-fg);
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .chevron,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .chevron,
 .sidebarExpanded .chevron,
 .sidebarResizing .chevron,
 .sidebarDropReady .chevron,
@@ -690,7 +657,7 @@
   pointer-events: auto;
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .treeRow,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .treeRow,
 .sidebarExpanded .treeRow,
 .sidebarResizing .treeRow,
 .sidebarDropReady .treeRow,
@@ -703,7 +670,7 @@
   min-width: 0;
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .treeLabel,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .treeLabel,
 .sidebarExpanded .treeLabel,
 .sidebarResizing .treeLabel,
 .sidebarDropReady .treeLabel,
@@ -723,7 +690,7 @@
     color var(--transition-fast);
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .treePaper,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .treePaper,
 .sidebarExpanded .treePaper,
 .sidebarResizing .treePaper,
 .sidebarDropReady .treePaper,
@@ -813,7 +780,7 @@
 }
 
 
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .treeNested,
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .treeNested,
 .sidebarExpanded .treeNested,
 .sidebarResizing .treeNested,
 .sidebarDropReady .treeNested,
