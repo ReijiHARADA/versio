@@ -29,9 +29,9 @@ const setOf = (texts: string[]) => new Set(texts.flatMap(ngrams));
 /** Letters and digits only, without accents: LaTeX gold splits `Δ_0` / `\\mu m` / `Garc\\'{\\i}a` where the PDF prints `Δ0` / `μm` / `García`. */
 const squeeze = (s: string) => s.normalize("NFKD").replace(/\p{M}/gu, "").replace(/ı/g, "i").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
 const charGrams = (s: string, n = 6) => Array.from({ length: Math.max(0, s.length - n + 1) }, (_, i) => s.slice(i, i + n));
-/** Share of `needle`'s letter 6-grams present in `hay`, ignoring spacing and punctuation. */
-export function squeezedContainment(needle: string, hay: string): number {
-  const g = [...new Set(charGrams(squeeze(needle)))];
+/** Share of `needle`'s letter n-grams (default 6) present in `hay`, ignoring spacing and punctuation. */
+export function squeezedContainment(needle: string, hay: string, n = 6): number {
+  const g = [...new Set(charGrams(squeeze(needle), n))];
   if (g.length === 0) return 0;
   const h = squeeze(hay);
   return g.filter((x) => h.includes(x)).length / g.length;
@@ -110,6 +110,12 @@ export function scoreElements(gold: ElementGold, blocks: ScoredBlock[], paper: S
     paragraphs: plainAligned.paragraphs.map((p, i) => verdictRank[normalizedAligned.paragraphs[i].verdict] > verdictRank[p.verdict] ? normalizedAligned.paragraphs[i] : p),
     blocks: plainAligned.blocks,
   };
+  // Gold splits small caps and subscripts the PDF prints joined (`R E S EE` / `RESEE`, `x i` / `xi`):
+  // a one-block paragraph whose letters are all there is intact. 20-grams keep lost sentences visible.
+  // shortcut: this also hides a kept line-end hyphen (`plau-sible`), which no paragraph metric tracks now.
+  const blockText = new Map(paragraphs.map((b) => [b.id, b.text]));
+  const isIntact = (p: (typeof aligned.paragraphs)[number]) =>
+    p.verdict === "intact" || (p.verdict === "partial" && squeezedContainment(scorable[p.index], blockText.get(p.blocks[0].id) ?? "", 20) >= 0.85);
 
   const refBlocks = byType("reference").map((b) => setOf([b.text]));
   return {
@@ -119,7 +125,7 @@ export function scoreElements(gold: ElementGold, blocks: ScoredBlock[], paper: S
     venue: ratio([gold.venue].filter((v): v is string => !!v && isPrinted(v)), (v) => !!paper.publication && (similarity(v, paper.publication) >= 0.8 || containment(v, setOf([paper.publication])) >= 0.8)),
     headings: ratio(goldHeadings, headingHit),
     headingPrecision: { predicted: headingBlocks.length, correct: headingBlocks.filter((b) => goldHeadings.some((h) => similarity(b, h) >= 0.85)).length },
-    paragraphs: { gold: aligned.paragraphs.length, found: aligned.paragraphs.filter((p) => p.verdict === "intact").length },
+    paragraphs: { gold: aligned.paragraphs.length, found: aligned.paragraphs.filter(isIntact).length },
     footnotes: ratio(gold.footnotes.filter((f) => tokens(f).length >= 4 && isPrinted(f)), (f) =>
       containment(f, footSet) >= 0.8 || (DECLARATION_NOTE.test(f) && containment(f, paraSet) >= 0.8)),
     figures: ratio(gold.figures.filter((f) => f.caption && isPrinted(f.caption)), (f) => !!inOne(f.caption.slice(0, 200), figureBlocks)),
