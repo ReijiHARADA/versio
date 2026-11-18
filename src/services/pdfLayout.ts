@@ -3370,6 +3370,29 @@ function groupLinesIntoBlocks(
       line.y - current[current.length - 1].y < baseFont * 2.2 &&
       Math.abs(line.fontSize - current[current.length - 1].fontSize) < 0.8 &&
       /^[A-Z0-9][A-Z0-9\s–—-]+$/.test(layoutPlain(line.text));
+    // A wrapped sentence-case heading (`3.2 Advancement of earning growth` /
+    // `forecasting through …`) scores its later lines as paragraph. Keep them
+    // when they share the heading's display size, which body text never has.
+    const headingWrapContinue =
+      currentRole === "heading" &&
+      forcedRole === "paragraph" &&
+      current.length <= 3 &&
+      line.page === current[0].page &&
+      line.column === current[0].column &&
+      line.fontSize >= baseFont * 1.1 &&
+      Math.abs(line.fontSize - current[current.length - 1].fontSize) < 0.3 &&
+      Math.abs(line.x - current[0].x) <= baseFont * 2 &&
+      line.y - current[current.length - 1].y < line.fontSize * 1.8 &&
+      !/[.!?:]\s*$/.test(current[current.length - 1].text.trim()) &&
+      !/^\d+(?:\.\d+)*\.?\s/.test(line.text.trim()) &&
+      // Same-size run-in prose (bold heading at body size) never drops to a
+      // smaller size right after; a wrapped display heading does.
+      (() => {
+        let k = sourceIndex + 1;
+        while (k < lines.length && k <= sourceIndex + 3 && lines[k].page === line.page &&
+          lines[k].column === line.column && Math.abs(lines[k].fontSize - line.fontSize) < 0.3) k += 1;
+        return lines[k]?.page === line.page && lines[k].fontSize <= line.fontSize - 0.6;
+      })();
 
 
     const repeatedGridBoundary =
@@ -3386,7 +3409,7 @@ function groupLinesIntoBlocks(
       continue;
     }
 
-    if (mergeable || affiliationContinue || captionContinue || grantContinue || keywordContinuation || titleContinue || footnoteContinue || headingContinue) {
+    if (mergeable || affiliationContinue || captionContinue || grantContinue || keywordContinuation || titleContinue || footnoteContinue || headingContinue || headingWrapContinue) {
       current.push(line);
       continue;
     }
