@@ -2141,7 +2141,8 @@ function isHeadingLine(line: LayoutLine, baseFont: number): boolean {
 }
 
 function looksLikeEmail(text: string): boolean {
-  return /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(text);
+  // `{a, b}@lab.edu` groups several addresses under one domain.
+  return /(?:\{[^{}]*\}|[A-Z0-9._%+-]+)@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(text);
 }
 
 /**
@@ -2153,8 +2154,8 @@ function looksLikeEmail(text: string): boolean {
  */
 function looksLikeContactMetadata(text: string): boolean {
   if (!looksLikeEmail(text)) return false;
-  const withoutEmails = text.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, " ");
-  return /^[\s\d,*†‡§∗·,;:()[\]{}]+$/u.test(withoutEmails.trim());
+  const withoutEmails = text.replace(/(?:\{[^{}]*\}|[A-Z0-9._%+-]+)@[A-Z0-9.-]+\.[A-Z]{2,}/gi, " ");
+  return /^[\s\d,*†‡§∗·,;:()[\]{}]*$/u.test(withoutEmails.trim());
 }
 
 function looksLikeAffiliation(text: string): boolean {
@@ -6104,6 +6105,41 @@ function joinAccentSplitLines(lines: LayoutLine[]): LayoutLine[] {
 }
 
 /**
+ * A centered masthead (bylines, affiliations) is cut at the column gutter even
+ * when no gap is printed there (`Xinnuo Xu` | `1 Ziedune Degutyte`). On page 1
+ * above Abstract/Introduction, rejoin same-row left/right halves that touch.
+ * (A byline like `1 Ziedune Degutyte` passes isBodyStartHeading, so it is not used here.)
+ */
+/** Top of page 1's Abstract/Introduction heading, or Infinity when there is none. */
+function page1BodyStart(lines: LayoutLine[]): number {
+  return Math.min(...lines.filter((line) => line.page === 1 && /^(?:\d+\.?\s*)?(?:abstract|introduction)\b/i.test(line.text.trim())).map((line) => line.y));
+}
+
+function joinMastheadGutterSplitLines(lines: LayoutLine[]): LayoutLine[] {
+  const bodyStart = page1BodyStart(lines);
+  if (!Number.isFinite(bodyStart)) return lines;
+  const out = [...lines];
+  for (let i = 0; i < out.length; i += 1) {
+    const left = out[i]!;
+    if (left.page !== 1 || left.column !== "left" || left.y >= bodyStart) continue;
+    const rightIndex = out.findIndex((line) => {
+      if (line.page !== 1 || line.column !== "right" || line.y >= bodyStart) return false;
+      const gap = line.x - (left.x + left.width);
+      // Superscript markers shift a line's y, so allow about half a line.
+      // A half that already mixes in an affiliation (IEEE `ABBAS…Faculty of…`) would swallow the other half's names.
+      return Math.abs(line.y - left.y) <= Math.max(2, left.fontSize * 0.55) && gap >= -1 && gap <= left.fontSize * 2 &&
+        looksLikeAffiliation(left.text) === looksLikeAffiliation(line.text);
+    });
+    if (rightIndex < 0) continue;
+    const right = out[rightIndex]!;
+    out[i] = itemsToLine([...left.items, ...right.items], "spanning", left.page, left.pageHeight, left.pageWidth);
+    out.splice(rightIndex, 1);
+    if (rightIndex < i) i -= 1;
+  }
+  return out;
+}
+
+/**
  * Bylines often drop the comma where an affiliation superscript sits
  * (`Ganesh Mundhe²Mayur Kshirsagar`), and the superscripts land on their own
  * line just above. Put the comma back where a marker fills the gap between two
@@ -6112,6 +6148,7 @@ function joinAccentSplitLines(lines: LayoutLine[]): LayoutLine[] {
 function commaAtSuperscriptMarkers(lines: LayoutLine[]): LayoutLine[] {
   const MARKER = /^[\d\s,*\u2217\u2020\u2021\u00a7\u00b6]+$/u;
   const markerLines = lines.filter((line) => MARKER.test(line.text.trim()));
+  const bodyStart = page1BodyStart(lines);
   return lines.map((line) => {
     if (markerLines.includes(line) || line.items.length < 2) return line;
     const wordFont = Math.max(...line.items.map((item) => item.fontSize));
@@ -6128,6 +6165,14 @@ function commaAtSuperscriptMarkers(lines: LayoutLine[]): LayoutLine[] {
     let changed = false;
     const patched = items.map((item, index) => {
       const next = items.slice(index + 1).find((other) => !markers.includes(other));
+      // A byline row can end on a marked name (`Jay Rainey¹`); the next row starts another name.
+      if (!next && line.page === 1 && line.y < bodyStart && /\p{L}$/u.test(item.text.trim()) &&
+          lines.some((below) => below.page === 1 && below.y > line.y && below.y - line.y <= line.fontSize * 2 &&
+            /^\p{Lu}/u.test(below.text.trim()) && /\p{L}[\d*\u2217\u2020\u2021]/u.test(below.text)) &&
+          markers.some((m) => m.x >= item.x + item.width - 1.5 && m.x <= item.x + item.width + line.fontSize)) {
+        changed = true;
+        return { ...item, text: `${item.text.trimEnd()},` };
+      }
       if (!next || !/\p{L}$/u.test(item.text.trim()) || !/^\p{Lu}/u.test(next.text.trim()) || /^and\b/i.test(next.text.trim())) return item;
       const end = item.x + item.width;
       // An in-line marker must hug the name it follows; one at the next item is that item's prefix (`¹Department of ²Faculty`).
@@ -6151,7 +6196,7 @@ export function reconstructDocument(pages: ExtractedPage[]): {
   const lines: LayoutLine[] = [];
 
   for (let i = 0; i < pages.length; i++) {
-    lines.push(...commaAtSuperscriptMarkers(joinAccentSplitLines(buildPageLines(pages[i], layouts[i], patterns))));
+    lines.push(...commaAtSuperscriptMarkers(joinMastheadGutterSplitLines(joinAccentSplitLines(buildPageLines(pages[i], layouts[i], patterns)))));
   }
 
   const bodyFont = median(
