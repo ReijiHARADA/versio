@@ -25,6 +25,7 @@
 - 生成物: `src-tauri/target/release/bundle/macos/Versio.app`
 - アプリアイコンは Icon Composer 形式 `src-tauri/icons/AppIcon.icon`（ライト/ダーク）。`npm run build:icon` で `src-tauri/icons/Assets.car` にコンパイルしてコミットし、bundler はその `.car` を同梱する（bundler 内の actool は ibtoold デーモンが壊れて失敗するため使わない）。`icon.icns` はフォールバック。元画像は `design/icon/staple_icon.py`（`-- out.png 1024 384 light|dark [layer]`）。
 - 日常使いの Versio は `npm run install:app`（main をビルドして `/Applications/Versio.app` に置く）の1本に統一する。worktree の `.app` は確認用の使い捨て。
+- PR をマージしたら `npm run prune:worktrees` でマージ済み worktree とローカルブランチを消す（未コミット変更あり・1時間以内に触った worktree は残す）。廃止したエンジンのモデル・venv・HF キャッシュは、コード削除と同じ PR の作業中にローカルからも消す。ベンチ／監査の出力先は作ったときに `.gitignore` へ入れる。
 - Xcode は `/Applications/Xcode-beta.app` を使用。ビルド時は `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer` を設定すること。
 - phase 時間は `scripts/tauri-build.sh` と `.build-timings` / [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。
 - 本番 CSP は有効。WKWebView 向けに `script-src` は nonce のみにしない（`'self' 'unsafe-inline' 'wasm-unsafe-eval'`）。変更時は `.app` で白画面にならないか確認する。
