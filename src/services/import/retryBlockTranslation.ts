@@ -17,6 +17,7 @@ import {
 import { isTranslationQualityError } from "../translation/retryPolicy";
 import type { PaperBlock } from "../../types/paper";
 import { resolveImportConfig } from "./helpers";
+import { translationInputForBlock } from "./policy";
 import type { ImportConfig } from "./types";
 
 export async function retryBlockTranslation(
@@ -26,10 +27,7 @@ export async function retryBlockTranslation(
     onBlockUpdated?: (block: PaperBlock) => void;
   } = {}
 ): Promise<PaperBlock> {
-  const source =
-    block.type === "figure" || block.type === "table"
-      ? String(block.metadata.captionOriginal ?? block.original ?? "")
-      : block.original ?? "";
+  const source = translationInputForBlock(block);
   if (!source.trim()) return block;
 
   const saved =

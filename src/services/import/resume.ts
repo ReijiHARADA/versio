@@ -29,7 +29,7 @@ import {
   resolveImportConfig,
 } from "./helpers";
 import { ImportCancelledError, throwIfImportAborted } from "./cancellation";
-import { isRetryableTranslationFailure, referenceSectionIds, shouldTranslateBlock, shouldTranslateSection } from "./policy";
+import { isRetryableTranslationFailure, referenceSectionIds, shouldTranslateBlock, shouldTranslateSection, translationInputForBlock } from "./policy";
 import { activeImportPaperIds, resumeAbortControllers, resumingPapers } from "./session";
 import type { ImportCallbacks, ImportConfig } from "./types";
 
@@ -262,10 +262,7 @@ export async function resumeIncompleteTranslation(
       enqueue(`section-${section.id}`, section.originalTitle, TranslationPriority.HIGH);
     }
     for (const block of pendingBlocks) {
-      const translationSource =
-        block.type === "figure" || block.type === "table"
-          ? String(block.metadata.captionOriginal ?? block.original)
-          : block.original!;
+      const translationSource = translationInputForBlock(block);
       enqueue(block.id, translationSource, TranslationPriority.MEDIUM);
     }
 

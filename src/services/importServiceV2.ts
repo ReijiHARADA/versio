@@ -51,6 +51,7 @@ import { finalizedTranslationStatus } from "./paperStatus";
 import {
   isRetryableTranslationFailure,
   referenceSectionIds,
+  translationInputForBlock,
   shouldTranslateBlock,
   shouldTranslateSection,
 } from "./import/policy";
@@ -68,6 +69,7 @@ import { createPresentationDemoProjection } from "./presentationDemo";
 
 export {
   isRetryableTranslationFailure,
+  translationInputForBlock,
   shouldTranslateBlock,
 } from "./import/policy";
 
@@ -643,10 +645,7 @@ export async function importPDFV2(
         continue;
       }
 
-      const translationSource =
-        block.type === "figure" || block.type === "table"
-          ? String(block.metadata.captionOriginal ?? block.original)
-          : block.original;
+      const translationSource = translationInputForBlock(block);
       const blockHash = await computeTextHash(translationSource);
       const cachedBlock = cfg.useCache
         ? usableCachedJa(

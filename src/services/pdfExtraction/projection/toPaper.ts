@@ -26,6 +26,7 @@ import {
   pickPublication,
   isReferencesHeading,
   isExpectedNonProseParagraph,
+  shouldTranslateCaption,
   shouldTranslateParagraph,
   unsafeParagraphStructureReason,
 } from "../../translation/quality";
@@ -4352,7 +4353,7 @@ function projectCaptionNode(context: BodyNodeContext, state: BodyProjectionState
             ? [text, ...nativeRows.map((row) => row.map((cell) => cell.text).join(" "))].join(" ")
             : text,
           translated: null,
-          translationStatus: rotationTableCaption || nativeRows?.length ? "skipped" : "pending",
+          translationStatus: rotationTableCaption || !shouldTranslateCaption(text) ? "skipped" : "pending",
           parentBlockId: null,
           metadata: {
             imageUrl: "",
