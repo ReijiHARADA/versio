@@ -101,7 +101,12 @@ def profile(n=12, m=8):
         out.append((-W / 2 + c + (W - 2 * c) * k / m, -h))
     return out  # (side, normal) offsets
 
-CHISEL = 0.9  # sheared tip: cut face leans back ~42deg through the thickness
+# sheared point seen from above (X-ray photo): two angled flanks meeting off-centre, slightly blunt nose
+P0, K_IN, K_OUT, NOSE = 0.2 * W, 1.1, 1.6, 0.02
+
+def tip_offset(s):
+    d = s - P0
+    return max(0.0, abs(d) - NOSE) * (K_OUT if d > 0 else K_IN)
 LIFT = 0.42  # bend crest height above the plate: thin paper lets the bend stand proud of the tip
 
 def leg_path():
@@ -117,7 +122,7 @@ def leg_path():
     for k in range(1, 25):
         th = sweep * k / 24
         path.append((cx + R * math.cos(th), cz + R * math.sin(th)))
-    xc = TIP + T * CHISEL + 0.02  # run stops before the chisel face; last point is projected onto it
+    xc = TIP + max(tip_offset(-W / 2), tip_offset(W / 2)) + 0.03  # run stops before the chisel face; last point is projected onto it
     for k in range(1, 121):
         t = k / 120
         x = px + (xc - px) * t
@@ -151,7 +156,7 @@ def build_leg(name, seed):
             s, h = s * math.cos(tw) - h * math.sin(tw), s * math.sin(tw) + h * math.cos(tw)
             p = Vector((px, dy, pz + dz)) + side * s + nrm * h
             if i == len(path) - 1:
-                p.x = TIP + (h + T / 2) * CHISEL  # chisel face: inner face reaches furthest
+                p.x = TIP + tip_offset(s)
             ring.append(bm.verts.new(p))
         rings.append(ring)
     faces = []
