@@ -312,7 +312,6 @@ function rejoinCaptionedTableGrids(blocks: PaperBlock[]): PaperBlock[] {
         .join(" "),
       pageEnd: Math.max(caption.pageEnd, ...grids.map((block) => block.pageEnd)),
       boundingBoxes: [...caption.boundingBoxes, ...grids.flatMap((block) => block.boundingBoxes)],
-      translationStatus: "skipped",
       metadata: {
         ...caption.metadata,
         role: "table",

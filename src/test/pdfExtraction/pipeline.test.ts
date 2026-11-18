@@ -99,6 +99,8 @@ describe("canonical extraction pipeline", () => {
       /^TABLE 1 Search strategy\./.test(String(block.metadata.captionOriginal ?? ""))
     );
     expect(table?.type).toBe("table");
+    expect(table?.translationStatus).toBe("pending");
+    expect(table?.metadata.captionOriginal).toBe("TABLE 1 Search strategy.");
     expect(table?.metadata.tableRows?.flat().some((cell) => cell.text === "Search")).toBe(true);
     expect(result.blocks.filter((block) =>
       /^TABLE 1 Search strategy\./.test(String(block.metadata.captionOriginal ?? ""))
