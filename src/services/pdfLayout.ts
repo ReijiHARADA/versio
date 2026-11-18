@@ -2141,7 +2141,8 @@ function isHeadingLine(line: LayoutLine, baseFont: number): boolean {
 }
 
 function looksLikeEmail(text: string): boolean {
-  return /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(text);
+  // `{a, b}@lab.edu` groups several addresses under one domain.
+  return /(?:\{[^{}]*\}|[A-Z0-9._%+-]+)@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(text);
 }
 
 /**
@@ -2153,7 +2154,7 @@ function looksLikeEmail(text: string): boolean {
  */
 function looksLikeContactMetadata(text: string): boolean {
   if (!looksLikeEmail(text)) return false;
-  const withoutEmails = text.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, " ");
+  const withoutEmails = text.replace(/(?:\{[^{}]*\}|[A-Z0-9._%+-]+)@[A-Z0-9.-]+\.[A-Z]{2,}/gi, " ");
   return /^[\s\d,*†‡§∗·,;:()[\]{}]+$/u.test(withoutEmails.trim());
 }
 
