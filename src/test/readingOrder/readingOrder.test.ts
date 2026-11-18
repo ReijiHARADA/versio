@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { reconstructDocument, type LayoutBlock, hasSourceTextIntegrity, isEquationLine, isFigureCaption, isTableCaption, composeSpacingAccents, looksLikeAuthorList } from "../../services/pdfLayout";
 import type { ExtractedPage } from "../../services/pdfService";
-import { FIXTURES } from "./builders";
+import { basicTwoColumnPages, FIXTURES } from "./builders";
 
 function tokensInOrder(haystack: string, tokens: string[]): void {
   let from = 0;
@@ -125,6 +125,17 @@ describe("byline superscripts in the same line", () => {
     expect(lineText([it8("Zhenhua Liu", 81, 120, 66, 12), it8("1", 147, 115.6, 4, 8), it8("Tong Zhu", 158, 120, 49, 12), it8("1", 207, 115.6, 4, 8)]))
       .toMatch(/Zhenhua Liu,\s*1?\s*Tong Zhu/);
     expect(lineText([it8("Accuracy F", 81, 120, 60, 12), it8("1", 141, 124, 4, 8), it8("MCC", 158, 120, 30, 12)])).not.toMatch(/F,/);
+  });
+});
+
+describe("bold caption label before a full-width caption", () => {
+  it("stays on the caption's line instead of the left column", () => {
+    const [page] = basicTwoColumnPages();
+    const font = page.textItems[1].fontSize;
+    const at = (text: string, x: number, width: number, fontName: string) => ({ text, x, y: 700, width, height: font, fontSize: font, fontName, page: 1 });
+    page.textItems.push(at("Figure 6.", 51, 42, "bold"), at("Plots using integrated-intensity ratios across the whole page width here.", 97, 460, page.textItems[1].fontName));
+    const { lines } = reconstructDocument([page]);
+    expect(lines.find((l) => l.text.includes("Plots using"))?.text).toMatch(/^Figure 6\. Plots using/);
   });
 });
 
