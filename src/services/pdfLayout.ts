@@ -5030,6 +5030,8 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
     const bodyFont = median(block.lines.map((line) => line.fontSize));
     const labelLines = block.lines.filter((line) =>
       line.x > pageWidth * 0.45 && line.text.trim().length <= 80 &&
+      // A run of lowercase words is wrapped prose (small caps lower its average size), not a label.
+      (line.text.match(/\b[a-z]{3,}\b/g) ?? []).length < 4 &&
       line.text.trim().split(/\s+/).filter(Boolean).length <= 12 &&
       line.fontSize <= bodyFont * 0.9 &&
       !/[.!?。！？:;]/.test(line.text.trim())
