@@ -8,6 +8,8 @@ OUT = argv[0] if argv else "/tmp/staple_icon.png"
 RES = int(argv[1]) if len(argv) > 1 else 1024
 SAMPLES = int(argv[2]) if len(argv) > 2 else 256
 DARK = len(argv) > 3 and argv[3] == "dark"  # macOS dark-appearance variant
+# "layer": full-bleed staple + shadow on transparency, for the Icon Composer .icon (system draws fill + mask)
+LAYER = len(argv) > 4 and argv[4] == "layer"
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scn = bpy.context.scene
@@ -29,14 +31,15 @@ def mat_steel():
     b.inputs["Anisotropic"].default_value = 0.3
     # fine drawn-wire streaks along the wire (local X of each leg)
     tc = nt.nodes.new("ShaderNodeTexCoord")
-    mp = nt.nodes.new("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (0.4, 60, 60)
+    mp = nt.nodes.new("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (0.4, 72, 1)  # UV: u = length, v = around the ~1.2-unit perimeter
     nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 6; nz.inputs["Detail"].default_value = 6
-    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"]); nt.links.new(mp.outputs["Vector"], nz.inputs["Vector"])
+    nt.links.new(tc.outputs["UV"], mp.inputs["Vector"])  # follows the wire through the bend (no seam in finish); nt.links.new(mp.outputs["Vector"], nz.inputs["Vector"])
     rr = nt.nodes.new("ShaderNodeMapRange"); rr.inputs["To Min"].default_value = 0.36; rr.inputs["To Max"].default_value = 0.50
     nt.links.new(nz.outputs["Fac"], rr.inputs["Value"]); nt.links.new(rr.outputs["Result"], b.inputs["Roughness"])
     # mottled zinc coating: fine blotches between two greys
     mo = nt.nodes.new("ShaderNodeTexNoise"); mo.inputs["Scale"].default_value = 40; mo.inputs["Detail"].default_value = 10
-    nt.links.new(tc.outputs["Object"], mo.inputs["Vector"])
+    mm = nt.nodes.new("ShaderNodeMapping"); mm.inputs["Scale"].default_value = (1, 1.2, 1)
+    nt.links.new(tc.outputs["UV"], mm.inputs["Vector"]); nt.links.new(mm.outputs["Vector"], mo.inputs["Vector"])
     cr = nt.nodes.new("ShaderNodeValToRGB")
     cr.color_ramp.elements[0].position = 0.35; cr.color_ramp.elements[0].color = (0.40, 0.42, 0.45, 1)
     cr.color_ramp.elements[1].position = 0.7; cr.color_ramp.elements[1].color = (0.56, 0.58, 0.61, 1)
@@ -81,29 +84,19 @@ W, T, CR = 0.38, 0.27, 0.10    # wire width (in-plane), thickness, profile corne
 R = 0.75 * T                   # tight clinch: inner bend radius ~ 1/4 of thickness
 X, TIP = 3.75, 0.24            # bend x, tip x (gap = 2*TIP)
 
-def profile(n=12, m=8):
-    # staple wire section (from SEM): flat outer/inner faces, barrel-rounded sides, W:T ~ 1.4
-    c = 0.14 * W                      # how far the side bulges past the flat faces' ends
-    h = T / 2
-    ra = (h * h + c * c) / (2 * c)    # side arc radius from its sagitta
-    phi = math.asin(h / ra)
-    ax = W / 2 - ra                   # right arc centre (left is mirrored)
+def profile(n=64, e=3.0):
+    # staple wire section (SEM): flat-ish outer/inner faces flowing into rounded sides, W:T ~ 1.4.
+    # Superellipse keeps curvature continuous, so there is no shading seam where face meets side.
     out = []
-    for k in range(n + 1):            # right side, bottom -> top
-        a = -phi + 2 * phi * k / n
-        out.append((ax + ra * math.cos(a), ra * math.sin(a)))
-    for k in range(1, m):             # top (outer) face, right -> left
-        out.append((W / 2 - c - (W - 2 * c) * k / m, h))
-    for k in range(n + 1):            # left side, top -> bottom
-        a = math.pi - phi + 2 * phi * k / n
-        out.append((-ax + ra * math.cos(a), ra * math.sin(a)))
-    for k in range(1, m):             # bottom (inner) face, left -> right
-        out.append((-W / 2 + c + (W - 2 * c) * k / m, -h))
+    for k in range(n):
+        t = 2 * math.pi * k / n
+        c, si = math.cos(t), math.sin(t)
+        out.append((W / 2 * math.copysign(abs(c) ** (2 / e), c), T / 2 * math.copysign(abs(si) ** (2 / e), si)))
     return out  # (side, normal) offsets
 
 # sheared point seen from the side: two flanks through the thickness meet near the paper side,
 # long flank on top (faces the viewer), slightly blunt nose
-P0, K_IN, K_OUT, NOSE = -0.2 * T, 1.2, 1.7, 0.03 * T
+P0, K_IN, K_OUT, NOSE = -0.1 * T, 0.9, 1.0, 0.03 * T  # short point, ~0.6T long like the real tip
 LIFT = 0.42  # bend crest height above the plate: thin paper lets the bend stand proud of the tip
 
 
@@ -146,7 +139,7 @@ def build_leg(name, seed):
         tw = math.radians(wobble(L, seed, 0.9))           # slight twist from the clinch
         dy = wobble(L, seed + 3, 0.005)                   # lateral waviness
         dz = wobble(L, seed + 7, 0.006)                   # vertical waviness of the run
-        squash = math.exp(-((L - 1.4) / 0.35) ** 2) * 0.12  # anvil flattens the wire at the bend
+        squash = math.exp(-((L - 1.4) / 0.6) ** 2) * 0.06  # anvil flattens the wire at the bend
         sw, sh = 1 + squash + wobble(L, seed + 11, 0.012), 1 - squash
         for s, h in prof:
             s, h = s * sw, h * sh
@@ -193,7 +186,7 @@ legs.rotation_euler.z = math.radians(45)
 
 # --- camera / light / world ------------------------------------------------
 cam = bpy.data.objects.new("cam", bpy.data.cameras.new("cam")); scn.collection.objects.link(cam)
-cam.data.type = "ORTHO"; cam.data.ortho_scale = 10.24
+cam.data.type = "ORTHO"; cam.data.ortho_scale = 2 * A if LAYER else 10.24
 cam.location = (0, 0.0, 30); scn.camera = cam
 
 def area(name, loc, size, energy, color=(1, 1, 1)):
@@ -244,6 +237,7 @@ out = nt.nodes.new("CompositorNodeComposite")
 nt.links.new(rl.outputs["IndexOB"], idm.inputs["ID value"]); nt.links.new(idm.outputs["Alpha"], sa.inputs["Alpha"])
 nt.links.new(sa.outputs["Image"], ov.inputs[1]); nt.links.new(rl.outputs["Image"], ov.inputs[2])
 nt.links.new(ov.outputs["Image"], out.inputs["Image"])
+scn.use_nodes = not LAYER
 bpy.ops.file.pack_all()  # embed the HDRI so the .blend opens anywhere
 bpy.ops.wm.save_as_mainfile(filepath=OUT.rsplit(".", 1)[0] + ".blend")
 bpy.ops.render.render(write_still=True)
