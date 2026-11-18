@@ -102,6 +102,19 @@ describe("scoreElements", () => {
     expect(s.paragraphs).toEqual({ gold: 1, found: 1 });
   });
 
+  it("matches a paragraph whose gold splits small caps the PDF prints joined", () => {
+    const words = (caps: (a: string, b: string) => string) =>
+      `To verify the efficiency of ${caps("W", "iki")} visual information we present ${caps("R E S", "EE")} a generative conversational framework powered by ${caps("M", "aria")} real world visual experiences and compare it against several strong ${caps("Y TS", "eg")} baselines including four pretrained models and two similar multimodal dialogue systems on both automatic and human evaluations.`;
+    const goldText = words((a, b) => `${a} ${b}`);
+    const pdf = words((a, b) => `${a.replace(/ /g, "")}${b}`);
+    const gold = jatsElementGold(`<article><front><article-meta><abstract><p>${goldText}</p></abstract></article-meta></front></article>`, { id: "caps-x", license: "", sourceUrl: "" });
+    const paper = { title: null, authors: [], publication: null, doi: null };
+    expect(scoreElements(gold, [{ id: "p", type: "paragraph", text: pdf }], paper, `${goldText} ${pdf}`).paragraphs).toEqual({ gold: 1, found: 1 });
+    // Words actually lost from the block still count as not intact.
+    const lost = pdf.replace(/ and compare it.*evaluations/, "");
+    expect(scoreElements(gold, [{ id: "p", type: "paragraph", text: lost }], paper, `${goldText} ${pdf}`).paragraphs).toEqual({ gold: 1, found: 0 });
+  });
+
   it("does not make different prose sentences match", () => {
     const first = "The participants completed a series of tasks in a quiet room while their responses were recorded by the experimenter for later analysis of accuracy and speed.";
     const second = "Researchers inspected the archived instruments during a separate calibration session and documented every discrepancy before releasing the final report to the laboratory staff.";
