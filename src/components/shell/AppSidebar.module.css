@@ -772,12 +772,6 @@
   bottom: -2px;
 }
 
-/* Paper rows draw their guide inside the row, which is shifted by its
-   indent margin; pull the guide back to the shared column. */
-.treeNestedClip > .treePaper::before,
-.treeNestedClip > .treePaper:not(:last-child)::after {
-  left: calc(var(--tree-line-x, 9px) - var(--tree-indent, 0px) - 0.5px);
-}
 
 
 .sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .treeNested,
