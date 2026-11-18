@@ -53,12 +53,16 @@ PAPER, STEEL = mat_paper(), mat_steel()
 # --- paper squircle (macOS icon body: 824/1024 of canvas) ------------------
 A, N, THICK = 4.12, 5.0, 0.25
 bm = bmesh.new()
-# macOS masks app icons to a squircle; superellipse approximates that mask
+# macOS icon grid: 824/1024 body, corner radius 185.4px with continuous (smoothed) corners.
+# Straight edges + per-corner superellipse (n=3) spanning ~1.53r: curvature-continuous like Apple's shape.
+E, NC = 1.528 * 1.854, 3.0
 pts = []
-for i in range(512):
-    t = 2 * math.pi * i / 512
-    c, si = math.cos(t), math.sin(t)
-    pts.append((A * math.copysign(abs(c) ** (2 / N), c), A * math.copysign(abs(si) ** (2 / N), si)))
+for cx, cy, a0 in ((1, 1, 0), (-1, 1, 90), (-1, -1, 180), (1, -1, 270)):
+    ox, oy = cx * (A - E), cy * (A - E)
+    for k in range(65):
+        t = math.radians(a0 + 90 * k / 64)
+        c, si = math.cos(t), math.sin(t)
+        pts.append((ox + E * math.copysign(abs(c) ** (2 / NC), c), oy + E * math.copysign(abs(si) ** (2 / NC), si)))
 top = [bm.verts.new((x, y, 0)) for x, y in pts]
 f = bm.faces.new(top)
 ext = bmesh.ops.extrude_face_region(bm, geom=[f])
