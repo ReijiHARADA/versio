@@ -66,6 +66,7 @@
     "tauri:build": "bash scripts/tauri-build.sh clean",
     "tauri:build:fast": "bash scripts/tauri-build.sh fast",
     "install:app": "bash scripts/install-app.sh",
+    "prune:worktrees": "bash scripts/prune-worktrees.sh",
     "build:icon": "bash scripts/build-icon-car.sh",
     "tauri:build:clean": "bash scripts/tauri-build.sh clean",
     "verify:browser": "node scripts/verify-browser.mjs",

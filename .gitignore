@@ -81,7 +81,7 @@ audit-manual-review*.json
 demo-output/
 
 # Field-level gold corpus (local evaluation only)
-test-data/field-gold/
+test-data/field-gold
 tools/doc-structure-probe/.build/
 tools/grobid-parity/build/
 
@@ -90,4 +90,14 @@ tools/grobid-parity/build/
 src-tauri/binaries/
 
 # Element gold (arXiv / ACL PDFs and LaTeX-derived gold; local only)
-test-data/element-gold/
+test-data/element-gold
+
+# Local extraction audits / gold data (worktrees symlink these, so no trailing slash)
+test-data/extraction-audit
+test-data/paragraph-gold
+graphify-out/
+# Local LLM bench run outputs
+translation-server/scripts/local_llm_bench/log-*.txt
+translation-server/scripts/local_llm_bench/out-*.json
+translation-server/scripts/local_llm_bench/fixture.json
+translation-server/scripts/local_llm_bench/judge/
