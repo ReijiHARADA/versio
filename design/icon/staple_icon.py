@@ -25,7 +25,7 @@ def mat_steel():
     nt = m.node_tree; b = nt.nodes["Principled BSDF"]
     b.inputs["Base Color"].default_value = (0.50, 0.52, 0.55, 1)  # electro-galvanized (zinc-plated) steel: dull grey, faint blue
     b.inputs["Metallic"].default_value = 1.0
-    b.inputs["Anisotropic"].default_value = 0.45
+    b.inputs["Anisotropic"].default_value = 0.3
     # fine drawn-wire streaks along the wire (local X of each leg)
     tc = nt.nodes.new("ShaderNodeTexCoord")
     mp = nt.nodes.new("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (0.4, 60, 60)
@@ -43,7 +43,7 @@ def mat_steel():
     tg = nt.nodes.new("ShaderNodeTangent"); tg.direction_type = "RADIAL"; tg.axis = "Z"
     tg2 = nt.nodes.new("ShaderNodeTangent"); tg2.direction_type = "UV_MAP"
     nt.links.new(tg2.outputs["Tangent"], b.inputs["Tangent"])
-    bump = nt.nodes.new("ShaderNodeBump"); bump.inputs["Strength"].default_value = 0.15; bump.inputs["Distance"].default_value = 0.005
+    bump = nt.nodes.new("ShaderNodeBump"); bump.inputs["Strength"].default_value = 0.3; bump.inputs["Distance"].default_value = 0.005
     nt.links.new(nz.outputs["Fac"], bump.inputs["Height"]); nt.links.new(bump.outputs["Normal"], b.inputs["Normal"])
     return m
 
@@ -97,12 +97,16 @@ def leg_path():
     for k in range(1, 25):
         th = sweep * k / 24
         path.append((cx + R * math.cos(th), cz + R * math.sin(th)))
-    for k in range(1, 31):
-        t = k / 30
+    for k in range(1, 121):
+        t = k / 120
         path.append((px + (TIP - px) * t, pz + (z0 - pz) * t))
     return path
 
-def build_leg(name):
+def wobble(u, seed, amp, freqs=(0.6, 1.3, 2.9)):
+    # deterministic low-frequency irregularity (no two real staple legs are straight or flat)
+    return amp * sum(math.sin(u * f * 2 * math.pi / 3 + seed * (k + 1) * 1.37) / (k + 1) for k, f in enumerate(freqs))
+
+def build_leg(name, seed):
     path, prof = leg_path(), profile()
     bm = bmesh.new(); rings = []
     uv_v = []
@@ -115,8 +119,15 @@ def build_leg(name):
         if i: L += (Vector((px, 0, pz)) - Vector((path[i-1][0], 0, path[i-1][1]))).length
         uv_v.append(L)
         ring = []
+        tw = math.radians(wobble(L, seed, 0.9))           # slight twist from the clinch
+        dy = wobble(L, seed + 3, 0.005)                   # lateral waviness
+        dz = wobble(L, seed + 7, 0.006)                   # vertical waviness of the run
+        squash = math.exp(-((L - 1.4) / 0.35) ** 2) * 0.12  # anvil flattens the wire at the bend
+        sw, sh = 1 + squash + wobble(L, seed + 11, 0.012), 1 - squash
         for s, h in prof:
-            p = Vector((px, 0, pz)) + side * s + nrm * h
+            s, h = s * sw, h * sh
+            s, h = s * math.cos(tw) - h * math.sin(tw), s * math.sin(tw) + h * math.cos(tw)
+            p = Vector((px, dy, pz + dz)) + side * s + nrm * h
             p.x = max(p.x, TIP)  # square-cut tip
             ring.append(bm.verts.new(p))
         rings.append(ring)
@@ -142,8 +153,8 @@ def build_leg(name):
 
 OFF = 0.0  # legs aligned on one line
 legs = bpy.data.objects.new("legs", None); scn.collection.objects.link(legs)
-la = build_leg("leg_a"); la.location.y = OFF
-lb = build_leg("leg_b"); lb.location.y = -OFF; lb.rotation_euler.z = math.pi
+la = build_leg("leg_a", 1); la.location.y = OFF
+lb = build_leg("leg_b", 5); lb.location.y = -OFF; lb.rotation_euler.z = math.pi
 la.parent = legs; lb.parent = legs
 legs.rotation_euler.z = math.radians(45)
 
