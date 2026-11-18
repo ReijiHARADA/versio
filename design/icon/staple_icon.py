@@ -201,7 +201,7 @@ if DARK:  # lower, cooler key; stronger strip so the wire edges still read on th
     area("fill", (8, -10, 14), 24, 200, (0.8, 0.88, 1.0))
     area("strip", (6, 8, 16), 2, 1400)
 else:
-    area("key", (-21, 21, 27), 7.5, 18000)
+    area("key", (21, -21, 27), 7.5, 18000)  # lower-right key: shadow falls to the upper left
     area("fill", (8, -10, 14), 24, 350, (0.92, 0.96, 1.0))
     area("strip", (6, 8, 16), 2, 700)
 
