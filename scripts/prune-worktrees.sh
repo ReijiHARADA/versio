@@ -14,6 +14,7 @@ git worktree list --porcelain | awk '/^worktree/{w=$2}/^branch/{sub("refs/heads/
 while IFS=$'\t' read -r wt br; do
   [ "$wt" = "$main_wt" ] && continue
   git merge-base --is-ancestor "$br" origin/main || continue
+  [ "$(git rev-parse "$br")" = "$(git rev-parse origin/main)" ] && continue  # fresh branch, no work yet
   if [ -n "$(git -C "$wt" status --porcelain)" ]; then echo "keep (dirty): $wt"; continue; fi
   if [ -n "$(find "$wt" -maxdepth 0 -mmin -60)" ]; then echo "keep (recent): $wt"; continue; fi
   run git worktree remove --force "$wt" && echo "removed: $wt"
