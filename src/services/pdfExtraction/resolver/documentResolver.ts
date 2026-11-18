@@ -2918,7 +2918,11 @@ export function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): Canonic
         continuationWords >
           ((continuation.match(/\([A-Da-d]\)/g) ?? []).length >= 1 ? 420 : 220)
       );
-    if (canMerge) {
+    // A caption set clearly smaller than body text never continues into a
+    // body-size block (Frontiers: column prose under a full-width figure).
+    const bodySizeAfterSmallCaption =
+      (previous?.style?.fontSizeRatio ?? 1) <= 0.88 && (node.style?.fontSizeRatio ?? 0) >= 0.95;
+    if (canMerge && !bodySizeAfterSmallCaption) {
       result[captionIndex] = {
         ...previous,
         text: `${captionText} ${continuation}`.replace(/\s+/g, " ").trim(),
