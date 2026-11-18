@@ -12,7 +12,7 @@ status: draft
 
 ## 現状値（main、2026-11-18、dev）
 
-ACL・arXiv は要素正解 40 本の dev、Europe PMC は dev から 106 本（`m0-paragold106` の id）。#60 で図・表キャプションの採点を、#62 で本文段落の採点を空白の違いに強くした後の値。
+ACL・arXiv は要素正解 40 本の dev、Europe PMC は dev から 106 本（`m0-paragold106` の id）。#60 で図・表キャプションの採点を、#63 で本文段落の採点を空白の違いに強くした後の値。
 
 | 指標 | ACL 13 本 | arXiv 15 本 | Europe PMC 106 本 |
 |---|---|---|---|
@@ -35,11 +35,11 @@ Europe PMC の dev 全件（868 本）と test split は、11-17 以降まだ測
 - 脚注：宣言系の注記はどちらの印刷形でも正解（#51、採点）。責任著者の連絡先を脚注として残す（#54、106 本 31.5% → 68.5%）。
 - 図：太字のキャプション番号がページ幅のキャプションから左の段に残る不具合（#59）。キャプションの採点を空白・記号・アクセントの違いに強くした（#60、採点）。
 - ACL の段落の区切りの検出漏れは、正解側の問題と判断（抽出器は直さない）。
-- 本文段落の採点：正解側がスモールキャップや添字を分かち書きする（`R E S EE` / `RESEE`、`x i` / `xi`）ために 1 ブロックに全文があっても partial になっていた。空白を無視した 20 文字の連なりで 85% 以上あれば intact とした（#62、採点。ACL 74.5% → 87.5%、arXiv 52.8% → 76.3%）。
+- 本文段落の採点：正解側がスモールキャップや添字を分かち書きする（`R E S EE` / `RESEE`、`x i` / `xi`）ために 1 ブロックに全文があっても partial になっていた。空白を無視した 20 文字の連なりで 85% 以上あれば intact とした（#63、採点。ACL 74.5% → 87.5%、arXiv 52.8% → 76.3%）。
 
 ## 次にやること（効果の大きい順）
 
-1. **arXiv・ACL の段落の分断**（arXiv 76.3%、ACL 87.5%）：#62 の後の残りは大半が split（1 段落が 2 ブロック以上）。続きが頭より前に並ぶもの（ACL 約 20、arXiv 約 45）と、図・表・数式・脚注をまたいで継がれないものがある。例 `acl-2023.emnlp-main.479` p2：段落の途中の 1 行（`modal dialogue framework RESEE`、スモールキャップでフォントが小さい）が別ブロックに外れて後ろに回る。p1・p7→p8：段の継ぎ目に図・脚注・表が挟まり継がれない。分類は `test-data/extraction-audit/tools/egsplit.ts <run> <acl|arxiv>`、1 本の詳細は `egmiss.ts <run> <id>`（どちらも採点の空白補正は入れていない）。feat/layout-columns（#53）はマージ済みで残作業なし。
+1. **arXiv・ACL の段落の分断**（arXiv 76.3%、ACL 87.5%）：#63 の後の残りは大半が split（1 段落が 2 ブロック以上）。続きが頭より前に並ぶもの（ACL 約 20、arXiv 約 45）と、図・表・数式・脚注をまたいで継がれないものがある。例 `acl-2023.emnlp-main.479` p2：段落の途中の 1 行（`modal dialogue framework RESEE`、スモールキャップでフォントが小さい）が別ブロックに外れて後ろに回る。p1・p7→p8：段の継ぎ目に図・脚注・表が挟まり継がれない。分類は `test-data/extraction-audit/tools/egsplit.ts <run> <acl|arxiv>`、1 本の詳細は `egmiss.ts <run> <id>`（どちらも採点の空白補正は入れていない）。feat/layout-columns（#53）はマージ済みで残作業なし。
 2. **ACL の著者の残り 5 本 13 人**：原因は 1 本ずつ違う。`naacl-long.73` は著者行全体が表と判定、`naacl-long.244` は著者・所属・メールが行の中で交互に混在、`eacl-long.154` は著者の 2 行目が段落と判定、`naacl-long.104` は著者行が断片化、`acl-long.419` は名前に所属がくっつく（`Duygu Nur Yaldiz USC USC`）。
 3. **キャプションの行末ハイフン**：`cate-gories`、`segmenta-tion` のようにキャプション内の行末ハイフンが残る。#60 以降は図の採点に効かないので、テキストを見て直す。
 4. **arXiv のタイトル**（73.3%、残り 4 本）と **arXiv の見出しの精度**（75.0%）。
@@ -57,8 +57,8 @@ npx vite-node --script scripts/element-gold-score.ts --run <run> --split dev [--
 ```
 
 - 試行は Europe PMC の dev から 106 本だけ `--ids` で流すと数分で済む。最後に全件を 1 回流す。
-- 基準 run：`g1-elementgold` / `g1-paragold106`（main e2e8a39 相当、#62 の採点で比べる）。古い run：`m1-elementgold`（e03de03）、`m0-paragold106`（6909889）、`t4-paragold`（全件）。`f10-*` は layout-regions（#45）より前なので比べない（ローカルの `test-data/extraction-audit/`、gitignore）。
-- 段落の採点は 5 語の連なりで照合し、1 ブロックで 30–85% のもの（partial）は空白を無視した 20 文字の連なりで見直す（#62）。このため本文に残る行末ハイフン（`plau-sible`）はどの指標にも出ない。直すときはテキストを見て判断する。以前、行末ハイフンの結合を強める変更で ACL の段落が 72.4% から 70.9% に下がり戻したが、それは #62 より前の採点での話。
+- 基準 run：`g1-elementgold` / `g1-paragold106`（main e2e8a39 相当、#63 の採点で比べる）。古い run：`m1-elementgold`（e03de03）、`m0-paragold106`（6909889）、`t4-paragold`（全件）。`f10-*` は layout-regions（#45）より前なので比べない（ローカルの `test-data/extraction-audit/`、gitignore）。
+- 段落の採点は 5 語の連なりで照合し、1 ブロックで 30–85% のもの（partial）は空白を無視した 20 文字の連なりで見直す（#63）。このため本文に残る行末ハイフン（`plau-sible`）はどの指標にも出ない。直すときはテキストを見て判断する。以前、行末ハイフンの結合を強める変更で ACL の段落が 72.4% から 70.9% に下がり戻したが、それは #63 より前の採点での話。
 
 ## 作業上の注意
 
