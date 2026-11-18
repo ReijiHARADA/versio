@@ -8,8 +8,6 @@
   margin: 0;
   padding: 12px;
   background: var(--color-bg-secondary);
-  border-left: 3px solid var(--color-accent);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   font-size: 0.875rem;
   color: var(--color-text-secondary);
   line-height: 1.6;

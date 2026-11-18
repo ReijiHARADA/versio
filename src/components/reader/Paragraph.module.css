@@ -67,8 +67,6 @@
   margin-top: var(--spacing-sm);
   padding: var(--spacing-md);
   background-color: var(--color-original-bg);
-  border-left: 3px solid var(--color-original-border);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   animation: slideDown 0.2s ease-out;
 }
 
@@ -110,8 +108,6 @@
 .failedContent {
   padding: var(--spacing-md);
   background-color: #fce8e6;
-  border-radius: var(--radius-md);
-  border-left: 3px solid #ea4335;
 }
 
 [data-theme="dark"] .failedContent {

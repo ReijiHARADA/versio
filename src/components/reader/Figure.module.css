@@ -154,7 +154,6 @@
   margin-top: var(--spacing-sm);
   padding: var(--spacing-sm);
   background-color: var(--color-original-bg);
-  border-left: 2px solid var(--color-original-border);
   font-style: italic;
   font-size: 0.8125rem;
   color: var(--color-text-tertiary);
