@@ -109,4 +109,15 @@ describe("scoreElements", () => {
     const s = scoreElements(gold, [{ id: "p", type: "paragraph", text: second }], { title: null, authors: [], publication: null, doi: null }, `${first} ${second}`);
     expect(s.paragraphs).toEqual({ gold: 1, found: 0 });
   });
+
+  it("counts a declaration note printed as a headed end section, but not ordinary notes", () => {
+    const declaration = "Competing interests: the authors declare that the research was conducted without any commercial relationships.";
+    const note = "These authors contributed equally to the work reported here and share first authorship.";
+    const gold = jatsElementGold(`<article><front><article-meta><author-notes><fn><p>${declaration}</p></fn><fn><p>${note}</p></fn></author-notes></article-meta></front></article>`, { id: "decl-x", license: "", sourceUrl: "" });
+    const s = scoreElements(gold, [
+      { id: "p1", type: "paragraph", text: declaration },
+      { id: "p2", type: "paragraph", text: note },
+    ], { title: null, authors: [], publication: null, doi: null }, `${declaration} ${note}`);
+    expect(s.footnotes).toEqual({ gold: 2, found: 1 });
+  });
 });
