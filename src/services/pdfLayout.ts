@@ -233,15 +233,14 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
   // may have a spanning title or caption, but not a persistent majority of
   // midpoint-crossing body rows.
   const pageArea = page.width * page.height;
+  // A rect covering (nearly) the whole page is a page frame or background, not a table or figure.
   const midpointIgnoredRects = [
     ...captionAnchoredGraphicsGrids(page, { x: 0, y: 0, width: page.width, height: page.height }),
-    ...(page.imagePlacements ?? [])
-      .filter((image) => {
-        const share = image.width * image.height / pageArea;
-        return share >= 0.02 && share <= 0.9;
-      })
-      .map(({ x, y, width, height }) => ({ x, y, width, height })),
-  ];
+    ...(page.imagePlacements ?? []).map(({ x, y, width, height }) => ({ x, y, width, height })),
+  ].filter((rect) => {
+    const share = rect.width * rect.height / pageArea;
+    return share >= 0.02 && share <= 0.9;
+  });
   const midpointItems = midpointIgnoredRects.length === 0
     ? usable
     : usable.filter((item) => !midpointIgnoredRects.some((rect) => {
