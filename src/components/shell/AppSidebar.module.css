@@ -428,54 +428,6 @@
   padding-right: 34px !important;
 }
 
-.projectMenuButton {
-  composes: surface from "../../styles/squircle.module.css";
-  position: absolute;
-  z-index: 5;
-  top: 4px;
-  right: 4px;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: none;
-  --sq-fill: var(--sq-fill-sm);
-  border-radius: var(--sq-radius-sm);
-  --sq-bg: transparent;
-  color: var(--color-text-secondary);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--sidebar-motion);
-}
-
-.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .projectMenuButton,
-.sidebarExpanded .projectMenuButton,
-.sidebarResizing .projectMenuButton,
-.sidebarDropReady .projectMenuButton,
-.sidebar:has([data-workspace-editing]) .projectMenuButton,
-.projectMenuButtonOpen {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.projectMenuButton:hover,
-.projectMenuButtonOpen {
-  --sq-bg: color-mix(in srgb, var(--color-bg) 72%, transparent);
-  color: var(--color-text);
-}
-
-.treeRow:has(.item.active) .projectMenuButton {
-  color: var(--color-selection-fg);
-}
-
-.treeRow:has(.item.active) .projectMenuButton:hover,
-.treeRow:has(.item.active) .projectMenuButtonOpen {
-  --sq-bg: color-mix(in srgb, var(--color-selection-fg) 22%, transparent);
-  color: var(--color-selection-fg);
-}
-
 .projectMenu {
   composes: surface from "../../styles/squircle.module.css";
   /* Portaled to document.body so nested tree overflow:hidden cannot clip it. */
@@ -684,7 +636,6 @@
 .sidebarResizing .treeLabel,
 .sidebarDropReady .treeLabel,
 .sidebar:has([data-workspace-editing]) .treeLabel {
-  padding-right: 28px;
   cursor: grab;
 }
 

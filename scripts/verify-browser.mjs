@@ -138,7 +138,7 @@ async function deleteWorkspaceByName(name) {
   await hoverSidebar();
   const link = page.getByRole("link", { name: name, exact: true });
   if ((await link.count()) === 0) return;
-  await page.getByRole("button", { name: `「${name}」のメニュー` }).click();
+  await page.getByRole("link", { name: name, exact: true }).click({ button: "right" });
   await page.getByRole("menuitem", { name: "削除", exact: true }).click();
   await link.waitFor({ state: "detached", timeout: 10_000 });
   createdWorkspaceNames.delete(name);
@@ -202,15 +202,15 @@ try {
       throw new Error("project header still contains a delete button");
     }
 
-    const menuButton = page.getByRole("button", {
-      name: `「${verifyProjectName}」のメニュー`,
-    });
-    await menuButton.click();
+    await page
+      .getByRole("link", { name: verifyProjectName, exact: true })
+      .click({ button: "right" });
     await page.getByRole("menuitem", { name: "名称を変更" }).waitFor();
     await page.getByRole("menuitem", { name: "論文ファイルを追加" }).waitFor();
     await page.getByRole("menuitem", { name: "削除", exact: true }).waitFor();
 
-    await page.getByRole("menuitem", { name: "名称を変更" }).click();
+    await page.keyboard.press("Escape");
+    await page.getByRole("link", { name: verifyProjectName, exact: true }).dblclick();
     await page.getByRole("textbox", { name: "名称", exact: true }).fill(renamedProjectName);
     await page.getByRole("textbox", { name: "名称", exact: true }).press("Enter");
     createdWorkspaceNames.delete(verifyProjectName);
@@ -222,8 +222,7 @@ try {
 
     await hoverSidebar();
     await page
-      .getByRole("button", { name: `「${renamedProjectName}」のメニュー` })
-      .click();
+      .getByRole("link", { name: renamedProjectName, exact: true }).click({ button: "right" });
     await page.getByRole("menuitem", { name: "削除", exact: true }).click();
     await page
       .getByRole("link", { name: renamedProjectName, exact: true })
@@ -243,8 +242,7 @@ try {
 
     await hoverSidebar();
     await page
-      .getByRole("button", { name: `「${parentFolderName}」のメニュー` })
-      .click();
+      .getByRole("link", { name: parentFolderName, exact: true }).click({ button: "right" });
     await page.getByRole("menuitem", { name: "サブフォルダーを追加" }).click();
     await page.getByLabel("フォルダ名").fill(childFolderName);
     await page.getByRole("button", { name: "作成", exact: true }).click();

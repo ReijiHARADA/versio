@@ -15,7 +15,7 @@ try {
   });
   const row = (id) => page.locator(`[data-workspace-id="${id}"]`);
   const parent = (id) => page.evaluate(async (value) => (await (await import("/src/services/projectService.ts")).listWorkspace()).find((node) => node.id === value)?.parentId, id);
-  await row(ids.a).getByRole("button", { name: "「A」のメニュー" }).click();
+  await row(ids.a).getByRole("link", { name: "A", exact: true }).click({ button: "right" });
   await expect(page.getByRole("menuitem")).toHaveText(["サブフォルダーを追加", "名称を変更", "論文ファイルを追加", "削除"]);
   await page.getByRole("menuitem", { name: "サブフォルダーを追加" }).click(); await page.getByRole("textbox", { name: "フォルダ名" }).fill("D"); await page.getByRole("button", { name: "作成" }).click(); await expect(page.getByRole("link", { name: "D" })).toBeVisible();
   await row(ids.a).getByRole("button", { name: "Aを展開" }).click(); await expect(row(ids.b)).toBeVisible(); await row(ids.a).getByRole("button", { name: "Aを折りたたむ" }).click(); await expect(row(ids.b)).toHaveCount(0); await page.getByRole("button", { name: "Aを展開" }).click();
