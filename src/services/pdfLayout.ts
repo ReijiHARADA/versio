@@ -6050,22 +6050,28 @@ function joinAccentSplitLines(lines: LayoutLine[]): LayoutLine[] {
  * items and the next item starts a capitalised word.
  */
 function commaAtSuperscriptMarkers(lines: LayoutLine[]): LayoutLine[] {
-  const markerLines = lines.filter((line) => /^[\d\s,*\u2217\u2020\u2021\u00a7\u00b6]+$/u.test(line.text.trim()));
-  if (markerLines.length === 0) return lines;
+  const MARKER = /^[\d\s,*\u2217\u2020\u2021\u00a7\u00b6]+$/u;
+  const markerLines = lines.filter((line) => MARKER.test(line.text.trim()));
   return lines.map((line) => {
     if (markerLines.includes(line) || line.items.length < 2) return line;
+    const wordFont = Math.max(...line.items.map((item) => item.fontSize));
+    const wordY = line.items.find((item) => item.fontSize === wordFont)!.y;
     const markers = markerLines
       .filter((marker) => marker.page === line.page && marker.fontSize < line.fontSize * 0.9 &&
         line.y - marker.y > 0 && line.y - marker.y <= line.fontSize * 0.8)
-      .flatMap((marker) => marker.items);
+      .flatMap((marker) => marker.items)
+      // Superscripts can also be grouped into the byline itself (`Zhenhua Liu¹ Tong Zhu¹`);
+      // only raised ones, so a subscript (`F₁ MCC`) in a table header is left alone.
+      .concat(line.items.filter((item) => MARKER.test(item.text.trim()) && item.fontSize < wordFont * 0.9 && wordY - item.y > wordFont * 0.2));
     if (markers.length === 0) return line;
     const items = [...line.items].sort((a, b) => a.x - b.x);
     let changed = false;
     const patched = items.map((item, index) => {
-      const next = items[index + 1];
+      const next = items.slice(index + 1).find((other) => !markers.includes(other));
       if (!next || !/\p{L}$/u.test(item.text.trim()) || !/^\p{Lu}/u.test(next.text.trim()) || /^and\b/i.test(next.text.trim())) return item;
       const end = item.x + item.width;
-      const marked = markers.some((m) => m.x >= end - 1.5 && m.x + m.width <= next.x + 1.5);
+      // An in-line marker must hug the name it follows; one at the next item is that item's prefix (`¹Department of ²Faculty`).
+      const marked = markers.some((m) => m.x >= end - 1.5 && m.x + m.width <= next.x + 1.5 && (!line.items.includes(m) || m.x <= end + 1.5));
       if (!marked) return item;
       changed = true;
       return { ...item, text: `${item.text.trimEnd()},` };

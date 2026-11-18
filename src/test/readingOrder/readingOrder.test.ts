@@ -116,6 +116,18 @@ describe("font-transition inline labels", () => {
   });
 });
 
+describe("byline superscripts in the same line", () => {
+  const it8 = (text: string, x: number, y: number, width: number, fontSize: number) =>
+    ({ text, x, y, width, height: fontSize, fontSize, fontName: "f", page: 1 });
+  const lineText = (items: ReturnType<typeof it8>[]) =>
+    reconstructDocument([{ pageNumber: 1, width: 612, height: 792, textItems: items }]).lines.map((l) => l.text).join(" | ");
+  it("puts the comma back at a raised affiliation marker, not at a subscript", () => {
+    expect(lineText([it8("Zhenhua Liu", 81, 120, 66, 12), it8("1", 147, 115.6, 4, 8), it8("Tong Zhu", 158, 120, 49, 12), it8("1", 207, 115.6, 4, 8)]))
+      .toMatch(/Zhenhua Liu,\s*1?\s*Tong Zhu/);
+    expect(lineText([it8("Accuracy F", 81, 120, 60, 12), it8("1", 141, 124, 4, 8), it8("MCC", 158, 120, 30, 12)])).not.toMatch(/F,/);
+  });
+});
+
 describe("isEquationLine", () => {
   it("keeps a numbered displayed equation", () => {
     expect(isEquationLine("P = I × V ± Δ (1)")).toBe(true);
