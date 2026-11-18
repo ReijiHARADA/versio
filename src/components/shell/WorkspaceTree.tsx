@@ -396,26 +396,29 @@ function PaperItem({
 }) {
   const label = paper.titleTranslated || paper.titleOriginal || "無題の論文";
   const drag = useDraggablePaper(paper.id, label, true, sourceNodeId);
+  // Wrapper owns the tree-guide pseudo-elements; the NavLink's own are the squircle fill.
   return (
-    <NavLink
-      to={`/reader/${paper.id}`}
-      title={label}
-      draggable={false}
-      className={({ isActive }) =>
-        `${styles.item} ${styles.treePaper} ${isActive ? styles.active : ""}`
-      }
-      style={{ "--tree-indent": `${depth * 16}px` } as React.CSSProperties}
-      onPointerDown={drag.onPointerDown}
-      onDragStart={(event) => event.preventDefault()}
-      onClick={(event) => {
-        if (drag.consumeClickIfDragged()) event.preventDefault();
-      }}
-    >
-      <span className={styles.icon}>
-        <FileText size={14} />
-      </span>
-      <span className={styles.itemLabel}>{label}</span>
-    </NavLink>
+    <div>
+      <NavLink
+        to={`/reader/${paper.id}`}
+        title={label}
+        draggable={false}
+        className={({ isActive }) =>
+          `${styles.item} ${styles.treePaper} ${isActive ? styles.active : ""}`
+        }
+        style={{ "--tree-indent": `${depth * 16}px` } as React.CSSProperties}
+        onPointerDown={drag.onPointerDown}
+        onDragStart={(event) => event.preventDefault()}
+        onClick={(event) => {
+          if (drag.consumeClickIfDragged()) event.preventDefault();
+        }}
+      >
+        <span className={styles.icon}>
+          <FileText size={14} />
+        </span>
+        <span className={styles.itemLabel}>{label}</span>
+      </NavLink>
+    </div>
   );
 }
 
