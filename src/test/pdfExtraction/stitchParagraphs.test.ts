@@ -46,6 +46,18 @@ describe("stitchParagraphContinuations", () => {
     expect(stitchParagraphContinuations([block("a", "paragraph", OPEN), block("eq", "equation", "x = y + z"), block("b", "paragraph", CONTINUATION)], sections)).toHaveLength(3);
   });
 
+  it("jumps over a table's complete notes, but not over open prose after it", () => {
+    const note = "Standard deviations are presented in parentheses. Lexical frequencies were taken from the corpus and matched across the two conditions.";
+    const table = block("t", "table", "Variable Match Mismatch t p");
+    const out = stitchParagraphContinuations([block("a", "paragraph", OPEN), table, block("n", "paragraph", note), block("b", "paragraph", CONTINUATION)], sections);
+    expect(out.map((b) => b.id)).toEqual(["a", "t", "n"]);
+    const open = "The intervention framework is based on behavioural theory and was delivered by trained nurses and ward managers across all of the participating wards in";
+    // The open paragraph after the table is the one the continuation belongs to.
+    const kept = stitchParagraphContinuations([block("a", "paragraph", OPEN), table, block("n", "paragraph", open), block("b", "paragraph", CONTINUATION)], sections);
+    expect(kept.map((b) => b.id)).toEqual(["a", "t", "n"]);
+    expect(kept[0].original).toBe(OPEN);
+  });
+
   it("keeps finished sentences, colon introductions, lists and references apart", () => {
     const finished = "Search for relevant papers was conducted in four main databases and in two registries.";
     expect(stitchParagraphContinuations([block("a", "paragraph", finished), block("b", "paragraph", CONTINUATION)], sections)).toHaveLength(2);
