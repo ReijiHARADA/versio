@@ -397,7 +397,10 @@ export function extractFromPages(input: {
     paper: { ...projected.paper, publication: projected.paper.publication ?? findVenue(input.pages) },
     sections: projected.sections,
     // Paragraphs interrupted by figures, tables, footnotes or page breaks are rejoined.
-    blocks: reconcileTranslationWarnings(repairLineBreakHyphens(stitchParagraphContinuations(collapseTableCellRuns(projected.blocks, projected.sections), projected.sections))),
+    blocks: repairLineBreakHyphens(
+      reconcileTranslationWarnings(stitchParagraphContinuations(collapseTableCellRuns(projected.blocks, projected.sections), projected.sections)),
+      generic.blocks
+    ),
     layoutBlocks: generic.blocks,
     layouts: generic.layouts,
     pageKind,

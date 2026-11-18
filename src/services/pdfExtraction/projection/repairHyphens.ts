@@ -1,40 +1,48 @@
+import type { LayoutBlock } from "../../pdfLayout";
 import type { PaperBlock } from "../../../types/paper";
 
-/**
- * Line-end hyphens that survived line joining ("experi-enced", "support-ive").
- *
- * joinHyphenated keeps the hyphen of `word-` + `lowercase` because it cannot tell
- * a broken word from a compound broken at its hyphen (`decision-` + `support`).
- * With the whole document in hand the two can be told apart: the hyphen goes
- * when the joined word is written elsewhere in the document, or when the tail
- * is a suffix fragment that is never a word of its own. Compounds whose parts
- * are words ("well-being", "self-report") keep their hyphen.
- */
-const SUFFIX_FRAGMENT =
-  /^(?:tions?|sions?|ations?|itions?|ments?|ness|ity|ities|ive|ives|ively|ances?|ences?|enced|ency|encies|ancy|ancies|ated|ating|ical|ically|ous|ously|ably|ibly|ism|ized|izing|ised|ising|ial|ially|ular|ures?|ogy|ings?|ed|ly|ers?|est|ics?|al|ies|ipants?|ists?)$/;
-const TEXT_TYPES = new Set<PaperBlock["type"]>(["paragraph", "heading", "footnote"]);
-const HYPHENATED = /\b([A-Za-z]{2,})-([a-z]{2,})\b/g;
+const HYPHENATED = /\b([A-Za-z]{3,})-([a-z][A-Za-z]*)\b/g;
+const WHOLE_WORD = /(?<![-\w])[A-Za-z]{4,}(?![-\w])/g;
+const TEXT_TYPES = new Set<PaperBlock["type"]>(["paragraph", "footnote", "figure", "table"]);
 
-export function repairLineBreakHyphens(blocks: PaperBlock[]): PaperBlock[] {
-  // Words written whole (hyphenated tokens are excluded by the boundary rules),
-  // and how often each hyphenated form occurs.
-  const vocabulary = new Map<string, number>();
-  const hyphenated = new Map<string, number>();
-  for (const b of blocks) {
-    if (!TEXT_TYPES.has(b.type)) continue;
-    const text = b.original ?? "";
-    for (const w of text.matchAll(/(?<![-\w])[A-Za-z]{5,}(?![-\w])/g)) vocabulary.set(w[0].toLowerCase(), (vocabulary.get(w[0].toLowerCase()) ?? 0) + 1);
-    for (const w of text.matchAll(HYPHENATED)) hyphenated.set(`${w[1]}${w[2]}`.toLowerCase(), (hyphenated.get(`${w[1]}${w[2]}`.toLowerCase()) ?? 0) + 1);
+/**
+ * Repair only hyphens that pdfLayout introduced while joining two native lines.
+ * A printed compound stays intact; a wrapped word loses its hyphen only when
+ * the unbroken form occurs elsewhere and the hyphenated form never does mid-line.
+ */
+export function repairLineBreakHyphens(blocks: PaperBlock[], layoutBlocks: LayoutBlock[]): PaperBlock[] {
+  const words = new Set<string>();
+  const midLineHyphens = new Set<string>();
+  const lineEndHyphens = new Set<string>();
+
+  for (const block of layoutBlocks) {
+    for (const line of block.lines) {
+      for (const word of line.text.matchAll(WHOLE_WORD)) words.add(word[0].toLowerCase());
+      for (const word of line.text.matchAll(HYPHENATED)) midLineHyphens.add(`${word[1]}-${word[2]}`.toLowerCase());
+    }
+    for (let index = 1; index < block.lines.length; index++) {
+      const head = block.lines[index - 1]!.text.trim().match(/([A-Za-z]{3,})-$/)?.[1];
+      const tail = block.lines[index]!.text.trim().match(/^([a-z][A-Za-z]*)\b/)?.[1];
+      if (head && tail) lineEndHyphens.add(`${head}-${tail}`.toLowerCase());
+    }
   }
-  return blocks.map((b) => {
-    if (b.type !== "paragraph" || !b.original || !b.original.includes("-")) return b;
-    const repaired = b.original.replace(HYPHENATED, (whole, head: string, tail: string) => {
-      const joined = `${head}${tail}`.toLowerCase();
-      // "co-occurrence" written with its hyphen as often as without is a real compound.
-      if (head.length >= 3 && (vocabulary.get(joined) ?? 0) >= Math.max(1, hyphenated.get(joined) ?? 0)) return `${head}${tail}`;
-      if (head.length >= 3 && SUFFIX_FRAGMENT.test(tail) && !vocabulary.has(tail)) return `${head}${tail}`;
-      return whole;
-    });
-    return repaired === b.original ? b : { ...b, original: repaired };
+
+  const repair = (text: string) => text.replace(HYPHENATED, (whole, head: string, tail: string) => {
+    const hyphenated = `${head}-${tail}`.toLowerCase();
+    return lineEndHyphens.has(hyphenated) && !midLineHyphens.has(hyphenated) && words.has(`${head}${tail}`.toLowerCase())
+      ? `${head}${tail}`
+      : whole;
+  });
+
+  return blocks.map((block) => {
+    if (!TEXT_TYPES.has(block.type)) return block;
+    const original = block.original ? repair(block.original) : block.original;
+    const caption = typeof block.metadata.captionOriginal === "string" ? repair(block.metadata.captionOriginal) : undefined;
+    if (original === block.original && (caption === undefined || caption === block.metadata.captionOriginal)) return block;
+    return {
+      ...block,
+      original,
+      ...(caption === undefined ? {} : { metadata: { ...block.metadata, captionOriginal: caption } }),
+    };
   });
 }
