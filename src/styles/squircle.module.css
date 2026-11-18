@@ -17,6 +17,17 @@
   isolation: isolate;
 }
 
+/* Defaults stop a nested surface inheriting its parent's colours (the
+   registered properties inherit so the pseudo-elements can read them).
+   :where() keeps specificity 0 so host rules win regardless of load order. */
+:where(.surface) {
+  /* The pseudo-element paints the fill; also clears the UA button background. */
+  background: none;
+  --sq-bg: transparent;
+  --sq-line: transparent;
+  --sq-bw: 0px;
+}
+
 .surface::before,
 .surface::after {
   content: "";
