@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   AlertCircle,
   CheckCircle,
@@ -53,6 +53,23 @@ export function PaperCard({ paper, enabled = true, onOpen, actions }: PaperCardP
       : null;
   const statusLabel = formatTranslationProgressLabel(view.readiness);
 
+  // "読めます" flashes for 5s right after a paper finishes; settled papers show no status.
+  const previousReadiness = useRef(view.readiness);
+  const [justReady, setJustReady] = useState(false);
+  useEffect(() => {
+    const previous = previousReadiness.current;
+    previousReadiness.current = view.readiness;
+    if (view.readiness !== "readable") {
+      setJustReady(false);
+      return;
+    }
+    if (previous !== "preparing" && previous !== "translating") return;
+    setJustReady(true);
+    const timer = window.setTimeout(() => setJustReady(false), 5000);
+    return () => window.clearTimeout(timer);
+  }, [view.readiness]);
+  const showStatus = view.readiness !== "readable" || justReady;
+
   const toggleFavorite = async (event: React.MouseEvent) => {
     event.stopPropagation();
     if (favoriting) return;
@@ -95,28 +112,30 @@ export function PaperCard({ paper, enabled = true, onOpen, actions }: PaperCardP
         </div>
       </div>
       <div className={styles.trailing}>
-        <span className={styles.status}>
-          {getStatusIcon(view.readiness)}
-          <span className={styles.statusLabel} data-testid="paper-readiness">
-            {statusLabel}
-          </span>
-          {view.readiness === "translating" && percent != null ? (
-            <span
-              className={styles.translateProgress}
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={percent}
-              aria-label={`日本語化 ${percent}%`}
-              data-testid="paper-translation-progress"
-            >
-              <span
-                className={styles.translateProgressFill}
-                style={{ width: `${percent}%` }}
-              />
+        {showStatus ? (
+          <span className={styles.status}>
+            {getStatusIcon(view.readiness)}
+            <span className={styles.statusLabel} data-testid="paper-readiness">
+              {statusLabel}
             </span>
-          ) : null}
-        </span>
+            {view.readiness === "translating" && percent != null ? (
+              <span
+                className={styles.translateProgress}
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={percent}
+                aria-label={`日本語化 ${percent}%`}
+                data-testid="paper-translation-progress"
+              >
+                <span
+                  className={styles.translateProgressFill}
+                  style={{ width: `${percent}%` }}
+                />
+              </span>
+            ) : null}
+          </span>
+        ) : null}
         <div className={styles.actions}>
           <PaperEpubSyncControl paperId={paper.id} disabled={!enabled} />
           {actions}
