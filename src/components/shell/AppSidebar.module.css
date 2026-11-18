@@ -755,13 +755,24 @@
   border-left: 1px solid var(--color-border);
 }
 
-/* Elbow: down to the row centre, then right, ending 2px before the row. */
+/*
+ * Elbow: down to the row centre, then right, ending 4px inside the row.
+ * The corner is a clothoid (r 7px, 60% transition, G2) drawn as a mask; a
+ * straight 1px mask layer above it keeps the elbow height-agnostic.
+ */
 .treeNestedClip > *::before {
   top: -2px;
-  width: 5px;
+  width: 11px;
   height: calc(var(--sidebar-icon-box) / 2 + 2px);
-  border-bottom: 1px solid var(--color-border);
-  border-bottom-left-radius: 4px;
+  border-left: 0;
+  background: var(--color-border);
+  --tree-elbow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='12'%3E%3Cpath d='M0.5 0L0.5 0.80L0.51 1.99L0.55 3.18L0.66 4.37L0.88 5.54L1.23 6.68L1.75 7.75L2.44 8.72L3.28 9.56L4.25 10.25L5.32 10.77L6.46 11.12L7.63 11.34L8.82 11.45L10.01 11.49L11.20 11.50L11 11.5' fill='none' stroke='black'/%3E%3C/svg%3E");
+  -webkit-mask:
+    var(--tree-elbow) no-repeat left bottom / 11px 12px,
+    linear-gradient(#000, #000) no-repeat left top / 1px calc(100% - 11px);
+  mask:
+    var(--tree-elbow) no-repeat left bottom / 11px 12px,
+    linear-gradient(#000, #000) no-repeat left top / 1px calc(100% - 11px);
 }
 
 .treeNestedClip > *:not(:last-child)::after {
