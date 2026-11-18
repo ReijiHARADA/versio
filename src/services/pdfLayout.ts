@@ -2155,7 +2155,7 @@ function looksLikeEmail(text: string): boolean {
 function looksLikeContactMetadata(text: string): boolean {
   if (!looksLikeEmail(text)) return false;
   const withoutEmails = text.replace(/(?:\{[^{}]*\}|[A-Z0-9._%+-]+)@[A-Z0-9.-]+\.[A-Z]{2,}/gi, " ");
-  return /^[\s\d,*†‡§∗·,;:()[\]{}]+$/u.test(withoutEmails.trim());
+  return /^[\s\d,*†‡§∗·,;:()[\]{}]*$/u.test(withoutEmails.trim());
 }
 
 function looksLikeAffiliation(text: string): boolean {

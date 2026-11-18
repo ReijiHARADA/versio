@@ -500,6 +500,30 @@ describe("canonical extraction pipeline", () => {
     expect(urls.every((block) => block.type === "footnote")).toBe(true);
   }, 60_000);
 
+  it("keeps grouped ACL masthead email rows out of page-one body blocks", async (ctx) => {
+    const pdf = path.resolve("test-data/element-gold/acl-2024.naacl-long.104/source.pdf");
+    if (!fs.existsSync(pdf)) ctx.skip();
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({ pages, paperId: "acl-grouped-email-masthead", filePath: pdf, fileHash: "acl-grouped-email-masthead", metadata: { pageCount: pages.length } });
+    expect(result.blocks.filter((block) => block.pageStart === 1 && /@/.test(block.original ?? ""))).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ type: expect.stringMatching(/^(paragraph|equation)$/) })]),
+    );
+  }, 60_000);
+
+  it("recovers ACL authors split at the masthead gutter", async (ctx) => {
+    const cases = [
+      ["acl-2024.eacl-long.154", ["Jay Rainey", "Evangelos Kazakos", "Georgios Tzimiropoulos", "Brais Martinez"]],
+      ["acl-2024.naacl-long.244", ["Emily Druhl", "Hong Yu"]],
+    ] as const;
+    for (const [id, authors] of cases) {
+      const pdf = path.resolve(`test-data/element-gold/${id}/source.pdf`);
+      if (!fs.existsSync(pdf)) { ctx.skip(); return; }
+      const pages = await extractPdfPages(pdf);
+      const result = extractFromPages({ pages, paperId: `${id}-masthead-gutter`, filePath: pdf, fileHash: `${id}-masthead-gutter`, metadata: { pageCount: pages.length } });
+      expect(result.paper.authors).toEqual(expect.arrayContaining(authors));
+    }
+  }, 60_000);
+
   it("keeps wrapped table-caption prose out of table cells", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
     if (!fs.existsSync(pdf)) ctx.skip();
