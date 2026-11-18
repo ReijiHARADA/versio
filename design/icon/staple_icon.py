@@ -104,6 +104,7 @@ def profile(n=12, m=8):
 # sheared point seen from the side: two flanks through the thickness meet near the paper side,
 # long flank on top (faces the viewer), slightly blunt nose
 P0, K_IN, K_OUT, NOSE = -0.2 * T, 1.2, 1.7, 0.03 * T
+LIFT = 0.42  # bend crest height above the plate: thin paper lets the bend stand proud of the tip
 
 
 def leg_path():
