@@ -26,6 +26,11 @@ export function containment(needle: string, hay: Set<string>): number {
   return g.length ? g.filter((x) => hay.has(x)).length / g.length : 0;
 }
 const setOf = (texts: string[]) => new Set(texts.flatMap(ngrams));
+/**
+ * Declaration notes print as a page footnote in some journals (PLOS `Competing Interests:`) and as a
+ * headed end section in others (Frontiers `Author contributions`); either form reaches the reader.
+ */
+const DECLARATION_NOTE = /^[*†‡]?\s*(authors?['’]?s? (contributions?|note)|competing interests?|conflicts? of interests?|funding|data availability|ethics statement|disclosure)\b/i;
 // Element-gold only: PDF extraction can split a math token as `M irreg n`.
 const normalizeMathTokenSpacing = (s: string) => {
   const t = tokens(s);
@@ -104,7 +109,8 @@ export function scoreElements(gold: ElementGold, blocks: ScoredBlock[], paper: S
     headings: ratio(goldHeadings, headingHit),
     headingPrecision: { predicted: headingBlocks.length, correct: headingBlocks.filter((b) => goldHeadings.some((h) => similarity(b, h) >= 0.85)).length },
     paragraphs: { gold: aligned.paragraphs.length, found: aligned.paragraphs.filter((p) => p.verdict === "intact").length },
-    footnotes: ratio(gold.footnotes.filter((f) => tokens(f).length >= 4 && isPrinted(f)), (f) => containment(f, footSet) >= 0.8),
+    footnotes: ratio(gold.footnotes.filter((f) => tokens(f).length >= 4 && isPrinted(f)), (f) =>
+      containment(f, footSet) >= 0.8 || (DECLARATION_NOTE.test(f) && containment(f, paraSet) >= 0.8)),
     figures: ratio(gold.figures.filter((f) => f.caption && isPrinted(f.caption)), (f) => !!inOne(f.caption.slice(0, 200), figureBlocks)),
     tables: ratio(tablesPrinted, (t) => !!inOne(t.caption.slice(0, 200), tableBlocks)),
     tableCells: { gold: cellsGold, found: cellsFound },
