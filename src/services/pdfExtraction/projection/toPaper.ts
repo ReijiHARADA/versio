@@ -3904,7 +3904,7 @@ function projectTableNode(context: BodyNodeContext, state: BodyProjectionState, 
     // projection. This also recovers page-range tails that PDF producers emit
     // as footnotes. Captions/equations/headings retain their own semantics.
     const referenceSectionNode = state.currentKind === "references" &&
-      node.role !== "heading" && node.role !== "caption" && node.role !== "equation" &&
+      node.role !== "heading" && node.role !== "caption" && node.role !== "equation" && node.role !== "footnote" &&
       isReferenceText(nodeText, state.currentKind);
     if (referenceSectionNode) {
       context.pushBlock(node, layout, {

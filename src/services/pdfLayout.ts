@@ -1767,6 +1767,9 @@ function isFootnoteLine(
   }
   if (line.fontSize > baseFont * 0.9 && line.fontSize > 8) return false;
   if (line.y < pageHeight * 0.7) return false;
+  // Footnote markers can be emitted separately from URL-only lines. At the
+  // page footnote zone, their smaller type distinguishes them from body URLs.
+  if (/^(?:\d{1,2}\s*)?https?:\/\/\S+$/i.test(t)) return true;
   // Measurement/statistical lines can begin with a number but are body prose,
   // not footnotes (for example `180 bpm` or `94.25±4.63%`).
   if (/^\d{3,}(?:\b|[.,])/.test(t) || /^\d{1,3}[.,]\d/.test(t)) return false;
