@@ -12,7 +12,6 @@ import {
   Star,
   Trash2,
 } from "../ui/MaterialSymbol";
-import { isTauriApp } from "../../utils/serverReady";
 import type { WorkspaceNode } from "../../types/project";
 import {
   clampSidebarWidth,
@@ -194,7 +193,6 @@ export function AppSidebar({
       ref={sidebarRef}
       className={styles.rail}
       data-sidebar-mode={sidebarMode}
-      data-traffic-lights={isTauriApp() || undefined}
       data-sidebar-drop-ready={pointerOverSidebar || undefined}
       data-sidebar-resizing={resizing || undefined}
       style={
