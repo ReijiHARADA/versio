@@ -12,8 +12,6 @@ import {
   Star,
   Trash2,
 } from "../ui/MaterialSymbol";
-import stapleLogo from "../../assets/brand/staple.png";
-import stapleLogoDark from "../../assets/brand/staple-dark.png";
 import { isTauriApp } from "../../utils/serverReady";
 import type { WorkspaceNode } from "../../types/project";
 import {
@@ -221,11 +219,6 @@ export function AppSidebar({
           />
 
           <div className={styles.brandRow} data-tauri-drag-region>
-            <img src={stapleLogo} className={`${styles.brandMark} ${styles.brandMarkLight}`} alt="" />
-            <img src={stapleLogoDark} className={`${styles.brandMark} ${styles.brandMarkDark}`} alt="" />
-            <span className={styles.brand} aria-hidden="true">
-              Versio
-            </span>
             {!narrow && (
               <button
                 type="button"
