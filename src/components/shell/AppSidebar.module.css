@@ -228,9 +228,11 @@
 }
 
 .brandMark {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
+  /* The baked-in drop shadow sits low; lift the staple to the text's optical center. */
+  transform: translateY(-2px);
 }
 
 .brandMarkDark,
@@ -266,7 +268,7 @@
 .brand {
   color: var(--color-text-secondary);
   font-family: var(--font-family-serif);
-  font-size: 1.25rem;
+  font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.04em;
