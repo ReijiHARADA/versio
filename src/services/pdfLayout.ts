@@ -8,6 +8,7 @@
  */
 
 import type { BoundingBox } from "../types/paper";
+import { joinsAsEnglishWord } from "./englishWords";
 import type { ExtractedPage, ExtractedTextItem } from "./pdfService";
 import {
   isReferencesHeading,
@@ -2355,6 +2356,10 @@ function looksLikeTitleLine(
 export function joinHyphenated(prev: string, next: string): string {
   if (/[-\u00ad\u2010\u2011\u2012\u2013]$/u.test(prev) && /^[a-z0-9]/i.test(next)) {
     if (/^\d/.test(next)) return `${prev}${next}`;
+    // A word broken at the line end (`cate-` + `gories`) whose joined form is a dictionary word.
+    const broken = prev.match(/(?<![A-Za-z])([A-Za-z]{3,})-$/)?.[1];
+    const tail = next.match(/^[a-z]+/)?.[0];
+    if (broken && tail && joinsAsEnglishWord(broken, tail)) return prev.slice(0, -1) + next;
     // "jewellery-, memory- and interaction-" + "perspectives"
     if (/(?:,|and)\s+[A-Za-z]+[-\u00ad\u2010\u2011\u2012\u2013]$/iu.test(prev)) {
       return prev + next;
