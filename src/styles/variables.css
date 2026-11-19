@@ -1,4 +1,6 @@
 :root {
+  /* Height of the macOS title bar the content sits under (desktop only). */
+  --titlebar-h: 0px;
   /* Colors - Light Theme */
   --color-bg: #ffffff;
   --color-bg-secondary: #f8f9fa;
@@ -91,6 +93,10 @@
   --scrollbar-size: 8px;
   --scrollbar-thumb: rgba(0, 0, 0, 0.14);
   --scrollbar-thumb-hover: rgba(0, 0, 0, 0.28);
+}
+
+html[data-titlebar] {
+  --titlebar-h: 28px;
 }
 
 [data-theme="dark"] {

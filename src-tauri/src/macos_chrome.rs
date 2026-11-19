@@ -1,5 +1,5 @@
-//! macOS title bar: transparent chrome whose fill matches the app sidebar
-//! (`--color-bg-secondary`: light `#f8f9fa`, dark `#252526`).
+//! macOS title bar: overlay chrome (content draws under it, so no separator line);
+//! window fill matches the app sidebar (`--color-bg-secondary`: light `#f8f9fa`, dark `#252526`).
 
 use tauri::{AppHandle, Manager, TitleBarStyle, WebviewWindow};
 
@@ -15,7 +15,7 @@ const DARK_B: f64 = 38.0 / 255.0;
 
 pub fn apply_sidebar_matched_chrome(window: &WebviewWindow, dark: bool) -> Result<(), String> {
     window
-        .set_title_bar_style(TitleBarStyle::Transparent)
+        .set_title_bar_style(TitleBarStyle::Overlay)
         .map_err(|e| e.to_string())?;
     set_window_background(window, dark)
 }

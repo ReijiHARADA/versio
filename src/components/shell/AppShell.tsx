@@ -143,6 +143,7 @@ export function AppShell() {
   }, [createParentId]);
 
   return <div className={styles.shell}>
+    <div className={styles.titlebarDrag} data-tauri-drag-region />
     <input ref={fileInputRef} type="file" accept=".pdf,application/pdf" className={styles.hiddenInput} onChange={(event) => { const file = event.target.files?.[0]; if (file && fileNodeId) void tryStartPdfImport(file, { workspaceNodeId: fileNodeId }); event.target.value = ""; setFileNodeId(null); }} />
     <AppSidebar workspaceNodes={workspaceNodes} searchQuery={searchQuery} onSearchChange={setSearchQuery} onNewWorkspace={() => setCreateParentId(null)} onNewChild={(node) => setCreateParentId(node.id)} onDeleteNode={deleteNode} onAddPaperToWorkspace={addPaperFile} activeNodeId={routeNodeId} inboxCount={inboxCount} />
     <div className={styles.main}>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><PaperDragPreview />
