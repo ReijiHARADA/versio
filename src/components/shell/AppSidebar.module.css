@@ -584,11 +584,6 @@
 }
 
 .footerButton {
-  appearance: none;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font: inherit;
   text-decoration: none;
 }
 
