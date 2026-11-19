@@ -10,8 +10,8 @@
   --sidebar-pad-x: 8px;
   --sidebar-resize-handle-w: 4px;
   --sidebar-chevron: 14px;
-  /* Right edge of the macOS traffic lights plus a gap. */
-  --traffic-lights-end: 92px;
+  /* Width of the three macOS traffic lights (close to zoom). */
+  --traffic-lights-w: 60px;
 }
 
 /* Animate expand progress as one continuous motion. */
@@ -19,6 +19,13 @@
   syntax: "<number>";
   inherits: true;
   initial-value: 0;
+}
+
+/* Desktop: the collapsed rail holds the traffic lights with the window margin on
+   both sides, and its icons share the lights' center line. */
+[data-traffic-lights] {
+  --sidebar-collapsed-w: calc(var(--traffic-lights-w) + 2 * var(--window-margin));
+  --sidebar-pad-x: calc((var(--sidebar-collapsed-w) - var(--sidebar-icon-box)) / 2);
 }
 
 /* Outer flex item. */
