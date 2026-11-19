@@ -22,7 +22,13 @@
   overflow: hidden;
   border-left: 1px solid var(--color-border);
   background: var(--color-bg);
-  box-shadow: -8px 0 24px var(--color-shadow);
+  box-shadow: -4px 0 16px color-mix(in srgb, var(--color-shadow) 50%, transparent);
+}
+
+/* A collapsed rail is narrower than the traffic lights: page headers make room. */
+.shell:has([data-traffic-lights][data-sidebar-mode="collapsed"]) .main :global(header[data-tauri-drag-region]),
+.shell:has([data-traffic-lights][data-sidebar-mode="auto"]):not(:has(aside:hover)) .main :global(header[data-tauri-drag-region]) {
+  padding-left: calc(var(--traffic-lights-end) - var(--sidebar-collapsed-w));
 }
 
 /* Resize guide: the divider line turns accent while resizing. */

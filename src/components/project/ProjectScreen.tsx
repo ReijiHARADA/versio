@@ -120,7 +120,7 @@ export function ProjectScreen() {
           event.target.value = "";
         }}
       />
-      <header className={styles.header}>
+      <header className={styles.header} data-tauri-drag-region>
         <div className={styles.headerText}>
           {folderPath.length > 0 ? (
             <h1 className={styles.title}>

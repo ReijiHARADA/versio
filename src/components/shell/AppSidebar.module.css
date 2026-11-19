@@ -10,6 +10,8 @@
   --sidebar-pad-x: 8px;
   --sidebar-resize-handle-w: 4px;
   --sidebar-chevron: 14px;
+  /* Right edge of the macOS traffic lights plus a gap. */
+  --traffic-lights-end: 84px;
 }
 
 /* Animate expand progress as one continuous motion. */
@@ -205,15 +207,24 @@
 /* ────────────────────────────────────────────────
    Search
 ──────────────────────────────────────────────── */
+/* Always holds the header band: the native traffic lights sit at its left
+   (tauri.conf.json trafficLightPosition x16), so brand content starts after them. */
 .brandRow {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  height: 0;
+  height: var(--control-height);
+  margin-top: calc((var(--header-height) - var(--control-height)) / 2);
   overflow: hidden;
+}
+
+[data-traffic-lights] .brandRow {
+  padding-left: calc(var(--traffic-lights-end) - var(--sidebar-content-pad));
+}
+
+.brandRow > * {
   opacity: var(--sidebar-expand-t);
-  transition: height var(--sidebar-motion), margin var(--sidebar-motion);
 }
 
 .brandMark {
@@ -262,15 +273,6 @@
   transition: height var(--sidebar-motion), margin var(--sidebar-motion);
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .brandRow,
-.sidebarExpanded .brandRow,
-.sidebarResizing .brandRow,
-.sidebarDropReady .brandRow,
-.sidebar:has([data-workspace-editing]) .brandRow {
-  /* Occupies the main pane header band so the logo lines up with page titles. */
-  height: var(--control-height);
-  margin-top: calc((var(--header-height) - var(--control-height)) / 2);
-}
 
 .search {
   composes: surface from "../../styles/squircle.module.css";

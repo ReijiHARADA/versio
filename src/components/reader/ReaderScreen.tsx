@@ -299,7 +299,7 @@ export function ReaderScreen() {
 
   return (
     <div className={styles.container} data-testid="reader-screen" aria-label="リーダー">
-      <header className={styles.header}>
+      <header className={styles.header} data-tauri-drag-region>
         <div className={styles.headerLeft}>
           <button
             className={styles.iconButton}

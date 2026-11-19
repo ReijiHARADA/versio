@@ -264,7 +264,7 @@ export function TrashScreen() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
+      <header className={styles.header} data-tauri-drag-region>
         <div className={styles.headerLeft}>
           <Trash2 size={20} style={{ color: "var(--color-accent)" }} />
           <h1 className={styles.title}>ゴミ箱</h1>

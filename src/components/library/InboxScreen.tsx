@@ -73,7 +73,7 @@ export function InboxScreen() {
         }}
       />
 
-      <header className={styles.header}>
+      <header className={styles.header} data-tauri-drag-region>
         <div className={styles.headerLeft}>
           <Inbox size={20} style={{ color: "var(--color-accent)" }} />
           <h1 className={styles.title}>インボックス</h1>

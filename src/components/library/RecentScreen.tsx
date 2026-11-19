@@ -45,7 +45,7 @@ export function RecentScreen() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
+      <header className={styles.header} data-tauri-drag-region>
         <div className={styles.headerLeft}>
           <Clock size={20} style={{ color: "var(--color-accent)" }} />
           <h1 className={styles.title}>最近読んだ論文</h1>
