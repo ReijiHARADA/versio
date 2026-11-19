@@ -524,6 +524,15 @@ describe("canonical extraction pipeline", () => {
     }
   }, 60_000);
 
+  it("keeps an acronym affiliation row and the abstract's first line out of ACL authors", async (ctx) => {
+    const pdf = path.resolve("test-data/element-gold/acl-2024.acl-long.419/source.pdf");
+    if (!fs.existsSync(pdf)) ctx.skip();
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({ pages, paperId: "acl-acronym-affiliation-row", filePath: pdf, fileHash: "acl-acronym-affiliation-row", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toContain("Duygu Nur Yaldiz");
+    expect(result.paper.authors.join(" ")).not.toMatch(/Generative Large Language Models|USC USC/);
+  }, 60_000);
+
   it("keeps wrapped table-caption prose out of table cells", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
     if (!fs.existsSync(pdf)) ctx.skip();

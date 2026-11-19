@@ -2174,8 +2174,13 @@ function looksLikePaperCode(text: string): boolean {
   return /^[A-Z]{1,3}-\d{2,4}$/.test(layoutPlain(text));
 }
 
+// A row of institution acronyms (`USC USC` under two names) is not a byline.
+function looksLikeAcronymRow(text: string): boolean {
+  return /^[A-Z]{2,5}(?:\s+[A-Z]{2,5})+$/.test(text.trim());
+}
+
 function looksLikeLatinAuthorLine(text: string): boolean {
-  if (looksLikeEmail(text) || looksLikeAffiliation(text) || looksLikeUrl(text)) {
+  if (looksLikeEmail(text) || looksLikeAffiliation(text) || looksLikeUrl(text) || looksLikeAcronymRow(text)) {
     return false;
   }
   if (looksLikePaperCode(text) || looksLikePersonName(text)) return false;
@@ -2256,7 +2261,7 @@ function isNameToken(part: string, parts: string[]): boolean {
 }
 
 function looksLikePersonName(text: string): boolean {
-  if (looksLikeEmail(text) || looksLikeAffiliation(text) || looksLikeUrl(text)) {
+  if (looksLikeEmail(text) || looksLikeAffiliation(text) || looksLikeUrl(text) || looksLikeAcronymRow(text)) {
     return false;
   }
   // Title continuations that open with interrogatives / auxiliaries are never
@@ -2815,6 +2820,8 @@ function roleForLine(
   // would steal Frontiers fragments (`An Feng`) from glued byline recovery.
   if (
     line.page === 1 &&
+    // Below the Abstract heading an all-caps acronym (`Models (LLMs)`) is prose, not a surname.
+    (mastheadEndY < 0 || line.y < mastheadEndY) &&
     looksLikePersonName(text.replace(/\d+$/g, "").trim()) &&
     text.trim().length <= 48 &&
     !looksLikeAffiliation(text) &&
