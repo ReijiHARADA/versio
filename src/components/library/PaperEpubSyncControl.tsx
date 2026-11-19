@@ -96,6 +96,7 @@ export function PaperEpubSyncControl({
     return (
       <button
         type="button"
+        className={styles.menuItem}
         role="menuitem"
         disabled={disabled || phase === "syncing"}
         onClick={(event) => void run(event)}
