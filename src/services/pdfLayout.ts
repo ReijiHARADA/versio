@@ -71,6 +71,8 @@ export type LayoutLine = {
   pageHeight?: number;
   pageWidth?: number;
   roleHint?: LayoutRole;
+  /** Half of a line split at the document gutter after both halves read as column prose. */
+  gutterProse?: boolean;
   /** Groups emitted table/figure region lines into one atomic layout block. */
   regionId?: number;
   /** Repeated multi-column geometry indicates a table row; never merge it into neighboring prose rows. */
@@ -2534,10 +2536,82 @@ function splitSameBaselineNameRuns(lines: LayoutLine[]): LayoutLine[] {
   });
 }
 
+/** The two-column geometry most pages of a document share, if any. */
+function dominantColumnLayout(layouts: PageColumnLayout[]): PageColumnLayout | undefined {
+  const multi = layouts.filter((layout) => layout.isMultiColumn && !layout.isAsymmetricRail);
+  if (multi.length < 3 || multi.length < layouts.length * 0.5) return undefined;
+  const gutterX = median(multi.map((layout) => layout.gutterX));
+  if (multi.filter((layout) => Math.abs(layout.gutterX - gutterX) <= 12).length < multi.length * 0.8) return undefined;
+  return { ...multi[0], gutterX, leftX: median(multi.map((layout) => layout.leftX)), rightX: median(multi.map((layout) => layout.rightX)) };
+}
+
+/** Split a line glued across the document gutter when both halves read as column prose. */
+function splitAtDocumentGutter(line: LayoutLine, doc: PageColumnLayout): [LayoutLine, LayoutLine] | undefined {
+  const items = [...line.items].sort((a, b) => a.x - b.x);
+  const font = line.fontSize || 10;
+  const index = items.findIndex((item, i) => i > 0 &&
+    items[i - 1].x + items[i - 1].width <= doc.gutterX + 3 && item.x >= doc.gutterX - 3 &&
+    item.x - (items[i - 1].x + items[i - 1].width) >= Math.max(6, font * 0.6));
+  if (index <= 0) return undefined;
+  const left = items.slice(0, index);
+  const right = items.slice(index);
+  const prose = (side: ExtractedTextItem[]) =>
+    side.every((item, i) => i === 0 || item.x - (side[i - 1].x + side[i - 1].width) <= font * 1.5) &&
+    (side.map((item) => item.text).join(" ").match(/\p{L}{2,}/gu) ?? []).length >= 3;
+  const width = (side: ExtractedTextItem[]) => side[side.length - 1].x + side[side.length - 1].width - side[0].x;
+  const column = doc.gutterX - doc.leftX;
+  if (Math.abs(left[0].x - doc.leftX) > font * 3 || Math.abs(right[0].x - doc.rightX) > font * 3) return undefined;
+  if (Math.abs(median(left.map((i) => i.fontSize)) - median(right.map((i) => i.fontSize))) > 1) return undefined;
+  if (!prose(left) || !prose(right)) return undefined;
+  if (Math.max(width(left), width(right)) < column * 0.75 || Math.min(width(left), width(right)) < column * 0.15) return undefined;
+  return [
+    { ...itemsToLine(left, "left", line.page, line.pageHeight, line.pageWidth), gutterProse: true },
+    { ...itemsToLine(right, "right", line.page, line.pageHeight, line.pageWidth), gutterProse: true },
+  ];
+}
+
+/**
+ * A page dominated by a full-width table or figure can fail page-level column
+ * detection while a short two-column band sits beside it; native lines then
+ * run across the gutter and alternate between columns. Read only that band
+ * with the document's column layout.
+ */
+function orderDocumentGutterBand(
+  visible: LayoutLine[],
+  layout: PageColumnLayout,
+  doc: PageColumnLayout,
+  regions: PageRegion[],
+): LayoutLine[] | undefined {
+  const splits = new Map<LayoutLine, [LayoutLine, LayoutLine]>();
+  for (const line of visible) {
+    const parts = splitAtDocumentGutter(line, doc);
+    if (parts) splits.set(line, parts);
+  }
+  if (splits.size < 2) return undefined;
+  const top = Math.min(...[...splits.keys()].map((line) => line.y));
+  const bottom = Math.max(...[...splits.keys()].map((line) => line.y));
+  const inBand = (line: LayoutLine) => line.y >= top && line.y <= bottom;
+  const band: LayoutLine[] = [];
+  for (const line of visible.filter(inBand)) {
+    const parts = splits.get(line);
+    if (parts) band.push(...parts);
+    else if (line.x + line.width <= doc.gutterX + 3) band.push({ ...line, column: "left" });
+    else if (line.x >= doc.gutterX - 3) band.push({ ...line, column: "right" });
+    else return undefined; // something else crosses the gutter inside the band
+  }
+  const bandLayout = { ...doc, page: layout.page, pageWidth: layout.pageWidth, pageHeight: layout.pageHeight, isMultiColumn: true };
+  return [
+    ...orderWithRegions(visible.filter((line) => line.y < top), layout, regions),
+    ...orderWithRegions(band, bandLayout, regions),
+    ...orderWithRegions(visible.filter((line) => line.y > bottom), layout, regions),
+  ];
+}
+
 function buildPageLines(
   page: ExtractedPage,
   layout: PageColumnLayout,
-  patterns: Set<string>
+  patterns: Set<string>,
+  docLayout?: PageColumnLayout,
 ): LayoutLine[] {
   const buckets: Record<LayoutColumn, ExtractedTextItem[]> = {
     left: [],
@@ -2658,6 +2732,10 @@ function buildPageLines(
     const body = visible.filter((line) => line.y >= splitAt.y);
     const mastheadLayout = layout.isAsymmetricRail ? { ...layout, isMultiColumn: false } : layout;
     return [...orderWithRegions(masthead, mastheadLayout, regions), ...orderWithRegions(body, layout, regions)];
+  }
+  if (!layout.isMultiColumn && docLayout && Math.abs(docLayout.pageWidth - layout.pageWidth) <= 2) {
+    const banded = orderDocumentGutterBand(visible, layout, docLayout, regions);
+    if (banded) return banded;
   }
 
   return orderWithRegions(visible, layout, regions);
@@ -4612,7 +4690,7 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
       const tableLikeLines = wordCount <= 120 && sentenceBoundaryCount <= 1 ? block.lines.filter((line) => {
         const text = line.text.trim();
         const numericDensity = (text.match(/\d/g) ?? []).length / Math.max(text.length, 1);
-        return line.items.length >= 2 && numericDensity >= 0.08 && !/[.!?]\s*$/.test(text);
+        return line.items.length >= 2 && numericDensity >= 0.08 && !/[.!?]\s*$/.test(text) && !line.gutterProse;
       }) : [];
       const tableXBands = new Set(tableLikeLines.flatMap((line) =>
         line.items.map((item) => Math.round(item.x / 24) * 24)
@@ -6205,10 +6283,11 @@ export function reconstructDocument(pages: ExtractedPage[]): {
 } {
   const patterns = detectHeaderFooterPatterns(pages);
   const layouts = pages.map(detectPageColumns);
+  const docLayout = dominantColumnLayout(layouts);
   const lines: LayoutLine[] = [];
 
   for (let i = 0; i < pages.length; i++) {
-    lines.push(...commaAtSuperscriptMarkers(joinMastheadGutterSplitLines(joinAccentSplitLines(buildPageLines(pages[i], layouts[i], patterns)))));
+    lines.push(...commaAtSuperscriptMarkers(joinMastheadGutterSplitLines(joinAccentSplitLines(buildPageLines(pages[i], layouts[i], patterns, docLayout)))));
   }
 
   const bodyFont = median(
