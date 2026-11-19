@@ -55,6 +55,8 @@
 
   /* Controls */
   --control-height: 32px;
+  /* Header band: a control plus the window margin above and below it. */
+  --header-height: calc(var(--control-height) + 2 * var(--window-margin));
   --control-height-lg: 36px;
   --control-radius: var(--radius-md);
   --control-padding-x: 12px;
@@ -71,11 +73,8 @@
   /* Layout */
   --nav-sidebar-width: 220px;
   --sidebar-width: 280px;
-  --header-height: 56px;
   /* Outer inset from the window edge to content (sidebar and every pane). */
   --window-margin: 24px;
-  /* Shared height for sidebar rows, search, and header buttons. */
-  --control-height: 32px;
   --content-max-width: 720px;
   --notes-panel-width: 360px;
   --notes-panel-min-width: 300px;
