@@ -55,7 +55,7 @@
     var(--sidebar-pad-x) +
       (var(--window-margin) - var(--sidebar-pad-x)) * var(--sidebar-expand-t)
   );
-  padding: 0 var(--sidebar-content-pad) var(--spacing-md);
+  padding: var(--titlebar-h) var(--sidebar-content-pad) var(--spacing-md);
   background-color: var(--color-bg-secondary);
   overflow: visible;
   box-sizing: border-box;
