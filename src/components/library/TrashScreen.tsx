@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Folder, FileText, Trash2 } from "lucide-react";
+import { Folder, FileText, Trash2 } from "../ui/MaterialSymbol";
 import {
   emptyTrash,
   listTrashItems,

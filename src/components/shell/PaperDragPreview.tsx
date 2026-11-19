@@ -1,4 +1,4 @@
-import { FileText } from "lucide-react";
+import { FileText } from "../ui/MaterialSymbol";
 import { usePaperDragStore } from "../../stores/paperDragStore";
 import styles from "./AppShell.module.css";
 

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, Plus, Inbox } from "lucide-react";
+import { Upload, Plus, Inbox } from "../ui/MaterialSymbol";
 import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useImportJobStore, visibleImportJobs } from "../../stores/importJobStore";

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { MemoryRouter } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "../components/ui/MaterialSymbol";
 import { AppSidebar } from "../components/shell/AppSidebar";
 import { useAppStore, type SidebarMode } from "../stores/appStore";
 import { useLibraryCache } from "../stores/libraryCache";

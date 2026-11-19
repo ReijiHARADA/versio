@@ -10,7 +10,7 @@ import {
   FolderPlus,
   Pencil,
   Trash2,
-} from "lucide-react";
+} from "../ui/MaterialSymbol";
 import type { WorkspaceNode, WorkspacePaper } from "../../types/project";
 import type { Paper } from "../../types/paper";
 import { buildWorkspaceTree, collectDescendantIds } from "../../data/workspace/tree";
@@ -22,6 +22,7 @@ import { useDraggablePaper } from "../library/useDraggablePaper";
 import { ExportDialog } from "../reader/ExportDialog";
 import { useWorkspaceDrag } from "./useWorkspaceDrag";
 import { hoverExpandId, WORKSPACE_HOVER_EXPAND_MS } from "./workspaceHoverExpand";
+import { isWorkspaceRenameDoubleClick } from "./workspaceRenameGesture";
 import { renameWorkspaceItem } from "../../services/projectService";
 import { isImeComposing } from "../../utils/ime";
 import styles from "./AppSidebar.module.css";
@@ -87,6 +88,7 @@ export function WorkspaceTree({
   const [deleting, setDeleting] = useState(false);
   const treeRef = useRef<HTMLElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const lastNodeClick = useRef<{ nodeId: string; at: number } | null>(null);
 
   const drag = useWorkspaceDrag(nodes, (id) => {
     if (id) setCollapsed((current) => ({ ...current, [id]: false }));
@@ -250,16 +252,6 @@ export function WorkspaceTree({
             setOpenMenuId(node.id);
           }}
         >
-          {hasNested ? (
-            <button
-              type="button"
-              className={styles.chevron}
-              aria-label={`${node.name}を${isOpen ? "折りたたむ" : "展開"}`}
-              title={isOpen ? "折りたたむ" : "展開"}
-              aria-expanded={isOpen}
-              onClick={toggle}
-            />
-          ) : null}
           {editingId === node.id ? (
             <div className={`${styles.item} ${styles.treeLabel}`} data-workspace-editing>
               <span className={styles.icon}>
@@ -273,13 +265,18 @@ export function WorkspaceTree({
               draggable={false}
               className={`${styles.item} ${styles.treeLabel} ${activeNodeId === node.id ? styles.active : ""}`}
               title={node.name}
+              aria-expanded={hasNested ? isOpen : undefined}
               onClick={(event) => {
-                if (draggingPaperId) event.preventDefault();
+                if (draggingPaperId) {
+                  event.preventDefault();
+                  return;
+                }
+                // Icon and name are one target: a click opens the folder page and toggles its children.
+                const rename = isWorkspaceRenameDoubleClick(lastNodeClick.current, node.id, event.timeStamp);
+                lastNodeClick.current = rename ? null : { nodeId: node.id, at: event.timeStamp };
+                if (hasNested) toggle();
                 setOpenMenuId(null);
-              }}
-              onDoubleClick={(event) => {
-                event.preventDefault();
-                setEditingId(node.id);
+                if (rename) setEditingId(node.id);
               }}
             >
               <span className={styles.icon}>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, RefreshCw } from "../ui/MaterialSymbol";
 import type { PaperBlock } from "../../types/paper";
 import type { Annotation } from "../../types/annotation";
 import type { GlossaryEntry } from "../../services/llm/types";

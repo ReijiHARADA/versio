@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Play } from "lucide-react";
+import { Play } from "../ui/MaterialSymbol";
 import styles from "./ReplayablePreview.module.css";
 
 type ReplayablePreviewProps = {

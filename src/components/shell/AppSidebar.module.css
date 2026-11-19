@@ -311,14 +311,6 @@
   color: var(--color-text-tertiary);
 }
 
-.folderItem {
-  appearance: none;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font: inherit;
-  text-align: left;
-}
 
 /* ────────────────────────────────────────────────
    Section — pack titles away when collapsed
@@ -608,56 +600,6 @@
 
 .treeRowMenuOpen {
   z-index: 10;
-}
-
-/*
- * Expand/collapse toggle. It has no glyph of its own: it covers the folder
- * icon (which already shows open/closed), so clicking the icon toggles and
- * clicking the name still opens the folder page.
- */
-.chevron {
-  composes: surface from "../../styles/squircle.module.css";
-  position: absolute;
-  top: 50%;
-  left: var(--tree-indent, 0px);
-  z-index: 2;
-  display: flex;
-  width: var(--sidebar-icon-box);
-  height: var(--sidebar-icon-box);
-  --sq-fill: var(--sq-fill-md);
-  border-radius: var(--sq-radius-md);
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 0;
-  --sq-bg: transparent;
-  color: var(--color-text-secondary);
-  opacity: var(--sidebar-expand-t);
-  pointer-events: none;
-  transform: translateY(-50%);
-  line-height: 0;
-}
-
-.chevron:hover {
-  --sq-bg: color-mix(in srgb, currentColor 14%, transparent);
-}
-
-.chevron:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: -2px;
-}
-
-.treeRow:has(.item.active) .chevron {
-  color: var(--color-selection-fg);
-}
-
-.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .chevron,
-.sidebarExpanded .chevron,
-.sidebarResizing .chevron,
-.sidebarDropReady .chevron,
-.sidebar:has([data-workspace-editing]) .chevron {
-  pointer-events: auto;
 }
 
 .sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .treeRow,

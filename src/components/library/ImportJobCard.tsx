@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { AlertCircle, Loader2, RotateCcw, ExternalLink, Star, X } from "lucide-react";
+import { AlertCircle, Loader2, RotateCcw, ExternalLink, Star, X } from "../ui/MaterialSymbol";
 import type { ImportJob } from "../../stores/importJobStore";
 import {
   actionLabel,

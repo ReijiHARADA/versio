@@ -1,4 +1,4 @@
-import { RefreshCw } from "lucide-react";
+import { RefreshCw } from "../ui/MaterialSymbol";
 import type { TranslationSettingsV2 } from "../../utils/translationSettings";
 import type { ServiceStatus } from "./settingsTypes";
 import { SettingsCard, SettingsStatusRow } from "./SettingsPrimitives";

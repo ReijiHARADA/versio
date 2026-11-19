@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X } from "../ui/MaterialSymbol";
 import type { LicenseInventory, LicensePackage } from "../../types/licenses";
 import {
   ECOSYSTEM_LABELS,

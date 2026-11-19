@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { FolderPlus, MoreHorizontal, Pause, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
+import { FolderPlus, MoreHorizontal, Pause, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "../ui/MaterialSymbol";
 import type { Paper } from "../../types/paper";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
