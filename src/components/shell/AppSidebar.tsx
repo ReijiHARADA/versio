@@ -14,6 +14,7 @@ import {
 } from "../ui/MaterialSymbol";
 import stapleLogo from "../../assets/brand/staple.png";
 import stapleLogoDark from "../../assets/brand/staple-dark.png";
+import { isTauriApp } from "../../utils/serverReady";
 import type { WorkspaceNode } from "../../types/project";
 import {
   clampSidebarWidth,
@@ -74,6 +75,8 @@ export function AppSidebar({
   const storedMode = useAppStore((state) => state.displaySettings.sidebarMode);
   const narrow = useSyncExternalStore(subscribeNarrow, isNarrowWindow);
   const sidebarMode = narrow ? "auto" : storedMode;
+  // Collapsing via the button happens under the pointer; ignore hover until it leaves.
+  const [hoverSuppressed, setHoverSuppressed] = useState(false);
   const storedWidth = useAppStore((state) => state.displaySettings.sidebarWidth);
   const setDisplaySettings = useAppStore((state) => state.setDisplaySettings);
   const draggingPaperId = usePaperDragStore((state) => state.draggingPaperId);
@@ -187,13 +190,14 @@ export function AppSidebar({
   );
 
   const modeClass =
-    sidebarMode === "expanded" ? styles.sidebarExpanded : styles.sidebarAuto;
+    sidebarMode === "expanded" ? styles.sidebarExpanded : hoverSuppressed ? "" : styles.sidebarAuto;
 
   return (
     <div
       ref={sidebarRef}
       className={styles.rail}
-      data-sidebar-mode={sidebarMode}
+      data-sidebar-mode={hoverSuppressed && sidebarMode === "auto" ? "collapsed" : sidebarMode}
+      data-traffic-lights={isTauriApp() || undefined}
       data-sidebar-drop-ready={pointerOverSidebar || undefined}
       data-sidebar-resizing={resizing || undefined}
       style={
@@ -205,7 +209,7 @@ export function AppSidebar({
       <div
         className={`${styles.shell} ${modeClass} ${pointerOverSidebar ? styles.sidebarDropReady : ""} ${resizing ? styles.sidebarResizing : ""}`}
       >
-        <aside className={styles.sidebar}>
+        <aside className={styles.sidebar} onPointerLeave={() => setHoverSuppressed(false)}>
           <div
             className={styles.resizeHandle}
             role="separator"
@@ -216,7 +220,7 @@ export function AppSidebar({
             onDoubleClick={onResizeDoubleClick}
           />
 
-          <div className={styles.brandRow}>
+          <div className={styles.brandRow} data-tauri-drag-region>
             <img src={stapleLogo} className={`${styles.brandMark} ${styles.brandMarkLight}`} alt="" />
             <img src={stapleLogoDark} className={`${styles.brandMark} ${styles.brandMarkDark}`} alt="" />
             <span className={styles.brand} aria-hidden="true">
@@ -226,9 +230,10 @@ export function AppSidebar({
               <button
                 type="button"
                 className={styles.brandToggle}
-                onClick={() =>
-                  setDisplaySettings({ sidebarMode: storedMode === "expanded" ? "auto" : "expanded" })
-                }
+                onClick={() => {
+                  setHoverSuppressed(storedMode === "expanded");
+                  setDisplaySettings({ sidebarMode: storedMode === "expanded" ? "auto" : "expanded" });
+                }}
                 title={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを固定"}
                 aria-label={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを固定"}
               >

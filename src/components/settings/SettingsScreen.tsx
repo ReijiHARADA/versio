@@ -335,7 +335,7 @@ export function SettingsScreen() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
+      <header className={styles.header} data-tauri-drag-region>
         <div className={styles.headerLeft}>
           <Settings size={20} className={styles.logo} />
           <h1 className={styles.title}>設定</h1>

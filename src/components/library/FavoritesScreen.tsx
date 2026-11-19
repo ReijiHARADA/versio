@@ -35,7 +35,7 @@ export function FavoritesScreen() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
+      <header className={styles.header} data-tauri-drag-region>
         <div className={styles.headerLeft}>
           <Star size={20} style={{ color: "var(--color-favorite)" }} fill="currentColor" />
           <h1 className={styles.title}>お気に入り</h1>

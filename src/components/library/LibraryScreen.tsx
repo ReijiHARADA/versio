@@ -63,7 +63,7 @@ export function LibraryScreen() {
         }}
       />
 
-      <header className={styles.header}>
+      <header className={styles.header} data-tauri-drag-region>
         <div className={styles.headerLeft}>
           <FileText size={24} className={styles.logo} />
           <h1 className={styles.title}>すべての論文</h1>
