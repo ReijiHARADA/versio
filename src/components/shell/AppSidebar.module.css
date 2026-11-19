@@ -213,7 +213,7 @@
   overflow: hidden;
 }
 
-/* Shares the header band with the native traffic lights (tauri.conf.json x16 y30,
+/* Shares the header band with the native traffic lights (tauri.conf.json x16 y42,
    centered on the page title): the collapse button sits right after them. */
 [data-traffic-lights] .brandRow {
   padding-left: calc(var(--traffic-lights-end) - var(--sidebar-content-pad));
