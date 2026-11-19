@@ -11,7 +11,7 @@ import {
   Settings,
   Star,
   Trash2,
-} from "lucide-react";
+} from "../ui/MaterialSymbol";
 import stapleLogo from "../../assets/brand/staple.png";
 import stapleLogoDark from "../../assets/brand/staple-dark.png";
 import type { WorkspaceNode } from "../../types/project";

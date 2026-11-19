@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./polyfills/pdfjsCompat";
+import "@material-symbols/font-600/sharp.css";
 import "./styles/variables.css";
 import "./styles/squircle.css";
 import App from "./App";

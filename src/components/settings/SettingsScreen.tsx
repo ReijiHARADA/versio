@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Settings } from "lucide-react";
+import { Settings } from "../ui/MaterialSymbol";
 import { getSetting, saveSetting, clearTranslationCache, restoreTranslationCache } from "../../services/database";
 import { checkOllamaAvailability } from "../../services/llm/ollamaProvider";
 import { addSamplePaper } from "../../services/samplePaper";

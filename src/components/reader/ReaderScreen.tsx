@@ -9,7 +9,7 @@ import {
   StickyNote,
   BookMarked,
   PanelLeft,
-} from "lucide-react";
+} from "../ui/MaterialSymbol";
 import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import {

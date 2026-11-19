@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FileText, FolderX, Loader2, Plus, Upload } from "lucide-react";
+import { FileText, FolderX, Loader2, Plus, Upload } from "../ui/MaterialSymbol";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";

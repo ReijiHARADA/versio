@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Upload } from "lucide-react";
+import { Upload } from "../ui/MaterialSymbol";
 import {
   fileFromDroppedPath,
   firstPdfPath,

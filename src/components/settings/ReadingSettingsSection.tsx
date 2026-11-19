@@ -1,4 +1,4 @@
-import { Sun, Moon, Monitor } from "lucide-react";
+import { Sun, Moon, Monitor } from "../ui/MaterialSymbol";
 import {
   useAppStore,
   type DisplaySettings,

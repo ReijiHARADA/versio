@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Maximize2, Eye, EyeOff } from "lucide-react";
+import { Maximize2, Eye, EyeOff } from "../ui/MaterialSymbol";
 import type { PaperBlock, TableMetadata } from "../../types/paper";
 import { usePaperAssetUrl } from "../../hooks/usePaperAssetUrl";
 import styles from "./Figure.module.css";

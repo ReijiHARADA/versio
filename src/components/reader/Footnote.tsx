@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "../ui/MaterialSymbol";
 import type { PaperBlock } from "../../types/paper";
 import { usableTranslatedText } from "../../services/translation/quality";
 import styles from "./Footnote.module.css";
