@@ -1,15 +1,4 @@
 .shell {
-  --main-surface-t: 0;
-  transition: --main-surface-t var(--sidebar-motion);
-}
-
-@property --main-surface-t {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 0;
-}
-
-.shell {
   /* Fill App root (which shrinks when the model banner is shown). */
   height: 100%;
   min-height: 0;
@@ -17,14 +6,6 @@
   overflow: hidden;
   background: var(--color-bg-secondary);
 }
-
-.shell:has([data-sidebar-mode] aside:hover),
-.shell:has([data-sidebar-mode="expanded"]),
-.shell:has([data-sidebar-drop-ready]),
-.shell:has([data-sidebar-resizing]) {
-  --main-surface-t: 1;
-}
-
 
 .hiddenInput {
   display: none;
@@ -39,22 +20,16 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: calc(28px * var(--main-surface-t)) 0 0 calc(28px * var(--main-surface-t));
+  border-left: 1px solid var(--color-border);
   background: var(--color-bg);
-  box-shadow: calc(-8px * var(--main-surface-t)) 0 calc(24px * var(--main-surface-t)) var(--color-shadow);
 }
 
-/* Resize guide traces the main surface's left edge through both rounded corners:
-   a box as wide as the corner radius, open on the right, so the top/bottom
-   borders end exactly where each arc meets the straight edge. */
+/* Resize guide: the divider line turns accent while resizing. */
 .main::after {
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
-  width: 28px;
-  border: 3px solid var(--color-accent);
-  border-right: 0;
-  border-radius: 28px 0 0 28px;
+  border-left: 3px solid var(--color-accent);
   z-index: 100; /* above sticky page headers */
   pointer-events: none;
   opacity: 0;

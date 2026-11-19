@@ -123,9 +123,9 @@ describe("mergeTranslationSettingsV2", () => {
 });
 
 describe("display settings defaults", () => {
-  it("defaults sidebar mode to auto hover expand", async () => {
+  it("defaults sidebar mode to expanded", async () => {
     const { useAppStore } = await import("../stores/appStore");
-    expect(useAppStore.getState().displaySettings.sidebarMode).toBe("auto");
+    expect(useAppStore.getState().displaySettings.sidebarMode).toBe("expanded");
     expect(useAppStore.getState().displaySettings.sidebarWidth).toBe(220);
   });
 });

@@ -52,7 +52,7 @@
   /* Top pad is 0 so the search can occupy the same vertical band as the page header. */
   --sidebar-content-pad: calc(
     var(--sidebar-pad-x) +
-      (var(--sidebar-chevron) - var(--sidebar-pad-x)) * var(--sidebar-expand-t)
+      (var(--window-margin) - var(--sidebar-pad-x)) * var(--sidebar-expand-t)
   );
   padding: 0 var(--sidebar-content-pad) var(--spacing-md);
   background-color: var(--color-bg-secondary);
@@ -205,8 +205,54 @@
 /* ────────────────────────────────────────────────
    Search
 ──────────────────────────────────────────────── */
-.brand {
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
   height: 0;
+  overflow: hidden;
+  opacity: var(--sidebar-expand-t);
+  transition: height var(--sidebar-motion), margin var(--sidebar-motion);
+}
+
+.brandMark {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.brandMarkDark,
+:global([data-theme="dark"]) .brandMarkLight {
+  display: none;
+}
+
+:global([data-theme="dark"]) .brandMarkDark {
+  display: block;
+}
+
+.brandToggle {
+  composes: surface from "../../styles/squircle.module.css";
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  --sq-bg: transparent;
+  --sq-fill: var(--sq-fill-8);
+  border-radius: var(--sq-radius-8);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+.brandToggle:hover {
+  --sq-bg: var(--color-bg-tertiary);
+  color: var(--color-text);
+}
+
+.brand {
   color: var(--color-text-secondary);
   font-family: var(--font-family-serif);
   font-size: 1.25rem;
@@ -216,11 +262,11 @@
   transition: height var(--sidebar-motion), margin var(--sidebar-motion);
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .brand,
-.sidebarExpanded .brand,
-.sidebarResizing .brand,
-.sidebarDropReady .brand,
-.sidebar:has([data-workspace-editing]) .brand {
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .brandRow,
+.sidebarExpanded .brandRow,
+.sidebarResizing .brandRow,
+.sidebarDropReady .brandRow,
+.sidebar:has([data-workspace-editing]) .brandRow {
   height: 24px;
   margin-top: 22px;
 }

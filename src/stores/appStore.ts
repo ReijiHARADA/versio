@@ -47,7 +47,7 @@ const defaultDisplaySettings: DisplaySettings = {
   contentWidth: 720,
   theme: "system",
   originalDisplay: "on-demand",
-  sidebarMode: "auto",
+  sidebarMode: "expanded",
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
 };
 
@@ -92,8 +92,8 @@ export const useAppStore = create<AppUiState>()(
     }),
     {
       name: STORE_KEY,
-      version: 7,
-      migrate: (persisted) => {
+      version: 8,
+      migrate: (persisted, version) => {
         const value = persisted as {
           displaySettings?: Partial<DisplaySettings> & {
             sidebarMode?: string;
@@ -104,8 +104,9 @@ export const useAppStore = create<AppUiState>()(
         const rest = { ...legacy };
         delete rest.sidebarCollapseRootsOnly;
         const merged = { ...defaultDisplaySettings, ...rest };
+        // v8: the sidebar is open by default and auto-collapses only in narrow windows.
         const sidebarMode: SidebarMode =
-          merged.sidebarMode === "expanded" ? "expanded" : "auto";
+          version < 8 || merged.sidebarMode === "expanded" ? "expanded" : "auto";
         return {
           displaySettings: {
             ...merged,

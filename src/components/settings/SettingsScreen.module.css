@@ -9,7 +9,7 @@
 
 .header {
   height: var(--header-height);
-  padding: 0 var(--spacing-lg);
+  padding: 0 var(--window-margin);
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -73,7 +73,7 @@
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-2xl);
+  padding: var(--spacing-xl) var(--window-margin) var(--spacing-2xl);
   background: var(--color-surface-page);
   will-change: transform;
 }
@@ -91,7 +91,7 @@
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-2xl);
+  padding: var(--spacing-xl) var(--window-margin) var(--spacing-2xl);
 }
 
 .elasticHint {

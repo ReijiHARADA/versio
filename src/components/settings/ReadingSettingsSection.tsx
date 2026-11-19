@@ -23,7 +23,7 @@ const DEFAULT_READING_SETTINGS: DisplaySettings = {
   contentWidth: 720,
   theme: "system",
   originalDisplay: "on-demand",
-  sidebarMode: "auto",
+  sidebarMode: "expanded",
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
 };
 
