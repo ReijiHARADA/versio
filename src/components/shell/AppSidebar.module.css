@@ -105,8 +105,7 @@
 .label,
 .itemLabel,
 .searchInput,
-.badge,
-.brand {
+.badge {
   /* Follows --sidebar-expand-t so labels fade/clip with the width. */
   opacity: var(--sidebar-expand-t);
   max-width: calc(160px * var(--sidebar-expand-t));
@@ -123,7 +122,6 @@
 .sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .itemLabel,
 .sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .searchInput,
 .sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .badge,
-.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .brand,
 .sidebarExpanded .label,
 .sidebarResizing .label,
 .sidebarExpanded .itemLabel,
@@ -132,17 +130,14 @@
 .sidebarResizing .searchInput,
 .sidebarExpanded .badge,
 .sidebarResizing .badge,
-.sidebarResizing .brand,
 .sidebarDropReady .label,
 .sidebarDropReady .itemLabel,
 .sidebarDropReady .searchInput,
 .sidebarDropReady .badge,
-.sidebarDropReady .brand,
 .sidebar:has([data-workspace-editing]) .label,
 .sidebar:has([data-workspace-editing]) .itemLabel,
 .sidebar:has([data-workspace-editing]) .searchInput,
-.sidebar:has([data-workspace-editing]) .badge,
-.sidebar:has([data-workspace-editing]) .brand {
+.sidebar:has([data-workspace-editing]) .badge {
   pointer-events: auto;
 }
 
@@ -218,31 +213,14 @@
   overflow: hidden;
 }
 
-/* The native traffic lights own the header band (tauri.conf.json y30, centered
-   on the page title); the brand row sits just below them. */
+/* Shares the header band with the native traffic lights (tauri.conf.json x16 y30,
+   centered on the page title): the collapse button sits right after them. */
 [data-traffic-lights] .brandRow {
-  margin-top: 44px;
+  padding-left: calc(var(--traffic-lights-end) - var(--sidebar-content-pad));
 }
 
 .brandRow > * {
   opacity: var(--sidebar-expand-t);
-}
-
-.brandMark {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  /* The baked-in drop shadow sits low; lift the staple to the text's optical center. */
-  transform: translateY(-2px);
-}
-
-.brandMarkDark,
-:global([data-theme="dark"]) .brandMarkLight {
-  display: none;
-}
-
-:global([data-theme="dark"]) .brandMarkDark {
-  display: block;
 }
 
 .brandToggle {
@@ -251,7 +229,6 @@
   place-items: center;
   width: 24px;
   height: 24px;
-  margin-left: auto;
   padding: 0;
   border: none;
   --sq-bg: transparent;
@@ -266,15 +243,6 @@
   color: var(--color-text);
 }
 
-.brand {
-  color: var(--color-text-secondary);
-  font-family: var(--font-family-serif);
-  font-size: 1.0625rem;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  transition: height var(--sidebar-motion), margin var(--sidebar-motion);
-}
 
 
 .search {
