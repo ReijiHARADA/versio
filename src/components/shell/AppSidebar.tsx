@@ -237,7 +237,7 @@ export function AppSidebar({
                 title={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを固定"}
                 aria-label={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを固定"}
               >
-                {storedMode === "expanded" ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+                {storedMode === "expanded" ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
               </button>
             )}
           </div>
