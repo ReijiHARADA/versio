@@ -72,9 +72,8 @@ export function AppSidebar({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const storedMode = useAppStore((state) => state.displaySettings.sidebarMode);
   const narrow = useSyncExternalStore(subscribeNarrow, isNarrowWindow);
-  const sidebarMode = narrow ? "auto" : storedMode;
-  // Collapsing via the button happens under the pointer; ignore hover until it leaves.
-  const [hoverSuppressed, setHoverSuppressed] = useState(false);
+  // Hover-to-open only in narrow windows; a wide window is either pinned open or collapsed.
+  const sidebarMode = narrow ? "auto" : storedMode === "expanded" ? "expanded" : "collapsed";
   const storedWidth = useAppStore((state) => state.displaySettings.sidebarWidth);
   const setDisplaySettings = useAppStore((state) => state.setDisplaySettings);
   const draggingPaperId = usePaperDragStore((state) => state.draggingPaperId);
@@ -188,13 +187,13 @@ export function AppSidebar({
   );
 
   const modeClass =
-    sidebarMode === "expanded" ? styles.sidebarExpanded : hoverSuppressed ? "" : styles.sidebarAuto;
+    sidebarMode === "expanded" ? styles.sidebarExpanded : sidebarMode === "auto" ? styles.sidebarAuto : "";
 
   return (
     <div
       ref={sidebarRef}
       className={styles.rail}
-      data-sidebar-mode={hoverSuppressed && sidebarMode === "auto" ? "collapsed" : sidebarMode}
+      data-sidebar-mode={sidebarMode}
       data-traffic-lights={isTauriApp() || undefined}
       data-sidebar-drop-ready={pointerOverSidebar || undefined}
       data-sidebar-resizing={resizing || undefined}
@@ -207,7 +206,7 @@ export function AppSidebar({
       <div
         className={`${styles.shell} ${modeClass} ${pointerOverSidebar ? styles.sidebarDropReady : ""} ${resizing ? styles.sidebarResizing : ""}`}
       >
-        <aside className={styles.sidebar} onPointerLeave={() => setHoverSuppressed(false)}>
+        <aside className={styles.sidebar}>
           <div
             className={styles.resizeHandle}
             role="separator"
@@ -224,11 +223,10 @@ export function AppSidebar({
                 type="button"
                 className={styles.brandToggle}
                 onClick={() => {
-                  setHoverSuppressed(storedMode === "expanded");
                   setDisplaySettings({ sidebarMode: storedMode === "expanded" ? "auto" : "expanded" });
                 }}
-                title={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを固定"}
-                aria-label={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを固定"}
+                title={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを開く"}
+                aria-label={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを開く"}
               >
                 {storedMode === "expanded" ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
               </button>
