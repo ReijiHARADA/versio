@@ -207,8 +207,7 @@
 /* ────────────────────────────────────────────────
    Search
 ──────────────────────────────────────────────── */
-/* Always holds the header band: the native traffic lights sit at its left
-   (tauri.conf.json trafficLightPosition x16), so brand content starts after them. */
+/* Always holds its band so the search never jumps when the sidebar expands. */
 .brandRow {
   display: flex;
   align-items: center;
@@ -219,8 +218,10 @@
   overflow: hidden;
 }
 
+/* The native traffic lights own the header band (tauri.conf.json y30, centered
+   on the page title); the brand row sits just below them. */
 [data-traffic-lights] .brandRow {
-  padding-left: calc(var(--traffic-lights-end) - var(--sidebar-content-pad));
+  margin-top: 44px;
 }
 
 .brandRow > * {
