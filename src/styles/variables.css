@@ -72,6 +72,8 @@
   --nav-sidebar-width: 220px;
   --sidebar-width: 280px;
   --header-height: 56px;
+  /* Outer inset from the window edge to content (sidebar and every pane). */
+  --window-margin: 24px;
   --content-max-width: 720px;
   --notes-panel-width: 360px;
   --notes-panel-min-width: 300px;

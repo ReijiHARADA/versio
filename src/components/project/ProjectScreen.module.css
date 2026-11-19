@@ -13,7 +13,7 @@
   align-items: center;
   justify-content: space-between;
   min-height: var(--header-height);
-  padding: 0 var(--spacing-lg);
+  padding: 0 var(--window-margin);
   flex-shrink: 0;
 }
 
@@ -101,7 +101,7 @@
 .list {
   flex: 1;
   overflow-y: auto;
-  padding: var(--spacing-lg) var(--spacing-xl);
+  padding: var(--spacing-lg) var(--window-margin);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);

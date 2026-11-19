@@ -1,6 +1,6 @@
 /* Match header horizontal inset (icon ←→ empty button). */
 .main {
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-md) var(--window-margin);
 }
 
 .list {

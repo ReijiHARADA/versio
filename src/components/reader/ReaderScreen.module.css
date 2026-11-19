@@ -10,7 +10,7 @@
 .header {
   height: var(--header-height);
   flex-shrink: 0;
-  padding: 0 var(--spacing-md);
+  padding: 0 var(--window-margin);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -153,7 +153,7 @@
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: var(--spacing-2xl) var(--spacing-xl);
+  padding: var(--spacing-2xl) var(--window-margin);
 }
 
 .rightPane {

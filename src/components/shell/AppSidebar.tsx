@@ -1,15 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { NavLink } from "react-router-dom";
 import {
   Clock,
   Inbox,
   Library,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plus,
   Search,
   Settings,
   Star,
   Trash2,
 } from "lucide-react";
+import stapleLogo from "../../assets/brand/staple.png";
+import stapleLogoDark from "../../assets/brand/staple-dark.png";
 import type { WorkspaceNode } from "../../types/project";
 import {
   clampSidebarWidth,
@@ -40,6 +44,19 @@ type AppSidebarProps = {
   initialCollapsedIds?: readonly string[];
 };
 
+/** Below this window width the sidebar always collapses and opens on hover. */
+const NARROW_WINDOW_QUERY = "(max-width: 1023px)";
+
+function subscribeNarrow(onChange: () => void) {
+  const query = window.matchMedia(NARROW_WINDOW_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+function isNarrowWindow() {
+  return window.matchMedia(NARROW_WINDOW_QUERY).matches;
+}
+
 export function AppSidebar({
   workspaceNodes,
   searchQuery,
@@ -54,7 +71,9 @@ export function AppSidebar({
   initialCollapsedIds,
 }: AppSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const sidebarMode = useAppStore((state) => state.displaySettings.sidebarMode);
+  const storedMode = useAppStore((state) => state.displaySettings.sidebarMode);
+  const narrow = useSyncExternalStore(subscribeNarrow, isNarrowWindow);
+  const sidebarMode = narrow ? "auto" : storedMode;
   const storedWidth = useAppStore((state) => state.displaySettings.sidebarWidth);
   const setDisplaySettings = useAppStore((state) => state.setDisplaySettings);
   const draggingPaperId = usePaperDragStore((state) => state.draggingPaperId);
@@ -197,8 +216,25 @@ export function AppSidebar({
             onDoubleClick={onResizeDoubleClick}
           />
 
-          <div className={styles.brand} aria-hidden="true">
-            Versio
+          <div className={styles.brandRow}>
+            <img src={stapleLogo} className={`${styles.brandMark} ${styles.brandMarkLight}`} alt="" />
+            <img src={stapleLogoDark} className={`${styles.brandMark} ${styles.brandMarkDark}`} alt="" />
+            <span className={styles.brand} aria-hidden="true">
+              Versio
+            </span>
+            {!narrow && (
+              <button
+                type="button"
+                className={styles.brandToggle}
+                onClick={() =>
+                  setDisplaySettings({ sidebarMode: storedMode === "expanded" ? "auto" : "expanded" })
+                }
+                title={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを固定"}
+                aria-label={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを固定"}
+              >
+                {storedMode === "expanded" ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+              </button>
+            )}
           </div>
 
           <label className={styles.search} title="ライブラリを検索 (⌘K)">
