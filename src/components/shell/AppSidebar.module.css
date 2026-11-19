@@ -49,7 +49,8 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: calc(2px + 2px * var(--sidebar-expand-t));
+  /* Spacing is set per element (proximity): 2px inside a group, --window-margin between groups. */
+  gap: 0;
   /* Keep both sides aligned as depth-0 chevrons gain room while expanding. */
   /* Top pad is 0 so the search can occupy the same vertical band as the page header. */
   --sidebar-content-pad: calc(
@@ -258,8 +259,7 @@
   border-radius: var(--sq-radius-md);
   color: var(--color-text-tertiary);
   /* Center within the same --header-height band as the main pane header. */
-  margin-top: calc((var(--header-height) - var(--sidebar-icon-box)) / 2);
-  margin-bottom: calc((var(--header-height) - var(--sidebar-icon-box)) / 2);
+  margin-top: var(--window-margin);
 }
 
 
@@ -293,7 +293,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-top: 0;
+  margin-top: var(--window-margin);
   transition: margin-top var(--sidebar-motion);
 }
 
@@ -307,7 +307,7 @@
 .sidebarResizing .section,
 .sidebarDropReady .section,
 .sidebar:has([data-workspace-editing]) .section {
-  margin-top: var(--spacing-sm);
+  margin-top: var(--window-margin);
 }
 
 .sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .section + .section,
@@ -315,7 +315,7 @@
 .sidebarResizing .section + .section,
 .sidebarDropReady .section + .section,
 .sidebar:has([data-workspace-editing]) .section + .section {
-  margin-top: var(--spacing-sm);
+  margin-top: var(--window-margin);
 }
 
 .sectionTitle {
@@ -327,8 +327,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 4px;
-  height: calc(28px * var(--sidebar-expand-t));
-  padding: calc(4px * var(--sidebar-expand-t)) 0;
+  /* Tight box so the title reads as part of the group below it. */
+  height: calc(24px * var(--sidebar-expand-t));
+  padding: 0;
   margin: 0;
   opacity: var(--sidebar-expand-t);
   overflow: hidden;
@@ -526,15 +527,6 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  transition: gap var(--sidebar-motion);
-}
-
-.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .scroll,
-.sidebarExpanded .scroll,
-.sidebarResizing .scroll,
-.sidebarDropReady .scroll,
-.sidebar:has([data-workspace-editing]) .scroll {
-  gap: 4px;
 }
 
 .footer {
