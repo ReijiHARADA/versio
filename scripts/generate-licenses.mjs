@@ -69,6 +69,8 @@ const LICENSE_FILE_NAMES = [
   "COPYING",
   "COPYING.md",
   "COPYING.txt",
+  // SCOWL word lists (wordlist-english) ship their terms in a Debian-style `Copyright` file.
+  "Copyright",
 ];
 
 const NOTICE_FILE_NAMES = ["NOTICE", "NOTICE.md", "NOTICE.txt", "NOTICE.TXT"];
