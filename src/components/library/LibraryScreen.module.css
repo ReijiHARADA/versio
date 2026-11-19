@@ -91,7 +91,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--spacing-lg) var(--window-margin);
+  padding: var(--window-margin);
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -162,7 +162,8 @@
   color: white;
   border: none;
   border-radius: var(--sq-radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
+  height: var(--control-height);
+  padding: 0 var(--spacing-md);
   font-size: 0.875rem;
   font-weight: 500;
   white-space: nowrap;
