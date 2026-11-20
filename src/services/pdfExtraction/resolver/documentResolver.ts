@@ -1,5 +1,5 @@
 import type { LayoutBlock, PageColumnLayout } from "../../pdfLayout";
-import { looksLikeAuthorList, looksLikeMathOrDataFragment } from "../../pdfLayout";
+import { joinHyphenated, looksLikeAuthorList, looksLikeMathOrDataFragment } from "../../pdfLayout";
 import { scoreLayoutBlock } from "../../extractionConfidence";
 import type {
   CanonicalDiagnostics,
@@ -3067,7 +3067,7 @@ function isTitleCaseTableCaptionBody(captionText: string, continuation: string):
 
 export function mergeTableCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[] {
   const result: CanonicalNode[] = [];
-  for (const node of nodes) {
+  for (const [nodeIndex, node] of nodes.entries()) {
     const captionIndex = result.findLastIndex((candidate) => candidate.role === "caption" && /^(?:table|表)\s*\d+/i.test(candidate.text?.trim() ?? ""));
     const previous = captionIndex >= 0 ? result[captionIndex] : undefined;
     const captionText = previous?.text?.trim() ?? "";
@@ -3100,6 +3100,26 @@ export function mergeTableCaptionContinuations(nodes: CanonicalNode[]): Canonica
     // (`investigated terms.`) before the real Title-Case legend (`Results of…`).
     const lowercaseWrap =
       !bareNumberedTableCaption && /^[a-zà-öø-ÿ]/u.test(continuation);
+    // A caption cut mid-sentence (`…for the Add_Data and`) whose next lines follow at
+    // the same line pitch inside its width is one legend, whatever case it resumes in.
+    // Only next to its table: a body line opening with `Table 3. Our findings…` is a reference, not a legend.
+    const underTable = [result[captionIndex - 1], nodes[nodeIndex + 1]].some((neighbor) => neighbor?.role === "table" && neighbor.pageStart === previous?.pageStart);
+    const tightWrap = !bareNumberedTableCaption && underTable && node.role === "paragraph" && previous?.pageStart === node.pageStart &&
+      horizontallyInside && sameLineHeight &&
+      verticalGap >= -4 && verticalGap <= 4 &&
+      /(?:[\p{Ll},;:\-–]|\b(?:and|or|of|the|a|an|in|for|with|on|to|by))$/u.test(captionText) &&
+      continuation.split(/\s+/).filter(Boolean).length <= 120;
+    if (tightWrap && previous) {
+      result[captionIndex] = {
+        ...previous,
+        text: joinHyphenated(captionText, continuation).replace(/\s+/g, " ").trim(),
+        pageEnd: node.pageEnd,
+        boundingBoxes: [...previous.boundingBoxes, ...node.boundingBoxes],
+        confidence: Math.min(previous.confidence, node.confidence),
+        evidence: previous.evidence,
+      };
+      continue;
+    }
     const canMerge = previous?.role === "caption" &&
       /^\s*(?:table|表)\s*\d+/i.test(captionText) &&
       previous.pageStart === node.pageStart &&
