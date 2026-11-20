@@ -1494,7 +1494,10 @@ function isEdgeChrome(
   // line, and its width makes it look like a body continuation below.
   const pieces = line.items.filter((item) => item.text.trim());
   if (line.y < topBand && pieces.length >= 2 && pieces.every((item) => patterns.has(normalizeChromeKey(item.text)))) return true;
-  if (line.y < topBand) {
+  // REVTeX sets the page-one title inside the header band (y≈62 on a 792pt page).
+  const pageOneTitle = line.page === 1 && line.fontSize >= 11.5 && /[a-z]/.test(line.text) &&
+    line.text.trim().split(/\s+/).length >= 3 && !isRepeatedHeaderFooter(line.text, patterns);
+  if (line.y < topBand && !pageOneTitle) {
     // Journal PDFs can begin the next page with the continuation of a body
     // paragraph.  A blanket top-band rule drops that line before paragraph
     // stitching (for example a lowercase continuation or a hyphenated word
@@ -1510,8 +1513,11 @@ function isEdgeChrome(
   if (line.y > layout.pageHeight - FOOTER_MARGIN) return true;
   if (/^\d{1,3}$/.test(line.text.trim())) return true;
   if (isPublicationMetadata(line.text)) return true;
-  if (patterns.has(normalizeChromeKey(line.text))) return true;
-  if (isRepeatedHeaderFooter(line.text, patterns)) return true;
+  // A one-word pattern is often a piece of a split running header (`measure`);
+  // a title-sized line away from the page edges is content (a title's last line `MEASURE`).
+  const titleSizedWord = line.fontSize >= 11.5 && !/\s/.test(normalizeChromeKey(line.text)) &&
+    line.y >= topBand * 1.6 && line.y <= layout.pageHeight - FOOTER_MARGIN * 2;
+  if (!titleSizedWord && isRepeatedHeaderFooter(line.text, patterns)) return true;
   if (
     line.y < topBand * 1.35 &&
     /^(proceedings of|conference on|extended abstracts|tei\s+[’']?\d{2,4}|chi\s+[’']?\d{2,4}|uist\s+[’']?\d{2,4}|iswc\s+[’']?\d{2,4}|dis\s+[’']?\d{2,4}|cscw|imwut|ubicomp)/i.test(
@@ -2162,7 +2168,7 @@ function looksLikeContactMetadata(text: string): boolean {
 }
 
 function looksLikeAffiliation(text: string): boolean {
-  return /(universitas|universidade|università|universiteit|university|department|institute|college|faculty|laboratory|\blab\b|(?:research\s+)?(?:center|centre)\s+(?:for|of)\b|school of|architecture|industrial design|centre of excellence|faculty of|department of|program studi|jurusan|\b(?:the )?(netherlands|australia|germany|france|japan|china|canada|sweden|denmark|finland|norway|italy|spain|switzerland|austria|belgium|ireland|scotland|england|wales|indonesia)\b|\b(?:sydney|london|dundee|eindhoven|cambridge|oxford|toronto|melbourne|macquarie|depok)\b|大学|大学院|研究所|学院|学部|学科|機構|高専)/i.test(
+  return /(universitas|universidade|università|universiteit|university|department|dipartimento|departamento|istituto|instituto|institute|college|faculty|laboratory|\blab\b|(?:research\s+)?(?:center|centre)\s+(?:for|of)\b|school of|architecture|industrial design|centre of excellence|faculty of|department of|program studi|jurusan|\b(?:the )?(netherlands|australia|germany|france|japan|china|canada|sweden|denmark|finland|norway|italy|spain|switzerland|austria|belgium|ireland|scotland|england|wales|indonesia)\b|\b(?:sydney|london|dundee|eindhoven|cambridge|oxford|toronto|melbourne|macquarie|depok)\b|大学|大学院|研究所|学院|学部|学科|機構|高専)/i.test(
     text
   );
 }
@@ -6213,7 +6219,8 @@ function joinMastheadGutterSplitLines(lines: LayoutLine[]): LayoutLine[] {
     const left = out[i]!;
     if (left.page !== 1 || left.column !== "left" || left.y >= bodyStart) continue;
     const rightIndex = out.findIndex((line) => {
-      if (line.page !== 1 || line.column !== "right" || line.y >= bodyStart) return false;
+      // The right half can also be filed as spanning when it reaches across the gutter (`SHERPA` | `: A Model-Driven…`).
+      if (line.page !== 1 || (line.column !== "right" && line.column !== "spanning") || line.y >= bodyStart) return false;
       const gap = line.x - (left.x + left.width);
       // Superscript markers shift a line's y, so allow about half a line.
       // A half that already mixes in an affiliation (IEEE `ABBAS…Faculty of…`) would swallow the other half's names.
@@ -6401,7 +6408,9 @@ export function reconstructDocument(pages: ExtractedPage[]): {
                 bodyFont * 2.8,
                 line.fontSize * (requireHang || midPhraseWrap ? 2.2 : sameFontWrap || displayTitleWrap ? 2.8 : 1.35),
               ) &&
-            Math.abs(line.x - lastTitleLine.x) <= 8 &&
+            // Left-aligned or centred under the line above (REVTeX centres title wraps).
+            (Math.abs(line.x - lastTitleLine.x) <= 8 ||
+              Math.abs(line.x + line.width / 2 - (lastTitleLine.x + lastTitleLine.width / 2)) <= 8) &&
             Math.abs(line.fontSize - lastTitleLine.fontSize) <= 1.2 &&
             (sameFontWrap ||
               displayTitleWrap ||
