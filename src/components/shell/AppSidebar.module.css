@@ -271,7 +271,6 @@
   color: var(--color-text);
   font: inherit;
   font-size: 0.875rem;
-  text-align: center;
   padding: 0;
 }
 
@@ -290,9 +289,10 @@
   outline: none;
 }
 
-/* Clear button: 22px square inset 5px, so its radius (8 - 5 = 3) is concentric with the field. */
+/* Trailing slot: the search icon at rest, the clear button once a query exists.
+   22px square inset 5px, so its radius (8 - 5 = 3) is concentric with the field. */
+.searchIcon,
 .searchClear {
-  composes: surface from "../../styles/squircle.module.css";
   position: absolute;
   top: 50%;
   right: 4px; /* + the field's 1px border = 5px inset */
@@ -301,12 +301,20 @@
   height: 22px;
   display: grid;
   place-items: center;
+  color: var(--color-text-tertiary);
+}
+
+.searchIcon {
+  pointer-events: none;
+}
+
+.searchClear {
+  composes: surface from "../../styles/squircle.module.css";
   padding: 0;
   border: none;
   border-radius: var(--sq-radius-3);
   --sq-fill: var(--sq-fill-3);
   --sq-ring: var(--sq-ring-3);
-  color: var(--color-text-tertiary);
   cursor: pointer;
   pointer-events: auto;
 }
@@ -316,15 +324,8 @@
   color: var(--color-text-secondary);
 }
 
-/* Centered only at rest; while editing (or holding a query) the caret starts at the left. */
-.titleSearch .searchInput:focus,
-.titleSearch .searchInput:not(:placeholder-shown) {
-  text-align: left;
-  padding: 0 var(--control-padding-x);
-}
-
-.titleSearch .searchInput:not(:placeholder-shown) {
-  padding-right: calc(4px + 22px + var(--spacing-xs));
+.titleSearch .searchInput {
+  padding: 0 calc(4px + 22px + var(--spacing-xs)) 0 var(--control-padding-x);
 }
 
 .searchInput::placeholder {
