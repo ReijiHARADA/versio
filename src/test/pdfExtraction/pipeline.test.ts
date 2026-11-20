@@ -533,6 +533,22 @@ describe("canonical extraction pipeline", () => {
     expect(result.paper.authors.join(" ")).not.toMatch(/Generative Large Language Models|USC USC/);
   }, 60_000);
 
+  it("recovers arXiv titles cut by the header band, a running-header word or the gutter", async (ctx) => {
+    const cases = [
+      ["arxiv-2501.17623", /^Keldysh field theory approach .* quantum dots coupled to superconducting leads$/],
+      ["arxiv-2509.03774", /^Proximitizing altermagnets with conventional superconductors$/],
+      ["arxiv-2509.00938", /^COMMUNITY DETECTION USING FORTUNATO’S PERFORMANCE MEASURE$/],
+      ["arxiv-2509.00272", /^SHERPA: A Model-Driven Framework for Large Language Model Execution$/],
+    ] as const;
+    for (const [id, title] of cases) {
+      const pdf = path.resolve(`test-data/element-gold/${id}/source.pdf`);
+      if (!fs.existsSync(pdf)) { ctx.skip(); return; }
+      const pages = await extractPdfPages(pdf);
+      const result = extractFromPages({ pages, paperId: `${id}-title`, filePath: pdf, fileHash: `${id}-title`, metadata: { pageCount: pages.length } });
+      expect(result.paper.titleOriginal).toMatch(title);
+    }
+  }, 120_000);
+
   it("keeps wrapped table-caption prose out of table cells", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
     if (!fs.existsSync(pdf)) ctx.skip();
