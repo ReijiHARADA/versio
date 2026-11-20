@@ -2287,7 +2287,12 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
           (cjkPersonLine || /^[A-ZÀ-ÖØ-Þ][\p{L}'’-]*(?:\s+[A-ZÀ-ÖØ-Þ][\p{L}'’-]*){1,4}$/u.test(text)) &&
           !/\b(?:republic|university|faculty|department|school|institute|college|hospital|city|street|road|usa|uk|canada|germany|france|italy|macedonia|ohrid|skopje)\b/i.test(text);
       });
-      if (personLines.length === 1) return personLines[0].text.replace(/\s+/g, " ").trim();
+      // A wrapped byline (`Tyler R. Cole , … , Jeremy Snyder and` / `Catherine Youngren`) is all names.
+      const otherLinesAreNames = lines.filter((line) => !personLines.includes(line)).every((line) => {
+        const names = expandAuthorLine(stripAuthorCredentials(line.text));
+        return names.length >= 2 && names.every((name) => looksLikePersonName(stripAuthorCredentials(name)));
+      });
+      if (personLines.length === 1 && !otherLinesAreNames) return personLines[0].text.replace(/\s+/g, " ").trim();
     }
     return node.text ?? "";
   };
@@ -2606,7 +2611,7 @@ function buildStructuredAuthors(
       `${predecessor ? `${predecessor.text} ` : ""}${projectionAuthorText(node)}`.trim(),
     );
     const gluedPairs = splitAffiliationNamePrefix(rawName);
-    for (const pair of gluedPairs) {
+      for (const pair of gluedPairs) {
       if (pair.affiliation.length >= 12) gluedAuthorAffiliations.push(pair.affiliation);
     }
     const expandedName = (gluedPairs.length > 0

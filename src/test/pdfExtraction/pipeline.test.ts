@@ -575,6 +575,14 @@ describe("canonical extraction pipeline", () => {
     expect(table1?.original).toMatch(/Add_Classes update scenarios constructed for the re-?spective datasets/);
   }, 60_000);
 
+  it("keeps every name of a byline that wraps onto a one-name line", async (ctx) => {
+    const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/epmc-lt-i-gt-nothing-is-going-to-replace-an-in-person-visit-lt-i-gt-canadian-.pdf");
+    if (!fs.existsSync(pdf)) ctx.skip();
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({ pages, paperId: "wrapped-byline", filePath: pdf, fileHash: "wrapped-byline", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["Tyler R. Cole", "Jeremy Snyder", "Catherine Youngren"]));
+  }, 60_000);
+
   it("keeps wrapped table-caption prose out of table cells", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
     if (!fs.existsSync(pdf)) ctx.skip();
