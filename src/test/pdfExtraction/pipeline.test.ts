@@ -557,6 +557,15 @@ describe("canonical extraction pipeline", () => {
     expect(result.blocks.filter((block) => /^\d+ Amirirad and Sayama$/.test((block.original ?? "").trim()))).toEqual([]);
   }, 60_000);
 
+  it("keeps a symbol-heavy caption line in its figure caption", async (ctx) => {
+    const pdf = path.resolve("test-data/element-gold/arxiv-2501.17623/source.pdf");
+    if (!fs.existsSync(pdf)) ctx.skip();
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({ pages, paperId: "caption-equation-line", filePath: pdf, fileHash: "caption-equation-line", metadata: { pageCount: pages.length } });
+    const fig4 = result.blocks.find((block) => block.type === "figure" && /^FIG\. 4:/.test(block.original ?? ""));
+    expect(fig4?.original).toMatch(/Δ0 = 1 \(from Eq\. \(104\)/);
+  }, 60_000);
+
   it("keeps wrapped table-caption prose out of table cells", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
     if (!fs.existsSync(pdf)) ctx.skip();
