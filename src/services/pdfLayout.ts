@@ -1684,7 +1684,9 @@ function isCopyright(text: string, fontSize: number, baseFont: number): boolean 
     /\bprotected by copyright, including for uses related to text and data mining\b/i.test(text);
   const explicitLicense =
     bmjRunningChrome ||
-    /^(?:©\s*(?:\d{4}\b|[A-Za-z])|open[-\s]access\b|license\s*\(\s*https?:\/\/creativecommons\.org|this\s+article\s+is\s+(?:licensed|distributed)\b)/i.test(
+    // `Open Access` alone is a badge; `Open Access (This) article …` a notice;
+    // body lines that merely start with `open-access recordings …` are prose.
+    /^(?:©\s*(?:\d{4}\b|[A-Za-z])|open[-\s]access(?:\s*$|\s+(?:this\s+)?article\b)|license\s*\(\s*https?:\/\/creativecommons\.org|this\s+article\s+is\s+(?:licensed|distributed)\b)/i.test(
       trimmed,
     );
   if (fontSize > baseFont * 0.92 && !explicitLicense) return false;
