@@ -113,23 +113,25 @@ export function MemoPopover({
           {mode === "view" ? (
             <p className={styles.body}>{annotation?.note || "ハイライトのみ"}</p>
           ) : (
-            <textarea
-              ref={textareaRef}
-              className={styles.textarea}
-              value={note}
-              disabled={saving}
-              placeholder="メモを入力…"
-              aria-label="メモを入力"
-              data-testid="memo-note-input"
-              onChange={(event) => onNoteChange(event.target.value)}
-              onKeyDown={(event) => {
-                if (isImeComposing(event)) return;
-                if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-                  event.preventDefault();
-                  onSave();
-                }
-              }}
-            />
+            <span className={styles.textareaField}>
+              <textarea
+                ref={textareaRef}
+                className={styles.textarea}
+                value={note}
+                disabled={saving}
+                placeholder="メモを入力…"
+                aria-label="メモを入力"
+                data-testid="memo-note-input"
+                onChange={(event) => onNoteChange(event.target.value)}
+                onKeyDown={(event) => {
+                  if (isImeComposing(event)) return;
+                  if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+                    event.preventDefault();
+                    onSave();
+                  }
+                }}
+              />
+            </span>
           )}
           {error && <p className={styles.error}>{error}</p>}
           <div className={styles.actions}>

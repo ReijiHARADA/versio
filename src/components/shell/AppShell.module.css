@@ -20,6 +20,7 @@
 }
 
 .main {
+  composes: surface from "../../styles/squircle.module.css";
   position: relative;
   z-index: 3;
   flex: 1;
@@ -27,12 +28,16 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   /* Desktop: a card below the title bar, flush with the window's right and bottom. */
   margin: var(--titlebar-h) var(--card-gap) var(--card-gap) 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--card-radius);
-  background: var(--color-bg);
+  /* Clothoid card: fill and 1px ring are masked pseudo-elements (see squircle.module.css). */
+  border: 1px solid transparent;
+  --sq-bw: 1px;
+  --sq-bg: var(--color-bg);
+  --sq-line: var(--color-border);
+  --sq-fill: var(--sq-fill-card);
+  --sq-ring: var(--sq-ring-card);
+  border-radius: var(--sq-radius-card);
   /* Layered so the card reads as lifted: a tight contact shadow, a soft near
      shadow, and a wide ambient one, all lit from above. */
   box-shadow:
@@ -41,8 +46,22 @@
     0 24px 64px var(--color-card-shadow);
 }
 
+/* Clips page content. Its circle radius sits inside the card's clothoid, so the
+   card's own fill covers the sliver between them; the card stays unmasked so
+   its box-shadow survives and scrolling never repaints a mask. */
+.mainBody {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--sq-radius-card);
+}
+
 /* Resize guide: the divider line turns accent while resizing. */
-.main::after {
+.mainBody::after {
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
@@ -55,12 +74,12 @@
 
 /* Hover shows the guide only after the pointer rests on the handle, so a quick
    pass from main into the sidebar never flashes it. Dragging shows it at once. */
-.shell:has([data-sidebar-mode] [role="separator"]:hover) .main::after {
+.shell:has([data-sidebar-mode] [role="separator"]:hover) .mainBody::after {
   opacity: 1;
   transition-delay: 250ms;
 }
 
-.shell:has([data-sidebar-resizing]) .main::after {
+.shell:has([data-sidebar-resizing]) .mainBody::after {
   opacity: 1;
   transition: none;
 }

@@ -17,8 +17,8 @@ const K = 1.52866483;
 // SVG masks are rasterized at intrinsic size; draw them 4x so the 9-slice stays crisp on Retina.
 const SCALE = 4;
 const TRANSITION = 0.6;
-const RADII = [2, 3, 4, 6, 8, 11, 12, 16];
-const TOKENS = { sm: 4, md: 8, lg: 12, control: 8, "control-inner": 6 };
+const RADII = [2, 3, 4, 6, 8, 10, 11, 12, 16];
+const TOKENS = { sm: 4, md: 8, lg: 12, card: 10, control: 8, "control-inner": 6 };
 
 /** Unit corner from (-1,0) on the top edge to (0,1) on the right edge; corner at origin, y down. */
 export function clothoidCorner(samples = 16) {

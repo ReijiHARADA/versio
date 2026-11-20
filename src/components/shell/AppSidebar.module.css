@@ -757,8 +757,14 @@
 .inlineName input {
   width: 100%; min-width: 0; padding: 2px 3px;
   font: inherit; color: var(--color-text);
-  background: var(--color-bg); border: 1px solid var(--color-accent);
-  border-radius: var(--radius-sm);
+}
+/* A div, not a span: `.inlineName span` styles the error text. */
+.inlineField {
+  composes: field from "../../styles/squircle.module.css";
+  --sq-line: var(--color-accent);
+  --sq-fill: var(--sq-fill-sm);
+  --sq-ring: var(--sq-ring-sm);
+  border-radius: var(--sq-radius-sm);
 }
 .inlineName span { font-size: 11px; color: #c5221f; }
 .menuNotice { margin: 5px 8px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
