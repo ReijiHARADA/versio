@@ -8,7 +8,7 @@
  */
 
 import type { BoundingBox } from "../types/paper";
-import { joinsAsEnglishWord } from "./englishWords";
+import { isEnglishWord, joinsAsEnglishWord } from "./englishWords";
 import type { ExtractedPage, ExtractedTextItem } from "./pdfService";
 import {
   isReferencesHeading,
@@ -2108,6 +2108,23 @@ function isGrantNumberContinuation(previous: string, next: string): boolean {
   return false;
 }
 
+/**
+ * Display-math and chart/table fragments set in a larger or bold font
+ * (`S∈[Y ]\\k |S|`, `1 X kikj`, `46.29 dB / 90.62%`): more digits and symbols than
+ * letters, or no dictionary word together with a math symbol or a
+ * number-plus-letter start. Parentheses are left out because ordinary headings
+ * carry them (`RoBERTa (Liu et al.)`).
+ */
+export function looksLikeMathOrDataFragment(text: string): boolean {
+  const body = text.replace(/^(?:[A-Z]\.)?\d+(?:\.\d+)*\.?\s+/, ""); // section number (`4.1.2 GPT-4`)
+  const letters = (body.match(/\p{L}/gu) ?? []).length;
+  const digitsAndSymbols = (body.match(/[\d∈∉∑∏∫≤≥≠≈′\\|=%()[\]^_]/g) ?? []).length;
+  if (digitsAndSymbols > letters) return true;
+  if ((text.match(/[A-Za-z]{4,}/g) ?? []).some(isEnglishWord)) return false;
+  return /[∈∉∑∏∫≤≥≠≈′\\|=%[\]^_\u0010\u0011]/.test(text) ||
+    /^\d+\s+(?:\S{1,2}(?:\s|$)|[a-z]\w{0,2}\()/.test(text); // `1 X kikj`, `1 u(s, x, l)`
+}
+
 function isHeadingLine(line: LayoutLine, baseFont: number): boolean {
   const text = layoutPlain(line.text);
   if (!text || text.length > 90) return false;
@@ -2120,6 +2137,7 @@ function isHeadingLine(line: LayoutLine, baseFont: number): boolean {
   if (looksLikeEmail(text) || looksLikeUrl(text) || looksLikeAffiliation(text)) {
     return false;
   }
+  if (looksLikeMathOrDataFragment(text)) return false;
   // A native stream may fuse a short numbered heading with the first words of
   // the following paragraph.  Once a reasonably long line contains sentence
   // punctuation followed by a new capitalized clause, prefer paragraph so the

@@ -1,5 +1,5 @@
 import type { LayoutBlock, PageColumnLayout } from "../../pdfLayout";
-import { looksLikeAuthorList } from "../../pdfLayout";
+import { looksLikeAuthorList, looksLikeMathOrDataFragment } from "../../pdfLayout";
 import { scoreLayoutBlock } from "../../extractionConfidence";
 import type {
   CanonicalDiagnostics,
@@ -4548,6 +4548,21 @@ export function resolveCanonicalDocument(input: {
   }
 
   nodes = demoteEditorialChromeHeadings(nodes);
+  // Several promotion paths can make a display-math or chart fragment a heading
+  // (`1 u(s, x, l)`, `S∈[Y ]\\k |S|`); none of them is a section title.
+  nodes = nodes.map((node) => node.role !== "heading" || !node.text || !looksLikeMathOrDataFragment(node.text.trim()) ? node : {
+    ...node,
+    role: "paragraph" as const,
+    confidence: Math.min(node.confidence, 0.55),
+    evidence: [...node.evidence, {
+      source: "generic-heuristic" as const,
+      label: "math-fragment-heading-demotion",
+      confidence: 0.8,
+      page: node.pageStart,
+      bbox: node.boundingBoxes[0],
+      reason: "heading-shaped line is mostly digits/symbols or has no dictionary word next to a math symbol",
+    }],
+  });
   // Inline section splits can mint a parent `5. Results` after `5.3 …` when
   // two-column glue injects the label into later prose. Demote only those
   // split-derived parents (layout-owned section titles keep their role).
