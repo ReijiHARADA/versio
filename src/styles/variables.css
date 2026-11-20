@@ -1,6 +1,6 @@
 :root {
   /* Title bar band (macOS traffic lights + sidebar toggle) above the main card. */
-  --titlebar-h: 34px;
+  --titlebar-h: 50px;
   /* Main card inset from the window's right and bottom edges, and its corner radius. */
   --card-gap: 8px;
   --card-radius: 10px;

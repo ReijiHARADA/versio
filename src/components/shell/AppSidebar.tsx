@@ -216,37 +216,40 @@ export function AppSidebar({
             onDoubleClick={onResizeDoubleClick}
           />
 
-          <label className={styles.search} title="ライブラリを検索 (⌘K)">
-            <span className={styles.iconSlot}>
-              <Search size={16} className={styles.searchIcon} />
-            </span>
-            <input
-              id="library-search"
-              type="search"
-              placeholder="ライブラリを検索"
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className={styles.searchInput}
-              aria-label="ライブラリを検索"
-              data-testid="library-search"
-            />
-          </label>
-          {/* Portaled so it sits above the title bar drag band, outside the rail stacking context. */}
-          {!narrow &&
-            createPortal(
-              <button
-                type="button"
-                className={styles.brandToggle}
-                onClick={() => {
-                  setDisplaySettings({ sidebarMode: storedMode === "expanded" ? "auto" : "expanded" });
-                }}
-                title={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを開く"}
-                aria-label={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを開く"}
-              >
-                {storedMode === "expanded" ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
-              </button>,
-              document.body
-            )}
+          {/* Title bar controls, portaled above the drag band and outside the rail stacking context. */}
+          {createPortal(
+            <>
+              {!narrow && (
+                <button
+                  type="button"
+                  className={styles.brandToggle}
+                  onClick={() => {
+                    setDisplaySettings({ sidebarMode: storedMode === "expanded" ? "auto" : "expanded" });
+                  }}
+                  title={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを開く"}
+                  aria-label={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを開く"}
+                >
+                  {storedMode === "expanded" ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+                </button>
+              )}
+              <label className={`${styles.search} ${styles.titleSearch}`} title="ライブラリを検索 (⌘K)">
+                <span className={styles.iconSlot}>
+                  <Search size={16} className={styles.searchIcon} />
+                </span>
+                <input
+                  id="library-search"
+                  type="search"
+                  placeholder="ライブラリを検索"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  className={styles.searchInput}
+                  aria-label="ライブラリを検索"
+                  data-testid="library-search"
+                />
+              </label>
+            </>,
+            document.body
+          )}
 
           <div className={styles.scroll}>
             <section className={styles.section}>

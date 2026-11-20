@@ -53,8 +53,8 @@
   /* Top pad is 0 so the search can occupy the same vertical band as the page header. */
   /* Same 8px inset as the main card's gap, collapsed or expanded. */
   --sidebar-content-pad: var(--card-gap);
-  /* Content starts at the main card's top edge. */
-  padding: var(--titlebar-h) var(--sidebar-content-pad) var(--card-gap);
+  /* Content starts just below the main card's top edge. */
+  padding: calc(var(--titlebar-h) + var(--card-gap)) var(--sidebar-content-pad) var(--card-gap);
   background-color: var(--color-bg-secondary);
   overflow: visible;
   box-sizing: border-box;
@@ -205,7 +205,8 @@
 .brandToggle {
   composes: surface from "../../styles/squircle.module.css";
   position: fixed;
-  top: calc((var(--titlebar-h) - 24px) / 2);
+  /* Fixed beside the traffic lights (center 17px), independent of the band height. */
+  top: 5px;
   left: 80px;
   z-index: 1001;
   display: grid;
@@ -221,6 +222,25 @@
   cursor: pointer;
 }
 
+
+/* Library search in the title bar, right edge aligned with the main card. */
+.search.titleSearch {
+  /* Outside the sidebar: keep the label-fade rules fully shown. */
+  --sidebar-expand-t: 1;
+  position: fixed;
+  top: calc((var(--titlebar-h) - var(--control-height)) / 2);
+  right: var(--card-gap);
+  z-index: 1001;
+  width: 220px;
+  gap: var(--spacing-sm);
+}
+
+.titleSearch .searchInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  pointer-events: auto;
+}
 
 .brandToggle:hover {
   --sq-bg: var(--color-bg-tertiary);
@@ -274,21 +294,13 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-top: var(--window-margin);
+  margin-top: 0;
   transition: margin-top var(--sidebar-motion);
 }
 
 /* Collapsed: leave one icon-row gap between workspace and library groups */
 .section + .section {
   margin-top: var(--sidebar-icon-box);
-}
-
-.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .section,
-.sidebarExpanded .section,
-.sidebarResizing .section,
-.sidebarDropReady .section,
-.sidebar:has([data-workspace-editing]) .section {
-  margin-top: var(--window-margin);
 }
 
 .sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .section + .section,
