@@ -51,7 +51,7 @@
   gap: 0;
   /* Keep both sides aligned as depth-0 chevrons gain room while expanding. */
   /* Top pad is 0 so the search can occupy the same vertical band as the page header. */
-  /* Same 8px inset as the main card's gap, collapsed or expanded. */
+  /* Same inset as the main card's gap, collapsed or expanded. */
   --sidebar-content-pad: var(--card-gap);
   /* Content starts just below the main card's top edge. */
   padding: calc(var(--titlebar-h) + var(--card-gap)) var(--sidebar-content-pad) var(--card-gap);
