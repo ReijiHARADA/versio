@@ -2883,11 +2883,17 @@ export function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): Canonic
       !/^(?:introduction|methods?|results?|discussion|conclusions?|references?)\b/i.test(
         continuation,
       );
+    // A symbol-heavy caption line (`𝑇𝐿 = 0.4, Δ0 = 1 (from Eq. (104)…`) is read as an
+    // equation; set at the caption's small size right under it, it is the caption.
+    const captionSizeEquationLine = node.role === "equation" && xAligned && verticalGap >= -2 && verticalGap <= 20 &&
+      (previous?.style?.fontSizeRatio ?? 1) <= 0.92 &&
+      Math.abs((node.style?.fontSizeRatio ?? 0) - (previous?.style?.fontSizeRatio ?? 1)) <= 0.04;
     const canMerge = previous?.role === "caption" &&
       /^\s*(?:figure|fig\.?|図)\s*\d+/i.test(captionText) &&
       (previous.pageStart === node.pageStart || pageBoundaryBareLegend) &&
       (node.role === "paragraph" ||
         node.role === "table" ||
+        captionSizeEquationLine ||
         shortHeadingLegend ||
         (node.role === "caption" && sameNumberedFigureLegend)) &&
       (continuation.length >= 12 || shortHeadingLegend) &&
