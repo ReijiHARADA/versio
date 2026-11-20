@@ -11,10 +11,19 @@
 | [README.md](./README.md) | **製品の定義・対応環境・セットアップ・主要導線・ドキュメント入口**が変わったときだけ |
 | [QUICKSTART.md](./QUICKSTART.md) | 起動手順・トラブルシュートが変わったとき |
 | 本ファイル (AGENTS.md) | エージェント向け制約・ビルド／OCR／翻訳／データルールが変わったとき |
+| [docs/handoffs/](./docs/handoffs/index.md) | セッションをまたぐ作業の**途中の状態**が変わったとき（下の「引き継ぎ」） |
 
 - 通常のバグ修正・リファクタ・小さな UX 調整で README / ROADMAP を書き換えない
 - 完了した目標を ROADMAP の「未達」に残さない。現状は CURRENT_STATE へ
 - 抽出・翻訳の詳細は専門文書へ書き、README / ROADMAP / CURRENT_STATE に重複コピーしない
+
+## 引き継ぎ（handoff）
+
+- 複数のセッションが並行して作業するので、引き継ぎは**作業ごとに 1 ファイル**: `docs/handoffs/<開始日>-<作業名>.md`（OKF、`type: Handoff`）。一覧は `docs/handoffs/index.md`（進行中／完了）。自分の作業のファイルだけを更新し、他のセッションのファイルは読むだけにする。
+- handoff に書くのは**途中の状態だけ**: 依頼と目標、今の状態（main のコミット、作業中のブランチ・PR）、比べる基準 run と worktree の場所、次の一手、判断待ち・未確認。数行で済む量に保つ。
+- 長く使う知識（現状値、済んだこと、次の候補、試して見送ったこと、測り方、作業上の注意）は分野ごとの**作業内容**の文書に書き、handoff からはリンクする。抽出は [docs/extraction-next-steps.md](./docs/extraction-next-steps.md)。
+- セッションの区切り（大きな PR のマージ後、作業の中断前）で handoff を更新し、作業内容の文書に移すべき知識があれば移す。作業が終わったら `status: deprecated` にして index の「完了」へ移す。
+- `test-data/` などの gitignore 下に引き継ぎを置かない（worktree や他のセッションから見えない）。
 
 ## Tauri macOS アプリ
 
