@@ -1,5 +1,5 @@
 :root {
-  /* Height of the macOS title bar the content sits under (desktop only). */
+  /* Gap above the main pane card for the macOS traffic lights (desktop only). */
   --titlebar-h: 0px;
   /* Colors - Light Theme */
   --color-bg: #ffffff;
@@ -96,7 +96,7 @@
 }
 
 html[data-titlebar] {
-  --titlebar-h: 28px;
+  --titlebar-h: 24px;
 }
 
 [data-theme="dark"] {
