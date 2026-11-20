@@ -8,7 +8,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
-  Search,
   Settings,
   Star,
   Trash2,
@@ -233,9 +232,6 @@ export function AppSidebar({
                 </button>
               )}
               <label className={`${styles.search} ${styles.titleSearch}`} title="ライブラリを検索 (⌘K)">
-                <span className={styles.iconSlot}>
-                  <Search size={16} className={styles.searchIcon} />
-                </span>
                 <input
                   id="library-search"
                   type="search"

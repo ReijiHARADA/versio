@@ -264,17 +264,14 @@
 }
 
 
-.searchIcon {
-  flex-shrink: 0;
-}
-
 .searchInput {
   min-width: 0;
   border: none;
   background: transparent;
   color: var(--color-text);
   font: inherit;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
+  text-align: center;
   padding: 0;
 }
 
