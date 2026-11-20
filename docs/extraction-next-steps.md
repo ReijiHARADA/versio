@@ -22,7 +22,7 @@ status: draft
 | 指標 | ACL 13 本 | arXiv 15 本 | Europe PMC 106 本 |
 |---|---|---|---|
 | タイトル | 100% | 100% | 84.0% |
-| 著者 | 100% | 100% | 75.3% |
+| 著者 | 100% | 100% | 76.6% |
 | 誌名/学会名 | 84.6% | 0%（0/2、ACM 形式は未対応） | 91.1% |
 | 見出し | 94.3% | 93.5% | 93.7% |
 | 見出しの精度 | 90.5% | 80.8% | 79.5% |
@@ -52,7 +52,7 @@ Europe PMC の dev 全件（868 本）と test split は、11-17 以降まだ測
 
 ### 要素正解
 
-- 著者：arXiv 40.7% → 100%（#49、#50）。ACL 71.1% → 100%（#56 上付き番号の位置にカンマ、#95 段の境目で割れた著者欄を結合・`{a, b}@lab.edu` をメール扱い、#107 略称だけの所属行 `USC USC` を名前にしない・Abstract より下の行を 1 人の著者行にしない）。Europe PMC：折り返した著者欄の最後の 1 人だけを残す近道を止めた（#140、74.2% → 75.3%）。
+- 著者：arXiv 40.7% → 100%（#49、#50）。ACL 71.1% → 100%（#56 上付き番号の位置にカンマ、#95 段の境目で割れた著者欄を結合・`{a, b}@lab.edu` をメール扱い、#107 略称だけの所属行 `USC USC` を名前にしない・Abstract より下の行を 1 人の著者行にしない）。Europe PMC：折り返した著者欄の最後の 1 人だけを残す近道を止めた（#140、74.2% → 75.3%）。採点：JATS の編集者グループ（`content-type="editor"`）を正解から外す（#144、→ 76.4%）。後ろに置かれたアクセント（PLOS `Schlo¨ gl`）を合成（#144、→ 76.6%）。
 - タイトル：arXiv 73.3% → 100%（#120：ページ上端の帯にかかる REVTeX のタイトル、柱の 1 語と一致して消えたタイトル行 `MEASURE`、中央揃えの 2 行目、段の境目で割れた `SHERPA` | `: A…`）。
 - 見出しの精度：ページ上部 14% までに置かれた柱（`2 Amirirad and Sayama`）を消す。下の帯では毎ページ同じ高さの文字列だけを柱とし、ページ 1 には使わない（#122）。数式・表の断片（`S∈[Y ]\k |S|`、`1 u(s, x, l)`、`46.29 dB / 90.62%`）を見出しにしない（#126、辞書の語が無く数式記号を含む等。resolver の最後でも戻す）。
 - 脚注：宣言系の注記はどちらの印刷形でも正解（#51、採点）。責任著者の連絡先を脚注に（#54）。URL だけの脚注（#77）。右端そろえのサイドバーの `Correspondence:` / 名前 / メールを 1 つの脚注に（#139、Europe PMC 69.9% → 75.3%）。
@@ -74,7 +74,7 @@ Europe PMC の dev 全件（868 本）と test split は、11-17 以降まだ測
 
 ### 要素正解
 
-1. **Europe PMC の著者の残り**（75.3%、162 人）：113 人は `PMC12280214` の 1 本（「著者は論文の末尾」のコンソーシアム論文。末尾の一覧を取るのは専用の処理が要る）。この論文では本文の `Gradient Boosting Machines (GBMs)` が著者になる誤りもある。残り約 50 人は 30 本ほどに散らばる（`PMC11557553` 4/9、`PMC12484009` 8/13 など、1 本ずつ原因が違う）。
+1. **Europe PMC の著者の残り**（76.6%、151 人）：113 人は `PMC12280214` の 1 本（「著者は論文の末尾」のコンソーシアム論文。末尾の一覧を取るのは専用の処理が要る。本文の `Gradient Boosting Machines (GBMs)` が著者になる誤りもある）。残りの約半分は Frontiers の 1 ページ目の側欄（`PMC11557553` 4/9、`PMC12484009` 8/13 など。段落正解のセッションが `fix/frontiers-rail` で著者投影ごと作り直し中なので触らない）。それ以外：`toPaper.ts` の 4 語の名前を 2 人に割る規則（`James Clawson Thad Starner` 用）が `Nguyen Khanh Tho Loc1,2`・`Puspita Adhi Kusuma Wijayanti` も割る（3 本。所属番号が名前ごとに付く行では割らない、が候補。`dont-mind-me.pdf` の元の行を確かめてから）、`Md Mozibur Rahman` の `Md` 落ち。一覧は `tools/authmiss.ts <run>`。
 2. **Europe PMC の脚注の残り**（18 件）：共同筆頭著者の注記（`These authors have contributed equally…`）が本文の段落に入る、古い Frontiers の形の連絡先（`PMC10817773`、`PMC12660074`）、利益相反の 1 文が段落になる。一覧は `tools/footmiss.ts <run>`（採点と同じ照合）。
 3. **arXiv・ACL の段落の分断**（arXiv 77.1%、ACL 88.4%）：arXiv の残りの約半分は数式の多い 3 本（`2508.21814`、`2501.17623`、`2412.11278`）で正解側が式をまたいで 1 段落にしているもの。ACL：段の継ぎ目で箇条書きの続きが継がれない（`naacl-long.104` p13）、同じ行の 2 つの文字列で段落が割れる（`emnlp-main.479` p1）。
 4. **arXiv の見出しの精度の残り**（80.8%）：`Algorithm fpGreed`、目次 `Contents`、本文の行（`6 Splatter Images, which…`）、`Facilities:`。一覧は `tools/falseheads.ts <run> <prefix>`。
@@ -110,7 +110,7 @@ npx vite-node --script scripts/element-gold-score.ts --run <run> --split dev [--
 ```
 
 - 基準 run：`t1-elementgold` / `t1-paragold106`（main 30b75d9 相当）。
-- ローカルの道具（`test-data/extraction-audit/tools/`、gitignore）：`lines.ts` / `lines70.ts`（ページのブロックと行）、`falseheads.ts`、`figmiss.ts`、`tabmiss.ts`、`footmiss.ts`、`hyphens.ts`（行末ハイフンの A/B）、`pverdict.ts <runA> <runB> <epmc-id>`（段落の判定が変わった正解段落）、`egmiss.ts`、`egsplit.ts`、`egpartial.ts`。どれも main の `src` を読むので、ワークツリーの変更を見るときは `scripts/` に一時コピーして import を `../src/` に書き換える（コミット前に消す）。
+- ローカルの道具（`test-data/extraction-audit/tools/`、gitignore）：`lines.ts` / `lines70.ts`（ページのブロックと行）、`falseheads.ts`、`figmiss.ts`、`tabmiss.ts`、`footmiss.ts`、`hyphens.ts`（行末ハイフンの A/B）、`pverdict.ts <runA> <runB> <epmc-id>`（段落の判定が変わった正解段落）、`egmiss.ts`、`authmiss.ts`（著者の取りこぼしと余分）、`egsplit.ts`、`egpartial.ts`。どれも main の `src` を読むので、ワークツリーの変更を見るときは `scripts/` に一時コピーして import を `../src/` に書き換える（コミット前に消す）。
 - 段落の採点は 5 語の連なり＋空白を無視した 20 文字の連なり（#63）。脚注・見出し等の照合は 3 語の連なり（`containment`）。
 
 ### 段落正解
