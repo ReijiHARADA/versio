@@ -44,6 +44,7 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 - 付録・補足の図表番号（`Table A6:`、`Table S2.`、`Figure A3:`）をキャプションとして認識し、段の中のキャプションの近くで行を集めるときは同じ段の行だけを使う。要素正解 dev で ACL の表 69.3% → 79.2%、Europe PMC 106 本の表 89.6% → 90.7%（論文単位の悪化なし）。→ [docs/extraction-next-steps.md](./docs/extraction-next-steps.md)
 - LaTeX の分離したアクセント記号（`D´ıaz`、`N´u˜nez`、`Franc¸ois`）を行の段階で合成する。全大文字の著者名は `Edoardo Ballico` の形にそろえ、`AND` で区切り、`OF`・`ON` などを含む全大文字のタイトル行は著者に入れない。要素正解 dev で arXiv の著者 40.7% → 51.9%、Europe PMC 106 本の著者 73.1% → 73.7%（論文単位の悪化なし）。続けて、所属に直接くっついた名前（`PandeyDepartment`）、ACM Reference Format による著者の補完、段の境界で切れた著者行の再結合、上付きの所属番号の位置でのカンマ補完、AASTeX の `Name,1` 形式の著者行に対応し、arXiv の著者は 100%（54/54）。
 - 要素正解の採点で、宣言系の注記（Author contributions、Competing interests など）は脚注でも見出し付きの末尾の節でも正解とする。Europe PMC dev の脚注 23.9% → 28.8%（採点の変更のみ）。→ [docs/extraction-next-steps.md](./docs/extraction-next-steps.md)
+- 論文のキーワード（`Keywords` / `KEYWORDS` / `Index Terms` の後の語の並び）を `paper.json` の `keywords` に保存し、Reader の見出し（所属の下）にチップで表示する。本文からはその行を外す。Europe PMC dev で 148/290 本に付き、JATS のキーワードと 96% 一致。既存の論文は「PDFを再抽出」で付く。
 - 責任著者の連絡先（`Correspondence: 名前, メール`）を脚注として Reader に残す。サイドバーのラベル・名前・メールは 1 つの注記にまとめる。Europe PMC 106 本の脚注 31.5% → 68.5%、ACL・arXiv は変化なし。
 - ACL の著者行で、名前の直後の上付き所属番号の位置に区切りを補う（`Zhenhua Liu¹ Tong Zhu¹`）。ACL dev の著者 71.1% → 82.9%、他は変化なし。
 - 太字のキャプション番号（`Figure 6.`）が、ページ幅のキャプションから左の段に取り残されないようにする。図 arXiv dev 63.6% → 68.2%、Europe PMC 106 本 86.3% → 87.2%。

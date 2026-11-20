@@ -222,6 +222,7 @@ export function packageToProjection(
     authors: pkg.paper.authors.map((author) => author.name),
     authorsStructured: pkg.paper.authors,
     affiliations: pkg.paper.affiliations,
+    keywords: pkg.paper.keywords,
     doi: pkg.paper.doi,
     packageRevision: pkg.paper.revision,
     publication: pkg.paper.publication,

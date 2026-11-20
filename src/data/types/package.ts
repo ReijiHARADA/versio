@@ -23,6 +23,7 @@ export type PaperJson = {
   };
   authors: PaperJsonAuthor[];
   affiliations: PaperJsonAffiliation[];
+  keywords?: string[];
   publication: string | null;
   year: number | null;
   doi: string | null;

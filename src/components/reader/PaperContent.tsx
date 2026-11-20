@@ -866,6 +866,13 @@ export const PaperContent = memo(
               ))}
             </div>
           )}
+          {paper.keywords && paper.keywords.length > 0 && (
+            <ul className={styles.keywords} aria-label="キーワード">
+              {paper.keywords.map((keyword) => (
+                <li className={styles.keyword} key={keyword}>{keyword}</li>
+              ))}
+            </ul>
+          )}
           {paper.publication && (
             <p className={styles.publication}>
               {paper.publication}

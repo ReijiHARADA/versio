@@ -93,6 +93,7 @@ export type Paper = {
   authors: string[];
   authorsStructured?: PaperAuthor[];
   affiliations?: PaperAffiliation[];
+  keywords?: string[];
   doi?: string | null;
   publication: string | null;
   year: number | null;
