@@ -549,6 +549,14 @@ describe("canonical extraction pipeline", () => {
     }
   }, 120_000);
 
+  it("drops a low running head printed with a separate page number", async (ctx) => {
+    const pdf = path.resolve("test-data/element-gold/arxiv-2509.00897/source.pdf");
+    if (!fs.existsSync(pdf)) ctx.skip();
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({ pages, paperId: "low-running-head", filePath: pdf, fileHash: "low-running-head", metadata: { pageCount: pages.length } });
+    expect(result.blocks.filter((block) => /^\d+ Amirirad and Sayama$/.test((block.original ?? "").trim()))).toEqual([]);
+  }, 60_000);
+
   it("keeps wrapped table-caption prose out of table cells", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
     if (!fs.existsSync(pdf)) ctx.skip();

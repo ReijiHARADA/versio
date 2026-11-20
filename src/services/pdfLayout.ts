@@ -104,6 +104,10 @@ function lineUsesBoldFace(line: LayoutLine): boolean {
 
 const HEADER_Y = 48;
 const FOOTER_MARGIN = 38;
+const RUNNING_HEAD_BAND = 0.14;
+// Patterns found only in the lower running-head band; page one (where the title
+// often repeats as a later running head) is not matched against them.
+const LOW_BAND_PATTERNS = new WeakMap<Set<string>, Set<string>>();
 const MIN_COLUMN_ITEMS = 8;
 const SPAN_WIDTH_RATIO = 0.48;
 // A native line can be slightly wider than its visual column because PDF
@@ -1427,10 +1431,6 @@ function splitVectorFigureOverlayLines(lines: LayoutLine[], page: ExtractedPage)
   });
 }
 
-function isRepeatedHeaderFooter(text: string, patterns: Set<string>): boolean {
-  return patterns.has(normalizeChromeKey(text));
-}
-
 function normalizeChromeKey(text: string): string {
   return text
     .trim()
@@ -1443,24 +1443,35 @@ function detectHeaderFooterPatterns(pages: ExtractedPage[]): Set<string> {
   const counts = new Map<string, number>();
   for (const page of pages) {
     const topBand = Math.max(HEADER_Y, page.height * 0.08);
+    // Some templates set the running head lower (y≈100 on a 792pt page). Below the
+    // usual band only text at the same height on every page counts, so table
+    // column heads that happen to open several pages do not.
+    const lowHeadBand = page.height * RUNNING_HEAD_BAND;
     const bottomBand = Math.max(FOOTER_MARGIN, page.height * 0.07);
     const edge = page.textItems.filter(
-      (i) => i.y < topBand || i.y > page.height - bottomBand
+      (i) => i.y < lowHeadBand || i.y > page.height - bottomBand
     );
     const seen = new Set<string>();
     for (const item of edge) {
-      const key = normalizeChromeKey(item.text);
-      if (key.length < 4 || key.length > 140) continue;
+      const text = normalizeChromeKey(item.text);
+      if (text.length < 4 || text.length > 140) continue;
+      const key = item.y >= topBand && item.y < lowHeadBand ? `${text}\u0000${Math.round(item.y)}` : text;
       if (seen.has(key)) continue;
       seen.add(key);
       counts.set(key, (counts.get(key) || 0) + 1);
     }
   }
   const patterns = new Set<string>();
+  const lowBand = new Set<string>();
   const threshold = Math.max(2, Math.floor(pages.length * 0.28));
-  for (const [text, count] of counts) {
-    if (count >= threshold) patterns.add(text);
+  for (const [key, count] of counts) {
+    if (count < threshold) continue;
+    const [text, y] = key.split("\u0000");
+    (y === undefined ? patterns : lowBand).add(text!);
   }
+  const lowOnly = [...lowBand].filter((text) => !patterns.has(text));
+  for (const text of lowOnly) patterns.add(text);
+  LOW_BAND_PATTERNS.set(patterns, new Set(lowOnly));
   return patterns;
 }
 
@@ -1493,10 +1504,18 @@ function isEdgeChrome(
   // Psychology (2024) 12:195` + `Page 3 of 12`) matches no pattern as a whole
   // line, and its width makes it look like a body continuation below.
   const pieces = line.items.filter((item) => item.text.trim());
-  if (line.y < topBand && pieces.length >= 2 && pieces.every((item) => patterns.has(normalizeChromeKey(item.text)))) return true;
+  // Running heads repeat the title in small type; the page-one title itself is never chrome.
+  const pageOneTitleSize = line.page === 1 && line.fontSize >= 11.5;
+  const lowBand = LOW_BAND_PATTERNS.get(patterns);
+  const isPatternKey = (key: string) => patterns.has(key) && !(line.page === 1 && lowBand?.has(key));
+  const isPattern = (item: { text: string }) => !pageOneTitleSize && isPatternKey(normalizeChromeKey(item.text));
+  if (line.y < topBand && pieces.length >= 2 && pieces.every(isPattern)) return true;
+  // A lower running head with its page number as a separate piece (`2` + `Amirirad and Sayama`).
+  if (line.y < layout.pageHeight * RUNNING_HEAD_BAND && pieces.length >= 2 && pieces.some(isPattern) &&
+      pieces.every((item) => isPattern(item) || /^\d{1,4}$/.test(item.text.trim()))) return true;
   // REVTeX sets the page-one title inside the header band (y≈62 on a 792pt page).
   const pageOneTitle = line.page === 1 && line.fontSize >= 11.5 && /[a-z]/.test(line.text) &&
-    line.text.trim().split(/\s+/).length >= 3 && !isRepeatedHeaderFooter(line.text, patterns);
+    line.text.trim().split(/\s+/).length >= 3 && !isPatternKey(normalizeChromeKey(line.text));
   if (line.y < topBand && !pageOneTitle) {
     // Journal PDFs can begin the next page with the continuation of a body
     // paragraph.  A blanket top-band rule drops that line before paragraph
@@ -1517,7 +1536,7 @@ function isEdgeChrome(
   // a title-sized line away from the page edges is content (a title's last line `MEASURE`).
   const titleSizedWord = line.fontSize >= 11.5 && !/\s/.test(normalizeChromeKey(line.text)) &&
     line.y >= topBand * 1.6 && line.y <= layout.pageHeight - FOOTER_MARGIN * 2;
-  if (!titleSizedWord && isRepeatedHeaderFooter(line.text, patterns)) return true;
+  if (!titleSizedWord && isPatternKey(normalizeChromeKey(line.text))) return true;
   if (
     line.y < topBand * 1.35 &&
     /^(proceedings of|conference on|extended abstracts|tei\s+[’']?\d{2,4}|chi\s+[’']?\d{2,4}|uist\s+[’']?\d{2,4}|iswc\s+[’']?\d{2,4}|dis\s+[’']?\d{2,4}|cscw|imwut|ubicomp)/i.test(
