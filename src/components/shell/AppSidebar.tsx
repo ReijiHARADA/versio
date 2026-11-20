@@ -8,6 +8,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
+  Search,
   Settings,
   Star,
   Trash2,
@@ -243,7 +244,7 @@ export function AppSidebar({
                   aria-label="ライブラリを検索"
                   data-testid="library-search"
                 />
-                {searchQuery && (
+                {searchQuery ? (
                   <button
                     type="button"
                     className={styles.searchClear}
@@ -257,6 +258,10 @@ export function AppSidebar({
                   >
                     <X size={14} />
                   </button>
+                ) : (
+                  <span className={styles.searchIcon} aria-hidden="true">
+                    <Search size={14} />
+                  </span>
                 )}
               </label>
             </>,
