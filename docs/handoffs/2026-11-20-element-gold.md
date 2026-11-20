@@ -12,11 +12,11 @@ status: draft
 
 ## 今の状態
 
-- 2026-11-17〜21 の作業（PR #42〜#144 のうち抽出・採点の分）まで。main 6265c2f。作業中のブランチ・PR は無い。
-- 比べる基準 run: `a1-elementgold` / `a1-paragold106`（main 6265c2f 相当、worktree `../app-worktrees/element-authors` で取ったもの。`test-data/extraction-audit` は main へのリンク）。
+- 2026-11-17〜21 の作業（PR #42〜#148 のうち抽出・採点の分）まで。main ec01077。作業中のブランチ・PR は無い。
+- 比べる基準 run: `b1-elementgold` / `b1-paragold106`（main ec01077 相当、worktree `../app-worktrees/element-authors` で取ったもの。`test-data/extraction-audit` は main へのリンク）。
 - Europe PMC 106 本の ID は `/tmp/claude-501/ids106.txt`。消えていたら `m0-paragold106` の docs のファイル名から作り直す。
 - Europe PMC の dev 全件（868 本）と test split は、11-17 以降まだ測っていない。
 
 ## 次の一手
 
-[extraction-next-steps.md](../extraction-next-steps.md) の「次にやること・要素正解」の 1 番（Europe PMC の著者の残り）。Frontiers の側欄は段落正解のセッションの担当なので避け、4 語の名前の分割から。
+[extraction-next-steps.md](../extraction-next-steps.md) の「次にやること・要素正解」の 1 番（Europe PMC の著者の残り）。Frontiers の側欄は段落正解のセッションの担当なので避ける。著者の残りは大物（`PMC12280214`）だけなので、次は 1b（PLOS の 2 ページ目の側欄）か 2 番（脚注）。
