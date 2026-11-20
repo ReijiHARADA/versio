@@ -215,7 +215,23 @@ export function AppSidebar({
             onDoubleClick={onResizeDoubleClick}
           />
 
-          <div className={styles.brandRow} data-tauri-drag-region>
+          {/* Search and the collapse button share the main pane header band. */}
+          <div className={styles.brandRow}>
+            <label className={styles.search} title="ライブラリを検索 (⌘K)">
+              <span className={styles.iconSlot}>
+                <Search size={16} className={styles.searchIcon} />
+              </span>
+              <input
+                id="library-search"
+                type="search"
+                placeholder="ライブラリを検索"
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className={styles.searchInput}
+                aria-label="ライブラリを検索"
+                data-testid="library-search"
+              />
+            </label>
             {!narrow && (
               <button
                 type="button"
@@ -230,22 +246,6 @@ export function AppSidebar({
               </button>
             )}
           </div>
-
-          <label className={styles.search} title="ライブラリを検索 (⌘K)">
-            <span className={styles.iconSlot}>
-              <Search size={16} className={styles.searchIcon} />
-            </span>
-            <input
-              id="library-search"
-              type="search"
-              placeholder="ライブラリを検索"
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className={styles.searchInput}
-              aria-label="ライブラリを検索"
-              data-testid="library-search"
-            />
-          </label>
 
           <div className={styles.scroll}>
             <section className={styles.section}>

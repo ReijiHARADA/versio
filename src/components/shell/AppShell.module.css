@@ -28,8 +28,12 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding-top: var(--titlebar-h);
-  border-left: 1px solid var(--color-border);
+  /* Desktop: a card below the title bar, flush with the window's right and bottom. */
+  margin-top: var(--titlebar-h);
+  border: 1px solid var(--color-border);
+  border-right: 0;
+  border-bottom: 0;
+  border-radius: var(--titlebar-h) var(--titlebar-h) 0 0;
   background: var(--color-bg);
   box-shadow: -4px 0 16px color-mix(in srgb, var(--color-shadow) 50%, transparent);
 }

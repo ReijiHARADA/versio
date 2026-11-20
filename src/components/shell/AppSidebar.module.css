@@ -10,6 +10,8 @@
   --sidebar-pad-x: 8px;
   --sidebar-resize-handle-w: 4px;
   --sidebar-chevron: 14px;
+  /* Width of the three macOS traffic lights (close to zoom). */
+  --traffic-lights-w: 60px;
 }
 
 /* Animate expand progress as one continuous motion. */
@@ -17,6 +19,13 @@
   syntax: "<number>";
   inherits: true;
   initial-value: 0;
+}
+
+/* Desktop: the collapsed rail is wide enough to hold the traffic lights with the
+   window margin on both sides; its icons share the lights' center line. */
+:global(html[data-titlebar]) .rail {
+  --sidebar-collapsed-w: calc(var(--traffic-lights-w) + 2 * var(--window-margin));
+  --sidebar-pad-x: calc((var(--sidebar-collapsed-w) - var(--sidebar-icon-box)) / 2);
 }
 
 /* Outer flex item. */
@@ -55,7 +64,9 @@
     var(--sidebar-pad-x) +
       (var(--window-margin) - var(--sidebar-pad-x)) * var(--sidebar-expand-t)
   );
-  padding: var(--titlebar-h) var(--sidebar-content-pad) var(--spacing-md);
+  /* Search row centers on the main pane header: card top (titlebar) + half the band. */
+  padding: calc(var(--titlebar-h) + (var(--header-height) - var(--control-height)) / 2)
+    var(--sidebar-content-pad) var(--spacing-md);
   background-color: var(--color-bg-secondary);
   overflow: visible;
   box-sizing: border-box;
@@ -202,13 +213,22 @@
    Search
 ──────────────────────────────────────────────── */
 /* Centered in the header band, level with the page title. */
+/* Collapsed: a column (open button above the search icon). Expanded: one row. */
 .brandRow {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: var(--window-margin);
   flex-shrink: 0;
-  height: var(--control-height);
-  margin-top: calc((var(--header-height) - var(--control-height)) / 2);
-  overflow: hidden;
+}
+
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .brandRow,
+.sidebarExpanded .brandRow,
+.sidebarResizing .brandRow,
+.sidebarDropReady .brandRow,
+.sidebar:has([data-workspace-editing]) .brandRow {
+  flex-direction: row;
+  gap: var(--spacing-sm);
 }
 
 .brandToggle {
@@ -219,7 +239,8 @@
   height: 24px;
   /* Centered in the collapsed rail's icon column; at the right edge when expanded,
      pulled out by the glyph's inner padding so the glyph meets the content edge. */
-  margin-left: calc((var(--sidebar-icon-box) - 24px) / 2);
+  order: -1;
+  flex-shrink: 0;
   margin-right: calc(-4px * var(--sidebar-expand-t));
   padding: 0;
   border: none;
@@ -235,7 +256,7 @@
 .sidebarResizing .brandToggle,
 .sidebarDropReady .brandToggle,
 .sidebar:has([data-workspace-editing]) .brandToggle {
-  margin-left: auto;
+  order: 0;
 }
 
 .brandToggle:hover {
@@ -257,7 +278,8 @@
   border-radius: var(--sq-radius-md);
   color: var(--color-text-tertiary);
   /* Center within the same --header-height band as the main pane header. */
-  margin-top: var(--window-margin);
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 
@@ -271,7 +293,7 @@
   background: transparent;
   color: var(--color-text);
   font: inherit;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   padding: 0;
 }
 

@@ -102,7 +102,8 @@
 .list {
   flex: 1;
   overflow-y: auto;
-  padding: var(--window-margin);
+  /* No top pad: the header band already ends 24px below its controls. */
+  padding: 0 var(--window-margin) var(--window-margin);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
