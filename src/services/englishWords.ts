@@ -22,6 +22,8 @@ import british50 from "wordlist-english/british-words-50.json";
 import british55 from "wordlist-english/british-words-55.json";
 import british60 from "wordlist-english/british-words-60.json";
 
+const ALL_LISTS = [english10, english20, english35, english40, english50, english55, english60, american10, american20, american35, american40, american50, american55, american60, british10, british20, british35, british40, british50, british55, british60];
+const COMMON_LISTS = [english10, english20, english35, american10, american20, american35, british10, british20, british35];
 let words: Set<string> | undefined;
 let commonWords: Set<string> | undefined;
 const toSet = (lists: unknown[]) => new Set((lists as string[][]).flat().map((word) => word.toLowerCase()));
@@ -30,10 +32,15 @@ const toSet = (lists: unknown[]) => new Set((lists as string[][]).flat().map((wo
 // line end only a common word (`inter-national`) is taken as one broken word.
 const PREFIX = /^(?:anti|co|counter|cross|inter|intra|long|micro|macro|multi|non|off|out|over|post|pre|re|self|semi|sub|super|two|three|under|well)$/i;
 
+export function isEnglishWord(word: string): boolean {
+  words ??= toSet(ALL_LISTS);
+  return words.has(word.toLowerCase());
+}
+
 export function joinsAsEnglishWord(head: string, tail: string): boolean {
   const word = `${head}${tail}`.toLowerCase();
   // Built on first use so app start-up does not pay for the lists.
-  words ??= toSet([english10, english20, english35, english40, english50, english55, english60, american10, american20, american35, american40, american50, american55, american60, british10, british20, british35, british40, british50, british55, british60]);
-  commonWords ??= toSet([english10, english20, english35, american10, american20, american35, british10, british20, british35]);
+  words ??= toSet(ALL_LISTS);
+  commonWords ??= toSet(COMMON_LISTS);
   return PREFIX.test(head) ? commonWords.has(word) : words.has(word);
 }
