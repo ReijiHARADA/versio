@@ -27,8 +27,8 @@ export function elasticOffset(pull: number): number {
 /** Raw overflow required to fill the gauge and arm “離して遷移”. */
 export const COMMIT_PULL_PX = 140;
 
-/** Asymptotic max visual shift of the current page while pulling. */
-export const PULL_RUBBER_DIM = 56;
+/** Asymptotic max shift of the page stack while pulling (the next page peeks in by this much). */
+export const PULL_RUBBER_DIM = 88;
 
 /**
  * Soft per-wheel ceiling (px of |deltaY| before scale). High enough to feel
@@ -245,6 +245,7 @@ export function useSettingsPanelTransition({ page, onPageChange }: Options) {
       clearAnimTimer();
       clearIdleTimer();
       clearArmTimer();
+      const pulled = pullOffsetRef.current;
       resetPullState();
 
       const from = pageRef.current;
@@ -262,7 +263,8 @@ export function useSettingsPanelTransition({ page, onPageChange }: Options) {
       snappingRef.current = true;
       setSnapping(true);
 
-      setStackOffset(from === "licenses" ? viewportH : 0);
+      // Start from where the pull left the stack so the slide has no jump back.
+      setStackOffset(from === "licenses" ? viewportH - pulled : pulled);
       requestAnimationFrame(() => {
         setStackOffset(target);
       });
@@ -471,7 +473,9 @@ export function useSettingsPanelTransition({ page, onPageChange }: Options) {
     settingsRef,
     licensesRef,
     viewportH,
-    stackOffset: transitioning ? stackOffset : settledBase,
+    stackOffset: transitioning
+      ? stackOffset
+      : settledBase + (page === "licenses" ? -pullOffset : pullOffset),
     pullOffset,
     progress,
     pulling,

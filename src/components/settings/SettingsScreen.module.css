@@ -78,12 +78,6 @@
   will-change: transform;
 }
 
-/* Elastic release back to rest — duration set inline from the pull hook. */
-.pagePullSettle {
-  transition-property: transform;
-  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 /* Legacy class name kept for any leftover references during transition. */
 .content {
   flex: 1;
@@ -459,8 +453,7 @@
     animation: none;
   }
 
-  .stackSnap,
-  .pagePullSettle {
+  .stackSnap {
     transition-duration: 0.01ms !important;
   }
 
