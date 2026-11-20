@@ -33,7 +33,12 @@
   border: 1px solid var(--color-border);
   border-radius: var(--card-radius);
   background: var(--color-bg);
-  box-shadow: -4px 0 16px color-mix(in srgb, var(--color-shadow) 50%, transparent);
+  /* Layered so the card reads as lifted: a tight contact shadow, a soft near
+     shadow, and a wide ambient one, all lit from above. */
+  box-shadow:
+    0 1px 2px var(--color-shadow),
+    0 4px 12px var(--color-shadow),
+    0 16px 40px var(--color-shadow);
 }
 
 /* Resize guide: the divider line turns accent while resizing. */
