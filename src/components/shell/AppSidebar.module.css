@@ -55,9 +55,8 @@
     var(--sidebar-pad-x) +
       (var(--window-margin) - var(--sidebar-pad-x)) * var(--sidebar-expand-t)
   );
-  /* Search row centers on the main pane header: card top (titlebar) + half the band. */
-  padding: calc(var(--titlebar-h) + (var(--header-height) - var(--control-height)) / 2)
-    var(--sidebar-content-pad) var(--spacing-md);
+  /* Content starts at the main card's top edge. */
+  padding: var(--titlebar-h) var(--sidebar-content-pad) var(--card-gap);
   background-color: var(--color-bg-secondary);
   overflow: visible;
   box-sizing: border-box;
@@ -204,35 +203,17 @@
    Search
 ──────────────────────────────────────────────── */
 /* Centered in the header band, level with the page title. */
-/* Collapsed: a column (open button above the search icon). Expanded: one row. */
-.brandRow {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--window-margin);
-  flex-shrink: 0;
-}
-
-.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .brandRow,
-.sidebarExpanded .brandRow,
-.sidebarResizing .brandRow,
-.sidebarDropReady .brandRow,
-.sidebar:has([data-workspace-editing]) .brandRow {
-  flex-direction: row;
-  gap: var(--spacing-sm);
-}
-
+/* Sits in the title bar right after the macOS traffic lights (tauri.conf.json x12). */
 .brandToggle {
   composes: surface from "../../styles/squircle.module.css";
+  position: fixed;
+  top: calc((var(--titlebar-h) - 24px) / 2);
+  left: 80px;
+  z-index: 1001;
   display: grid;
   place-items: center;
   width: 24px;
   height: 24px;
-  /* Centered in the collapsed rail's icon column; at the right edge when expanded,
-     pulled out by the glyph's inner padding so the glyph meets the content edge. */
-  order: -1;
-  flex-shrink: 0;
-  margin-right: calc(-4px * var(--sidebar-expand-t));
   padding: 0;
   border: none;
   --sq-bg: transparent;
@@ -242,13 +223,6 @@
   cursor: pointer;
 }
 
-.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .brandToggle,
-.sidebarExpanded .brandToggle,
-.sidebarResizing .brandToggle,
-.sidebarDropReady .brandToggle,
-.sidebar:has([data-workspace-editing]) .brandToggle {
-  order: 0;
-}
 
 .brandToggle:hover {
   --sq-bg: var(--color-bg-tertiary);
@@ -269,8 +243,6 @@
   border-radius: var(--sq-radius-md);
   color: var(--color-text-tertiary);
   /* Center within the same --header-height band as the main pane header. */
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 
