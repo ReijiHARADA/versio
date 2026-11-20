@@ -4467,6 +4467,40 @@ export function isSmallTypeNote(text: string, fontRatio: number, topRatio: numbe
   return words >= 6 && /[.)]$/.test(text) && digits < text.length * 0.08;
 }
 
+const layoutFontRatio = (layout: LayoutBlock, baseFontSize: number): number => {
+  const sizes = layout.lines.map((line) => line.fontSize).sort((a, b) => a - b);
+  return (sizes[Math.floor(sizes.length / 2)] ?? baseFontSize) / baseFontSize;
+};
+
+/**
+ * Page 2 of a rail-first journal (PLOS) carries the end of page 1's metadata rail
+ * (`Competing interests: The authors have` / `declared that …`): small type left of a
+ * body column that starts well right of the margin.
+ */
+function isPageTwoRailNote(context: BodyNodeContext, node: CanonicalNode, layout: LayoutBlock): boolean {
+  const pageWidth = context.layouts.find((l) => l.page === node.pageStart)?.pageWidth ?? 612;
+  if (node.pageStart !== 2 || node.pageEnd !== 2 || layout.bbox.x > pageWidth * 0.18) return false;
+  const fontSize = (block: LayoutBlock) => layoutFontRatio(block, 1);
+  const body = context.layoutBlocks.filter((b) => b.pageStart === 2 && b.role === "paragraph" && b.bbox.width >= pageWidth * 0.4 && b.bbox.x >= pageWidth * 0.28);
+  if (body.length < 2) return false;
+  const bodyX = Math.min(...body.map((b) => b.bbox.x));
+  const bodySizes = body.map(fontSize).sort((a, b) => a - b);
+  return fontSize(layout) <= bodySizes[Math.floor(bodySizes.length / 2)]! * 0.88 && layout.bbox.x + layout.bbox.width < bodyX - 6;
+}
+
+function noteLayout(context: BodyNodeContext, node: CanonicalNode, roleLayout: LayoutBlock | undefined): LayoutBlock | undefined {
+  // `layoutForNode` needs a matching role; a resolver relabel or a merge loses it.
+  const first = node.boundingBoxes[0];
+  return roleLayout ?? context.layoutBlocks.find((b) => b.pageStart === node.pageStart && b.text === node.text) ??
+    (first && context.layoutBlocks.find((b) => b.pageStart === first.page && b.lines.some((l) => Math.abs(l.bbox.x - first.x) < 1 && Math.abs(l.bbox.y - first.y) < 1)));
+}
+
+function isRailNoteNode(context: BodyNodeContext, state: BodyProjectionState, node: CanonicalNode, roleLayout: LayoutBlock | undefined): boolean {
+  if (!["paragraph", "other", "heading"].includes(node.role) || state.currentKind === "references") return false;
+  const layout = noteLayout(context, node, roleLayout);
+  return !!layout && isPageTwoRailNote(context, node, layout);
+}
+
 function isNoteParagraph(context: BodyNodeContext, state: BodyProjectionState, node: CanonicalNode, roleLayout: LayoutBlock | undefined): boolean {
   if (node.role !== "paragraph" || state.currentKind === "references") return false;
   // `layoutForNode` needs a matching role; a resolver relabel or a merge loses it.
@@ -4505,7 +4539,8 @@ export function splitFootnoteRun(text: string): string[] {
 }
 
 function projectFootnoteNode(context: BodyNodeContext, state: BodyProjectionState, node: CanonicalNode, layout: LayoutBlock | undefined, boxes: BoundingBox[], column: string): boolean {
-    if (node.role === "footnote" || isNoteParagraph(context, state, node, layout)) {
+    const railNote = isRailNoteNode(context, state, node, layout);
+    if (node.role === "footnote" || railNote || isNoteParagraph(context, state, node, layout)) {
       const text = node.text ?? "";
       // Running page indices are often labeled footnote by layout heuristics.
       if (isStandalonePageNumber(text, node.role)) return true;
@@ -4519,7 +4554,7 @@ function projectFootnoteNode(context: BodyNodeContext, state: BodyProjectionStat
         translated: null,
         translationStatus: shouldTranslateParagraph(note) ? "pending" : "skipped",
         parentBlockId: null,
-        metadata: { column, role: "footnote" },
+        metadata: { column, role: "footnote", ...(railNote ? { railNote: true } : {}) },
       });
       return true;
     }
@@ -4613,6 +4648,8 @@ function dispatchBodyNode(context: BodyNodeContext, state: BodyProjectionState, 
     const column = node.column ?? layout?.column ?? "single";
     const nodeText = (node.text ?? "").trim();
 
+  // A rail line can read as a short heading (`Ravenzwaaij and a Japanese JSPS KAKENHI`).
+  if (node.role === "heading" && isRailNoteNode(context, state, node, layout) && projectFootnoteNode(context, state, node, layout, boxes, column)) return;
   if (projectTableNode(context, state, node, layout, boxes, column, nodeText)) return;
   if (projectHeadingNode(context, state, node, layout, boxes, column)) return;
   if (projectCaptionNode(context, state, node, layout, boxes, column)) return;
@@ -4621,7 +4658,29 @@ function dispatchBodyNode(context: BodyNodeContext, state: BodyProjectionState, 
   projectProseNode(context, state, node, layout, boxes, column);
 }
 
-function finalizeBodyBlocks(blocks: PaperBlock[], layoutBlocks: LayoutBlock[]): PaperBlock[] {
+/** Rail note lines arrive one per block; a line that does not open a new `Label:` continues the note. */
+function joinRailNoteLines(blocks: PaperBlock[]): PaperBlock[] {
+  const out: PaperBlock[] = [];
+  let open = -1;
+  for (const block of blocks) {
+    const last = out[open];
+    if (!block.metadata?.railNote) {
+      out.push(block);
+      continue;
+    }
+    // Body lines interleave with the rail in reading order; join to the open note on the page.
+    if (last && last.pageStart === block.pageStart && !/^[A-Z][\w ]{2,40}:/.test(block.original ?? "")) {
+      const original = `${last.original ?? ""} ${block.original ?? ""}`.replace(/\s+/g, " ").trim();
+      out[open] = { ...last, original, boundingBoxes: [...last.boundingBoxes, ...block.boundingBoxes], translationStatus: shouldTranslateParagraph(original) ? "pending" : "skipped" };
+      continue;
+    }
+    open = out.push(block) - 1;
+  }
+  return out;
+}
+
+function finalizeBodyBlocks(rawBlocks: PaperBlock[], layoutBlocks: LayoutBlock[]): PaperBlock[] {
+  const blocks = joinRailNoteLines(rawBlocks);
   // Native table cells can arrive as separate high-confidence table blocks
   // on one visual baseline. Reconstruct the logical row before exposing
   // PaperBlocks, while leaving sidebar-grid cells (which use distinct
