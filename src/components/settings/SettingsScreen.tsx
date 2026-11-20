@@ -348,29 +348,21 @@ export function SettingsScreen() {
         </aside>
         <div ref={panel.viewportRef} className={styles.viewport}>
           <div
-            className={`${styles.stack} ${panel.transitioning ? styles.stackSnap : ""}`}
+            className={`${styles.stack} ${panel.snapping ? styles.stackSnap : ""}`}
             style={{
               height: panel.viewportH > 0 ? panel.viewportH * 2 : "200%",
               transform: `translateY(${-panel.stackOffset}px)`,
-              transitionDuration: panel.transitioning ? `${panel.transitionMs}ms` : undefined,
+              transitionDuration: panel.transitioning
+                ? `${panel.transitionMs}ms`
+                : panel.snapping
+                  ? `${panel.settleMs}ms`
+                  : undefined,
             }}
           >
             <main
               ref={contentRef}
-              className={`${styles.page} ${
-                panelPage === "settings" && panel.snapping && !panel.transitioning
-                  ? styles.pagePullSettle
-                  : ""
-              }`}
-              style={{
-                height: panel.viewportH > 0 ? panel.viewportH : "50%",
-                transform:
-                  panelPage === "settings" ? `translateY(${-panel.pullOffset}px)` : undefined,
-                transitionDuration:
-                  panelPage === "settings" && panel.snapping && !panel.transitioning
-                    ? `${panel.settleMs}ms`
-                    : undefined,
-              }}
+              className={styles.page}
+              style={{ height: panel.viewportH > 0 ? panel.viewportH : "50%" }}
               aria-hidden={panelPage === "licenses"}
             >
               <section id={settingsSectionElementId("reading")} className={styles.section}>
@@ -405,20 +397,8 @@ export function SettingsScreen() {
             </main>
             <main
               ref={panel.licensesRef}
-              className={`${styles.page} ${
-                panelPage === "licenses" && panel.snapping && !panel.transitioning
-                  ? styles.pagePullSettle
-                  : ""
-              }`}
-              style={{
-                height: panel.viewportH > 0 ? panel.viewportH : "50%",
-                transform:
-                  panelPage === "licenses" ? `translateY(${panel.pullOffset}px)` : undefined,
-                transitionDuration:
-                  panelPage === "licenses" && panel.snapping && !panel.transitioning
-                    ? `${panel.settleMs}ms`
-                    : undefined,
-              }}
+              className={styles.page}
+              style={{ height: panel.viewportH > 0 ? panel.viewportH : "50%" }}
               aria-hidden={panelPage === "settings"}
             >
               <LicensesSettingsSection />
@@ -441,15 +421,13 @@ export function SettingsScreen() {
                 ready={panel.pastThreshold && !panel.latching}
               />
               <span className={styles.elasticHintLabel}>
-                {panel.arming || panel.latching
-                  ? "端でいったん停止"
-                  : panelPage === "settings"
-                    ? panel.pastThreshold
-                      ? "離してライセンスへ"
-                      : "ゆっくり引っ張ってゲージをためる"
-                    : panel.pastThreshold
-                      ? "離して設定へ"
-                      : "ゆっくり引っ張ってゲージをためる"}
+                {panelPage === "settings"
+                  ? panel.pastThreshold && !panel.latching
+                    ? "離してライセンスへ"
+                    : "引っ張ってライセンスへ"
+                  : panel.pastThreshold && !panel.latching
+                    ? "離して設定へ"
+                    : "引っ張って設定へ"}
               </span>
             </div>
           ) : null}

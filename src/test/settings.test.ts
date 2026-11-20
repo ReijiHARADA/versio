@@ -48,7 +48,7 @@ describe("settings pull-to-navigate", () => {
     expect(rubberBand(140)).toBeLessThan(PULL_RUBBER_DIM);
   });
 
-  it("keeps visual pull well below a full page (PTR-style, not page peek)", () => {
+  it("keeps the next-page peek well below a full page", () => {
     const deep = pullVisualOffset(COMMIT_PULL_PX * 3, false);
     expect(deep).toBeGreaterThan(0);
     expect(deep).toBeLessThanOrEqual(PULL_RUBBER_DIM);
