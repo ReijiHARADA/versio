@@ -11,6 +11,7 @@ import {
   Settings,
   Star,
   Trash2,
+  X,
 } from "lucide-react";
 import type { WorkspaceNode } from "../../types/project";
 import {
@@ -242,6 +243,21 @@ export function AppSidebar({
                   aria-label="ライブラリを検索"
                   data-testid="library-search"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className={styles.searchClear}
+                    aria-label="検索をクリア"
+                    // Keep focus in the input so the user can type again right away.
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      onSearchChange("");
+                      document.getElementById("library-search")?.focus();
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
               </label>
             </>,
             document.body
