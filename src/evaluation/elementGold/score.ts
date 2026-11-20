@@ -68,7 +68,8 @@ export function scoreElements(gold: ElementGold, blocks: ScoredBlock[], paper: S
   const ratio = <T>(items: T[], ok: (x: T) => boolean) => ({ gold: items.length, found: items.filter(ok).length });
 
   const headingBlocks = byType("heading").map((b) => bareHeading(b.text));
-  const goldHeadings = gold.headings.map((h) => bareHeading(h.text)).filter((h) => h && isPrinted(h));
+  // A keyword label is front matter: the extractor moves it into paper.keywords, not a section heading.
+  const goldHeadings = gold.headings.map((h) => bareHeading(h.text)).filter((h) => h && isPrinted(h) && !/^(?:key\s*words?|index terms)$/i.test(h));
   // A run-in heading ("Study setting. Participants were…") is printed inside its paragraph.
   const runIn = byType("paragraph").map((b) => tokens(bareHeading(b.text)).slice(0, 12).join(" "));
   const headingHit = (h: string) => headingBlocks.some((b) => similarity(b, h) >= 0.85) || (tokens(h).length > 0 && runIn.some((p) => p.startsWith(tokens(h).join(" "))));

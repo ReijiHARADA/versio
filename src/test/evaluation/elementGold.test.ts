@@ -95,6 +95,12 @@ describe("scoreElements", () => {
     expect(s.figures).toEqual({ gold: 1, found: 0 });
   });
 
+  it("does not count a keyword label as a section heading", () => {
+    const g = jatsElementGold(`<article><front><article-meta><abstract><p>${LONG}</p></abstract></article-meta></front><body><sec><title>Keywords</title><p>${LONG}</p></sec><sec><title>Introduction</title><p>${LONG}</p></sec></body></article>`, { id: "kw-x", license: "", sourceUrl: "" });
+    const s = scoreElements(g, [{ id: "h", type: "heading", text: "Introduction" }], { title: null, authors: [], publication: null, doi: null }, `Keywords Introduction ${LONG}`);
+    expect(s.headings).toEqual({ gold: 1, found: 1 });
+  });
+
   it("matches math tokens split around a subscript", () => {
     const text = "A study reports results from repeated measurements across several conditions with careful controls and consistent analysis methods for all participants in the experiment.";
     const gold = jatsElementGold(`<article><front><article-meta><abstract><p>${text} M irreg n improved accuracy in every evaluation setting.</p></abstract></article-meta></front></article>`, { id: "math-x", license: "", sourceUrl: "" });
