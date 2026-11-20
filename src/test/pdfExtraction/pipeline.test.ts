@@ -566,6 +566,15 @@ describe("canonical extraction pipeline", () => {
     expect(fig4?.original).toMatch(/Δ0 = 1 \(from Eq\. \(104\)/);
   }, 60_000);
 
+  it("keeps a body-size table caption's wrapped lines in the caption", async (ctx) => {
+    const pdf = path.resolve("test-data/element-gold/acl-2024.eacl-long.174/source.pdf");
+    if (!fs.existsSync(pdf)) ctx.skip();
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({ pages, paperId: "table-caption-wrap", filePath: pdf, fileHash: "table-caption-wrap", metadata: { pageCount: pages.length } });
+    const table1 = result.blocks.find((block) => block.type === "table" && /^Table 1:/.test(block.original ?? ""));
+    expect(table1?.original).toMatch(/Add_Classes update scenarios constructed for the re-?spective datasets/);
+  }, 60_000);
+
   it("keeps wrapped table-caption prose out of table cells", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
     if (!fs.existsSync(pdf)) ctx.skip();
