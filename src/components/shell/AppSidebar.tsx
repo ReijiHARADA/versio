@@ -12,7 +12,7 @@ import {
   Settings,
   Star,
   Trash2,
-} from "../ui/MaterialSymbol";
+} from "lucide-react";
 import type { WorkspaceNode } from "../../types/project";
 import {
   clampSidebarWidth,

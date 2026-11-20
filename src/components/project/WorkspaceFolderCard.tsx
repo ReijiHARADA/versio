@@ -1,4 +1,4 @@
-import { Folder } from "../ui/MaterialSymbol";
+import { Folder } from "lucide-react";
 import type { WorkspaceNode } from "../../types/project";
 import styles from "./WorkspaceFolderCard.module.css";
 

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { X } from "../ui/MaterialSymbol";
+import { X } from "lucide-react";
 import styles from "../project/ProjectModal.module.css";
 import { isImeComposing } from "../../utils/ime";
 

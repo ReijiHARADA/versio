@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { Search, X, ChevronUp, ChevronDown } from "../ui/MaterialSymbol";
+import { Search, X, ChevronUp, ChevronDown } from "lucide-react";
 import type { PaperBlock, Section } from "../../types/paper";
 import { sectionDisplayTitle } from "../../services/translation/quality";
 import styles from "./SearchPanel.module.css";

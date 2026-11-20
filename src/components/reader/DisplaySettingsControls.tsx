@@ -1,4 +1,4 @@
-import { Sun, Moon, Monitor } from "../ui/MaterialSymbol";
+import { Sun, Moon, Monitor } from "lucide-react";
 import { useAppStore, type Theme } from "../../stores/appStore";
 import styles from "./DisplaySettingsControls.module.css";
 

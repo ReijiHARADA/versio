@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "../ui/MaterialSymbol";
+import { X } from "lucide-react";
 import styles from "./ExportDialog.module.css";
 
 export type ExportDialogValues = {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronRight, Search } from "../ui/MaterialSymbol";
+import { ChevronRight, Search } from "lucide-react";
 import {
   ECOSYSTEM_LABELS,
   STATUS_LABELS,
