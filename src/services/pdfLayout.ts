@@ -298,7 +298,68 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     }
     return false;
   })();
-  if (!cleanGutter && midpointBridgedRows >= 8 && midpointBridgedRows / Math.max(midpointRows.length, 1) >= 0.55) {
+  // Some journal first pages use an asymmetric metadata rail: a narrow
+  // `Article history`/`Keywords` column sits beside a wide abstract column.
+  // The ordinary two-column detector intentionally ignores the short rail
+  // lines, which can make the abstract continue after the rail's keywords
+  // (`... pa` + `tient data ...`). Detect this layout from persistent x bands
+  // and y overlap without treating a title/author row as a column profile.
+  const asymmetricRail = (() => {
+    if (page.pageNumber !== 1) return null;
+    // A lone `Abstract` heading is common in ordinary two-column papers and
+    // is not enough to identify a metadata rail. Require the rail-specific
+    // labels that distinguish article-info/keyword sidebars from a normal
+    // abstract beside an author masthead.
+    const pageText = page.textItems.map((item) => item.text).join(" ");
+    // PLOS puts the same kind of rail (`Citation:` … `Editor:`) beside the abstract. Frontiers
+    // also prints `Citation:` but its masthead rail (`Edited by:`) is read by the author projection.
+    const plosRail = /\bcitation\s*:/i.test(pageText) && /\beditor\s*:/i.test(pageText);
+    if (!/article\s+history|keywords\s*:/i.test(pageText) && !plosRail) return null;
+    const left = usable.filter((item) =>
+      item.y >= page.height * 0.36 && item.x <= page.width * 0.18 && item.width <= page.width * 0.28 &&
+      Math.abs(item.rotation ?? 0) < 5
+    );
+    const right = usable.filter((item) =>
+      item.y >= page.height * 0.36 && item.x >= page.width * 0.28 && item.x <= page.width * 0.55 &&
+      item.width >= 8 && Math.abs(item.rotation ?? 0) < 5
+    );
+    // Line-level native items (PLOS) give ~30 right items per page, word-level ones far more.
+    if (left.length < 15 || right.length < 20) return null;
+    const leftY = { min: Math.min(...left.map((item) => item.y)), max: Math.max(...left.map((item) => item.y)) };
+    const rightY = { min: Math.min(...right.map((item) => item.y)), max: Math.max(...right.map((item) => item.y)) };
+    const overlap = Math.min(leftY.max, rightY.max) - Math.max(leftY.min, rightY.min);
+    if (overlap < 100 || leftY.max - leftY.min < 140 || rightY.max - rightY.min < 100) return null;
+    const wideStart = Math.min(...right.map((item) => item.x));
+    // A real rail leaves a gap before the wide column on every shared row; a
+    // full-width page cut into word items runs straight across that x.
+    const rows = new Map<number, ExtractedTextItem[]>();
+    for (const item of usable) {
+      if (item.y < Math.max(leftY.min, rightY.min) || item.y > Math.min(leftY.max, rightY.max)) continue;
+      const key = Math.round(item.y / 3);
+      rows.set(key, [...(rows.get(key) ?? []), item]);
+    }
+    let shared = 0;
+    let gapped = 0;
+    for (const row of rows.values()) {
+      const before = row.filter((item) => item.x < wideStart - 2);
+      const after = row.filter((item) => item.x >= wideStart - 2);
+      if (!before.length || !after.length) continue;
+      shared += 1;
+      const end = Math.max(...before.map((item) => item.x + item.width));
+      const start = Math.min(...after.map((item) => item.x));
+      if (start - end >= Math.max(6, median(row.map((item) => item.fontSize)) * 0.6)) gapped += 1;
+    }
+    if (shared >= 5 && gapped < shared * 0.7) return null;
+    return {
+      leftX: median(left.map((item) => item.x)),
+      rightX: wideStart,
+      plos: plosRail,
+      leftCount: left.length,
+      rightCount: right.length,
+    };
+  })();
+  // Only the PLOS rail may override this: its abstract lines legitimately bridge the midpoint.
+  if (!asymmetricRail?.plos && !cleanGutter && midpointBridgedRows >= 8 && midpointBridgedRows / Math.max(midpointRows.length, 1) >= 0.55) {
     return fallback;
   }
 
@@ -390,46 +451,12 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     return { leftX, rightX };
   })();
 
-  // Some journal first pages use an asymmetric metadata rail: a narrow
-  // `Article history`/`Keywords` column sits beside a wide abstract column.
-  // The ordinary two-column detector intentionally ignores the short rail
-  // lines, which can make the abstract continue after the rail's keywords
-  // (`... pa` + `tient data ...`). Detect this layout from persistent x bands
-  // and y overlap without treating a title/author row as a column profile.
-  const asymmetricRail = (() => {
-    if (page.pageNumber !== 1) return null;
-    // A lone `Abstract` heading is common in ordinary two-column papers and
-    // is not enough to identify a metadata rail. Require the rail-specific
-    // labels that distinguish article-info/keyword sidebars from a normal
-    // abstract beside an author masthead.
-    const pageText = page.textItems.map((item) => item.text).join(" ");
-    if (!/article\s+history|keywords\s*:/i.test(pageText)) return null;
-    const left = usable.filter((item) =>
-      item.y >= page.height * 0.36 && item.x <= page.width * 0.18 && item.width <= page.width * 0.28 &&
-      Math.abs(item.rotation ?? 0) < 5
-    );
-    const right = usable.filter((item) =>
-      item.y >= page.height * 0.36 && item.x >= page.width * 0.28 && item.x <= page.width * 0.55 &&
-      item.width >= 8 && Math.abs(item.rotation ?? 0) < 5
-    );
-    if (left.length < 15 || right.length < 30) return null;
-    const leftY = { min: Math.min(...left.map((item) => item.y)), max: Math.max(...left.map((item) => item.y)) };
-    const rightY = { min: Math.min(...right.map((item) => item.y)), max: Math.max(...right.map((item) => item.y)) };
-    const overlap = Math.min(leftY.max, rightY.max) - Math.max(leftY.min, rightY.min);
-    if (overlap < 100 || leftY.max - leftY.min < 140 || rightY.max - rightY.min < 100) return null;
-    return {
-      leftX: median(left.map((item) => item.x)),
-      rightX: Math.min(...right.map((item) => item.x)),
-      leftCount: left.length,
-      rightCount: right.length,
-    };
-  })();
   if (layoutEnv("PDF_LAYOUT_DEBUG") === "columns" && page.pageNumber === 1) {
     console.warn(`[PDF_COLUMNS] asymmetric=${JSON.stringify(asymmetricRail)} sample=${sample.length}`);
   }
 
   if (sample.length < MIN_COLUMN_ITEMS * 2) {
-    if (!alignedColumnPairs && !asymmetricWordColumns) return fallback;
+    if (!alignedColumnPairs && !asymmetricWordColumns && !asymmetricRail) return fallback;
   }
 
   const rowStartPeaks = findTwoRowStarts(usable, page.width);
@@ -475,7 +502,7 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
       ? rightX - leftX >= page.width * 0.35 && leftLong.length >= 8 &&
         usable.filter((item) => item.x >= page.width * 0.5 && item.width <= page.width * 0.24).length >= 40
     : asymmetricRail
-      ? rightX - leftX >= page.width * 0.15 && asymmetricRail.leftCount >= 15 && asymmetricRail.rightCount >= 30
+      ? rightX - leftX >= page.width * 0.15 && asymmetricRail.leftCount >= 15 && asymmetricRail.rightCount >= 20
     : leftItems.length >= MIN_COLUMN_ITEMS &&
       rightItems.length >= MIN_COLUMN_ITEMS &&
       (rowStartPeaks != null || (leftLong.length >= MIN_COLUMN_ITEMS &&
@@ -524,7 +551,10 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     ? (leftEdge + rightColumnStart(usable, leftEdge, rightX)) / 2
     : medianGutter;
   // Only a clear correction moves it: items sitting right at the gutter flip columns on a 1pt shift.
-  const gutterX = edgeGutter - medianGutter >= 4 ? edgeGutter : medianGutter;
+  const columnGutter = edgeGutter - medianGutter >= 4 ? edgeGutter : medianGutter;
+  // A narrow rail has no column-wide lines of its own: the long lines are the wide
+  // column's, so the median gutter lands inside it. Cut just before the wide column.
+  const gutterX = asymmetricRail ? Math.min(columnGutter, rightX - 4) : columnGutter;
 
   return {
     page: page.pageNumber,
@@ -650,7 +680,9 @@ function assignColumn(
 ): LayoutColumn {
   if (!layout.isMultiColumn) return "single";
 
-  if (item.width > layout.pageWidth * ASSIGN_SPAN_WIDTH_RATIO) return "spanning";
+  // Beside a narrow rail the wide column's own lines are wide; they still start in that column.
+  const inWideRailColumn = layout.isAsymmetricRail && item.x >= layout.gutterX - 2;
+  if (item.width > layout.pageWidth * ASSIGN_SPAN_WIDTH_RATIO && !inWideRailColumn) return "spanning";
   if (
     item.width > layout.pageWidth * 0.4 &&
     item.x < layout.gutterX - 20 &&
