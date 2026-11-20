@@ -736,8 +736,18 @@ function joinItemTexts(items: ExtractedTextItem[]): string {
   let out = sorted[0].text;
   for (let i = 1; i < sorted.length; i++) {
     const prev = sorted[i - 1];
-    const cur = sorted[i];
+    let cur = sorted[i];
     const gap = cur.x - (prev.x + prev.width);
+    // Some publishers paint the accent after its letter, drawn back over it (`Schlo` + `¨ gl`).
+    const trailingAccent = /^[´¨˜ˆˇ]/.test(cur.text) && gap < -0.2 * prev.fontSize ? /[\p{L}ı]$/u.exec(out) : null;
+    if (trailingAccent) {
+      const base = trailingAccent[0] === "ı" ? "i" : trailingAccent[0];
+      out = out.slice(0, -1) + (base + SPACING_ACCENT_TO_COMBINING[cur.text[0]!]).normalize("NFC");
+      // The glyph's advance reads as a space; a lowercase letter after it continues the word.
+      cur = { ...cur, text: cur.text.slice(1).replace(/^ (?=\p{Ll})/u, "") };
+      out += cur.text;
+      continue;
+    }
     // Large display titles (Nature-style word-per-span) often kern at ~0.09em.
     // The previous 0.14em floor glued `Active`+`vision` into `Activevision`.
     const spaceThreshold = Math.max(0.85, prev.fontSize * 0.085);

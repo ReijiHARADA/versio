@@ -35,7 +35,9 @@ export function parseJatsFields(xml: string): FieldRecord {
   const meta = first(front, "article-meta")?.inner ?? front;
   const titleEl = first(first(meta, "title-group")?.inner ?? meta, "article-title");
 
-  const authors = elements(meta, "contrib")
+  // PLOS / Cureus list the handling editor in `<contrib-group content-type="editor">` with no contrib-type.
+  const authorGroups = elements(meta, "contrib-group").filter((g) => (g.attrs["content-type"] ?? "author") === "author");
+  const authors = authorGroups.flatMap((g) => elements(g.inner, "contrib"))
     .filter((c) => (c.attrs["contrib-type"] ?? "author") === "author")
     .map((c) => {
       const nameEl = first(c.inner, "name");

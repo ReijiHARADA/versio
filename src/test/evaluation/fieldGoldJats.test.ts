@@ -10,6 +10,7 @@ const JATS = `<?xml version="1.0"?>
     <contrib contrib-type="author"><name><surname>Chen</surname><given-names>Bo</given-names></name><xref ref-type="aff" rid="aff1"/><xref ref-type="aff" rid="aff2"/><email>bo@example.org</email></contrib>
     <contrib contrib-type="editor"><name><surname>Editor</surname><given-names>Ed</given-names></name></contrib>
   </contrib-group>
+  <contrib-group content-type="editor"><contrib><name><surname>Handler</surname><given-names>Hana</given-names></name></contrib></contrib-group>
   <aff id="aff1"><label>1</label><institution>Univ A</institution>, <country>Japan</country></aff>
   <aff id="aff2"><label>2</label><institution-wrap><institution>Lab B</institution></institution-wrap></aff>
   <author-notes><corresp id="c1">* Correspondence: <email>jane@example.org</email></corresp></author-notes>

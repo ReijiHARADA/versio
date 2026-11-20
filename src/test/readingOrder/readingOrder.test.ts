@@ -1817,6 +1817,16 @@ describe("composeSpacingAccents", () => {
   });
 });
 
+describe("accents painted after their letter", () => {
+  it("composes an accent drawn back over the previous span's last letter", () => {
+    const at = (text: string, x: number, width: number) => ({ text, x, y: 100, width, height: 9, fontSize: 9, fontName: "Body", page: 1 });
+    const { blocks } = reconstructDocument([{ pageNumber: 1, width: 612, height: 792, textItems: [
+      at("Christian Schlo", 100, 69.4), at("¨ gl and La", 165.1, 40), at("´szlo", 201.6, 14.7), at("´ Vasa wrote this.", 213, 80),
+    ] }]);
+    expect(blocks.map((b) => b.text).join(" ")).toContain("Christian Schlögl and László Vasa wrote this.");
+  });
+});
+
 describe("looksLikeAuthorList", () => {
   it("accepts AASTeX bylines with inline affiliation numbers", () => {
     expect(looksLikeAuthorList("Kotomi Taniguchi,1 Ryan M. Lau,2, 3 Takashi Onaka,4 Macarena Garcia Marin,5 Hideo Matsuhara,6")).toBe(true);
