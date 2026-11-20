@@ -47,7 +47,8 @@ export function isChartDebrisFragment(text: string): boolean {
   if (digits === 0 && letters >= 2 && words.length <= 4 && /^[a-z]/.test(trimmed)) return true;
   if (digits === 0 && words.length === 1 && /ly$/i.test(trimmed) && letters >= 6) return true;
   if (words.length <= 10 && digits / Math.max(letters + digits, 1) < 0.08 &&
-      (/^(?:of|and|the|bolded|pairs except)\b/i.test(trimmed) || /\bbolded\.?$/.test(trimmed))) return true;
+      // Lower-case only: a capitalised `The …` is a sentence, not a chart label.
+      (/^(?:of|and|the)\b/.test(trimmed) || /^(?:bolded|pairs except)\b/i.test(trimmed) || /\bbolded\.?$/.test(trimmed))) return true;
   return false;
 }
 

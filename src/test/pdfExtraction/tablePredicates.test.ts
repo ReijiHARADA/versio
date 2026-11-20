@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hasStrongNativeTableRows } from "../../services/pdfExtraction/projection/tablePredicates";
+import { hasStrongNativeTableRows, isChartDebrisFragment } from "../../services/pdfExtraction/projection/tablePredicates";
 import type { CanonicalNode } from "../../services/pdfExtraction/canonical/types";
 import type { LayoutBlock, LayoutLine } from "../../services/pdfLayout";
 
@@ -64,5 +64,13 @@ describe("hasStrongNativeTableRows", () => {
   it("keeps compact multi-cell rows recoverable as a table", () => {
     const lines = ["Measure Value", "Accuracy 0.91", "Recall 0.84"].map((text, index) => line(text, 375 + index * 12));
     expect(hasStrongNativeTableRows(node(lines.map((entry) => entry.text).join(" ")), layout(lines))).toBe(true);
+  });
+});
+
+describe("isChartDebrisFragment", () => {
+  it("keeps a short capitalised sentence and drops lower-case label crumbs", () => {
+    expect(isChartDebrisFragment("The SHAP explainability framework was employed to analyze the feature")).toBe(false);
+    expect(isChartDebrisFragment("of the selected models")).toBe(true);
+    expect(isChartDebrisFragment("Bolded values are the best")).toBe(true);
   });
 });
