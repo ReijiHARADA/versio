@@ -526,11 +526,6 @@ function expandAuthorLine(text: string): string[] {
     return uppercaseAuthorNames;
   }
   const spacedNameTokens = cleaned.split(/\s+/).filter(Boolean);
-  // Native mastheads sometimes lose the delimiter between two adjacent
-  // two-token names while retaining commas around the run, e.g.
-  // `..., James Clawson Thad Starner3, Jim Budd`. Split only a comma-bounded
-  // run of exactly four ordinary title-case tokens; this is conservative and
-  // avoids guessing inside compound surnames or prose.
   const particleToken = /^(?:bin|binti|ibn|van|von|de|den|der|di|da|la|le)$/i;
   // Normalize trailing `Name and Name` delimiters only in multi-author rows
   // (`… Schewe and Dawid Pieper`), not lone particles / topic phrases.
@@ -541,26 +536,9 @@ function expandAuthorLine(text: string): string[] {
     .split(/[,;]/)
     .map((part) => part.trim())
     .filter(Boolean);
-  const commaBoundedNames =
-    commaSegments.length >= 2
-      ? commaSegments.flatMap((part) => {
-          const tokens = part.split(/\s+/).filter(Boolean);
-          // Pair-split only likely undelimited Anglo First Last First Last
-          // glue. Keep Spanish double surnames and short East-Asian tokens
-          // (`Canva Byron Ma Lam`, `Adriana Monserrath Monge Moreno`).
-          const looksLikeTwoAngloNames =
-            tokens.length === 4 &&
-            tokens.every((token) => /^[A-Z][\p{Ll}’'’-]+$/u.test(token)) &&
-            !tokens.some((token) => particleToken.test(token) || /^(?:ma|m\.?)$/i.test(token)) &&
-            tokens.every((token) => token.length >= 3) &&
-            // Keep Spanish double surnames (`Adriana Monserrath Monge Moreno`).
-            !tokens.every((token) => token.length >= 5) &&
-            !/[À-ÖØ-öø-ÿ'’-]/u.test(part);
-          return looksLikeTwoAngloNames
-            ? [tokens.slice(0, 2).join(" "), tokens.slice(2).join(" ")]
-            : [part];
-        })
-      : commaSegments;
+  // A four-token segment between commas is one person (`Nguyen Khanh Tho Loc1,2`);
+  // splitting it as two glued Anglo names broke more names than it fixed.
+  const commaBoundedNames = commaSegments;
   if (commaBoundedNames.length > 1 && commaBoundedNames.every((part) =>
     /^(?:[A-Z][\p{Ll}’'’-]+\s+){1,3}[A-Z][\p{Ll}’'’-]+$/u.test(part) ||
     // Given + bare/dotted initial (`Revathy P.` / `Revathy P`).
@@ -2663,7 +2641,8 @@ function mergeAuthorSourceNodes(
     // expandAuthorLine does not glue the boundary names into one token.
     const prevText = (previous.text ?? "").trim();
     const nextText = (node.text ?? "").trim();
-    const joiner = /(?:,|;|·|\band\b|&)\s*$/i.test(prevText) ? " " : ", ";
+    // A given name can wrap alone onto the end of the row (`…, Md` / `Mozibur Rahman6`).
+    const joiner = /(?:,|;|·|\band\b|&)\s*$/i.test(prevText) || /,\s*(?!(?:Jr|Sr)\b)\p{Lu}[\p{Ll}.]*$/u.test(prevText) ? " " : ", ";
     const lines = [prevText, nextText].filter(Boolean).join(joiner).replace(/\s+/g, " ").trim();
     mergedAuthorSources[mergedAuthorSources.length - 1] = {
       ...previous,
