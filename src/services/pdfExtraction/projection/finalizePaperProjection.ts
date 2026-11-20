@@ -1,3 +1,4 @@
+import { extractKeywords } from "./frontMatter/keywords";
 import type { LayoutBlock } from "../../pdfLayout";
 import type { Paper } from "../../../types/paper";
 import { reconcileBlockIds } from "../../../data/package/reconcile";
@@ -478,6 +479,7 @@ export function finalizePaperProjection(
   authorNames = authorNames
     .map((name) => name.replace(/\s*\(ORC[^)]*\)?\s*$/i, "").trim())
     .filter((name) => name && !/\b(?:departamento|department|universit\w*|institut\w*|[eé]cole|polytechnique|laborator\w*|school|college|faculty|cent(?:er|re)|submitted to)\b/i.test(name));
+  const keywordList = extractKeywords(input.canonical.nodes);
   const paper: Paper = {
     id: paperId,
     sourceFilePath: input.filePath,
@@ -494,6 +496,7 @@ export function finalizePaperProjection(
           : [],
     authorsStructured,
     affiliations,
+    ...(keywordList.keywords.length ? { keywords: keywordList.keywords } : {}),
     doi: doiMatch ?? null,
     publication: pickPublication(input.metadata.title),
     year: null,
@@ -505,7 +508,10 @@ export function finalizePaperProjection(
     updatedAt: new Date().toISOString(),
   };
 
-  return finalizeBlocks(input, paper, sections, splitReferenceEntries);
+  // Keyword lines now live on the paper; drop the body copies so they are not shown twice.
+  const bodyBlocks = splitReferenceEntries.filter((block) =>
+    !keywordList.nodeIds.has(String(block.metadata?.canonicalNodeId ?? "")));
+  return finalizeBlocks(input, paper, sections, bodyBlocks);
 }
 
 /**

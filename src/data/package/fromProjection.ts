@@ -33,6 +33,7 @@ export function paperToPaperJson(paper: Paper, revision = 1): PaperJson {
           affiliationIds: [],
         })),
     affiliations: paper.affiliations ?? [],
+    ...(paper.keywords?.length ? { keywords: paper.keywords } : {}),
     publication: paper.publication,
     year: paper.year,
     doi: paper.doi ?? null,

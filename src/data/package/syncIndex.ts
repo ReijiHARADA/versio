@@ -29,6 +29,7 @@ function stubIndexFromPackage(
     authors: pkg.paper.authors.map((author) => author.name),
     authorsStructured: pkg.paper.authors,
     affiliations: pkg.paper.affiliations,
+    keywords: pkg.paper.keywords,
     publication: pkg.paper.publication,
     year: pkg.paper.year,
     doi: pkg.paper.doi,

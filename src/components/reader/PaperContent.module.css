@@ -44,6 +44,24 @@
   color: var(--color-text-tertiary);
 }
 
+.keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin: 0 0 var(--spacing-sm);
+  padding: 0;
+  list-style: none;
+}
+
+.keyword {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--color-bg-secondary);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
 .publication {
   font-size: 0.875rem;
   color: var(--color-text-tertiary);
