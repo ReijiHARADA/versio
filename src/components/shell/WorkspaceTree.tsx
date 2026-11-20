@@ -10,7 +10,7 @@ import {
   FolderPlus,
   Pencil,
   Trash2,
-} from "../ui/MaterialSymbol";
+} from "lucide-react";
 import type { WorkspaceNode, WorkspacePaper } from "../../types/project";
 import type { Paper } from "../../types/paper";
 import { buildWorkspaceTree, collectDescendantIds } from "../../data/workspace/tree";

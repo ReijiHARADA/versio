@@ -1,5 +1,5 @@
 import type { MouseEvent } from "react";
-import { Trash2 } from "../ui/MaterialSymbol";
+import { Trash2 } from "lucide-react";
 import styles from "./PaperCard.module.css";
 
 type PaperDeleteControlsProps = {

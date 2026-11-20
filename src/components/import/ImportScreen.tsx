@@ -7,7 +7,7 @@ import {
   AlertCircle,
   Loader2,
   BookOpen,
-} from "../ui/MaterialSymbol";
+} from "lucide-react";
 import type { ImportStage } from "../../services/importServiceV2";
 import { takePendingImport } from "../../services/pendingImport";
 import { startBackgroundImport } from "../../services/import/startBackgroundImport";

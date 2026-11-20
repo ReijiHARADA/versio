@@ -5,7 +5,7 @@ import {
   Clock,
   Loader2,
   Star,
-} from "../ui/MaterialSymbol";
+} from "lucide-react";
 import type { Paper } from "../../types/paper";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { shouldTranslateBlock } from "../../services/importServiceV2";

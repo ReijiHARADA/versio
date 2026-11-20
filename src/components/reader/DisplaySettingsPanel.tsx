@@ -1,4 +1,4 @@
-import { X } from "../ui/MaterialSymbol";
+import { X } from "lucide-react";
 import { DisplaySettingsControls } from "./DisplaySettingsControls";
 import styles from "./DisplaySettingsPanel.module.css";
 
