@@ -52,6 +52,8 @@ export type PageColumnLayout = {
   rightX: number;
   /** First-page asymmetric metadata rail beside a wide abstract column. */
   isAsymmetricRail?: boolean;
+  /** The rail starts beside the title (editor/reviewer credits), so the masthead is two columns as well. */
+  isMastheadRail?: boolean;
 };
 
 export type LayoutLine = {
@@ -314,7 +316,9 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     // PLOS puts the same kind of rail (`Citation:` … `Editor:`) beside the abstract. Frontiers
     // also prints `Citation:` but its masthead rail (`Edited by:`) is read by the author projection.
     const plosRail = /\bcitation\s*:/i.test(pageText) && /\beditor\s*:/i.test(pageText);
-    if (!/article\s+history|keywords\s*:/i.test(pageText) && !plosRail) return null;
+    // `Edited by` / `Reviewed by` labels head the same kind of left rail beside title, byline and abstract.
+    const reviewRail = /\bedited by\b/i.test(pageText) && /\breviewed by\b/i.test(pageText);
+    if (!/article\s+history|keywords\s*:/i.test(pageText) && !plosRail && !reviewRail) return null;
     const left = usable.filter((item) =>
       item.y >= page.height * 0.36 && item.x <= page.width * 0.18 && item.width <= page.width * 0.28 &&
       Math.abs(item.rotation ?? 0) < 5
@@ -329,7 +333,11 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     const rightY = { min: Math.min(...right.map((item) => item.y)), max: Math.max(...right.map((item) => item.y)) };
     const overlap = Math.min(leftY.max, rightY.max) - Math.max(leftY.min, rightY.min);
     if (overlap < 100 || leftY.max - leftY.min < 140 || rightY.max - rightY.min < 100) return null;
-    const wideStart = Math.min(...right.map((item) => item.x));
+    // The wide column starts where several lines start; a lone rail fragment past the rail's edge does not count.
+    const startCounts = new Map<number, number>();
+    for (const item of right) startCounts.set(Math.round(item.x / 2), (startCounts.get(Math.round(item.x / 2)) ?? 0) + 1);
+    const sharedStarts = [...startCounts].filter(([, count]) => count >= 3).map(([key]) => key * 2);
+    const wideStart = sharedStarts.length ? Math.min(...sharedStarts) : Math.min(...right.map((item) => item.x));
     // A real rail leaves a gap before the wide column on every shared row; a
     // full-width page cut into word items runs straight across that x.
     const rows = new Map<number, ExtractedTextItem[]>();
@@ -353,13 +361,14 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     return {
       leftX: median(left.map((item) => item.x)),
       rightX: wideStart,
-      plos: plosRail,
+      bridgesMidpoint: plosRail || reviewRail,
+      mastheadRail: reviewRail,
       leftCount: left.length,
       rightCount: right.length,
     };
   })();
-  // Only the PLOS rail may override this: its abstract lines legitimately bridge the midpoint.
-  if (!asymmetricRail?.plos && !cleanGutter && midpointBridgedRows >= 8 && midpointBridgedRows / Math.max(midpointRows.length, 1) >= 0.55) {
+  // Only the PLOS and editor/reviewer rails may override this: their abstract lines legitimately bridge the midpoint.
+  if (!asymmetricRail?.bridgesMidpoint && !cleanGutter && midpointBridgedRows >= 8 && midpointBridgedRows / Math.max(midpointRows.length, 1) >= 0.55) {
     return fallback;
   }
 
@@ -565,6 +574,7 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     leftX,
     rightX,
     isAsymmetricRail: Boolean(asymmetricRail),
+    isMastheadRail: Boolean(asymmetricRail?.mastheadRail),
   };
 }
 
@@ -1132,6 +1142,23 @@ function clusterItemsIntoLines(
       groups.push([item]);
       groupY.push(item.y);
     }
+  }
+
+  // A superscript sits above its own baseline. A bare marker that landed below its line's baseline
+  // (`2` of the next affiliation, placed before that line existed) moves to the line it prefixes.
+  for (let i = 0; i < groups.length; i++) {
+    for (const marker of [...groups[i]]) {
+      if (!/^[\d,*†‡§]{1,3}$/.test(marker.text.trim()) || marker.y <= groupY[i] + 1) continue;
+      const right = marker.x + marker.width;
+      const target = groups.findIndex((group, j) => j !== i && groupY[j] > marker.y && groupY[j] - marker.y <= fontBase * 0.6 &&
+        group.some((item) => item !== marker && item.x >= right - 1 && item.x - right <= 6));
+      if (target < 0) continue;
+      groups[i] = groups[i].filter((item) => item !== marker);
+      groups[target].push(marker);
+    }
+  }
+  for (let i = groups.length - 1; i >= 0; i--) {
+    if (groups[i].length === 0) { groups.splice(i, 1); groupY.splice(i, 1); }
   }
 
   // Detect repeated cell columns before line cells are joined into one text
@@ -2817,7 +2844,7 @@ function buildPageLines(
   if (layout.isMultiColumn && splitAt && page.pageNumber === 1) {
     const masthead = visible.filter((line) => line.y < splitAt.y);
     const body = visible.filter((line) => line.y >= splitAt.y);
-    const mastheadLayout = layout.isAsymmetricRail ? { ...layout, isMultiColumn: false } : layout;
+    const mastheadLayout = layout.isAsymmetricRail && !layout.isMastheadRail ? { ...layout, isMultiColumn: false } : layout;
     return [...orderWithRegions(masthead, mastheadLayout, regions), ...orderWithRegions(body, layout, regions)];
   }
   if (!layout.isMultiColumn && docLayout && Math.abs(docLayout.pageWidth - layout.pageWidth) <= 2) {

@@ -112,6 +112,10 @@ function chartLabelEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
  * repeated numeric geometry is stronger evidence than the label vocabulary;
  * keep the label as non-prose content without hard-coding chart terms. */
 function axisLabelEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
+  // Byline rows sit between rows of affiliation superscripts (`1 2`, `3 4`), which look like ticks.
+  if (block.role === "author") return 0;
+  const previous = blocks[blocks.indexOf(block) - 1];
+  if (previous?.role === "author" && previous.column === block.column && /(?:\band|&|,)\s*\*?$/.test(previous.text.trim())) return 0;
   const text = block.text.trim();
   if (!text || text.length > 80 || /[.!?:;。！？]$/.test(text)) return 0;
   const words = text.split(/\s+/).filter(Boolean);

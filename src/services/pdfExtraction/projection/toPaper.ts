@@ -16,6 +16,7 @@ import {
   type LayoutBlock,
   type PageColumnLayout,
 } from "../../pdfLayout";
+import type { ExtractedTextItem } from "../../pdfService";
 import {
   looksLikeAuthorsOnlyReferenceStub,
   looksLikeConferenceRunningHeader,
@@ -661,6 +662,9 @@ function isNonAuthorMastheadLine(text: string): boolean {
   const value = text.replace(/\s+/g, " ").trim();
   if (!value) return true;
   if (isAllCapsTitleLine(value)) return true;
+  // A place line (`Grohmann, Tacna, Peru, Peru`): three or more comma parts of one word each.
+  const commaParts = value.replace(/,\s*$/, "").split(/\s*,\s*/);
+  if (commaParts.length >= 3 && commaParts.every((part) => /^\p{Lu}[\p{L}'’-]+$/u.test(part))) return true;
   // Bare city crumbs peeled from postal/institution lines.
   if (
     /^(?:palo alto|tel aviv|albany|new york|san francisco|los angeles|san jose|mountain view|new delhi|kampala|nairobi)$/i.test(
@@ -1839,6 +1843,41 @@ function shouldKeepCaptionedTableTarget(target: CanonicalNode): boolean {
   return false;
 }
 
+/** Numbered affiliations set as running text (`…Brazil, 2Laboratory of…`) arrive one node per wrapped line.
+ * Join consecutive lines of one column into a single stream so the marker split sees whole institutions. */
+function joinWrappedMarkerStreams(nodes: CanonicalNode[]): CanonicalNode[] {
+  const markers = (text: string) => (text.match(/(?:^|[,;]\s*)\d{1,2}(?=[A-Z])/g) ?? []).length;
+  // The next wrapped line of the same column, wherever it sits in the node order.
+  const successor = (node: CanonicalNode) => {
+    const box = node.boundingBoxes.at(-1);
+    if (!box) return undefined;
+    return nodes
+      .filter((candidate) => {
+        const next = candidate.boundingBoxes[0];
+        return candidate !== node && next && candidate.pageStart === node.pageStart && candidate.column === node.column &&
+          Math.abs(next.x - box.x) <= 4 && next.y > box.y && next.y - box.y <= Math.max(14, box.height * 2);
+      })
+      .sort((a, b) => a.boundingBoxes[0].y - b.boundingBoxes[0].y)[0];
+  };
+  const used = new Set<CanonicalNode>();
+  const out: CanonicalNode[] = [];
+  for (const node of nodes) {
+    if (used.has(node)) continue;
+    const run = [node];
+    for (let next = successor(node); next && !used.has(next) && !run.includes(next); next = successor(next)) run.push(next);
+    const wrapped = run.slice(1).some((member) => !/^\s*\d{1,2}[A-Z]/.test(member.text ?? ""));
+    const text = run.map((member) => member.text?.trim() ?? "").join(" ");
+    if (run.length >= 2 && wrapped && markers(text) >= 2) {
+      run.forEach((member) => used.add(member));
+      out.push({ ...node, text, boundingBoxes: run.flatMap((member) => member.boundingBoxes), evidence: run.flatMap((member) => member.evidence) });
+    } else {
+      used.add(node);
+      out.push(node);
+    }
+  }
+  return out;
+}
+
 function layoutForNode(
   node: CanonicalNode,
   blocks: LayoutBlock[]
@@ -2141,7 +2180,10 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
     return n.pageStart === 1 && (n.role === "paragraph" || n.role === "author" || n.role === "title") &&
       (box?.x ?? 0) > sidebarRight + 12 && (box?.width ?? 0) >= 180;
   });
+  // A page-one rail read as its own column: every node sharing the editor/reviewer labels' column is rail chrome.
+  const railColumn = pageOneNodesByY.find((n) => n.column === "left" && /^(?:edited by|reviewed by)\b/i.test(n.text?.trim() ?? ""))?.column;
   const isSidebarChromeNode = (node: (typeof canonical.nodes)[number]): boolean => {
+    if (railColumn && node.pageStart === 1 && node.column === railColumn) return true;
     const box = node.boundingBoxes[0];
     return hasSidebarBody && node.pageStart === 1 && (box?.x ?? 0) + (box?.width ?? 0) <= sidebarRight + 18;
   };
@@ -2231,7 +2273,7 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
         Math.abs((candidateBox?.x ?? Infinity) - x) <= 55;
     });
   });
-  const affiliationSourceNodes = [...affiliationNodes, ...affiliationContinuationNodes];
+  const affiliationSourceNodes = [...joinWrappedMarkerStreams(affiliationNodes), ...affiliationContinuationNodes];
   const affiliated = canonical.relations.filter((r) => r.kind === "AFFILIATED_WITH");
   const projectionAuthorText = (node: (typeof canonical.nodes)[number]): string => {
     const box = node.boundingBoxes[0];
@@ -2313,7 +2355,9 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
       candidate._y >= previous._y && candidate._y - previous._y <= 90 &&
       Math.abs(candidate._x - previous._x) <= 32 &&
       /[,;:]\s*$/.test(previous.name) &&
-      /^[A-Z]/.test(candidate.name.trim());
+      /^[A-Z]/.test(candidate.name.trim()) &&
+      // Differently numbered institutions are separate even when the first ends in a comma.
+      !(previous._marker && candidate._marker && previous._marker !== candidate._marker);
     if (canStitch) {
       stitchedAffiliations[stitchedAffiliations.length - 1] = {
         ...previous,
@@ -2392,7 +2436,8 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
   appendWrappedAffiliations(wrappedAffiliationNodes, nativeAffiliationNodes, affiliations);
   const reviewLabel = canonical.nodes.filter((node) => node.pageStart === 1 &&
     /^(?:edited|reviewed)\s+by\s*:/i.test(node.text?.trim() ?? "")).at(-1);
-  affiliations = applyReviewLabelAffiliations(reviewLabel, canonical, affiliations);
+  // The rebuild compensates for a sidebar interleaved with the masthead; a rail read as its own column needs none.
+  if (!railColumn) affiliations = applyReviewLabelAffiliations(reviewLabel, canonical, affiliations);
   const editorReviewCreditNames = new Set(
     canonical.nodes
       .map((node) => node.text ?? "")
@@ -2807,13 +2852,15 @@ function collectAffiliationCandidates(
     const geometryColumnSource = (() => {
       if (sidebarMixed || lines.length === 0) return undefined;
       const rows = lines.map((line) => line.items.sort((a, b) => a.x - b.x));
-      const gaps = rows.flatMap((items) => items.slice(1).map((item, index) => item.x - (items[index]?.x ?? item.x)));
+      // Whitespace between neighbouring items, not the distance between their starts.
+      const gapBefore = (items: ExtractedTextItem[], index: number) => items[index].x - (items[index - 1].x + items[index - 1].width);
+      const gaps = rows.flatMap((items) => items.slice(1).map((_, index) => gapBefore(items, index + 1)));
       const splitGap = Math.max(48, ...gaps.filter((gap) => Number.isFinite(gap))) > 48
         ? Math.max(48, ...gaps.filter((gap) => Number.isFinite(gap)))
         : 0;
-      if (splitGap <= 48 || rows.filter((items) => items.length >= 2 && items.some((item, i) => i > 0 && item.x - items[i - 1].x >= 48)).length < 1) return undefined;
+      if (splitGap <= 48 || rows.filter((items) => items.length >= 2 && items.some((_, i) => i > 0 && gapBefore(items, i) >= 48)).length < 1) return undefined;
       const splitRows = rows.map((items) => {
-        const pivot = items.findIndex((item, index) => index > 0 && item.x - items[index - 1].x >= 48);
+        const pivot = items.findIndex((_, index) => index > 0 && gapBefore(items, index) >= 48);
         return pivot > 0 ? [items.slice(0, pivot), items.slice(pivot)] : [items];
       });
       const columns = [0, 1].map((column) => splitRows
@@ -2864,7 +2911,7 @@ function collectAffiliationCandidates(
     }
     if (markerParts.length >= 2 && markerParts.every((part) =>
       part.split(/\s+/).length >= 3 &&
-      /\b(?:university|department|institute|school|faculty|college|hospital|laboratory|center|centre|consortium)\b/i.test(part))) {
+      /\b(?:universi\w*|department|institut[eo]|school|escuela|faculty|facultad|college|hospital|laboratory|center|centre|consortium)\b/i.test(part))) {
       return markerParts.flatMap((rawName, index) => {
         const leadingEditorialInstitution = index === 0 &&
           /\b(?:edited|reviewed)\s+by\s*:/i.test(node.text ?? "")
@@ -3022,7 +3069,17 @@ function collectAuthorContinuationNodes(
     (!isNonAuthorMastheadLine(n.text) ||
       (/(?:\band|&)\s*$/i.test(n.text.trim()) &&
         (n.text.match(/\b[A-Z][\p{L}'’-]+(?:\s+[A-Z]\.)?(?:\s+[A-Z][\p{L}'’-]+)+/gu)?.length ?? 0) >= 2)) &&
-      ((n.role === "heading" && n.text.trim().length <= 240 &&
+      // The last row of a byline wrapped after `and` or `,` (`… Bernard N’kaoua3 and` / `Fabien Lotte1,2`,
+      // `… XuHua Xie2,3*,` / `Feng Wang4 and Yuxiang Mao4`).
+      ((/^(?:[A-ZÀ-ÖØ-Ý][\p{L}'’.-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’.-]+){1,3}[\d*†‡]*(?:,[\d*†‡]+)*\s*(?:,|\band\b|&)\s*)*[A-ZÀ-ÖØ-Ý][\p{L}'’.-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’.-]+){1,3}\s*[\d,*†‡]*$/u.test(n.text.trim()) &&
+        authorNodes.some((author) => {
+          const authorBox = author.boundingBoxes[0];
+          const box = n.boundingBoxes[0];
+          return Boolean(authorBox && box) && author.pageStart === n.pageStart &&
+            /(?:\band|&|,)\s*$/i.test(author.text?.trim() ?? "") &&
+            Math.abs(authorBox!.x - box!.x) <= 4 && box!.y > authorBox!.y && box!.y - authorBox!.y <= 30;
+        })) ||
+      (n.role === "heading" && n.text.trim().length <= 240 &&
       (n.text.match(/,/g)?.length ?? 0) >= 1 &&
       (n.text.match(/[A-Z][\p{L}'’-]+/gu)?.length ?? 0) >= 2 &&
       /\d\s*[A-Z]/.test(n.text)) ||

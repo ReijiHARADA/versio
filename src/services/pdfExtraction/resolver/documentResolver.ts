@@ -592,6 +592,35 @@ function splitInlineSectionLabelChain(node: CanonicalNode, depth: number): Canon
   return [node];
 }
 
+const NUMBERED_INSTITUTION = /(?:^|[,;]\s*)\d{1,2}\s?(?:Department|Doctoral|Faculty|Facultad|School|Escuela|Institute|Instituto|Universi\w*|Center|Centre|Laborator\w*|College|Hospital|Graduate|Research)\b/;
+
+/** A page-one masthead row carrying a numbered institution (`1Doctoral Program in…`, `Spain, 2Department of…`) is an affiliation. */
+function promotePageOneNumberedAffiliations(nodes: CanonicalNode[]): CanonicalNode[] {
+  const firstAbstractIndex = nodes.findIndex((node) => node.pageStart === 1 && node.role === "abstract");
+  return nodes.map((node, index) => {
+    if (node.pageStart !== 1 || (node.role !== "paragraph" && node.role !== "author") || !node.text) return node;
+    if (firstAbstractIndex >= 0 && index > firstAbstractIndex) return node;
+    const t = node.text.trim();
+    if (t.length > 400 || /[.!?]$/.test(t)) return node;
+    if (!NUMBERED_INSTITUTION.test(t)) return node;
+    return {
+      ...node,
+      role: "affiliation" as const,
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic" as const,
+          label: "page-one-numbered-affiliation",
+          confidence: 0.82,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "masthead row starts a numbered institution",
+        },
+      ],
+    };
+  });
+}
+
 function demotePageOneAuthorHeadings(nodes: CanonicalNode[]): CanonicalNode[] {
   return nodes.map((node) => {
     if (node.role !== "heading" || node.pageStart !== 1 || !node.text) return node;
@@ -1611,6 +1640,9 @@ function markColonStructuredFrontAbstracts(nodes: CanonicalNode[]): CanonicalNod
  * Promote only when page 1 still has no abstract node.
  */
 /** DovePress body column often paints abstract wrap lines as `copyright`. */
+/** A suggested citation (`Surname A, Surname B and Surname C (2026) Title…`) is metadata, not body prose. */
+const SUGGESTED_CITATION = /^[A-Z][\p{L}'’-]+\s+[A-Z]{1,3}(?:,\s*[A-Z][\p{L}'’-]+\s+[A-Z]{1,3})*(?:,?\s+(?:and|&)\s+[A-Z][\p{L}'’-]+\s+[A-Z]{1,3})?\s*\(\d{4}\)/u;
+
 function demotePageOneProseCopyrights(nodes: CanonicalNode[]): CanonicalNode[] {
   return nodes.map((node) => {
     if (node.role !== "copyright" || node.pageStart !== 1 || !node.text) return node;
@@ -1625,7 +1657,8 @@ function demotePageOneProseCopyrights(nodes: CanonicalNode[]): CanonicalNode[] {
       /\bcoordinating the review of this manuscript\b/i.test(t) ||
       /^(?:protected by copyright|downloaded from|to cite\s*:)/i.test(t) ||
       // License grants are legal boilerplate even though they read as prose.
-      /\b(?:is|are) (?:licensed|distributed) under\b|\bcreative commons\b/i.test(t)
+      /\b(?:is|are) (?:licensed|distributed) under\b|\bcreative commons\b/i.test(t) ||
+      SUGGESTED_CITATION.test(t)
     ) {
       return node;
     }
@@ -1695,6 +1728,7 @@ function demotePageOneProseAffiliations(nodes: CanonicalNode[]): CanonicalNode[]
   return nodes.map((node) => {
     if (node.role !== "affiliation" || node.pageStart !== 1 || !node.text) return node;
     const t = node.text.trim();
+    if (NUMBERED_INSTITUTION.test(t) && t.length <= 400 && !/[.!?]$/.test(t)) return node;
     // Nature chrome button label painted as affiliation.
     if (publisherPredicates.isNatureUpdateButton(t)) {
       return {
@@ -1793,6 +1827,7 @@ function markUnlabeledFrontAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
     const t = text.trim();
     return (
       /^(?:citation|editorial on the research topic)\b/i.test(t) ||
+      SUGGESTED_CITATION.test(t) ||
       /^(?:and\s+\w+\.\s+)?this is an open-access article\b/i.test(t) ||
       /^open access\b/i.test(t) ||
       // Nature early-access cover blurb / peer-review chrome must not steal the
@@ -4119,6 +4154,11 @@ export function resolveCanonicalDocument(input: {
   nodes = demotePageOneAuthorHeadings(nodes);
   nodes = recoverPageOneAuthorTables(nodes);
   nodes = promoteMislabelledSectionAuthors(nodes);
+  nodes = promotePageOneNumberedAffiliations(nodes);
+  // A page-one suggested citation is front-matter metadata, not body prose.
+  nodes = nodes.map((node) => node.pageStart === 1 && node.role === "paragraph" && SUGGESTED_CITATION.test(node.text?.trim() ?? "")
+    ? { ...node, role: "copyright" as const }
+    : node);
   nodes = demotePageOneProseAffiliations(nodes);
   nodes = demotePageOneProseCopyrights(nodes);
   // Affiliation superscripts glued onto abstract prose without a newline:

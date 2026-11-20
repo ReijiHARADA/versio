@@ -63,8 +63,10 @@ describe("author masthead projection", () => {
     const pages = await extractPdfPages(frontiersAndContinuationPdf);
     const result = extractFromPages({ pages, paperId: "frontiers-author-continuation", filePath: frontiersAndContinuationPdf, fileHash: "frontiers-author-continuation", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toEqual(expect.arrayContaining([
-      "Sanchit Pawar", "Asle Fagerstrøm", "Valdimar Sigurdsson", "Aurelija Burinskiene", "Erik Arntzen",
+      "Sanchit Pawar", "Asle Fagerstrøm", "Valdimar Sigurdsson", "Erik Arntzen",
     ]));
+    // Aurelija Burinskiene is listed under REVIEWED BY in the sidebar, not in the byline or citation.
+    expect(result.paper.authors).not.toContain("Aurelija Burinskiene");
   }, 60_000);
 
   it("recovers adjacent title-case authors from mixed email and location columns", async (ctx) => {
@@ -375,7 +377,34 @@ describe("author masthead projection", () => {
     expect(result.paper.affiliations.length).toBeGreaterThanOrEqual(3);
     expect(result.paper.affiliations.every((affiliation) => !/@|kino31513|\b[234]\s+and\s+Science/i.test(affiliation.name))).toBe(true);
     expect(result.paper.affiliations.some((affiliation) => /Research Center for Brain Communication/i.test(affiliation.name))).toBe(true);
+    // The superscript `2` sits just above its own line; it must not join the line above.
+    expect(result.paper.affiliations.map((affiliation) => affiliation.name)).toEqual([
+      expect.stringMatching(/^Research Center for Brain Communication, Kochi University of Technology/),
+      expect.stringMatching(/^Graduate School of Humanities and Sociology.*The University of Tokyo, Tokyo, Japan/),
+      expect.stringMatching(/^Faculty of Science and Engineering, Waseda University/),
+      expect.stringMatching(/^Faculty of Arts and Science, Kyushu University/),
+    ]);
+    // Reviewers in the sidebar rail are not affiliations of this paper.
+    expect(result.paper.affiliations.every((affiliation) => !/Mercatorum|Fujian Normal|Toronto/i.test(affiliation.name))).toBe(true);
   }, 60_000);
+
+  it("reads an EDITED BY / REVIEWED BY sidebar rail as its own column", async (ctx) => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const cases = [
+      // Editor `Michalis Vrigkas` was the first author when the rail was read line by line with the byline.
+      { file: "epmc-multimodal-human-action-recognition-and-personalized-sports-health-promo.pdf", authors: ["Ying Xi", "Taibin Huang", "Zhiyu Yang"], notAuthor: "Michalis Vrigkas" },
+      // The last byline row (`Feng Wang4 and Yuxiang Mao4`) follows a row ending in a comma.
+      { file: "epmc-meta-analysis-of-the-effects-of-lower-extremity-exoskeleton-robot-on-the.pdf", authors: ["Peishi Feng", "Jinglong Li", "Sheng Lu", "Feng Wang", "Yuxiang Mao"], notAuthor: undefined },
+    ].filter((entry) => fs.existsSync(path.join(pending, entry.file)));
+    if (cases.length === 0) ctx.skip();
+    for (const entry of cases) {
+      const file = path.join(pending, entry.file);
+      const pages = await extractPdfPages(file);
+      const result = extractFromPages({ pages, paperId: entry.file, filePath: file, fileHash: entry.file, metadata: { pageCount: pages.length } });
+      expect(result.paper.authors).toEqual(expect.arrayContaining(entry.authors));
+      if (entry.notAuthor) expect(result.paper.authors).not.toContain(entry.notAuthor);
+    }
+  }, 120_000);
 
   it("splits wrapped Frontiers bylines and drops topic / school author crumbs", async () => {
     const stridesPdf = path.join(

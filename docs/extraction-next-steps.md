@@ -17,7 +17,7 @@ status: draft
 
 ## 現状値
 
-### 要素正解（main 30b75d9、2026-11-20、dev）
+### 要素正解（main 30b75d9 + 側欄の段 PR、2026-11-21、dev）
 
 | 指標 | ACL 13 本 | arXiv 15 本 | Europe PMC 106 本 |
 |---|---|---|---|
@@ -39,13 +39,13 @@ Europe PMC の dev 全件（868 本）と test split は、11-17 以降まだ測
 
 | 指標 | dev 287 本 | 評価用 405 本 | 目標（評価用） |
 |---|---|---|---|
-| intact | 90.0% | 89.1% | 98% |
-| intact（PDF に印字された段落のみ） | 91.9% | 91.0% | — |
-| 警告ブロック | 1,779 | 2,827 | 500 |
-| うち fragment / complete（誤警告）/ merged / outside | 740 / 288 / 17 / 734 | 1,241 / 385 / 38 / 1,163 | complete 50 |
+| intact | 90.3% | 89.4% | 98% |
+| intact（PDF に印字された段落のみ） | 92.2% | 91.3% | — |
+| 警告ブロック | 1,632 | 2,644 | 500 |
+| うち fragment / complete（誤警告）/ merged / outside | 706 / 284 / 17 / 625 | 1,210 / 382 / 38 / 1,014 | complete 50 |
 
 - 指標の天井は約 98%（版違い・JATS にしかない文が約 2%）。`scripts/paragraph-gold-coverage.ts` → `test-data/field-gold/_cache/coverage/`。
-- 壊れた段落の原因（dev、#138 後の run `rl4`）: split-interrupted 517（うち間に側欄の文が挟まるもの 1 ページ目 28・2 ページ目以降 33）、lost-text 342、split-column 170、in-non-paragraph-block 117、merged-paragraphs 89、interleaved-columns 79、split-page 18。
+- 壊れた段落の原因（dev、側欄の段 PR 後の run `fr8`）: split-interrupted 486、lost-text 336、split-column 160、in-non-paragraph-block 119、merged-paragraphs 85、interleaved-columns 78、split-page 19。
 - 警告の約 4 割は正解に無いブロック（表・図の中の文字、著者列、所属、ライセンス）への警告。種類ごとにばらばらで、1 つの規則で減るのは数十件まで。
 
 ## 済んだこと
@@ -69,6 +69,7 @@ Europe PMC の dev 全件（868 本）と test split は、11-17 以降まだ測
 - 本文を黙って捨てていたフィルタ: 「The / Of / And」で始まる 10 語以下の段落を図の断片として消していた（#121、dev 175 ブロック復元）。図ラベル扱いで消える短い完結した文を残す（#123）。本文サイズの「open-access …」で始まる行をライセンス扱いしない（#124）。
 - Keywords をメタデータ `paper.keywords` に移して Reader に表示（#128、`frontMatter/keywords.ts`。JATS の kwd と語の 96% 一致）。
 - PLOS の 1 ページ目の側欄を独立した段として読む（#138、`asymmetricRail` を `Citation:` + `Editor:` に拡張）。評価用 docdiff +58/−0。
+- `EDITED BY` / `REVIEWED BY`（`Edited by:` の旧形も）の 1 ページ目の側欄を独立した段として読む（2026-11-21）。側欄はタイトルの横から始まるので、マストヘッドも 2 段で読む（`isMastheadRail`）。本文の段の始まりは 3 行以上が始まる x（側欄のはみ出しを本文の始まりにしない）。著者投影は側欄の段のノードを側欄として外す（`railColumn`）。あわせて：上付き番号が自分の行より上の行に付く誤り（番号はベースラインより上にある）、番号付き所属の流し組みの結合と分割、`, ` で終わる著者行の次の名前行、推奨引用（`Surname A and Surname B (2026)`）を本文・抄録にしない。dev docdiff +50/−0、評価用 +71/−1（1 本は行末ハイフン `Work-Related` の除去）。Europe PMC 106 本でタイトル 84.0→92.5%、著者 75.3→78.2%。
 
 ## 次にやること（効果の大きい順）
 
@@ -85,9 +86,9 @@ Europe PMC の dev 全件（868 本）と test split は、11-17 以降まだ測
 
 ### 段落正解
 
-1. **Frontiers の 1 ページ目の側欄**（評価用 +116 本・警告 −204 の見込み）: 側欄として読むと著者・所属の投影が壊れる（下の「見送ったこと」）。著者投影を側欄レイアウト前提で作り直し、`authorProjection.test.ts` の Frontiers の期待値を PDF の Citation 欄と照合し直す、別作業として扱う。
-2. **2 ページ目以降の split-interrupted**（dev 469）: 間に図・表・脚注・見出しが入る型。`interrupt.ts <run>` で型を分けてから。
-3. **split-column**（dev 170）: 段の切れ目での分断。
+1. **2 ページ目以降の split-interrupted**（dev 486 のうち）: 間に図・表・脚注・見出しが入る型。`interrupt.ts <run>` で型を分けてから。
+2. **split-column**（dev 160）: 段の切れ目での分断。
+3. 側欄ページの残り: 側欄の下半分（RECEIVED〜COPYRIGHT）が抄録の途中に別の帯として入るページ（`PMC13454063`、抄録が 69%/31% で割れる）。
 4. 小さい規則（1 本あたり +0.1pt 前後）: `(a)` 始まりのサブパネル説明（正解外警告 34 / 正解 11）、Abbreviations 一覧、崩れた数式の段落（種類を変えると Reader の表示が変わるので方針判断が要る）。
 
 ## 試して見送ったこと（段落正解。繰り返さない）
@@ -97,7 +98,7 @@ Europe PMC の dev 全件（868 本）と test split は、11-17 以降まだ測
 - 段組判定で「左右に段がある高さだけで gutter を判定」: 表が中心のページを 2 段組と誤判定する。ページ全体ではなく帯だけを 2 段にする #114 で代替。
 - 「同じ文字サイズなら本文外でも結合」: 囲み記事が抄録に、表のセルの文が本文に結合する。
 - Frontiers のライセンス断片を段落に戻さない（`demotePageOneProseCopyrights` の除外追加）: 評価用で intact が下がり見送り。抄録とライセンスが行ごとに交互に混ざるブロックが原因。
-- Frontiers の 1 ページ目を側欄として読む（2026-11-20）: (1) `EDITED BY` + `REVIEWED BY` を引き金にすると著者テスト 8 件失敗。うち 1 件（marketing-neuroconsumer）はテストの期待値の誤り（Aurelija Burinskiene は査読者）。残りは編集者・査読者名が著者・所属に流入。(2) 側欄の編集者・査読者の行を落とすと 5 件まで減るが、所属の分割と抄録の検出が崩れる。(3) RECEIVED / CITATION / COPYRIGHT / KEYWORDS より上を 1 段のまま読むと 14 件失敗。Frontiers の著者テストの多くが旧来の崩れた読み順を前提にしている。
+- Frontiers の 1 ページ目を側欄として読む（2026-11-20 の 1 回目。11-21 に著者投影ごと直して採用、上の「済んだこと」）: (1) `EDITED BY` + `REVIEWED BY` を引き金にすると著者テスト 8 件失敗。うち 1 件（marketing-neuroconsumer）はテストの期待値の誤り（Aurelija Burinskiene は査読者）。残りは編集者・査読者名が著者・所属に流入。(2) 側欄の編集者・査読者の行を落とすと 5 件まで減るが、所属の分割と抄録の検出が崩れる。(3) RECEIVED / CITATION / COPYRIGHT / KEYWORDS より上を 1 段のまま読むと 14 件失敗。Frontiers の著者テストの多くが旧来の崩れた読み順を前提にしている。
 - lost-text の「途中が消えた」型の大半は採点側の差（版違いの言い回し、引用の書式、行内数式が JATS に無い、引用番号の範囲展開）。本物は 2 割程度で原因はばらばら。
 
 ## 測り方
