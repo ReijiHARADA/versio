@@ -11,6 +11,7 @@ import { ReaderScreen } from "./components/reader/ReaderScreen";
 import { ImportScreen } from "./components/import/ImportScreen";
 import { SettingsScreen } from "./components/settings/SettingsScreen";
 import { PdfFileDropLayer } from "./components/shell/PdfFileDropLayer";
+import { IntroOverlay } from "./components/intro/IntroOverlay";
 import { useAppStore } from "./stores/appStore";
 import { isTauriApp } from "./utils/serverReady";
 import { flushPersistence } from "./services/database";
@@ -97,6 +98,7 @@ function App() {
   return (
     <HashRouter>
       <PdfFileDropLayer />
+      <IntroOverlay />
       <div className={`${styles.root} ${isTauriApp() ? styles.rootDesktop : ""}`}>
         <div className={styles.routes}>
           <Routes>
