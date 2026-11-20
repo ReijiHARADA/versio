@@ -290,6 +290,13 @@
   outline: none;
 }
 
+/* Centered only at rest; while editing (or holding a query) the caret starts at the left. */
+.titleSearch .searchInput:focus,
+.titleSearch .searchInput:not(:placeholder-shown) {
+  text-align: left;
+  padding: 0 var(--control-padding-x);
+}
+
 .searchInput::placeholder {
   color: var(--color-text-tertiary);
 }
