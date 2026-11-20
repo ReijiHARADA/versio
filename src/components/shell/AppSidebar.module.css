@@ -174,7 +174,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: calc(var(--spacing-sm) * var(--sidebar-expand-t));
+  /* Icon box already pads 8px around the 16px glyph. */
+  gap: calc(2px * var(--sidebar-expand-t));
   width: 100%;
   min-width: 0;
   height: var(--sidebar-icon-box);
