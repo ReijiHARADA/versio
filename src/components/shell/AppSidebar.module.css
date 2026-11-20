@@ -53,8 +53,8 @@
   /* Top pad is 0 so the search can occupy the same vertical band as the page header. */
   /* Same inset as the main card's gap, collapsed or expanded. */
   --sidebar-content-pad: var(--card-gap);
-  /* Content starts just below the main card's top edge. */
-  padding: calc(var(--titlebar-h) + var(--card-gap)) var(--sidebar-content-pad) var(--card-gap);
+  /* First section title (24px) centers on the main pane header band (card top + 1px border). */
+  padding: calc(var(--titlebar-h) + 1px + (var(--header-height) - 24px) / 2) var(--sidebar-content-pad) var(--card-gap);
   background-color: var(--color-bg-secondary);
   overflow: visible;
   box-sizing: border-box;
