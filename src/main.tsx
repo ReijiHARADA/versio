@@ -5,10 +5,6 @@ import "@material-symbols/font-600/sharp.css";
 import "./styles/variables.css";
 import "./styles/squircle.css";
 import App from "./App";
-import { isTauriApp } from "./utils/serverReady";
-
-// Desktop window draws content under the macOS title bar (Overlay style).
-if (isTauriApp()) document.documentElement.dataset.titlebar = "";
 
 function showBootError(error: unknown) {
   const message = error instanceof Error ? `${error.message}\n${error.stack ?? ""}` : String(error);

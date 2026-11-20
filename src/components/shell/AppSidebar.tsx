@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
 import {
   Clock,
@@ -215,24 +216,24 @@ export function AppSidebar({
             onDoubleClick={onResizeDoubleClick}
           />
 
-          {/* Search and the collapse button share the main pane header band. */}
-          <div className={styles.brandRow}>
-            <label className={styles.search} title="ライブラリを検索 (⌘K)">
-              <span className={styles.iconSlot}>
-                <Search size={16} className={styles.searchIcon} />
-              </span>
-              <input
-                id="library-search"
-                type="search"
-                placeholder="ライブラリを検索"
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className={styles.searchInput}
-                aria-label="ライブラリを検索"
-                data-testid="library-search"
-              />
-            </label>
-            {!narrow && (
+          <label className={styles.search} title="ライブラリを検索 (⌘K)">
+            <span className={styles.iconSlot}>
+              <Search size={16} className={styles.searchIcon} />
+            </span>
+            <input
+              id="library-search"
+              type="search"
+              placeholder="ライブラリを検索"
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className={styles.searchInput}
+              aria-label="ライブラリを検索"
+              data-testid="library-search"
+            />
+          </label>
+          {/* Portaled so it sits above the title bar drag band, outside the rail stacking context. */}
+          {!narrow &&
+            createPortal(
               <button
                 type="button"
                 className={styles.brandToggle}
@@ -243,9 +244,9 @@ export function AppSidebar({
                 aria-label={storedMode === "expanded" ? "サイドバーを畳む" : "サイドバーを開く"}
               >
                 {storedMode === "expanded" ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
-              </button>
+              </button>,
+              document.body
             )}
-          </div>
 
           <div className={styles.scroll}>
             <section className={styles.section}>

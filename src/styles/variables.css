@@ -1,6 +1,9 @@
 :root {
-  /* Gap above the main pane card for the macOS traffic lights (desktop only). */
-  --titlebar-h: 0px;
+  /* Title bar band (macOS traffic lights + sidebar toggle) above the main card. */
+  --titlebar-h: 34px;
+  /* Main card inset from the window's right and bottom edges, and its corner radius. */
+  --card-gap: 8px;
+  --card-radius: 10px;
   /* Colors - Light Theme */
   --color-bg: #ffffff;
   --color-bg-secondary: #f8f9fa;
@@ -93,10 +96,6 @@
   --scrollbar-size: 8px;
   --scrollbar-thumb: rgba(0, 0, 0, 0.14);
   --scrollbar-thumb-hover: rgba(0, 0, 0, 0.28);
-}
-
-html[data-titlebar] {
-  --titlebar-h: 24px;
 }
 
 [data-theme="dark"] {
