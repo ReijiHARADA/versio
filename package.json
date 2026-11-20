@@ -70,7 +70,6 @@
     "build:icon": "bash scripts/build-icon-car.sh",
     "tauri:build:clean": "bash scripts/tauri-build.sh clean",
     "verify:browser": "node scripts/verify-browser.mjs",
-    "capture:settings-previews": "node scripts/capture-settings-previews.mjs",
     "audit:prepare-review": "vite-node --script scripts/prepare-translation-manual-review.ts",
     "audit:summarize-review": "npx --yes tsx scripts/summarize-translation-manual-review.ts",
     "audit:run-pending": "node scripts/run-pending-translation-audit.mjs",
