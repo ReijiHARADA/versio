@@ -2,19 +2,11 @@ import { Sun, Moon, Monitor } from "lucide-react";
 import {
   useAppStore,
   type DisplaySettings,
-  type OriginalDisplayMode,
   type Theme,
   DEFAULT_SIDEBAR_WIDTH,
 } from "../../stores/appStore";
-import { Toggle } from "../ui/Toggle";
 import { SettingsCard, SettingsRow } from "./SettingsPrimitives";
-import { SettingsSelect } from "./SettingsSelect";
 import { ReadingPreview } from "./ReadingPreview";
-import { BehaviorComparison } from "./BehaviorComparison";
-import {
-  SIDEBAR_AUTO_COLLAPSE_OFF,
-  SIDEBAR_AUTO_COLLAPSE_ON,
-} from "./settingsPreviewAssets";
 import styles from "./SettingsScreen.module.css";
 
 const DEFAULT_READING_SETTINGS: DisplaySettings = {
@@ -26,15 +18,6 @@ const DEFAULT_READING_SETTINGS: DisplaySettings = {
   sidebarMode: "expanded",
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
 };
-
-const ORIGINAL_DISPLAY_OPTIONS: {
-  value: OriginalDisplayMode;
-  label: string;
-}[] = [
-  { value: "on-demand", label: "必要なときだけ" },
-  { value: "always", label: "常に表示" },
-  { value: "when-untranslated", label: "翻訳がないときだけ" },
-];
 
 export function ReadingSettingsSection() {
   const displaySettings = useAppStore((state) => state.displaySettings);
@@ -161,41 +144,6 @@ export function ReadingSettingsSection() {
           <ReadingPreview settings={displaySettings} />
         </SettingsCard>
 
-        <SettingsCard title="原文">
-          <SettingsRow
-            label="原文の表示"
-            description="英語原文を本文内でどのように表示するか選びます。"
-            htmlFor="original-display"
-          >
-            <SettingsSelect
-              id="original-display"
-              aria-label="原文の表示"
-              value={displaySettings.originalDisplay}
-              options={ORIGINAL_DISPLAY_OPTIONS}
-              onChange={(originalDisplay) => setDisplaySettings({ originalDisplay })}
-            />
-          </SettingsRow>
-        </SettingsCard>
-
-        <SettingsCard title="ナビゲーション">
-          <SettingsRow label="自動で折りたたむ" htmlFor="sidebar-auto-collapse">
-            <Toggle
-              id="sidebar-auto-collapse"
-              checked={displaySettings.sidebarMode === "auto"}
-              onChange={(checked) =>
-                setDisplaySettings({
-                  sidebarMode: checked ? "auto" : "expanded",
-                })
-              }
-            />
-          </SettingsRow>
-
-          <BehaviorComparison
-            value={displaySettings.sidebarMode === "auto"}
-            off={SIDEBAR_AUTO_COLLAPSE_OFF}
-            on={SIDEBAR_AUTO_COLLAPSE_ON}
-          />
-        </SettingsCard>
       </div>
     </div>
   );
