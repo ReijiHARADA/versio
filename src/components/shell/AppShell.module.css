@@ -37,8 +37,8 @@
      shadow, and a wide ambient one, all lit from above. */
   box-shadow:
     0 1px 2px var(--color-shadow),
-    0 4px 12px var(--color-shadow),
-    0 16px 40px var(--color-shadow);
+    0 6px 20px var(--color-shadow),
+    0 24px 64px var(--color-shadow);
 }
 
 /* Resize guide: the divider line turns accent while resizing. */
