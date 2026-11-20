@@ -43,7 +43,6 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 - 設定画面の情報設計が揃っている
 - 正式名称・アイコンが決まっている
 - 公証付き配布の手順（または CI）が再現できる
-- **設定の挙動説明に before / after の短い動画（GIF 等）を置ける** — 特に「自動で折りたたむ」（auto / 常に開く）。左右に設定前・設定後を並べ、アイコンレール時の開閉が一目で分かること。素材は `src/assets/settings-previews/` に置き、`ReadingSettingsSection` から参照する（折りたたみ時の最上位のみ表示は固定挙動）
 
 ### A4. ライブラリの見分けやすさ（必要になったら）
 
