@@ -4896,6 +4896,18 @@ function finalizeBodyBlocks(blocks: PaperBlock[], layoutBlocks: LayoutBlock[]): 
   return splitReferenceEntries;
 }
 
+/** A short finished sentence (`where v denotes the maximum velocity.`) is prose, never a chart label. */
+export function isShortFinishedSentence(text: string): boolean {
+  const trimmed = text.trim();
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  const digits = (trimmed.match(/\d/g) ?? []).length;
+  const letters = (trimmed.match(/\p{L}/gu) ?? []).length;
+  return words.length >= 6 &&
+    /[.!?]["”’')\]]*$/.test(trimmed) &&
+    words.some((word) => /^(?:the|of|and|to|in|a|is|are|was|were|for|with|that|this|by|on|as|be|from)$/i.test(word)) &&
+    digits / Math.max(1, letters + digits) < 0.15;
+}
+
 function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
   const { canonical, paperId, layoutBlocks, layouts, baseFontSize } = input;
   const childOf = canonical.relations.filter((r) => r.kind === "CHILD_OF");
@@ -4954,7 +4966,7 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
     if (n.role === "other" && n.evidence.some((entry) =>
       entry.label === "vector-figure-label-cluster" || entry.label === "repeated-numeric-chart-label" ||
       entry.label === "image-overlap-label-cluster"
-    ) && !isLikelyNarrativeText(n.text ?? "")) return false;
+    ) && !isLikelyNarrativeText(n.text ?? "") && !isShortFinishedSentence(n.text ?? "")) return false;
     return true;
   });
   const fallbackIds = readable.map((n) => n.id);

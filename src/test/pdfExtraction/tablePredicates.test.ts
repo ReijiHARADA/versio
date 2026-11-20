@@ -74,3 +74,12 @@ describe("isChartDebrisFragment", () => {
     expect(isChartDebrisFragment("Bolded values are the best")).toBe(true);
   });
 });
+
+describe("isShortFinishedSentence", () => {
+  it("treats short finished prose as text, not a chart label", async () => {
+    const { isShortFinishedSentence } = await import("../../services/pdfExtraction/projection/toPaper");
+    expect(isShortFinishedSentence("where vmax(HR) denotes the maximum permitted translational velocity.")).toBe(true);
+    expect(isShortFinishedSentence("Regression 16.2 (10.8) 34.8 (14.6) 17.4 27.2 (13.2) probability (11.2) (%)")).toBe(false);
+    expect(isShortFinishedSentence("20190 2020 2021 2022 2023 2024")).toBe(false);
+  });
+});
