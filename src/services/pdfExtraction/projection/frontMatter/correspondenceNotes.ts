@@ -7,6 +7,8 @@ const INLINE_NOTE = /^[*∗†‡\s]*(?:correspondence|corresponding authors?|e-
 const MARKED_EMAIL = /^[*∗†‡]\s*[\w.+-]+@[\w-]+(?:\.[\w-]+)+\s*$/;
 const EMAIL_TAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+(?![\s\S]*@)([\s\S]*)$/;
 const MASTHEAD_ROLES = new Set(["copyright", "other", "paragraph"]);
+// The next sidebar field below the address (`RECEIVED 13 February 2024`).
+const SIDEBAR_FIELD = /^\s*(?:received|accepted|published|edited by|reviewed by|citation|copyright|specialty section)\b/i;
 
 /**
  * The corresponding-author note is printed (a footnote or a sidebar box) but the
@@ -22,11 +24,13 @@ export function withCorrespondenceNotes(nodes: CanonicalNode[]): CanonicalNode[]
     const text = (node.text ?? "").trim();
     const box = node.boundingBoxes[0];
     if (LABEL_ONLY.test(text) && box) {
-      // Sidebar rows sit directly below the label in the same column.
+      // Sidebar rows sit directly below the label in the same column, left- or
+      // right-aligned with it; the name row may already be filed as an author.
       const parts = nodes.filter((n) => {
         const b = n.boundingBoxes[0];
-        return n.pageStart === node.pageStart && n.id !== node.id && b && MASTHEAD_ROLES.has(n.role) &&
-          Math.abs(b.x - box.x) <= 12 && b.y > box.y && b.y - box.y <= 40 && !/^\P{Ll}+$/u.test(n.text ?? "");
+        return n.pageStart === node.pageStart && n.id !== node.id && b && (MASTHEAD_ROLES.has(n.role) || n.role === "author") &&
+          (Math.abs(b.x - box.x) <= 12 || Math.abs(b.x + b.width - (box.x + box.width)) <= 12) &&
+          b.y > box.y && b.y - box.y <= 40 && !/^\P{Ll}+$/u.test(n.text ?? "") && !SIDEBAR_FIELD.test(n.text ?? "");
       });
       if (!parts.some((n) => EMAIL.test(n.text ?? ""))) continue;
       parts.forEach((n) => consumed.add(n.id));
