@@ -275,6 +275,17 @@
   padding: 0;
 }
 
+/* The search cancel/decoration slots reserve width and pull centered text off-center. */
+.searchInput {
+  appearance: none;
+}
+
+.searchInput::-webkit-search-cancel-button,
+.searchInput::-webkit-search-decoration {
+  appearance: none;
+  display: none;
+}
+
 .searchInput:focus {
   outline: none;
 }
