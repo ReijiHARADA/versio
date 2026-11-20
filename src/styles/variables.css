@@ -2,7 +2,7 @@
   /* Title bar band (macOS traffic lights + sidebar toggle) above the main card. */
   --titlebar-h: 50px;
   /* Main card inset from the window's right and bottom edges, and its corner radius. */
-  --card-gap: 12px;
+  --card-gap: 10px;
   --card-radius: 10px;
   /* Colors - Light Theme */
   --color-bg: #ffffff;
@@ -24,6 +24,8 @@
   --color-figure-bg: #f5f5f5;
   --color-equation-bg: #f8f9fa;
   --color-shadow: rgba(0, 0, 0, 0.1);
+  /* Main card shadow: lighter than --color-shadow so the card barely lifts. */
+  --color-card-shadow: rgba(0, 0, 0, 0.06);
   --color-danger: #c5221f;
   --color-success: #16803c;
   --color-favorite: #f4b400;
@@ -119,6 +121,7 @@
   --color-figure-bg: #2d2d30;
   --color-equation-bg: #252526;
   --color-shadow: rgba(0, 0, 0, 0.3);
+  --color-card-shadow: rgba(0, 0, 0, 0.18);
   --color-danger: #f28b82;
   --color-success: #6ee7b7;
   --color-favorite: #fdd663;

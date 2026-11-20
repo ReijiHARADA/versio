@@ -36,9 +36,9 @@
   /* Layered so the card reads as lifted: a tight contact shadow, a soft near
      shadow, and a wide ambient one, all lit from above. */
   box-shadow:
-    0 1px 2px var(--color-shadow),
-    0 6px 20px var(--color-shadow),
-    0 24px 64px var(--color-shadow);
+    0 1px 2px var(--color-card-shadow),
+    0 6px 20px var(--color-card-shadow),
+    0 24px 64px var(--color-card-shadow);
 }
 
 /* Resize guide: the divider line turns accent while resizing. */
