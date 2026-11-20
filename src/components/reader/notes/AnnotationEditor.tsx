@@ -31,20 +31,22 @@ export function AnnotationEditor({
           元の翻訳文が変更されたため、現在の本文上で位置を特定できません。
         </p>
       )}
-      <textarea
-        ref={ref}
-        className={styles.textarea}
-        value={note}
-        onChange={(e) => onNoteChange(e.target.value)}
-        placeholder="メモを入力（空でもハイライトとして保存できます）"
-        onKeyDown={(e) => {
-          if (isImeComposing(e)) return;
-          if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-            e.preventDefault();
-            onSave();
-          }
-        }}
-      />
+      <span className={styles.textareaField}>
+        <textarea
+          ref={ref}
+          className={styles.textarea}
+          value={note}
+          onChange={(e) => onNoteChange(e.target.value)}
+          placeholder="メモを入力（空でもハイライトとして保存できます）"
+          onKeyDown={(e) => {
+            if (isImeComposing(e)) return;
+            if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+              e.preventDefault();
+              onSave();
+            }
+          }}
+        />
+      </span>
       <div className={styles.actions}>
         <button type="button" className={styles.save} onClick={onSave}>
           保存

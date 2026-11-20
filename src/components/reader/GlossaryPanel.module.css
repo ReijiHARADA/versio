@@ -64,9 +64,6 @@
   width: 100%;
   box-sizing: border-box;
   padding: 6px 8px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg);
   color: var(--color-text);
   font-size: 0.8125rem;
 }
@@ -78,6 +75,13 @@
   color: var(--color-text-tertiary);
   font-size: 0.75rem;
   cursor: pointer;
+}
+
+.field {
+  composes: field from "../../styles/squircle.module.css";
+  --sq-fill: var(--sq-fill-sm);
+  --sq-ring: var(--sq-ring-sm);
+  border-radius: var(--sq-radius-sm);
 }
 
 .add {

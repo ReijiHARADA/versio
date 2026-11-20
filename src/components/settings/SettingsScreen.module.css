@@ -186,50 +186,35 @@
   gap: var(--spacing-md);
 }
 
-.select,
 .input {
   appearance: none;
   min-height: var(--control-height);
   width: 100%;
   padding: 0 var(--control-padding-x);
-  border: 1px solid transparent;
-  border-radius: var(--control-radius);
-  background: var(--color-surface-control);
   color: var(--color-text);
   font-size: var(--font-size-body);
-  font-family: inherit;
-  transition: background-color var(--transition-fast), outline-color var(--transition-fast);
-}
-
-.select {
-  cursor: pointer;
-  padding-right: calc(var(--control-padding-x) + 1.25rem);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 12px 12px;
-}
-
-[data-theme="dark"] .select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-}
-
-.input {
   font-family: var(--font-family-mono);
 }
 
-.select:hover,
-.input:hover {
-  background-color: color-mix(in srgb, var(--color-surface-control) 88%, var(--color-text));
+.inputField {
+  composes: field from "../../styles/squircle.module.css";
+  --sq-bg: var(--color-surface-control);
+  --sq-line: transparent;
+  --sq-fill: var(--sq-fill-control);
+  --sq-ring: var(--sq-ring-control);
+  border-radius: var(--sq-radius-control);
+  transition: --sq-bg var(--transition-fast), outline-color var(--transition-fast);
 }
 
-.select:focus-visible,
-.input:focus-visible {
+.inputField:hover {
+  --sq-bg: color-mix(in srgb, var(--color-surface-control) 88%, var(--color-text));
+}
+
+.inputField:has(:focus-visible) {
   outline: 2px solid var(--color-accent);
   outline-offset: 1px;
 }
 
-.select:disabled,
 .input:disabled {
   opacity: 0.55;
   cursor: not-allowed;

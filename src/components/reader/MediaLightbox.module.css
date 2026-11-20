@@ -85,7 +85,7 @@
   display: block;
   max-width: none;
   object-fit: contain;
-  border-radius: var(--radius-sm);
+  -webkit-mask-box-image: var(--sq-fill-sm);
   transform-origin: center center;
   will-change: transform;
   user-select: none;

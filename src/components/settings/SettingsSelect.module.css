@@ -16,6 +16,7 @@
   appearance: none;
   position: relative;
   z-index: 2;
+  isolation: isolate;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -26,27 +27,52 @@
   margin: 0;
   padding: 0 calc(var(--control-padding-x) + 1.25rem) 0 var(--control-padding-x);
   border: 1px solid transparent;
-  border-radius: var(--control-radius);
-  background-color: var(--color-surface-control);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 12px 12px;
+  /* Circle inside the clothoid, for box-shadow and the focus ring. */
+  border-radius: var(--sq-radius-control);
+  background: none;
+  --sq-bg: var(--color-surface-control);
+  --sq-fill: var(--sq-fill-control);
   color: var(--color-text);
   font-size: var(--font-size-body);
   font-family: inherit;
   font-weight: var(--font-weight-medium);
   text-align: left;
   cursor: pointer;
-  transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: --sq-bg var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-[data-theme="dark"] .trigger {
+/* Clothoid fill (the trigger's border is transparent, so no ring is needed). */
+.trigger::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  background: var(--sq-bg);
+  -webkit-mask-box-image: var(--sq-fill);
+  pointer-events: none;
+}
+
+/* Chevron lives here: the element's own background would sit under the fill. */
+.trigger::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: 12px;
+  height: 12px;
+  transform: translateY(-50%);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+  pointer-events: none;
+}
+
+[data-theme="dark"] .trigger::after {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 }
 
 .trigger:hover {
-  background-color: color-mix(in srgb, var(--color-surface-control) 88%, var(--color-text));
+  --sq-bg: color-mix(in srgb, var(--color-surface-control) 88%, var(--color-text));
 }
 
 .trigger:focus-visible {
@@ -55,8 +81,9 @@
 }
 
 .open .trigger {
-  border-radius: calc(var(--control-radius) - 2px);
-  background-color: color-mix(in srgb, var(--color-surface-page) 72%, transparent);
+  border-radius: var(--sq-radius-control-inner);
+  --sq-fill: var(--sq-fill-control-inner);
+  --sq-bg: color-mix(in srgb, var(--color-surface-page) 72%, transparent);
   box-shadow: none;
   font-weight: var(--font-weight-semibold);
 }

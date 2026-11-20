@@ -412,22 +412,24 @@ function InlineName({ node, onClose }: { node: WorkspaceNode; onClose: () => voi
   };
   return (
     <div className={styles.inlineName}>
-      <input
-        ref={input}
-        aria-label="名称"
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onPointerDown={(event) => event.stopPropagation()}
-        onBlur={() => void save()}
-        onKeyDown={(event) => {
-          if (isImeComposing(event)) return;
-          if (event.key === "Escape") onClose();
-          if (event.key === "Enter") {
-            event.preventDefault();
-            void save();
-          }
-        }}
-      />
+      <div className={styles.inlineField}>
+        <input
+          ref={input}
+          aria-label="名称"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          onPointerDown={(event) => event.stopPropagation()}
+          onBlur={() => void save()}
+          onKeyDown={(event) => {
+            if (isImeComposing(event)) return;
+            if (event.key === "Escape") onClose();
+            if (event.key === "Enter") {
+              event.preventDefault();
+              void save();
+            }
+          }}
+        />
+      </div>
     </div>
   );
 }

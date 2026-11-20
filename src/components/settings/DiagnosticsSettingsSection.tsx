@@ -64,19 +64,23 @@ export function DiagnosticsSettingsSection({
           <div className={styles.fieldStack} style={{ marginTop: "var(--spacing-lg)" }}>
             <label className={styles.fieldLabel}>
               Ollama Server URL
-              <input
-                className={styles.input}
-                value={settings.ollamaServerUrl}
-                onChange={(e) => onChange({ ollamaServerUrl: e.target.value })}
-              />
+              <span className={styles.inputField}>
+                <input
+                  className={styles.input}
+                  value={settings.ollamaServerUrl}
+                  onChange={(e) => onChange({ ollamaServerUrl: e.target.value })}
+                />
+              </span>
             </label>
             <label className={styles.fieldLabel}>
               Ollama Model
-              <input
-                className={styles.input}
-                value={settings.ollamaModel}
-                onChange={(e) => onChange({ ollamaModel: e.target.value })}
-              />
+              <span className={styles.inputField}>
+                <input
+                  className={styles.input}
+                  value={settings.ollamaModel}
+                  onChange={(e) => onChange({ ollamaModel: e.target.value })}
+                />
+              </span>
             </label>
           </div>
         </SettingsCard>
@@ -85,16 +89,18 @@ export function DiagnosticsSettingsSection({
           <div className={styles.fieldStack}>
             <label className={styles.fieldLabel}>
               Translation concurrency
-              <input
-                className={styles.input}
-                type="number"
-                min={1}
-                max={8}
-                value={settings.translationConcurrency}
-                onChange={(e) =>
-                  onChange({ translationConcurrency: Number(e.target.value) })
-                }
-              />
+              <span className={styles.inputField}>
+                <input
+                  className={styles.input}
+                  type="number"
+                  min={1}
+                  max={8}
+                  value={settings.translationConcurrency}
+                  onChange={(e) =>
+                    onChange({ translationConcurrency: Number(e.target.value) })
+                  }
+                />
+              </span>
             </label>
             <p className={styles.hint}>
               一般向けの「翻訳速度」と同じ値です。細かく指定したいときだけ変更してください。

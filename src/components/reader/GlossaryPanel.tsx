@@ -48,18 +48,22 @@ export function GlossaryPanel({ entries, onChange, onClose }: GlossaryPanelProps
         <ul className={styles.list}>
           {entries.map((entry, index) => (
             <li key={`${entry.term}-${index}`} className={styles.item}>
-              <input
-                className={styles.term}
-                value={entry.term}
-                onChange={(e) => updateEntry(index, { term: e.target.value })}
-                aria-label="英語の用語"
-              />
-              <input
-                className={styles.translation}
-                value={entry.translation}
-                onChange={(e) => updateEntry(index, { translation: e.target.value })}
-                aria-label="日本語訳"
-              />
+              <span className={styles.field}>
+                <input
+                  className={styles.term}
+                  value={entry.term}
+                  onChange={(e) => updateEntry(index, { term: e.target.value })}
+                  aria-label="英語の用語"
+                />
+              </span>
+              <span className={styles.field}>
+                <input
+                  className={styles.translation}
+                  value={entry.translation}
+                  onChange={(e) => updateEntry(index, { translation: e.target.value })}
+                  aria-label="日本語訳"
+                />
+              </span>
               <button type="button" className={styles.remove} onClick={() => removeEntry(index)}>
                 削除
               </button>
@@ -68,16 +72,20 @@ export function GlossaryPanel({ entries, onChange, onClose }: GlossaryPanelProps
         </ul>
       )}
       <div className={styles.add}>
-        <input
-          placeholder="英語の用語"
-          value={draftTerm}
-          onChange={(e) => setDraftTerm(e.target.value)}
-        />
-        <input
-          placeholder="日本語訳"
-          value={draftTranslation}
-          onChange={(e) => setDraftTranslation(e.target.value)}
-        />
+        <span className={styles.field}>
+          <input
+            placeholder="英語の用語"
+            value={draftTerm}
+            onChange={(e) => setDraftTerm(e.target.value)}
+          />
+        </span>
+        <span className={styles.field}>
+          <input
+            placeholder="日本語訳"
+            value={draftTranslation}
+            onChange={(e) => setDraftTranslation(e.target.value)}
+          />
+        </span>
         <button type="button" className={styles.addButton} onClick={addEntry}>
           追加
         </button>
