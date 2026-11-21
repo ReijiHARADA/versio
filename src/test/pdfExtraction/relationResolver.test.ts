@@ -29,6 +29,17 @@ describe("pageBoundaryContinuationRelations", () => {
     expect(relations).toEqual([{ kind: "CONTINUES", from: "p1", to: "p2", score: 0.88 }]);
   });
 
+  it("skips a page number and a table floated to the top of the next page", () => {
+    const relations = pageBoundaryContinuationRelations([
+      node("p1", 1, "While fine-tuning pre-trained models has been widely successful, the prompt method treats the task as a language modeling problem. This is achieved", 690, "right"),
+      { ...node("num", 1, "4342", 780, "right") },
+      { ...node("tab", 2, "Model F1 Accuracy", 60, "left"), role: "table", boundingBoxes: [{ page: 2, x: 50, y: 60, width: 500, height: 150 }] },
+      { ...node("cap", 2, "Table 5: Results.", 220, "left"), role: "caption" },
+      node("p2", 2, "by integrating masked language modeling with a set of label words.", 300, "left"),
+    ], layouts);
+    expect(relations).toEqual([{ kind: "CONTINUES", from: "p1", to: "p2", score: 0.88 }]);
+  });
+
   it("does not link complete or mid-page paragraphs", () => {
     const relations = pageBoundaryContinuationRelations([
       node("p1", 1, "A complete paragraph ends here.", 690, "right"),
