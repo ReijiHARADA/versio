@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boxFromPoints, idsInBox, usePaperSelectionStore } from "./paperSelectionStore";
+import { boxFromPoints, idsInBox, rangeBetween, usePaperSelectionStore } from "./paperSelectionStore";
 
 describe("paper marquee selection", () => {
   const items = [
@@ -15,6 +15,14 @@ describe("paper marquee selection", () => {
   it("selects every tile the marquee overlaps", () => {
     expect(idsInBox(boxFromPoints(90, 100, 130, 10), items)).toEqual(["a", "b"]);
     expect(idsInBox(boxFromPoints(105, 145, 115, 155), items)).toEqual([]);
+  });
+
+  it("selects a shift-click range in either direction", () => {
+    const order = ["a", "b", "c", "d"];
+    expect(rangeBetween(order, "b", "d")).toEqual(["b", "c", "d"]);
+    expect(rangeBetween(order, "d", "a")).toEqual(["a", "b", "c", "d"]);
+    expect(rangeBetween(order, null, "c")).toEqual(["c"]);
+    expect(rangeBetween(order, "gone", "c")).toEqual(["c"]);
   });
 
   it("toggles and clears", () => {

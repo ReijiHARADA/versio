@@ -36,7 +36,8 @@ export function PaperDragPreview() {
       style={{ transform: `translate(${pointerX + 14}px, ${pointerY + 10}px)` }}
     >
       <FileText size={14} strokeWidth={1.8} />
-      <span>{count > 1 ? `${dragLabel || "論文"} ほか ${count - 1} 件` : dragLabel || "論文"}</span>
+      <span>{dragLabel || "論文"}</span>
+      {count > 1 && <strong className={styles.dragMore}>ほか {count - 1} 件</strong>}
     </div>
   );
 }

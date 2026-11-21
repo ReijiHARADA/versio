@@ -1,25 +1,36 @@
 import { create } from "zustand";
 
-/** Finder-style selection of paper tiles in the grid ("アイテム") view. UI only. */
+/** Finder-style selection of paper cards (grid tiles and list rows). UI only. */
 type PaperSelectionState = {
   ids: ReadonlySet<string>;
-  select: (ids: Iterable<string>) => void;
+  /** Last ⌘-clicked / dragged card: the fixed end of a ⇧-click range. */
+  anchor: string | null;
+  select: (ids: Iterable<string>, anchor?: string | null) => void;
   toggle: (id: string) => void;
   clear: () => void;
 };
 
 export const usePaperSelectionStore = create<PaperSelectionState>((set) => ({
   ids: new Set(),
-  select: (ids) => set({ ids: new Set(ids) }),
+  anchor: null,
+  select: (ids, anchor) => set((state) => ({ ids: new Set(ids), anchor: anchor === undefined ? state.anchor : anchor })),
   toggle: (id) =>
     set((state) => {
       const next = new Set(state.ids);
       if (next.has(id)) next.delete(id);
       else next.add(id);
-      return { ids: next };
+      return { ids: next, anchor: id };
     }),
-  clear: () => set((state) => (state.ids.size ? { ids: new Set() } : state)),
+  clear: () => set((state) => (state.ids.size || state.anchor ? { ids: new Set(), anchor: null } : state)),
 }));
+
+/** Ids from anchor to target inclusive, in display order; just the target when the anchor is gone. */
+export function rangeBetween(order: string[], anchor: string | null, target: string): string[] {
+  const from = anchor ? order.indexOf(anchor) : -1;
+  const to = order.indexOf(target);
+  if (from < 0 || to < 0) return [target];
+  return order.slice(Math.min(from, to), Math.max(from, to) + 1);
+}
 
 export type Box = { left: number; top: number; right: number; bottom: number };
 

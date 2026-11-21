@@ -142,7 +142,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  max-width: 220px;
+  max-width: 280px;
   padding: 6px 10px;
   --sq-fill: var(--sq-fill-8);
   --sq-ring: var(--sq-ring-8);
@@ -201,6 +201,12 @@
   pointer-events: none;
   border: 1px solid color-mix(in srgb, var(--color-accent) 70%, transparent);
   background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.dragMore {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  font-weight: 600;
 }
 
 .dragPreview span {
