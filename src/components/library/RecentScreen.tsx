@@ -9,6 +9,8 @@ import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
 import { PaperCard } from "./PaperCard";
 import { PaperMenu } from "./PaperMenu";
 import { useDeletePaper } from "../../hooks/useDeletePaper";
+import { LibraryViewToggle, useLibraryView } from "./LibraryViewToggle";
+import { LibrarySortMenu, useSortedPapers } from "./LibrarySortMenu";
 import styles from "./LibraryScreen.module.css";
 
 export function RecentScreen() {
@@ -28,7 +30,8 @@ export function RecentScreen() {
       })
       .slice(0, 30);
   }, [papers]);
-  const recent = useLibraryPaperSearch(recentBase, searchQuery);
+  const recent = useSortedPapers(useLibraryPaperSearch(recentBase, searchQuery));
+  const view = useLibraryView();
 
   const handleOpen = (paperId: string) => {
     if (busyId === paperId) return;
@@ -50,6 +53,10 @@ export function RecentScreen() {
           <Clock size={20} style={{ color: "var(--color-accent)" }} />
           <h1 className={styles.title}>最近読んだ論文</h1>
         </div>
+        <div className={styles.headerRight}>
+          <LibrarySortMenu />
+          <LibraryViewToggle />
+        </div>
       </header>
       <main className={styles.main}>
         {recent.length === 0 ? (
@@ -59,11 +66,12 @@ export function RecentScreen() {
             <p className={styles.emptyDescription}>論文を開くと、ここに最近読んだ論文が表示されます</p>
           </div>
         ) : (
-          <div className={styles.paperList}>
+          <div className={view === "grid" ? styles.tileGrid : styles.paperList}>
             {recent.map((paper) => (
               <PaperCard
                 key={paper.id}
                 paper={paper}
+                layout={view}
                 enabled={busyId !== paper.id}
                 onOpen={() => handleOpen(paper.id)}
                 actions={
