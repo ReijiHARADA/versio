@@ -19,6 +19,7 @@ import { resumeSavedTranslations } from "../../services/import/startBackgroundIm
 import { createPresentationCaptureSeed } from "../../services/presentationDemo";
 import { useImportJobStore } from "../../stores/importJobStore";
 import { setTranslationUiDeferReason } from "../../utils/batchBlockUpdates";
+import { isTauriApp } from "../../utils/serverReady";
 import styles from "./AppShell.module.css";
 
 export function AppShell() {
@@ -112,6 +113,33 @@ export function AppShell() {
   }, [memberships, papers, workspaceNodes]);
   const create = async (input: { name: string; description?: string }) => { const node = await createWorkspaceNode({ ...input, parentId: createParentId ?? null }); upsertWorkspaceNode(node); setCreateParentId(undefined); if (node.parentId) return; navigate(`/project/${node.id}`); };
   const addPaperFile = (node: WorkspaceNode) => { setFileNodeId(node.id); fileInputRef.current?.click(); };
+
+  // Native menu bar items (src-tauri/src/menu.rs). Adding a paper from a folder screen files it there.
+  const menuActionRef = useRef<(id: string) => void>(() => {});
+  menuActionRef.current = (id) => {
+    if (id === "settings") navigate("/settings");
+    else if (id === "add-paper") { setFileNodeId(routeNodeId); fileInputRef.current?.click(); }
+    else if (id === "new-folder") setCreateParentId(null);
+    else if (id === "toggle-sidebar") {
+      const { displaySettings, setDisplaySettings } = useAppStore.getState();
+      setDisplaySettings({ sidebarMode: displaySettings.sidebarMode === "expanded" ? "auto" : "expanded" });
+    }
+  };
+  useEffect(() => {
+    if (!isTauriApp()) return;
+    let stop: (() => void) | undefined;
+    let cancelled = false;
+    void import("@tauri-apps/api/event").then(({ listen }) =>
+      listen<string>("menu-action", (event) => menuActionRef.current(event.payload)).then((unlisten) => {
+        if (cancelled) unlisten();
+        else stop = unlisten;
+      })
+    );
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  }, []);
   const deleteNode = async (node: WorkspaceNode) => {
     const removed = await removeWorkspaceItem(node.id);
     removeWorkspaceNodesLocal(removed);
@@ -149,7 +177,7 @@ export function AppShell() {
 
   return <div className={styles.shell}>
     <div className={styles.titlebarDrag} data-tauri-drag-region />
-    <input ref={fileInputRef} type="file" accept=".pdf,application/pdf" className={styles.hiddenInput} onChange={(event) => { const file = event.target.files?.[0]; if (file && fileNodeId) void tryStartPdfImport(file, { workspaceNodeId: fileNodeId }); event.target.value = ""; setFileNodeId(null); }} />
+    <input ref={fileInputRef} type="file" accept=".pdf,application/pdf" className={styles.hiddenInput} onChange={(event) => { const file = event.target.files?.[0]; if (file) void tryStartPdfImport(file, fileNodeId ? { workspaceNodeId: fileNodeId } : undefined); event.target.value = ""; setFileNodeId(null); }} />
     <AppSidebar workspaceNodes={workspaceNodes} searchQuery={searchQuery} onSearchChange={setSearchQuery} onNewWorkspace={() => setCreateParentId(null)} onNewChild={(node) => setCreateParentId(node.id)} onDeleteNode={deleteNode} onAddPaperToWorkspace={addPaperFile} activeNodeId={routeNodeId} inboxCount={inboxCount} />
     <div className={styles.main}><div className={styles.mainBody}>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div></div><PaperDragPreview />
     <PlamoDownloadToast raised={Boolean(toast)} />

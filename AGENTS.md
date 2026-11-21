@@ -38,6 +38,7 @@
 - PR をマージしたら `npm run prune:worktrees` でマージ済み worktree とローカルブランチを消す（未コミット変更あり・1時間以内に触った worktree は残す）。廃止したエンジンのモデル・venv・HF キャッシュは、コード削除と同じ PR の作業中にローカルからも消す。ベンチ／監査の出力先は作ったときに `.gitignore` へ入れる。
 - Xcode は `/Applications/Xcode-beta.app` を使用。ビルド時は `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer` を設定すること。
 - phase 時間は `scripts/tauri-build.sh` と `.build-timings` / [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。
+- macOS メニューバーは日本語の独自メニュー（`src-tauri/src/menu.rs`）。独自項目は `menu-action` イベントで `AppShell` が処理する。システムが足す項目（音声入力・絵文字など）は `src-tauri/Info.plist` の `CFBundleLocalizations = ja` で日本語になる。
 - 本番 CSP は有効。WKWebView 向けに `script-src` は nonce のみにしない（`'self' 'unsafe-inline' 'wasm-unsafe-eval'`）。変更時は `.app` で白画面にならないか確認する。
 - PDF 解析は **pdfjs-dist 3.11（legacy build）**。6.x は WKWebView で Iterator Helpers が無く即クラッシュするので上げない。日本語 CID フォントは `pdfjs-dist/cmaps`（Adobe-Japan1 など）をアプリに同梱してデコードする。
 - ユーザー領域への書き出しは Rust の save dialog コマンドで完結させる。フロントから任意 absolute path への write API を復活させない。
