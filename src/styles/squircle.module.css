@@ -61,12 +61,22 @@
    --sq-line's alpha, so a transparent ring stays invisible. */
 .surface::after {
   background: linear-gradient(
-    var(--sq-edge-dir, 180deg),
     oklch(from var(--sq-line) calc(l + var(--sq-edge-lift, 0)) c h / alpha),
     var(--sq-line) 45%,
     oklch(from var(--sq-line) calc(l - var(--sq-edge-sink, 0)) c h / alpha)
   );
   -webkit-mask-box-image: var(--sq-ring);
+}
+
+.edged {
+  --sq-edge-lift: var(--edge-lift);
+  --sq-edge-sink: var(--edge-sink);
+}
+/* Primary (accent) buttons: lit edge plus a crisp inner highlight and shade. */
+.cta {
+  composes: edged;
+  --sq-edge-highlight: var(--edge-highlight);
+  --sq-edge-shade: var(--edge-shade);
 }
 
 .clip {
@@ -87,10 +97,6 @@
   --sq-fill: var(--sq-fill-md);
   --sq-ring: var(--sq-ring-md);
   border-radius: var(--sq-radius-md);
-  /* Recessed: darker top edge, no inner highlight. */
-  --sq-edge-dir: 0deg;
-  --sq-edge-highlight: 0;
-  --sq-edge-shade: 0;
 }
 
 .field > :is(input, textarea) {

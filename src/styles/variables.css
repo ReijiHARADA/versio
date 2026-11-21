@@ -24,14 +24,13 @@
   --color-figure-bg: #f5f5f5;
   --color-equation-bg: #f8f9fa;
   --color-shadow: rgba(0, 0, 0, 0.1);
-  /* Main card shadow: lighter than --color-shadow so the card barely lifts. */
-  --color-card-shadow: rgba(0, 0, 0, 0.06);
-  /* Surface edges (squircle.module.css): OKLCH lightness shift of the ring at
-     its top / bottom, and alpha of the inner top highlight. */
-  --sq-edge-lift: 0.05;
-  --sq-edge-sink: 0.09;
-  --sq-edge-highlight: 0.5;
-  --sq-edge-shade: 0.2;
+  /* Surface edges, opted in via squircle.module.css .edged / .cta: OKLCH
+     lightness shift of the ring at top / bottom, and alpha of the CTA's inner
+     1px highlight / shade. */
+  --edge-lift: 0.05;
+  --edge-sink: 0.09;
+  --edge-highlight: 0.5;
+  --edge-shade: 0.2;
   --color-danger: #c5221f;
   --color-success: #16803c;
   --color-favorite: #f4b400;
@@ -127,11 +126,10 @@
   --color-figure-bg: #2d2d30;
   --color-equation-bg: #252526;
   --color-shadow: rgba(0, 0, 0, 0.3);
-  --color-card-shadow: rgba(0, 0, 0, 0.18);
-  --sq-edge-lift: 0.1;
-  --sq-edge-sink: 0.04;
-  --sq-edge-highlight: 0.18;
-  --sq-edge-shade: 0.35;
+  --edge-lift: 0.1;
+  --edge-sink: 0.04;
+  --edge-highlight: 0.18;
+  --edge-shade: 0.35;
   --color-danger: #f28b82;
   --color-success: #6ee7b7;
   --color-favorite: #fdd663;

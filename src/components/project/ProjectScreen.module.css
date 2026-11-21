@@ -40,7 +40,7 @@
 }
 
 .addButton {
-  composes: surface from "../../styles/squircle.module.css";
+  composes: surface cta from "../../styles/squircle.module.css";
   position: relative;
   display: flex;
   align-items: center;

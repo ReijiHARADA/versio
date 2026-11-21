@@ -20,7 +20,7 @@
 }
 
 .main {
-  composes: surface from "../../styles/squircle.module.css";
+  composes: surface edged from "../../styles/squircle.module.css";
   position: relative;
   z-index: 3;
   flex: 1;
@@ -38,17 +38,12 @@
   --sq-fill: var(--sq-fill-card);
   --sq-ring: var(--sq-ring-card);
   border-radius: var(--sq-radius-card);
-  /* Layered so the card reads as lifted: a tight contact shadow, a soft near
-     shadow, and a wide ambient one, all lit from above. */
-  box-shadow:
-    0 1px 2px var(--color-card-shadow),
-    0 6px 20px var(--color-card-shadow),
-    0 24px 64px var(--color-card-shadow);
+  /* No drop shadow: the lit ring alone separates the card. */
 }
 
 /* Clips page content. Its circle radius sits inside the card's clothoid, so the
    card's own fill covers the sliver between them; the card stays unmasked so
-   its box-shadow survives and scrolling never repaints a mask. */
+   scrolling never repaints a mask. */
 .mainBody {
   position: relative;
   flex: 1;
