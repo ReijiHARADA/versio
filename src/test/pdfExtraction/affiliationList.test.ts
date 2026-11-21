@@ -4,6 +4,7 @@ import { looksLikeAffiliationList } from "../../services/pdfExtraction/resolver/
 describe("looksLikeAffiliationList", () => {
   it("accepts a back-matter list of institutions and places", () => {
     expect(looksLikeAffiliationList("Department of Neurosurgery, Maxine Dunitz Neurosurgical Institute, Cedars-Sinai Medical Center, Los Angeles, CA, USA. Department of Computational Biomedicine, Cedars-Sinai Medical Center, Los Angeles, CA, USA.")).toBe(true);
+    expect(looksLikeAffiliationList("140Institute of Psychiatry, Psychology & Neuroscience, London, UK. 192Hospital Universitario la Paz, Madrid, Spain. 196CAEBI, Centro Andaluz de Estudios Bioinformáticos, Sevilla, Spain.")).toBe(true);
     expect(looksLikeAffiliationList("11RIKEN Center for Sustainable Resource Science, Yokohama, Kanagawa 230-0045, Japan")).toBe(true);
   });
 

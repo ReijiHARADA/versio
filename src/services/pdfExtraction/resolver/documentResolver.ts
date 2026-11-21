@@ -4109,7 +4109,7 @@ export function resolveTableRegions(nodes: CanonicalNode[], regions: StructuralR
   return resolvedNodes;
 }
 
-const INSTITUTION = /\b(?:university|universit[àéä]t?|universidad|universidade|department|dept\.|faculty|school|college|institute|institut|instituto|istituto|laboratory|hospital|clinic|centre|center|foundation|council|academy|ministry|unit)\b/i;
+const INSTITUTION = /\b(?:universit\w*|univ\.|department|dept\.|faculty|school|college|institut\w*|istituto|laborator\w*|hospital\w*|ospedal\w*|clinic\w*|centre|center|centro|foundation|fondazione|council|academy|ministry|unit|unidad|servicio|azienda)\b/i;
 const NAME_PARTICLES = new Set("of and for the de di la le du des del y e und der at in on to a & van von da do das dos".split(" "));
 
 /**
@@ -4118,7 +4118,8 @@ const NAME_PARTICLES = new Set("of and for the de di la le du des del y e und de
  * Prose has lowercase words beyond name particles.
  */
 export function looksLikeAffiliationList(text: string): boolean {
-  const segments = text.trim().split(/(?<=[.;])\s+(?=[A-Z\d])/).filter((segment) => segment.length > 3);
+  const segments = text.trim().split(/(?<=[.;])\s+(?=[A-Z\d])/).filter((segment) => segment.length > 3)
+    .map((segment) => segment.replace(/^\d+\s*/, "")); // a glued affiliation number (`140Institute of …`)
   const affiliations = segments.filter((segment) => INSTITUTION.test(segment) && segment.includes(",") && !/\b(?:is|are|was|were)\b/.test(segment) &&
     segment.split(/\s+/).filter((word) => /^[a-z]/.test(word) && !NAME_PARTICLES.has(word.replace(/[^a-z&]/g, ""))).length <= 1);
   return segments.length > 0 && affiliations.length / segments.length >= 0.8 &&
