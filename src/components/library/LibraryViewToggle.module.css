@@ -74,3 +74,11 @@
   background: color-mix(in srgb, var(--color-text) 11%, transparent);
   color: var(--color-text);
 }
+
+/* Same width for every label (widest is 4 full-width chars) so the toggle,
+   and the sort control beside it, do not shift when the view changes. */
+.text {
+  display: inline-block;
+  width: 4em;
+  text-align: center;
+}
