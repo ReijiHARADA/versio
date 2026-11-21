@@ -163,3 +163,19 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Inner rim like .cta buttons: bright top-left, shaded bottom-right, a
+   concentric clothoid 1px inside the card's ring. Sits above page content. */
+.mainRim {
+  position: absolute;
+  inset: -1px;
+  z-index: 101;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom right,
+    rgb(255 255 255 / var(--edge-highlight)),
+    transparent 50%,
+    rgb(0 0 0 / var(--edge-shade))
+  );
+  -webkit-mask-box-image: var(--sq-rim-card);
+}
