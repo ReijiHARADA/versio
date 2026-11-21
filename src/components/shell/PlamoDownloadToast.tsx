@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import { currentPlamoDownload, usePlamoDownloadStore } from "../settings/plamoDownload";
 import { describePlamoError } from "../../services/translation/plamoReadiness";
@@ -12,6 +12,8 @@ export function PlamoDownloadToast({ raised }: { raised: boolean }) {
   const downloading = usePlamoDownloadStore((state) => state.downloading);
   const percent = usePlamoDownloadStore((state) => state.percent);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
+  const content = useRef<HTMLSpanElement>(null);
+  const [width, setWidth] = useState<number | null>(null);
 
   useEffect(() => {
     const run = currentPlamoDownload();
@@ -44,10 +46,25 @@ export function PlamoDownloadToast({ raised }: { raised: boolean }) {
     return () => window.clearTimeout(timer);
   }, [phase]);
 
-  if (!downloading && phase.kind === "idle") return null;
+  const visible = downloading || phase.kind !== "idle";
   const state = phase.kind === "idle" ? "downloading" : phase.kind;
+
+  // an auto-width box cannot transition, so pin the pill to its content's measured width and animate that
+  useLayoutEffect(() => {
+    if (visible && content.current) setWidth(content.current.offsetWidth);
+  }, [visible, state, percent]);
+
+  if (!visible) return null;
   return (
-    <div className={styles.toast} data-state={state} data-raised={raised} role="status" aria-live="polite">
+    <div
+      className={styles.toast}
+      data-state={state}
+      data-raised={raised}
+      role="status"
+      aria-live="polite"
+      style={width === null ? undefined : { width: width + 32 }}
+    >
+      <span ref={content} className={styles.content}>
       {state === "downloading" ? (
         <span key="downloading" className={styles.message}>
           翻訳モデルをインストール中
@@ -72,6 +89,7 @@ export function PlamoDownloadToast({ raised }: { raised: boolean }) {
         aria-valuenow={state === "downloading" ? percent : 100}
       >
         <span className={styles.fill} style={{ width: `${state === "downloading" ? percent : 100}%` }} />
+      </span>
       </span>
     </div>
   );
