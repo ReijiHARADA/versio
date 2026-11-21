@@ -243,6 +243,35 @@
   pointer-events: auto;
 }
 
+/* Back / forward, right after the sidebar toggle (Finder-style). */
+.historyNav {
+  position: fixed;
+  top: 5px;
+  left: 108px;
+  z-index: 1001;
+  display: flex;
+  gap: 2px;
+}
+
+.historyNavNarrow {
+  left: 80px;
+}
+
+.historyButton {
+  composes: brandToggle;
+  position: static;
+}
+
+.historyButton:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.historyButton:disabled:hover {
+  --sq-bg: transparent;
+  color: var(--color-text-tertiary);
+}
+
 .brandToggle:hover {
   --sq-bg: var(--color-bg-tertiary);
   color: var(--color-text);
