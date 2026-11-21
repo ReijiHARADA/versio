@@ -111,7 +111,7 @@
 }
 
 .toastInfo {
-  background: #3c4043;
+  background: var(--gray-800);
   color: #fff;
 }
 
