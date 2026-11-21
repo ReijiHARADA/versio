@@ -928,8 +928,12 @@ function clusterItemsIntoLines(
   // BMJ Open keeps a "To cite" rail whose wrapped lines nearly touch the
   // abstract column (gap ~4pt). Band matching alone cannot split those rows;
   // the detected body leftX is the reliable cut.
-  const marginRailCutoff =
-    typeof bodyLeftX === "number" && bodyLeftX > 80 ? bodyLeftX - 16 : null;
+  // A rail span ends before the body starts; a span running well past the cut is body prose
+  // (an indented abstract can place leftX right of the real body origin).
+  const cutoffCandidate = typeof bodyLeftX === "number" && bodyLeftX > 80 ? bodyLeftX - 16 : null;
+  const marginRailCutoff = cutoffCandidate != null &&
+    !items.some((item) => item.x < cutoffCandidate && item.x + item.width > bodyLeftX! + fontBase * 4)
+    ? cutoffCandidate : null;
   const sidebarBands = (() => {
     // A publisher rail can sit beside a main text column even when the page
     // detector conservatively labels the page single-column (for example an
