@@ -3,7 +3,7 @@
   position: relative;
   margin: var(--spacing-xl) 0;
   padding: var(--spacing-md);
-  --sq-bg: var(--color-figure-bg);
+  --sq-bg: var(--color-bg-tertiary);
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
 }

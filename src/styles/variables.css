@@ -4,26 +4,39 @@
   /* Main card inset from the window's right and bottom edges, and its corner radius. */
   --card-gap: 10px;
   --card-radius: 10px;
-  /* Colors - Light Theme */
+  /* Neutrals (light). Two families by role:
+     --color-bg-*      : flat layers, page → secondary → tertiary (darker)
+     --color-surface-* : grouped panels, hover fill, raised controls */
   --color-bg: #ffffff;
   --color-bg-secondary: #f8f9fa;
   --color-bg-tertiary: #f1f3f4;
+  --color-surface-page: var(--color-bg);
+  --color-surface-grouped: #f7f8fa;
+  --color-surface-hover: #e8eaed;
+  --color-surface-control: #ffffff;
   --color-text: #1a1a1a;
   --color-text-secondary: #5f6368;
   --color-text-tertiary: #9aa0a6;
   --color-border: #e0e0e0;
   --color-border-light: #eeeeee;
+  --color-separator-subtle: color-mix(in srgb, var(--color-text) 8%, transparent);
+  --color-shadow: rgba(0, 0, 0, 0.1);
+
+  /* Accent */
   --color-accent: #1a73e8;
   --color-accent-hover: #1557b0;
   --color-accent-light: #e8f0fe;
-  /* Selected nav / outline / toolbar chip: solid accent, white label */
+  /* Selected nav / outline / toolbar chip: solid accent, white label (both themes) */
   --color-selection-bg: var(--color-accent);
   --color-selection-fg: #ffffff;
+
+  /* Status / content */
+  --color-danger: #c5221f;
+  --color-success: #16803c;
+  --color-favorite: #f4b400;
   --color-original-bg: #fef7e0;
   --color-original-border: #fbbc04;
-  --color-figure-bg: #f5f5f5;
-  --color-equation-bg: #f8f9fa;
-  --color-shadow: rgba(0, 0, 0, 0.1);
+
   /* Surface edges, opted in via squircle.module.css .edged / .cta: OKLCH
      lightness shift of the ring at top / bottom, and alpha of the CTA's inner
      rim at its top-left / bottom-right. */
@@ -31,16 +44,6 @@
   --edge-sink: 0.09;
   --edge-highlight: 0.5;
   --edge-shade: 0.14;
-  --color-danger: #c5221f;
-  --color-success: #16803c;
-  --color-favorite: #f4b400;
-
-  /* Semantic surfaces (design system v1) */
-  --color-surface-page: var(--color-bg);
-  --color-surface-grouped: #f7f8fa;
-  --color-surface-hover: #e8eaed;
-  --color-surface-control: #ffffff;
-  --color-separator-subtle: color-mix(in srgb, var(--color-text) 8%, transparent);
 
   /* Typography scale v1 (role-based) */
   --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -106,39 +109,39 @@
 }
 
 [data-theme="dark"] {
-  --scrollbar-thumb: rgba(255, 255, 255, 0.16);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+  /* Neutrals (dark) */
   --color-bg: #1e1e1e;
   --color-bg-secondary: #252526;
   --color-bg-tertiary: #2d2d30;
+  --color-surface-grouped: #323234;
+  --color-surface-hover: #353538;
+  --color-surface-control: #3a3a3c;
   --color-text: #e0e0e0;
   --color-text-secondary: #a0a0a0;
   --color-text-tertiary: #6e6e6e;
   --color-border: #3c3c3c;
   --color-border-light: #333333;
+  --color-separator-subtle: color-mix(in srgb, var(--color-text) 12%, transparent);
+  --color-shadow: rgba(0, 0, 0, 0.3);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.16);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+
+  /* Accent */
   --color-accent: #4dabf7;
   --color-accent-hover: #74c0fc;
   --color-accent-light: #1c3a5e;
-  --color-selection-bg: var(--color-accent);
-  --color-selection-fg: #ffffff;
+
+  /* Status / content */
+  --color-danger: #f28b82;
+  --color-success: #6ee7b7;
+  --color-favorite: #fdd663;
   --color-original-bg: #3d3520;
   --color-original-border: #d4a72c;
-  --color-figure-bg: #2d2d30;
-  --color-equation-bg: #252526;
-  --color-shadow: rgba(0, 0, 0, 0.3);
+
   --edge-lift: 0.1;
   --edge-sink: 0.04;
   --edge-highlight: 0.55;
   --edge-shade: 0.16;
-  --color-danger: #f28b82;
-  --color-success: #6ee7b7;
-  --color-favorite: #fdd663;
-
-  --color-surface-page: var(--color-bg);
-  --color-surface-grouped: #323234;
-  --color-surface-hover: #353538;
-  --color-surface-control: #3a3a3c;
-  --color-separator-subtle: color-mix(in srgb, var(--color-text) 12%, transparent);
 }
 
 * {
