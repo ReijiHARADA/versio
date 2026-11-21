@@ -74,8 +74,13 @@ function masks(r) {
     size,
     `<path d='${roundedRectPath(0.5, 0.5, size - 0.5, size - 0.5, Math.max(r - 0.5, 0.5))}' fill='none' stroke='black'/>`
   );
+  // Second 1px ring just inside `ring`, concentric with it (CTA inner rim).
+  const rim = svgUrl(
+    size,
+    `<path d='${roundedRectPath(1.5, 1.5, size - 1.5, size - 1.5, Math.max(r - 1.5, 0.5))}' fill='none' stroke='black'/>`
+  );
   const cut = slice * SCALE; // WebKit reads slice in the SVG's intrinsic pixels
-  return { fill: `${fill} ${cut} / ${slice}px`, ring: `${ring} ${cut} / ${slice}px` };
+  return { fill: `${fill} ${cut} / ${slice}px`, ring: `${ring} ${cut} / ${slice}px`, rim: `${rim} ${cut} / ${slice}px` };
 }
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
@@ -90,12 +95,12 @@ if (isMain) {
     ":root {",
   ];
   for (const r of RADII) {
-    const { fill, ring } = masks(r);
+    const { fill, ring, rim } = masks(r);
     // Circle of radius K·r stays inside the clothoid: host border-radius for box-shadow / outline.
-    lines.push(`  --sq-fill-${r}: ${fill};`, `  --sq-ring-${r}: ${ring};`, `  --sq-radius-${r}: ${(K * r).toFixed(2)}px;`);
+    lines.push(`  --sq-fill-${r}: ${fill};`, `  --sq-ring-${r}: ${ring};`, `  --sq-rim-${r}: ${rim};`, `  --sq-radius-${r}: ${(K * r).toFixed(2)}px;`);
   }
   for (const [name, r] of Object.entries(TOKENS)) {
-    lines.push(`  --sq-fill-${name}: var(--sq-fill-${r});`, `  --sq-ring-${name}: var(--sq-ring-${r});`, `  --sq-radius-${name}: var(--sq-radius-${r});`);
+    lines.push(`  --sq-fill-${name}: var(--sq-fill-${r});`, `  --sq-ring-${name}: var(--sq-ring-${r});`, `  --sq-rim-${name}: var(--sq-rim-${r});`, `  --sq-radius-${name}: var(--sq-radius-${r});`);
   }
   lines.push("}", "");
   const out = path.join(path.dirname(fileURLToPath(import.meta.url)), "../src/styles/squircle.css");
