@@ -191,8 +191,8 @@ const chapters: Chapter[] = [
         "起動時にダウンロードを後回しにした場合は、設定 → 翻訳 を開いて「モデルをダウンロード」を押してください。「準備完了」と表示されれば、取り込んだ論文は自動で翻訳されます。"
       ),
       p(
-        "That is everything you need. You can move this paper to the trash at any time; it will not come back.",
-        "必要なことは以上です。この論文はいつでもゴミ箱に入れて構いません。再び現れることはありません。"
+        "That is everything you need. Enjoy reading.",
+        "必要なことは以上です。良い読書を。"
       ),
     ],
   },

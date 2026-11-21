@@ -14,16 +14,27 @@ export async function seedIntroductionPaper(existingPaperCount: number): Promise
     return "skipped";
   }
 
+  await writeIntroductionPaper();
+  await saveSetting(SEEDED_KEY, true);
+  return "added";
+}
+
+/** Every launch: put the Introduction back if it is not in the library (also restores it from the trash). */
+export async function ensureIntroductionPaper(activePaperIds: string[]): Promise<"added" | "skipped"> {
+  if (activePaperIds.includes(introductionPaper.id)) return "skipped";
+  await writeIntroductionPaper();
+  return "added";
+}
+
+async function writeIntroductionPaper(): Promise<void> {
   const now = new Date().toISOString();
   const paper = { ...introductionPaper, createdAt: now, updatedAt: now };
   await savePaper(paper);
   await saveSections(introductionSections);
   await saveBlocks(introductionBlocks);
-  await saveSetting(SEEDED_KEY, true);
 
   const { addPaper, setSections, setBlocks } = useLibraryCache.getState();
   addPaper(paper);
   setSections(paper.id, introductionSections);
   setBlocks(paper.id, introductionBlocks);
-  return "added";
 }
