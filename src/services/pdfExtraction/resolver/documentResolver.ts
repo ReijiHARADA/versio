@@ -4661,6 +4661,21 @@ export function resolveCanonicalDocument(input: {
       reason: "heading-shaped line is mostly digits/symbols or has no dictionary word next to a math symbol",
     }],
   });
+  // An algorithm float's title (`Algorithm fpGreed`) sits right above its `Input:` / `Require:` line.
+  nodes = nodes.map((node, index) => node.role !== "heading" || !/^Algorithm\s+\S+$/.test(node.text?.trim() ?? "") ||
+    !/^(Input|Require|Output|Ensure|Data)\s*:/.test(nodes[index + 1]?.text?.trim() ?? "") ? node : {
+    ...node,
+    role: "paragraph" as const,
+    confidence: Math.min(node.confidence, 0.55),
+    evidence: [...node.evidence, {
+      source: "generic-heuristic" as const,
+      label: "algorithm-title-heading-demotion",
+      confidence: 0.8,
+      page: node.pageStart,
+      bbox: node.boundingBoxes[0],
+      reason: "`Algorithm <name>` directly above an Input:/Require: line is a float title",
+    }],
+  });
   // Inline section splits can mint a parent `5. Results` after `5.3 …` when
   // two-column glue injects the label into later prose. Demote only those
   // split-derived parents (layout-owned section titles keep their role).
