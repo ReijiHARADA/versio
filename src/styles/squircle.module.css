@@ -65,6 +65,9 @@
    and shaded at the bottom-right. `to bottom right` puts the light/dark split
    on the other diagonal, so the top and left edges stay lit at any width. */
 .cta {
+  /* Circle matching the clothoid's diagonal (md 9.15px), minus the 1px inset,
+     so the face's corner stays concentric with the outer ring. */
+  --cta-inner-radius: 8.15px;
   --cta-ring: color-mix(in oklab, var(--sq-bg), #000 12%);
   --cta-face: linear-gradient(
     to bottom right,
@@ -85,7 +88,7 @@
   inset: 1px;
   z-index: -1;
   border: 1px solid transparent;
-  border-radius: inherit;
+  border-radius: var(--cta-inner-radius);
   background:
     var(--cta-face) padding-box,
     linear-gradient(

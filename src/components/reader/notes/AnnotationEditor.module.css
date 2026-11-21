@@ -54,6 +54,7 @@
   font-size: 0.8125rem;
   padding: 8px 14px;
   --sq-fill: var(--sq-fill-sm);
+  --cta-inner-radius: 3.58px;
   border-radius: var(--sq-radius-sm);
   cursor: pointer;
 }
