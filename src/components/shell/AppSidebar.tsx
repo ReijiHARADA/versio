@@ -253,10 +253,7 @@ export function AppSidebar({
           {/* Title bar controls, portaled above the drag band and outside the rail stacking context. */}
           {createPortal(
             <>
-              <div
-                className={`${styles.titleControls} ${sidebarMode === "expanded" ? styles.titleControlsEnd : ""}`}
-                style={{ "--sidebar-expanded-w": `${sidebarWidth}px` } as React.CSSProperties}
-              >
+              <div className={styles.titleControls}>
               {!narrow && (
                 <button
                   type="button"
