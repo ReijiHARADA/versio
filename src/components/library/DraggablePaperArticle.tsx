@@ -6,6 +6,7 @@ type DraggablePaperArticleProps = {
   label: string;
   className: string;
   enabled?: boolean;
+  sourceNodeId?: string;
   onOpen: () => void;
   children: ReactNode;
 };
@@ -15,10 +16,11 @@ export function DraggablePaperArticle({
   label,
   className,
   enabled = true,
+  sourceNodeId,
   onOpen,
   children,
 }: DraggablePaperArticleProps) {
-  const drag = useDraggablePaper(paperId, label, enabled);
+  const drag = useDraggablePaper(paperId, label, enabled, sourceNodeId);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key === "Enter" || event.key === " ") {

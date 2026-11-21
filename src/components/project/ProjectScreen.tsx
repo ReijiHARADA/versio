@@ -58,6 +58,16 @@ export function ProjectScreen() {
     [importJobs, nodeId]
   );
   const node = workspaceNodes.find((item) => item.id === nodeId);
+  // The card lists the whole subtree; a drag moves the paper out of the node that holds it.
+  const sourceNodeByPaper = useMemo(() => {
+    const map = new Map<string, string>();
+    if (!nodeId) return map;
+    const ids = new Set([nodeId, ...collectDescendantIds(workspaceNodes, nodeId)]);
+    for (const link of memberships) {
+      if (ids.has(link.nodeId) && (!map.has(link.paperId) || link.nodeId === nodeId)) map.set(link.paperId, link.nodeId);
+    }
+    return map;
+  }, [nodeId, workspaceNodes, memberships]);
   const subtreeCount = useMemo(
     () => (nodeId ? subtreePaperIds(nodeId, workspaceNodes, memberships).length : 0),
     [memberships, nodeId, workspaceNodes]
@@ -206,6 +216,7 @@ export function ProjectScreen() {
                 key={paper.id}
                 paper={paper}
                 layout={view}
+                sourceNodeId={sourceNodeByPaper.get(paper.id)}
                 onOpen={() => {
                   const state = derivePaperReadiness({
                     processingStatus: paper.processingStatus,
