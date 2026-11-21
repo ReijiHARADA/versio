@@ -45,7 +45,7 @@
 }
 
 .save {
-  composes: surface from "../../../styles/squircle.module.css";
+  composes: surface cta from "../../../styles/squircle.module.css";
   position: relative;
   appearance: none;
   border: none;

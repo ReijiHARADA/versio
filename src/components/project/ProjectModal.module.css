@@ -100,7 +100,7 @@
   gap: var(--spacing-sm);
 }
 
-.primary { composes: surface from "../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-md); }
+.primary { composes: surface cta from "../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-md); }
 .secondary { composes: surface from "../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-md); }
 
 .primary,

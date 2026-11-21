@@ -80,7 +80,7 @@
 }
 
 .ghost { composes: surface from "../../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); }
-.primary { composes: surface from "../../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); }
+.primary { composes: surface cta from "../../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); }
 .danger { composes: surface from "../../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); }
 
 .ghost,
