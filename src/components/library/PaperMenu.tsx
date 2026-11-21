@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BookText, FolderPlus, MoreHorizontal, Pause, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
+import { BookText, FolderPlus, MoreHorizontal, Quote, Pause, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
 import type { Paper } from "../../types/paper";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
@@ -17,6 +17,25 @@ import {
 import { PaperEpubSyncControl } from "./PaperEpubSyncControl";
 import { PaperMetadataSheet } from "./PaperMetadataSheet";
 import styles from "./PaperCard.module.css";
+
+async function copyBibTeX(paper: Paper): Promise<void> {
+  try {
+    const text = import("../../services/bibliography/exportCitations").then(({ formatCitations }) =>
+      formatCitations([paper], "bibtex")
+    );
+    // WebKit drops clipboard writes made after an await; a promised ClipboardItem keeps the gesture.
+    if (typeof ClipboardItem !== "undefined" && navigator.clipboard.write) {
+      await navigator.clipboard.write([
+        new ClipboardItem({ "text/plain": text.then((t) => new Blob([t], { type: "text/plain" })) }),
+      ]);
+    } else {
+      await navigator.clipboard.writeText(await text);
+    }
+    showToast({ kind: "success", message: "BibTeX をコピーしました" });
+  } catch {
+    showToast({ kind: "error", message: "BibTeX をコピーできませんでした" });
+  }
+}
 
 type PaperMenuProps = {
   paper: Paper;
@@ -216,6 +235,19 @@ export function PaperMenu({
           >
             <BookText size={14} />
             書誌情報…
+          </button>
+          <button
+            type="button"
+            className={styles.menuItem}
+            role="menuitem"
+            onClick={(event) => {
+              event.stopPropagation();
+              setOpen(false);
+              void copyBibTeX(paper);
+            }}
+          >
+            <Quote size={14} />
+            BibTeX をコピー
           </button>
           <button type="button" className={styles.menuItem} role="menuitem" disabled={reextracting} onClick={(event) => void reextract(event)}>
             <RefreshCw size={14} />

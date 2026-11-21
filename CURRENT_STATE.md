@@ -20,7 +20,7 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 | リーダー | 日本語 1 カラム、目次、原文段落展開、読書位置保存、目次は既定で非表示、⌘F 論文内検索（右上の検索欄が画面に応じてスコープを切り替え）、図表の本文内表示と拡大 |
 | 書誌情報 | 論文メニュー「書誌情報…」のシートで題・著者・掲載誌・年・巻・号・ページ・DOI・URL を編集し `paper.json` に保存。DOI / arXiv ID（URL 可）を入れて「取得」を押したときだけ Crossref / arXiv に問い合わせ（Rust の `fetch_bibliographic_record`、固定ホストのみ）、内容を確認してから保存 |
 | メモ・用語 | 訳文上のインラインメモ（block ID アンカー）、用語集 |
-| 書き出し | 訳文 Markdown / Notion 用 ZIP / EPUB（スマホ同期）、フォルダ単位 ZIP。保存先は Rust save dialog |
+| 書き出し | 訳文 Markdown / Notion 用 ZIP / EPUB（スマホ同期）、フォルダ単位 ZIP。参考文献は論文メニュー「BibTeX をコピー」、フォルダメニュー「BibTeX / RIS を書き出す…」（書誌情報は `paper.json` から）。保存先は Rust save dialog |
 | 元 PDF | 読んでいる付近のページを Preview で開く（macOS のみ） |
 | 翻訳 | 既定は PLaMo 3 Translate 2B（同梱 `llama-server`、`127.0.0.1:8766`、起動ごとのトークン）。モデル（1.8 GB）は初回利用時に設定画面または取り込み時にダウンロード。旧 MADLAD-400 3B と Python 翻訳サーバーは削除済み（2026-11-17）。根拠: [docs/research/local-llm-translation-bench-2026-11.md](./docs/research/local-llm-translation-bench-2026-11.md) |
 | 設定 | 表示設定、ライセンス一覧（Versio MIT + 必須 third-party notices）。「サンプル論文を追加」（開発者カード）は廃止 |

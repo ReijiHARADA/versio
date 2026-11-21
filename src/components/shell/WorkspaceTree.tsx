@@ -9,6 +9,7 @@ import {
   FolderOpen,
   FolderPlus,
   Pencil,
+  Quote,
   Trash2,
 } from "lucide-react";
 import type { WorkspaceNode, WorkspacePaper } from "../../types/project";
@@ -23,9 +24,23 @@ import { ExportDialog } from "../reader/ExportDialog";
 import { useWorkspaceDrag } from "./useWorkspaceDrag";
 import { hoverExpandId, WORKSPACE_HOVER_EXPAND_MS } from "./workspaceHoverExpand";
 import { isWorkspaceRenameDoubleClick } from "./workspaceRenameGesture";
-import { renameWorkspaceItem } from "../../services/projectService";
+import { listPapersForWorkspace, renameWorkspaceItem } from "../../services/projectService";
 import { isImeComposing } from "../../utils/ime";
 import styles from "./AppSidebar.module.css";
+
+async function exportFolderCitations(node: WorkspaceNode, format: "bibtex" | "ris"): Promise<void> {
+  try {
+    const { exportCitations } = await import("../../services/bibliography/exportCitations");
+    const papers = await listPapersForWorkspace(node.id);
+    const saved = await exportCitations(papers, format, node.name);
+    if (saved) showToast({ kind: "success", message: `${papers.length} 件の参考文献を書き出しました` });
+  } catch (error) {
+    showToast({
+      kind: "error",
+      message: error instanceof Error ? error.message : "参考文献の書き出しに失敗しました",
+    });
+  }
+}
 
 const MENU_WIDTH = 190;
 const MENU_GAP = 4;
@@ -199,6 +214,22 @@ export function WorkspaceTree({
               <Upload size={14} />
               このフォルダを書き出す…
             </button>
+            {(["bibtex", "ris"] as const).map((format) => (
+              <button
+                key={format}
+                type="button"
+                className={styles.projectMenuItem}
+                role="menuitem"
+                disabled={subtreePaperCount(node.id, nodes, memberships) === 0}
+                onClick={() => {
+                  setOpenMenuId(null);
+                  void exportFolderCitations(node, format);
+                }}
+              >
+                <Quote size={14} />
+                {format === "bibtex" ? "BibTeX" : "RIS"} を書き出す…
+              </button>
+            ))}
             <div className={styles.projectMenuSeparator} />
             <button
               type="button"
