@@ -51,4 +51,14 @@ describe("demotedRowContinuationRelations", () => {
       { kind: "CONTINUES", from: "row", to: "b", score: 0.8 },
     ]);
   });
+
+  it("links a demoted footnote line only to the footnote that carries on below it", () => {
+    const footnote = (id: string, text: string, y: number) => ({ ...node(id, 1, text, y, "left"), role: "footnote" as const });
+    const row = { ...footnote("row", "1 The typical aromatic C-C stretching modes fall between 6.1", 700), evidence: [{ source: "generic-heuristic" as const, label: "unfinished-heading-demotion", confidence: 0.8 }] };
+    expect(demotedRowContinuationRelations([
+      node("a", 1, "PAHs are a key component of the ISM and their emission", 600, "left"),
+      row,
+      footnote("b", "and 6.5 μm and we call it the 6 μm feature in this paper.", 712),
+    ])).toEqual([{ kind: "CONTINUES", from: "row", to: "b", score: 0.8 }]);
+  });
 });

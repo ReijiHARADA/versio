@@ -2028,7 +2028,7 @@ function projectionNodesWithContinuations(
     let nextId = continuationByNode.get(node.id);
     while (nextId) {
       const next = nodeById.get(nextId);
-      if (!next || node.role !== "paragraph" || next.role !== "paragraph" || !node.text || !next.text) break;
+      if (!next || (node.role !== "paragraph" && node.role !== "footnote") || next.role !== node.role || !node.text || !next.text) break;
       const nextLayout = layoutForNode(next, layoutBlocks);
       const text = joinHyphenated(node.text, next.text).replace(/\s+/g, " ").trim();
       const boxes = [...node.boundingBoxes, ...next.boundingBoxes];

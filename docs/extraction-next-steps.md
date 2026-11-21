@@ -17,7 +17,7 @@ status: draft
 
 ## 現状値
 
-### 要素正解（main 7f1dfbb + 側欄の段 PR、2026-11-21、dev）
+### 要素正解（main 2175dfd + 小文字で続く見出しの PR、2026-11-21、dev）
 
 | 指標 | ACL 13 本 | arXiv 15 本 | Europe PMC 106 本 |
 |---|---|---|---|
@@ -25,8 +25,8 @@ status: draft
 | 著者 | 100% | 100% | 80.5% |
 | 誌名/学会名 | 84.6% | 0%（0/2、ACM 形式は未対応） | 91.1% |
 | 見出し | 94.3% | 93.5% | 93.8% |
-| 見出しの精度 | 90.8% | 81.3% | 80.2% |
-| 本文段落（intact） | 88.4% | 77.2% | 92.6% |
+| 見出しの精度 | 91.2% | 82.3% | 81.5% |
+| 本文段落（intact） | 88.4% | 77.2% | 92.8% |
 | 脚注 | 83.8% | 95.8% | 86.3% |
 | 図 | 92.2% | 87.9% | 88.6% |
 | 表 | 87.1% | 81.3% | 95.2% |
@@ -60,6 +60,7 @@ Europe PMC の dev 全件（868 本）と test split は、11-17 以降まだ測
 - 表：キャプションだけの表と隣の格子を 1 つに（#89）。本文と同じ大きさのキャプションの折り返し行を続きに（#137、表が隣にあり文の途中で切れているときだけ。ACL 81.2% → 87.1%）。
 - 行末ハイフン：結合した語が英語の辞書（SCOWL 10–60、`wordlist-english`、`src/services/englishWords.ts`）にあればハイフンを取る。接頭辞（`non-` `pre-` など）はサイズ 35 までの一般語のときだけ（#115）。残ったハイフン A：ACL 649 → 351、arXiv 291 → 242、Europe PMC 858 → 251。
 - 段落：スモールキャップの本文行の抜け（#67）、ページ下端のページ番号（#72）。採点：分かち書きの違いに強く（#63）。
+- 見出しの精度：4 語以上の見出しで、すぐ下に左端をそろえて始まる 4 語以上の段落・脚注が小文字で続くもの（`6 Splatter Images, which … while` + `maintaining …`、脚注の 1 行目 `1 The typical … between 6.1`）を段落・脚注に戻して次とつなぐ。`4.1.2 …` のような多段の番号の見出しは除く（2026-11-21）。見出しの精度 ACL 90.8→91.2%、arXiv 81.3→82.3%、Europe PMC 80.2→81.5%、本文段落 Europe PMC 92.6→92.8%。段落正解 dev は docdiff +0/−0。
 - 採点：`Keywords` / `Index Terms` は論文の情報（paper.keywords）が正解なので、正解の見出しから外す（#136）。
 
 ### 段落正解（PR #45〜#138 のうち段落の分）
@@ -80,7 +81,7 @@ Europe PMC の dev 全件（868 本）と test split は、11-17 以降まだ測
 1b. **2 ページ目の側欄の残り**：`PMC12742791` は側欄の行が本文の行と同じ行に混ざる（段検出の段階。#162 の投影側の処理では直らない）。
 2. **Europe PMC の脚注の残り**（15 件、うち約半分は Frontiers の 1 ページ目の側欄で段落正解のセッションの担当）：共同筆頭著者の注記（`These authors have contributed equally…`）が本文の段落に入る、古い Frontiers の形の連絡先（`PMC10817773`、`PMC12660074`）、利益相反の 1 文が段落になる。一覧は `tools/footmiss.ts <run>`（採点と同じ照合）。
 3. **arXiv・ACL の段落の分断**（arXiv 77.1%、ACL 88.4%）：arXiv の残りの約半分は数式の多い 3 本（`2508.21814`、`2501.17623`、`2412.11278`）で正解側が式をまたいで 1 段落にしているもの。ACL：段の継ぎ目で箇条書きの続きが継がれない（`naacl-long.104` p13）、同じ行の 2 つの文字列で段落が割れる（`emnlp-main.479` p1）。
-4. **arXiv の見出しの精度の残り**（80.8%）：`Algorithm fpGreed`、目次 `Contents`、本文の行（`6 Splatter Images, which…`）、`Facilities:`。一覧は `tools/falseheads.ts <run> <prefix>`。
+4. **arXiv の見出しの精度の残り**（82.3%）：`Algorithm fpGreed`、目次 `Contents`、`Facilities:`。一覧は `tools/falseheads.ts <run> <prefix>`。
 5. **図の残り**：`2501.17623` の FIG. 8・9（図の多いページが 1 段と判定され、`of 𝜙.` と `FIG. 6:` が同じ行につながる）、`2509.01026` の 2 件、`2509.00272` の 1 件。一覧は `tools/figmiss.ts <run> <prefix>`。
 6. **表の残り**：`eacl-long.174` p6（表の最後の行とキャプションの続きが同じ行につながる）、`naacl-long.304` p14（付録の数式断片と見出し「A.6」が 1 つの表）。一覧は `tools/tabmiss.ts <run> <prefix>`。
 7. 後回し：表のセル、正解データの追加（計画どおり）。arXiv の誌名/学会名（ACM 形式、正解 2 件のみ）。行末ハイフンの残り（参考文献の人名 `Christo-pher`、辞書に無い専門語 `tokeni-zation`。`tools/hyphens.ts <run>`）。
@@ -114,7 +115,7 @@ npx vite-node --script scripts/extraction-audit.ts --corpus paragold --ids $(cat
 npx vite-node --script scripts/element-gold-score.ts --run <run> --split dev [--json out.json]   # 引数の前に -- を付けない
 ```
 
-- 基準 run：`t1-elementgold` / `t1-paragold106`（main 30b75d9 相当）。
+- 基準 run：`b0-elementgold` / `b0-paragold106`（main 2175dfd）、変更後 `h3-*`。
 - ローカルの道具（`test-data/extraction-audit/tools/`、gitignore）：`lines.ts` / `lines70.ts`（ページのブロックと行）、`falseheads.ts`、`figmiss.ts`、`tabmiss.ts`、`footmiss.ts`、`hyphens.ts`（行末ハイフンの A/B）、`pverdict.ts <runA> <runB> <epmc-id>`（段落の判定が変わった正解段落）、`egmiss.ts`、`authmiss.ts`（著者の取りこぼしと余分）、`egsplit.ts`、`egpartial.ts`。どれも main の `src` を読むので、ワークツリーの変更を見るときは `scripts/` に一時コピーして import を `../src/` に書き換える（コミット前に消す）。
 - 段落の採点は 5 語の連なり＋空白を無視した 20 文字の連なり（#63）。脚注・見出し等の照合は 3 語の連なり（`containment`）。
 
