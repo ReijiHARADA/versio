@@ -28,7 +28,8 @@ if gh release view "$TAG" -R "$REPO" >/dev/null 2>&1; then
 fi
 
 rm -rf "$OUT" && mkdir -p "$OUT"
-tar -czf "$OUT/$ARCHIVE" -C "$APP_DIR" Versio.app
+# No AppleDouble `._*` entries: the updater refuses to unpack them.
+COPYFILE_DISABLE=1 tar --no-mac-metadata -czf "$OUT/$ARCHIVE" -C "$APP_DIR" Versio.app
 npx tauri signer sign -f "$KEY" -p "${VERSIO_UPDATER_KEY_PASSWORD:-}" "$OUT/$ARCHIVE" >/dev/null
 SIG="$(cat "$OUT/$ARCHIVE.sig")"
 

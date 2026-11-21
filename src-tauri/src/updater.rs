@@ -31,6 +31,9 @@ pub async fn install_update<R: Runtime>(app: AppHandle<R>) -> Result<(), String>
     update
         .download_and_install(|_, _| {}, || {})
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| {
+            log::error!("update install failed: {e}");
+            e.to_string()
+        })?;
     app.restart()
 }
