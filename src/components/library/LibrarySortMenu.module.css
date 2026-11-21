@@ -1,0 +1,34 @@
+.root {
+  position: relative;
+}
+
+/* Same grey pill as the view toggle. */
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  margin: 0;
+  padding: 0 13px 0 11px;
+  border: none;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 240ms ease,
+    background-color 240ms ease;
+}
+
+.trigger:hover,
+.trigger[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--color-text) 11%, transparent);
+  color: var(--color-text);
+}
+
+.hidden {
+  visibility: hidden;
+}

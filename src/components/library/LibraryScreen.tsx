@@ -12,6 +12,7 @@ import { PaperCard } from "./PaperCard";
 import { PaperMenu } from "./PaperMenu";
 import { ImportJobCard } from "./ImportJobCard";
 import { LibraryViewToggle, useLibraryView } from "./LibraryViewToggle";
+import { LibrarySortMenu, useSortedPapers } from "./LibrarySortMenu";
 import { useDeletePaper } from "../../hooks/useDeletePaper";
 import { useImportJobRecovery } from "./useImportJobRecovery";
 import styles from "./LibraryScreen.module.css";
@@ -24,7 +25,7 @@ export function LibraryScreen() {
   const searchQuery = useProjectStore((state) => state.searchQuery);
   const importJobs = useImportJobStore((state) => state.jobs);
   const jobs = useMemo(() => visibleImportJobs(importJobs), [importJobs]);
-  const visiblePapers = useLibraryPaperSearch(papers, searchQuery);
+  const visiblePapers = useSortedPapers(useLibraryPaperSearch(papers, searchQuery));
   const recovery = useImportJobRecovery({ fileInputRef });
   const view = useLibraryView();
 
@@ -71,6 +72,7 @@ export function LibraryScreen() {
           <h1 className={styles.title}>すべての論文</h1>
         </div>
         <div className={styles.headerRight}>
+          <LibrarySortMenu />
           <LibraryViewToggle />
           <button
             type="button"

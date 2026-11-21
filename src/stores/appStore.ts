@@ -9,6 +9,8 @@ export type OriginalDisplayMode = "on-demand" | "always" | "when-untranslated";
 /** auto: hoverで開閉 / expanded: 常時展開 */
 export type SidebarMode = "auto" | "expanded";
 export type LibraryView = "list" | "grid";
+export type LibrarySortKey = "added" | "opened" | "title" | "year";
+export type LibrarySort = { key: LibrarySortKey; dir: "asc" | "desc" };
 
 /** Default expanded sidebar width (px). Double-click the resize edge to restore. */
 export const DEFAULT_SIDEBAR_WIDTH = 220;
@@ -30,6 +32,7 @@ export type DisplaySettings = {
   sidebarWidth: number;
   /** Paper / folder listing: compact rows or cover tiles. */
   libraryView: LibraryView;
+  librarySort: LibrarySort;
 };
 
 type AppUiState = {
@@ -53,6 +56,7 @@ const defaultDisplaySettings: DisplaySettings = {
   sidebarMode: "expanded",
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   libraryView: "list",
+  librarySort: { key: "added", dir: "desc" },
 };
 
 export const useAppStore = create<AppUiState>()(
