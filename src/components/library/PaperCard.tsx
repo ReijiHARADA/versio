@@ -83,10 +83,10 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
     }
   };
 
-  const favoriteButton = (
+  const favoriteButton = (className = "", iconSize = 14) => (
     <button
       type="button"
-      className={`${styles.favoriteButton} ${paper.favorite ? styles.favoriteOn : ""}`}
+      className={`${styles.favoriteButton} ${paper.favorite ? styles.favoriteOn : ""} ${className}`}
       title={paper.favorite ? "お気に入りを外す" : "お気に入りに追加"}
       aria-label={paper.favorite ? "お気に入りを外す" : "お気に入りに追加"}
       aria-pressed={paper.favorite}
@@ -96,7 +96,7 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
       onClick={(event) => void toggleFavorite(event)}
     >
       <Star
-        size={14}
+        size={iconSize}
         fill={paper.favorite ? "currentColor" : "none"}
         aria-hidden="true"
       />
@@ -140,7 +140,7 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
         <div className={styles.tileCover}>
           <PaperCover paperId={paper.id} />
           <div className={styles.tileOverlay}>
-            {favoriteButton}
+            {favoriteButton()}
             <div className={styles.actions}>{actions}</div>
           </div>
         </div>
@@ -162,7 +162,8 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
     >
       <div className={styles.info}>
         <div className={styles.titleRow}>
-          {favoriteButton}
+          {/* List: only favorites show a star, hung left of the title; unfavorite via the menu too. */}
+          {paper.favorite ? favoriteButton(styles.listFavorite, 11) : null}
           <h3 className={styles.title}>{label}</h3>
         </div>
       </div>
