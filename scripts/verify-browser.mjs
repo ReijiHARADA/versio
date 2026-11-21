@@ -6,7 +6,7 @@
  * - Built assets already produced (`npm run build` + `npm run preview` in CI)
  *
  * Critical checks must fail (not skip) when fixtures are missing.
- * Uses in-app sample paper + workspace UI; no MADLAD / network PDFs.
+ * Uses the bundled Introduction paper + workspace UI; no MADLAD / network PDFs.
  */
 import { mkdirSync, rmSync } from "node:fs";
 import { chromium } from "@playwright/test";
@@ -22,7 +22,7 @@ const renamedProjectName = `${verifyProjectName} Renamed`;
 const parentFolderName = `Browser Verify Parent ${runId}`;
 const childFolderName = `${parentFolderName} Child`;
 
-const SAMPLE_TITLE_JA = "Attention機構があれば十分である";
+const SAMPLE_TITLE_JA = "Versio：言語を越えて論文を読む";
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
@@ -145,33 +145,24 @@ async function deleteWorkspaceByName(name) {
 }
 
 async function ensureSamplePaper() {
-  await page.getByRole("link", { name: "設定" }).click();
-  await page.getByRole("heading", { name: "設定", exact: true }).waitFor({ timeout: 10_000 });
-
-  // Sample lives under 詳細 on the single settings page
-  await page.getByRole("button", { name: "詳細", exact: true }).click();
-  const advanced = page.locator("#section-advanced");
-  await advanced.waitFor({ timeout: 10_000 });
-  await advanced.scrollIntoViewIfNeeded();
-
-  const addSample = advanced.getByRole("button", {
-    name: /サンプル論文を追加|サンプル論文は追加済み/,
-  });
-  await addSample.waitFor({ state: "visible", timeout: 10_000 });
-
-  const already = await addSample.isDisabled();
-  if (!already) {
-    await addSample.click();
-    await advanced
-      .getByText(/ライブラリに追加しました|すでにライブラリにあります/)
-      .waitFor({ timeout: 15_000 });
-  }
-
+  // The Introduction is seeded once on a fresh library; a reused profile may have trashed it, so re-add it directly.
   await page.getByRole("link", { name: "すべての論文" }).click();
-  await page.getByRole("heading", { name: "すべての論文" }).waitFor({
-    timeout: 10_000,
-  });
+  await page.getByRole("heading", { name: "すべての論文" }).waitFor({ timeout: 10_000 });
   const card = page.getByText(SAMPLE_TITLE_JA).first();
+  if (!(await card.isVisible().catch(() => false))) {
+    await page.evaluate(async () => {
+      const db = await import("/src/services/database.ts");
+      const data = await import("/src/data/introductionPaper.ts");
+      const { useLibraryCache } = await import("/src/stores/libraryCache.ts");
+      if (!(await db.getPaper(data.introductionPaper.id))) {
+        await db.savePaper(data.introductionPaper);
+        await db.saveSections(data.introductionSections);
+        await db.saveBlocks(data.introductionBlocks);
+      }
+      const paper = await db.getPaper(data.introductionPaper.id);
+      if (paper && !useLibraryCache.getState().papers.some((p) => p.id === paper.id)) useLibraryCache.getState().addPaper(paper);
+    });
+  }
   await card.waitFor({ state: "visible", timeout: 15_000 });
   return card;
 }
@@ -304,7 +295,7 @@ try {
       await page.getByRole("button", { name: "検索 (⌘F)" }).click();
       const field = page.getByPlaceholder("この論文を検索");
       await field.waitFor({ state: "visible", timeout: 10_000 });
-      await field.fill("Attention");
+      await field.fill("glossary");
       await page.locator("[data-search-panel]").waitFor({ state: "visible", timeout: 5_000 });
       await page.keyboard.press("Escape");
       await page.locator("[data-search-panel]").waitFor({ state: "detached", timeout: 5_000 });
@@ -317,7 +308,7 @@ try {
     });
 
     await check("favorite mark on paper card", async () => {
-      const card = page.locator("article").filter({ hasText: "Attention" }).first();
+      const card = page.locator("article").filter({ hasText: SAMPLE_TITLE_JA }).first();
       await card.getByRole("button", { name: "論文の操作" }).click();
       await page.getByRole("menuitem", { name: "お気に入り" }).click();
       await card.getByLabel("お気に入り").waitFor({ timeout: 10_000 });
@@ -325,7 +316,7 @@ try {
     await shot("library-favorite");
 
     await check("inline memo popover stays on reader", async () => {
-      const card = page.locator("article").filter({ hasText: "Attention" }).first();
+      const card = page.locator("article").filter({ hasText: SAMPLE_TITLE_JA }).first();
       await card.click();
       await page.waitForURL(/#\/reader\//, { timeout: 10_000 });
       const translation = page.locator("[data-text-role='translation']").first();

@@ -9,10 +9,6 @@ type Props = {
   onChange: (patch: Partial<TranslationSettingsV2>) => void;
   ollamaStatus: ServiceStatus;
   onRecheck: () => void;
-  sampleAlreadyAdded: boolean;
-  isAddingSample: boolean;
-  sampleMessage: string | null;
-  onAddSample: () => void;
 };
 
 function statusLabel(status: ServiceStatus): string {
@@ -31,10 +27,6 @@ export function DiagnosticsSettingsSection({
   onChange,
   ollamaStatus,
   onRecheck,
-  sampleAlreadyAdded,
-  isAddingSample,
-  sampleMessage,
-  onAddSample,
 }: Props) {
   const checking = ollamaStatus.checking;
 
@@ -108,23 +100,6 @@ export function DiagnosticsSettingsSection({
           </div>
         </SettingsCard>
 
-        <SettingsCard title="開発者">
-          <div className={styles.actionRow}>
-            <button
-              type="button"
-              className={styles.button}
-              onClick={onAddSample}
-              disabled={sampleAlreadyAdded || isAddingSample}
-            >
-              {sampleAlreadyAdded
-                ? "サンプル論文は追加済み"
-                : isAddingSample
-                  ? "追加中..."
-                  : "サンプル論文を追加"}
-            </button>
-          </div>
-          {sampleMessage ? <p className={styles.statusText}>{sampleMessage}</p> : null}
-        </SettingsCard>
       </div>
     </div>
   );

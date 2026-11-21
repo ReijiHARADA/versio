@@ -4,6 +4,7 @@ import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
 import { useAppStore } from "../../stores/appStore";
 import { getAllPapers, getAllWorkspacePapers } from "../../services/database";
+import { seedIntroductionPaper } from "../../services/introductionPaper";
 import { addPaperToWorkspace, createWorkspaceNode, listWorkspace, movePaperInWorkspace, removePaperFromAllWorkspaces, removeWorkspaceItem } from "../../services/projectService";
 import { tryStartPdfImport } from "../../services/pdfImport";
 import type { WorkspaceNode } from "../../types/project";
@@ -81,6 +82,9 @@ export function AppShell() {
         mergeWorkspaceNodes(dbNodes);
         setMemberships(dbLinks);
         setPapers(dbPapers);
+        void seedIntroductionPaper(dbPapers.length).catch((error) => {
+          console.warn("Failed to seed the Introduction paper:", error);
+        });
         void purgeExpiredTrash().catch((error) => {
           console.warn("Failed to purge expired trash:", error);
         });
