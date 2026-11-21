@@ -4625,7 +4625,7 @@ export function resolveCanonicalDocument(input: {
     /^[a-z]/.test(next.text?.trim() ?? "") && !/^\d+\.\d/.test(node.text?.trim() ?? "") &&
     wordCount(node.text) >= 4 && wordCount(next.text) >= 4 && startsJustBelow(node, next);
   // A lone wrapped tail (`major`) under a long title is the title's own line, not prose.
-  const wordCount = (text: string | undefined) => (text ?? "").trim().split(/\s+/).length;
+  const wordCount = (text: string | null | undefined) => (text ?? "").trim().split(/\s+/).length;
   // The canonical neighbour is not always the next printed line (a figure label can sit between).
   const startsJustBelow = (node: CanonicalNode, next: CanonicalNode) => {
     const a = node.boundingBoxes.at(-1);
