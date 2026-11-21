@@ -32,6 +32,9 @@ export function AppShell() {
   const [createParentId, setCreateParentId] = useState<string | null | undefined>(undefined); const [fileNodeId, setFileNodeId] = useState<string | null>(null); const fileInputRef = useRef<HTMLInputElement>(null);
   const [demoReady, setDemoReady] = useState(!isPresentationDemo);
 
+  // The search field's scope follows the current screen, so a query never leaks into another scope.
+  useEffect(() => setSearchQuery(""), [location.pathname, setSearchQuery]);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "k") return;

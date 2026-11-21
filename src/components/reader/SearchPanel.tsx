@@ -1,9 +1,8 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { Search, X, ChevronUp, ChevronDown } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { X, ChevronUp, ChevronDown } from "lucide-react";
 import type { PaperBlock, Section } from "../../types/paper";
 import { sectionDisplayTitle } from "../../services/translation/quality";
 import styles from "./SearchPanel.module.css";
-import { isImeComposing } from "../../utils/ime";
 
 type SearchResult = {
   block: PaperBlock;
@@ -17,9 +16,9 @@ type SearchPanelProps = {
   sections: Section[];
   hitIndex: number;
   hitCount: number;
+  query: string;
   onClose: () => void;
   onResultClick: (blockId: string) => void;
-  onSearchChange: (query: string) => void;
   onStep: (delta: number) => void;
 };
 
@@ -28,22 +27,12 @@ export function SearchPanel({
   sections,
   hitIndex,
   hitCount,
+  query,
   onClose,
   onResultClick,
-  onSearchChange,
   onStep,
 }: SearchPanelProps) {
-  const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    onSearchChange(query);
-  }, [query, onSearchChange]);
 
   const results = useMemo(() => {
     if (query.length < 2) return [];
@@ -100,20 +89,6 @@ export function SearchPanel({
     setSelectedIndex(0);
   }, [results]);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (isImeComposing(e)) return;
-      if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter") {
-        e.preventDefault();
-        return;
-      }
-      if (e.key === "Escape") {
-        onClose();
-      }
-    },
-    [onClose]
-  );
-
   const highlightMatch = (text: string): React.ReactNode => {
     if (!query) return text;
     const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
@@ -138,31 +113,8 @@ export function SearchPanel({
       aria-label="論文内検索"
     >
       <div className={styles.header}>
-        <div className={styles.inputWrapper}>
-          <Search size={16} className={styles.searchIcon} />
-          <input
-            ref={inputRef}
-            type="text"
-            className={styles.input}
-            placeholder="この論文を検索"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            aria-label="論文内を検索"
-            data-testid="reader-search-input"
-          />
-          {query && (
-            <button
-              className={styles.clearButton}
-              onClick={() => setQuery("")}
-              title="クリア"
-              aria-label="検索をクリア"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
-        <button className={styles.closeButton} onClick={onClose}>
+        <span className={styles.title}>論文内検索</span>
+        <button className={styles.closeButton} onClick={onClose} aria-label="検索を閉じる">
           <X size={20} />
         </button>
       </div>

@@ -97,6 +97,8 @@ export function AppSidebar({
   if (navigationType === "PUSH") maxHistoryIdx.current = historyIdx;
   else maxHistoryIdx.current = Math.max(maxHistoryIdx.current, historyIdx);
   void location; // re-render on every navigation so the idx above stays current
+  const searchScope = searchScopeLabel(location.pathname, workspaceNodes);
+  const searchShortcut = location.pathname.startsWith("/reader/") ? "⌘F" : "⌘K";
   const canGoBack = historyIdx > 0;
   const canGoForward = historyIdx < maxHistoryIdx.current;
   useEffect(() => {
@@ -288,15 +290,15 @@ export function AppSidebar({
                   <ChevronRight size={18} />
                 </button>
               </div>
-              <label className={`${styles.search} ${styles.titleSearch}`} title="ライブラリを検索 (⌘K)">
+              <label className={`${styles.search} ${styles.titleSearch}`} title={`${searchScope}を検索 (${searchShortcut})`}>
                 <input
                   id="library-search"
                   type="search"
-                  placeholder="ライブラリを検索"
+                  placeholder={`${searchScope}を検索`}
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
                   className={styles.searchInput}
-                  aria-label="ライブラリを検索"
+                  aria-label={`${searchScope}を検索`}
                   data-testid="library-search"
                 />
                 {searchQuery ? (
@@ -433,4 +435,15 @@ function LibItem({
       {badge !== undefined && <span className={styles.badge}>{badge}</span>}
     </NavLink>
   );
+}
+
+/** What the title bar search covers on the current route. */
+export function searchScopeLabel(pathname: string, nodes: WorkspaceNode[]): string {
+  if (pathname.startsWith("/reader/")) return "この論文";
+  if (pathname === "/inbox") return "インボックス";
+  if (pathname === "/favorites") return "お気に入り";
+  if (pathname === "/recent") return "最近";
+  const project = pathname.match(/^\/project\/([^/]+)/);
+  if (project) return nodes.find((n) => n.id === decodeURIComponent(project[1]))?.name ?? "ワークスペース";
+  return "ライブラリ";
 }
