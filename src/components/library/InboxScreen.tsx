@@ -14,6 +14,8 @@ import { ImportJobCard } from "./ImportJobCard";
 import { useDeletePaper } from "../../hooks/useDeletePaper";
 import { useImportJobRecovery } from "./useImportJobRecovery";
 import type { Paper } from "../../types/paper";
+import { LibraryViewToggle, useLibraryView } from "./LibraryViewToggle";
+import { LibrarySortMenu, useSortedPapers } from "./LibrarySortMenu";
 import styles from "./LibraryScreen.module.css";
 
 export function InboxScreen() {
@@ -42,7 +44,8 @@ export function InboxScreen() {
     () => papers.filter((p) => !assignedIds.has(p.id)),
     [assignedIds, papers]
   );
-  const inboxPapers = useLibraryPaperSearch(inboxBase, searchQuery);
+  const inboxPapers = useSortedPapers(useLibraryPaperSearch(inboxBase, searchQuery));
+  const view = useLibraryView();
 
   const handleFileSelect = useCallback(async (file: File) => {
     await tryStartPdfImport(file);
@@ -79,6 +82,8 @@ export function InboxScreen() {
           <h1 className={styles.title}>インボックス</h1>
         </div>
         <div className={styles.headerRight}>
+          <LibrarySortMenu />
+          <LibraryViewToggle />
           <button
             type="button"
             className={styles.addButton}
@@ -104,14 +109,15 @@ export function InboxScreen() {
             </p>
           </div>
         ) : (
-          <div className={styles.paperList}>
+          <div className={view === "grid" ? styles.tileGrid : styles.paperList}>
             {jobs.map((job) => (
-              <ImportJobCard key={job.id} job={job} {...recovery} />
+              <ImportJobCard key={job.id} job={job} layout={view} {...recovery} />
             ))}
             {inboxPapers.map((paper) => (
               <PaperCard
                 key={paper.id}
                 paper={paper}
+                layout={view}
                 enabled={busyId !== paper.id}
                 onOpen={() => handleOpen(paper)}
                 actions={

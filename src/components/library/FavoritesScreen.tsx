@@ -9,6 +9,8 @@ import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
 import { PaperCard } from "./PaperCard";
 import { PaperMenu } from "./PaperMenu";
 import { useDeletePaper } from "../../hooks/useDeletePaper";
+import { LibraryViewToggle, useLibraryView } from "./LibraryViewToggle";
+import { LibrarySortMenu, useSortedPapers } from "./LibrarySortMenu";
 import styles from "./LibraryScreen.module.css";
 
 export function FavoritesScreen() {
@@ -17,7 +19,8 @@ export function FavoritesScreen() {
   const setCurrentPaper = useAppStore((s) => s.setCurrentPaper);
   const searchQuery = useProjectStore((s) => s.searchQuery);
   const favoriteBase = useMemo(() => papers.filter((p) => p.favorite), [papers]);
-  const favorites = useLibraryPaperSearch(favoriteBase, searchQuery);
+  const favorites = useSortedPapers(useLibraryPaperSearch(favoriteBase, searchQuery));
+  const view = useLibraryView();
   const { busyId, requestDelete } = useDeletePaper();
 
   const handleOpen = (paperId: string) => {
@@ -40,6 +43,10 @@ export function FavoritesScreen() {
           <Star size={20} style={{ color: "var(--color-favorite)" }} fill="currentColor" />
           <h1 className={styles.title}>お気に入り</h1>
         </div>
+        <div className={styles.headerRight}>
+          <LibrarySortMenu />
+          <LibraryViewToggle />
+        </div>
       </header>
       <main className={styles.main}>
         {favorites.length === 0 ? (
@@ -49,11 +56,12 @@ export function FavoritesScreen() {
             <p className={styles.emptyDescription}>論文のメニューからお気に入りに追加できます</p>
           </div>
         ) : (
-          <div className={styles.paperList}>
+          <div className={view === "grid" ? styles.tileGrid : styles.paperList}>
             {favorites.map((paper) => (
               <PaperCard
                 key={paper.id}
                 paper={paper}
+                layout={view}
                 enabled={busyId !== paper.id}
                 onOpen={() => handleOpen(paper.id)}
                 actions={
