@@ -19,6 +19,7 @@ import { displayPaperTitle } from "../../services/translation/quality";
 import { DraggablePaperArticle } from "./DraggablePaperArticle";
 import { PaperEpubSyncControl } from "./PaperEpubSyncControl";
 import { PaperCover } from "./PaperCover";
+import { READ_STATUS_LABELS } from "../../services/paperLibraryState";
 import styles from "./PaperCard.module.css";
 
 type PaperCardProps = {
@@ -129,6 +130,24 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
     </span>
   ) : null;
   const label = displayPaperTitle(paper);
+  const tags = paper.tags ?? [];
+  // Unread is the default and stays unmarked; only reading / read get a badge.
+  const libraryMeta =
+    paper.readStatus === "reading" || paper.readStatus === "read" || tags.length > 0 ? (
+      <span className={styles.libraryMeta}>
+        {paper.readStatus === "reading" || paper.readStatus === "read" ? (
+          <span className={styles.readBadge} data-status={paper.readStatus}>
+            {READ_STATUS_LABELS[paper.readStatus]}
+          </span>
+        ) : null}
+        {tags.slice(0, 3).map((tag) => (
+          <span key={tag} className={styles.tagChip}>
+            {tag}
+          </span>
+        ))}
+        {tags.length > 3 ? <span className={styles.tagMore}>+{tags.length - 3}</span> : null}
+      </span>
+    ) : null;
 
   if (layout === "grid") {
     return (
@@ -150,6 +169,7 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
         <h3 className={styles.tileTitle} title={label}>
           {label}
         </h3>
+        {libraryMeta}
         {status}
       </DraggablePaperArticle>
     );
@@ -169,6 +189,7 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
           {/* List: only favorites show a star, hung left of the title; unfavorite via the menu too. */}
           {paper.favorite ? favoriteButton(styles.listFavorite, 11) : null}
           <h3 className={styles.title}>{label}</h3>
+          {libraryMeta}
         </div>
       </div>
       <div className={styles.trailing}>
