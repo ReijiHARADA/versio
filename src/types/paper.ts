@@ -82,6 +82,17 @@ export type PaperAffiliation = {
   name: string;
 };
 
+/** Citation fields beyond title/authors/venue/year/DOI (user-edited or fetched). */
+export type PaperBibliography = {
+  entryType?: "article" | "inproceedings" | "preprint" | "book" | "misc";
+  volume?: string;
+  issue?: string;
+  pages?: string;
+  publisher?: string;
+  url?: string;
+  arxivId?: string;
+};
+
 export type Paper = {
   id: string;
   sourceFilePath: string;
@@ -95,6 +106,7 @@ export type Paper = {
   affiliations?: PaperAffiliation[];
   keywords?: string[];
   doi?: string | null;
+  bibliography?: PaperBibliography;
   publication: string | null;
   year: number | null;
   pageCount: number;

@@ -1,3 +1,4 @@
+mod bibliography;
 #[cfg(target_os = "macos")]
 mod legacy_data;
 #[cfg(target_os = "macos")]
@@ -84,6 +85,7 @@ pub fn run() {
             plamo::ensure_plamo_server,
             sync_window_chrome_theme,
             ocr::ocr_image,
+            bibliography::fetch_bibliographic_record,
             source_pdf::save_source_pdf,
             source_pdf::copy_source_pdf,
             source_pdf::open_source_pdf,

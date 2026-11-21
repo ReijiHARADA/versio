@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { FolderPlus, MoreHorizontal, Pause, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
+import { BookText, FolderPlus, MoreHorizontal, Pause, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
 import type { Paper } from "../../types/paper";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
@@ -15,6 +15,7 @@ import {
   addPaperToWorkspace,
 } from "../../services/projectService";
 import { PaperEpubSyncControl } from "./PaperEpubSyncControl";
+import { PaperMetadataSheet } from "./PaperMetadataSheet";
 import styles from "./PaperCard.module.css";
 
 type PaperMenuProps = {
@@ -38,6 +39,7 @@ export function PaperMenu({
   const [cancelling, setCancelling] = useState(false);
   const [reextracting, setReextracting] = useState(false);
   const [favoriting, setFavoriting] = useState(false);
+  const [editingMetadata, setEditingMetadata] = useState(false);
   const workspaceNodes = useProjectStore((state) => state.workspaceNodes);
   const memberships = useProjectStore((state) => state.memberships);
   const upsertMembership = useProjectStore((state) => state.upsertMembership);
@@ -202,6 +204,19 @@ export function PaperMenu({
               ワークスペースに追加…
             </button>
           )}
+          <button
+            type="button"
+            className={styles.menuItem}
+            role="menuitem"
+            onClick={(event) => {
+              event.stopPropagation();
+              setOpen(false);
+              setEditingMetadata(true);
+            }}
+          >
+            <BookText size={14} />
+            書誌情報…
+          </button>
           <button type="button" className={styles.menuItem} role="menuitem" disabled={reextracting} onClick={(event) => void reextract(event)}>
             <RefreshCw size={14} />
             {reextracting ? "抽出を更新中..." : "PDFを再抽出"}
@@ -289,6 +304,9 @@ export function PaperMenu({
             })
           )}
         </div>
+      )}
+      {editingMetadata && (
+        <PaperMetadataSheet paper={paper} onClose={() => setEditingMetadata(false)} />
       )}
     </div>
   );
