@@ -101,3 +101,7 @@ translation-server/scripts/local_llm_bench/log-*.txt
 translation-server/scripts/local_llm_bench/out-*.json
 translation-server/scripts/local_llm_bench/fixture.json
 translation-server/scripts/local_llm_bench/judge/
+
+# Blender scene saved for inspection by design/intro/stapler_intro.py (INTRO_BLEND)
+design/intro/*.blend
+design/intro/*.blend1

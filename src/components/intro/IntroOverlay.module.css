@@ -1,0 +1,125 @@
+/* The intro is a sheet of paper: the same near-white as the rendered sheet, in both appearances. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: #fcfdfd;
+  transition: opacity 0.4s ease;
+}
+
+.overlay[data-leaving="true"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.cta {
+  position: absolute;
+  left: 50%;
+  bottom: max(13vh, 48px);
+  transform: translateX(-50%);
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  visibility: hidden;
+}
+
+.cta[data-visible="true"] {
+  visibility: visible;
+}
+
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 30px;
+  border-radius: 999px;
+  color: #1d1d1f;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* the service-blue pill grows out from the centre once the letters have landed */
+.pill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--intro-blue, #1a73e8);
+  transform: scaleX(0);
+  opacity: 0;
+  transition: filter 0.15s;
+}
+
+.letter {
+  position: relative;
+  display: inline-block;
+  opacity: 0;
+  filter: blur(6px);
+  transform: translateY(6px);
+}
+
+.cta[data-visible="true"] .letter {
+  animation: letter 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.cta[data-visible="true"] .pill {
+  animation: ink 0.4s ease 0.75s forwards;
+}
+
+.cta[data-visible="true"] .pill::before {
+  animation: grow 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.7s forwards;
+}
+
+.cta:hover .pill::before {
+  filter: brightness(0.92);
+}
+
+.cta:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: 3px;
+}
+
+@keyframes letter {
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+}
+
+@keyframes ink {
+  to {
+    color: #fff;
+  }
+}
+
+@keyframes grow {
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta[data-visible="true"] .letter,
+  .cta[data-visible="true"] .pill,
+  .cta[data-visible="true"] .pill::before {
+    animation-duration: 0.01s;
+    animation-delay: 0s !important;
+  }
+}
