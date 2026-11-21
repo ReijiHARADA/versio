@@ -487,6 +487,7 @@
 }
 
 .item.active {
+  view-transition-name: sidebar-selection;
   --sq-bg: var(--color-selection-bg);
   color: var(--color-selection-fg);
   font-weight: 500;
@@ -804,3 +805,20 @@
 .inlineName span { font-size: 11px; color: #c5221f; }
 .menuNotice { margin: 5px 8px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
 .projectMenu button:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Only the selection pill moves; the rest of the window swaps instantly. */
+:global(::view-transition-old(root)),
+:global(::view-transition-new(root)) {
+  animation: none;
+}
+
+:global(::view-transition-group(sidebar-selection)) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:global(::view-transition-old(sidebar-selection)),
+:global(::view-transition-new(sidebar-selection)) {
+  animation-duration: 260ms;
+  height: 100%;
+}
