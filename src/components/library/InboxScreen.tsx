@@ -16,6 +16,7 @@ import { useImportJobRecovery } from "./useImportJobRecovery";
 import type { Paper } from "../../types/paper";
 import { LibraryViewToggle, useLibraryView } from "./LibraryViewToggle";
 import { LibrarySortMenu, useSortedPapers } from "./LibrarySortMenu";
+import { AddByIdentifierButton } from "./AddByIdentifierButton";
 import styles from "./LibraryScreen.module.css";
 
 export function InboxScreen() {
@@ -84,6 +85,7 @@ export function InboxScreen() {
         <div className={styles.headerRight}>
           <LibrarySortMenu />
           <LibraryViewToggle />
+          <AddByIdentifierButton />
           <button
             type="button"
             className={styles.addButton}

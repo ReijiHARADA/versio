@@ -19,7 +19,10 @@ export function PaperTagsPopover({ paper, anchor, onClose }: Props) {
   const [draft, setDraft] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   // InfoPopover focuses its panel in a layout effect; take focus back for typing.
-  useEffect(() => inputRef.current?.focus(), []);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => inputRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, []);
   const suggestions = useMemo(() => {
     const own = new Set(tags.map((tag) => tag.toLocaleLowerCase()));
     const query = draft.trim().toLocaleLowerCase();

@@ -15,6 +15,7 @@ import { LibraryViewToggle, useLibraryView } from "./LibraryViewToggle";
 import { LibrarySortMenu, useSortedPapers } from "./LibrarySortMenu";
 import { useDeletePaper } from "../../hooks/useDeletePaper";
 import { useImportJobRecovery } from "./useImportJobRecovery";
+import { AddByIdentifierButton } from "./AddByIdentifierButton";
 import styles from "./LibraryScreen.module.css";
 
 export function LibraryScreen() {
@@ -74,6 +75,7 @@ export function LibraryScreen() {
         <div className={styles.headerRight}>
           <LibrarySortMenu />
           <LibraryViewToggle />
+          <AddByIdentifierButton />
           <button
             type="button"
             className={styles.addButton}

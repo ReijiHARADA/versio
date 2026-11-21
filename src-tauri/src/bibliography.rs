@@ -79,34 +79,111 @@ fn endpoint(kind: &str, id: &str) -> Result<String, String> {
     }
 }
 
+/// GET over https only (redirects included). Body on stdout, HTTP status via stderr,
+/// so binary bodies (PDF) stay intact.
+fn curl_get(url: &str, max_time: &str, max_bytes: u64) -> Result<(Vec<u8>, String), String> {
+    let output = Command::new("/usr/bin/curl")
+        .args(["-sS", "-L", "--proto", "=https", "--proto-redir", "=https"])
+        .args([
+            "--max-time",
+            max_time,
+            "--max-filesize",
+            &max_bytes.to_string(),
+        ])
+        .args(["-A", USER_AGENT, "-w", "%{stderr}%{http_code}", url])
+        .output()
+        .map_err(|e| format!("通信を開始できませんでした: {e}"))?;
+    if !output.status.success() {
+        return Err(if output.status.code() == Some(63) {
+            "PDFが大きすぎます（100MBまで）".into()
+        } else {
+            "サーバーに接続できませんでした".into()
+        });
+    }
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let status = stderr
+        .trim()
+        .chars()
+        .rev()
+        .take(3)
+        .collect::<String>()
+        .chars()
+        .rev()
+        .collect();
+    Ok((output.stdout, status))
+}
+
+fn expect_ok(status: &str) -> Result<(), String> {
+    match status {
+        "200" => Ok(()),
+        "404" => Err("該当する論文が見つかりませんでした".into()),
+        code => Err(format!("サーバーがエラーを返しました ({code})")),
+    }
+}
+
 #[tauri::command]
 pub async fn fetch_bibliographic_record(kind: String, id: String) -> Result<String, String> {
     let url = endpoint(&kind, id.trim())?;
     tauri::async_runtime::spawn_blocking(move || {
-        let output = Command::new("/usr/bin/curl")
-            .args([
-                "-sS",
-                "-L",
-                "--max-time",
-                "20",
-                "--proto",
-                "=https",
-                "-A",
-                USER_AGENT,
-            ])
-            .args(["-w", "\n%{http_code}", &url])
-            .output()
-            .map_err(|e| format!("通信を開始できませんでした: {e}"))?;
-        if !output.status.success() {
-            return Err("書誌情報サーバーに接続できませんでした".into());
+        let (body, status) = curl_get(&url, "20", 20_000_000)?;
+        expect_ok(&status)?;
+        Ok(String::from_utf8_lossy(&body).into_owned())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+const MAX_PDF_BYTES: u64 = 100 * 1024 * 1024;
+
+/// Open-access PDF location for a DOI, from OpenAlex (no account or email needed).
+fn openalex_pdf_url(doi: &str) -> Result<String, String> {
+    let url = format!(
+        "https://api.openalex.org/works/doi:{}",
+        percent_encode_path(doi)
+    );
+    let (body, status) = curl_get(&url, "20", 20_000_000)?;
+    expect_ok(&status)?;
+    let work: serde_json::Value = serde_json::from_slice(&body)
+        .map_err(|_| "OpenAlex の応答を読み取れませんでした".to_string())?;
+    let best = work
+        .pointer("/best_oa_location/pdf_url")
+        .and_then(|v| v.as_str());
+    let any = work
+        .get("locations")
+        .and_then(|v| v.as_array())
+        .and_then(|locations| {
+            locations
+                .iter()
+                .find_map(|l| l.get("pdf_url").and_then(|v| v.as_str()))
+        });
+    best.or(any)
+        .filter(|u| u.starts_with("https://"))
+        .map(str::to_string)
+        .ok_or_else(|| "オープンアクセスの PDF が見つかりませんでした".into())
+}
+
+/// Downloads an open-access PDF for an arXiv id or DOI. The host is fixed for
+/// arXiv; for a DOI the PDF URL comes from OpenAlex, never from the frontend.
+#[tauri::command]
+pub async fn download_open_access_pdf(kind: String, id: String) -> Result<Vec<u8>, String> {
+    let id = id.trim().to_string();
+    let url = match kind.as_str() {
+        "arxiv" if is_valid_arxiv_id(&id) => format!("https://arxiv.org/pdf/{id}"),
+        "doi" if is_valid_doi(&id) => String::new(),
+        _ => return Err("arXiv ID か DOI の形式が正しくありません".into()),
+    };
+    tauri::async_runtime::spawn_blocking(move || {
+        let url = if url.is_empty() {
+            openalex_pdf_url(&id)?
+        } else {
+            url
+        };
+        let (body, status) = curl_get(&url, "120", MAX_PDF_BYTES)?;
+        expect_ok(&status)?;
+        if !body.starts_with(b"%PDF") {
+            return Err("PDF を直接取得できませんでした（出版社のページが返されました）".into());
         }
-        let text = String::from_utf8_lossy(&output.stdout).into_owned();
-        let (body, status) = text.rsplit_once('\n').unwrap_or((&text, ""));
-        match status.trim() {
-            "200" => Ok(body.to_string()),
-            "404" => Err("該当する論文が見つかりませんでした".into()),
-            code => Err(format!("書誌情報サーバーがエラーを返しました ({code})")),
-        }
+        Ok(body)
     })
     .await
     .map_err(|e| e.to_string())?
