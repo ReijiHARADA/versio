@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { isTauriApp } from "../../utils/serverReady";
 import { describePlamoError } from "../../services/translation/plamoReadiness";
-import { currentPlamoDownload, downloadPlamoModelOnce } from "./plamoDownload";
+import { currentPlamoDownload, downloadPlamoModelOnce, simulatePlamoDownload } from "./plamoDownload";
+import { ONBOARDING_PREVIEW } from "../intro/introSteps";
 
 type Progress = { present: boolean; downloadedBytes: number; totalBytes: number };
 export type PlamoModelState = "unavailable" | "checking" | "absent" | "downloading" | "present" | "error";
@@ -48,7 +49,7 @@ export function usePlamoModel() {
     setState("downloading");
     setError(null);
     try {
-      await downloadPlamoModelOnce(invoke);
+      await downloadPlamoModelOnce(ONBOARDING_PREVIEW ? simulatePlamoDownload : invoke);
       setState("present");
     } catch (e) {
       setError(describePlamoError(e));

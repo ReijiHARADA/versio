@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { currentPlamoDownload, usePlamoDownloadStore } from "../settings/plamoDownload";
 import { describePlamoError } from "../../services/translation/plamoReadiness";
 import { showToast } from "../../stores/toastStore";
@@ -9,17 +9,16 @@ type Progress = { downloadedBytes: number; totalBytes: number };
 /** Background PLaMo install, wherever it was started: stays at the bottom until done, then hands off to a normal toast. */
 export function PlamoDownloadToast({ raised }: { raised: boolean }) {
   const downloading = usePlamoDownloadStore((state) => state.downloading);
-  const [percent, setPercent] = useState(0);
+  const percent = usePlamoDownloadStore((state) => state.percent);
 
   useEffect(() => {
     const run = currentPlamoDownload();
     if (!downloading || !run) return;
-    setPercent(0);
     let unlisten: (() => void) | undefined;
     let cancelled = false;
     void import("@tauri-apps/api/event").then(({ listen }) =>
       listen<Progress>("plamo-model-progress", ({ payload }) => {
-        setPercent(Math.floor((100 * payload.downloadedBytes) / Math.max(1, payload.totalBytes)));
+        usePlamoDownloadStore.setState({ percent: Math.floor((100 * payload.downloadedBytes) / Math.max(1, payload.totalBytes)) });
       }).then((fn) => (cancelled ? fn() : (unlisten = fn)))
     );
     run.then(
