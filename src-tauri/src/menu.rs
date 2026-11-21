@@ -4,7 +4,16 @@
 use tauri::menu::{AboutMetadata, Menu, MenuItemBuilder, SubmenuBuilder};
 use tauri::{AppHandle, Emitter, Runtime};
 
-pub const ACTIONS: [&str; 4] = ["settings", "add-paper", "new-folder", "toggle-sidebar"];
+pub const ACTIONS: [&str; 8] = [
+    "settings",
+    "add-paper",
+    "new-folder",
+    "toggle-sidebar",
+    "text-bigger",
+    "text-smaller",
+    "text-reset",
+    "shortcuts",
+];
 
 pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     let item = |id: &str, text: &str, accel: &str| {
@@ -51,6 +60,10 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
             "CmdOrCtrl+Ctrl+S",
         )?)
         .separator()
+        .item(&item("text-bigger", "文字を大きく", "CmdOrCtrl+=")?)
+        .item(&item("text-smaller", "文字を小さく", "CmdOrCtrl+-")?)
+        .item(&item("text-reset", "文字を標準サイズに", "CmdOrCtrl+0")?)
+        .separator()
         .fullscreen_with_text("フルスクリーンにする")
         .build()?;
 
@@ -63,7 +76,18 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     #[cfg(target_os = "macos")]
     window.set_as_windows_menu_for_nsapp()?;
 
-    Menu::with_items(app, &[&app_menu, &file, &edit, &view, &window])
+    // A registered Help menu gets macOS's built-in menu-item search field.
+    let help = SubmenuBuilder::new(app, "ヘルプ")
+        .item(&item(
+            "shortcuts",
+            "キーボードショートカット",
+            "CmdOrCtrl+/",
+        )?)
+        .build()?;
+    #[cfg(target_os = "macos")]
+    help.set_as_help_menu_for_nsapp()?;
+
+    Menu::with_items(app, &[&app_menu, &file, &edit, &view, &window, &help])
 }
 
 pub fn handle<R: Runtime>(app: &AppHandle<R>, id: &str) {
