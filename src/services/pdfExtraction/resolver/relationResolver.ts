@@ -311,14 +311,14 @@ export function demotedRowContinuationRelations(nodes: CanonicalNode[]): Canonic
   const relations: CanonicalRelation[] = [];
   for (let i = 0; i < nodes.length; i += 1) {
     const row = nodes[i];
-    if (row.role !== "paragraph" || !row.evidence.some((entry) => entry.label === "unfinished-heading-demotion")) continue;
+    if ((row.role !== "paragraph" && row.role !== "footnote") || !row.evidence.some((entry) => entry.label === "unfinished-heading-demotion")) continue;
     const previous = nodes[i - 1];
     const next = nodes[i + 1];
-    if (previous?.role === "paragraph" && previous.text && previous.pageEnd === row.pageStart &&
+    if (previous?.role === row.role && previous.text && previous.pageEnd === row.pageStart &&
       !/[.!?:]\s*$/.test(previous.text.trim())) {
       relations.push({ kind: "CONTINUES", from: previous.id, to: row.id, score: 0.8 });
     }
-    if (next?.role === "paragraph" && next.text && (next.pageStart === row.pageEnd || next.pageStart === row.pageEnd + 1)) {
+    if (next?.role === row.role && next.text && (next.pageStart === row.pageEnd || next.pageStart === row.pageEnd + 1)) {
       relations.push({ kind: "CONTINUES", from: row.id, to: next.id, score: 0.8 });
     }
   }

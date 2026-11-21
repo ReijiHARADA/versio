@@ -4618,9 +4618,26 @@ export function resolveCanonicalDocument(input: {
   // Several promotion paths can make a display-math or chart fragment a heading
   // (`1 u(s, x, l)`, `S∈[Y ]\\k |S|`); none of them is a section title.
   // A line ending in a comma or a dash (`MG: Formal analysis, Methodology, Writing –`) is a wrapped row, not a title.
-  nodes = nodes.map((node) => node.role !== "heading" || !/[,–—]\s*$/.test(node.text ?? "") ? node : {
+  // So is a heading of 4+ words whose next block on the page carries on in lowercase
+  // (`6 Splatter Images, which … while` + `maintaining …`); `4.1.2 Lack of … experimental` keeps its title.
+  const continuesInLowercase = (node: CanonicalNode, next: CanonicalNode | undefined) =>
+    (next?.role === "paragraph" || next?.role === "footnote") && next.pageStart === node.pageEnd &&
+    /^[a-z]/.test(next.text?.trim() ?? "") && !/^\d+\.\d/.test(node.text?.trim() ?? "") &&
+    wordCount(node.text) >= 4 && wordCount(next.text) >= 4 && startsJustBelow(node, next);
+  // A lone wrapped tail (`major`) under a long title is the title's own line, not prose.
+  const wordCount = (text: string | undefined) => (text ?? "").trim().split(/\s+/).length;
+  // The canonical neighbour is not always the next printed line (a figure label can sit between).
+  const startsJustBelow = (node: CanonicalNode, next: CanonicalNode) => {
+    const a = node.boundingBoxes.at(-1);
+    const b = next.boundingBoxes[0];
+    if (!a || !b || a.page !== b.page) return false;
+    const gap = b.y - (a.y + a.height);
+    return gap > -2 && gap < a.height * 1.5 && Math.abs(b.x - a.x) < 30;
+  };
+  nodes = nodes.map((node, index) => node.role !== "heading" ||
+    !(/[,–—]\s*$/.test(node.text ?? "") || continuesInLowercase(node, nodes[index + 1])) ? node : {
     ...node,
-    role: "paragraph" as const,
+    role: nodes[index + 1]?.role === "footnote" && !/[,–—]\s*$/.test(node.text ?? "") ? "footnote" as const : "paragraph" as const,
     confidence: Math.min(node.confidence, 0.55),
     evidence: [...node.evidence, {
       source: "generic-heuristic" as const,
@@ -4628,7 +4645,7 @@ export function resolveCanonicalDocument(input: {
       confidence: 0.8,
       page: node.pageStart,
       bbox: node.boundingBoxes[0],
-      reason: "heading-shaped line ends in a comma or dash",
+      reason: "heading-shaped line ends in a comma or dash, or its sentence carries on below",
     }],
   });
   nodes = nodes.map((node) => node.role !== "heading" || !node.text || !looksLikeMathOrDataFragment(node.text.trim()) ? node : {
