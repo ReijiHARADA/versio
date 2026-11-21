@@ -6,10 +6,11 @@
   bottom: 28px;
   transform: translateX(-50%);
   z-index: 39;
+  box-sizing: border-box;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  justify-content: center;
   max-width: min(640px, calc(100vw - 32px));
+  overflow: hidden;
   padding: 10px 16px;
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
@@ -21,6 +22,7 @@
   box-shadow: 0 8px 24px var(--color-shadow);
   transition:
     bottom var(--transition-normal),
+    width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
     background-color 0.3s ease;
 }
 
@@ -30,6 +32,13 @@
 
 .toast[data-state="failed"] {
   background: #c5221f;
+}
+
+.content {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
 }
 
 .message {
@@ -42,12 +51,16 @@
   animation: swap 0.3s ease;
 }
 
+/* a long failure reason ellipsizes inside the pill's max width (16px padding each side) */
+.toast[data-state="failed"] .message {
+  max-width: calc(min(640px, 100vw - 32px) - 32px);
+}
+
 .percent {
   font-variant-numeric: tabular-nums;
   opacity: 0.8;
 }
 
-/* inline bar: fills while installing, then folds away as the result takes its place */
 .bar {
   flex: none;
   width: 72px;
@@ -55,17 +68,12 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.3);
   overflow: hidden;
-  transition:
-    width 0.35s ease 0.25s,
-    margin 0.35s ease 0.25s,
-    opacity 0.25s ease 0.25s;
 }
 
+/* the bar leaves the layout at once; the pill's width transition carries the motion */
 .toast[data-state="done"] .bar,
 .toast[data-state="failed"] .bar {
-  width: 0;
-  margin-left: -12px; /* give back the flex gap */
-  opacity: 0;
+  display: none;
 }
 
 .fill {
@@ -84,7 +92,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .message {
+  .content {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+}
+
+.message {
     animation: none;
   }
 
