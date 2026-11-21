@@ -4109,6 +4109,22 @@ export function resolveTableRegions(nodes: CanonicalNode[], regions: StructuralR
   return resolvedNodes;
 }
 
+const INSTITUTION = /\b(?:university|universit[àéä]t?|universidad|universidade|department|dept\.|faculty|school|college|institute|institut|instituto|istituto|laboratory|hospital|clinic|centre|center|foundation|council|academy|ministry|unit)\b/i;
+const NAME_PARTICLES = new Set("of and for the de di la le du des del y e und der at in on to a & van von da do das dos".split(" "));
+
+/**
+ * Every sentence names an institution and a place in title case
+ * (`Department of Medicine, Rush University, Chicago, IL, USA. Centre for …`).
+ * Prose has lowercase words beyond name particles.
+ */
+export function looksLikeAffiliationList(text: string): boolean {
+  const segments = text.trim().split(/(?<=[.;])\s+(?=[A-Z\d])/).filter((segment) => segment.length > 3);
+  const affiliations = segments.filter((segment) => INSTITUTION.test(segment) && segment.includes(",") && !/\b(?:is|are|was|were)\b/.test(segment) &&
+    segment.split(/\s+/).filter((word) => /^[a-z]/.test(word) && !NAME_PARTICLES.has(word.replace(/[^a-z&]/g, ""))).length <= 1);
+  return segments.length > 0 && affiliations.length / segments.length >= 0.8 &&
+    (segments.length >= 2 || (text.match(/,/g) ?? []).length >= 2);
+}
+
 export function resolveCanonicalDocument(input: {
   candidates: RoleCandidate[];
   layouts: PageColumnLayout[];
@@ -4659,6 +4675,20 @@ export function resolveCanonicalDocument(input: {
       page: node.pageStart,
       bbox: node.boundingBoxes[0],
       reason: "heading-shaped line is mostly digits/symbols or has no dictionary word next to a math symbol",
+    }],
+  });
+  // A back-matter affiliation list (`Department of …, City, Country. Centre for …`) is not body text.
+  // Keep it as a note: an `affiliation` node after page 1 reaches neither the body nor paper.affiliations.
+  nodes = nodes.map((node) => node.role !== "paragraph" || node.pageStart === 1 || !node.text || !looksLikeAffiliationList(node.text) ? node : {
+    ...node,
+    role: "footnote" as const,
+    evidence: [...node.evidence, {
+      source: "generic-heuristic" as const,
+      label: "back-matter-affiliation-list",
+      confidence: 0.75,
+      page: node.pageStart,
+      bbox: node.boundingBoxes[0],
+      reason: "every sentence is an institution and place",
     }],
   });
   // An algorithm float's title (`Algorithm fpGreed`) sits right above its `Input:` / `Require:` line.
