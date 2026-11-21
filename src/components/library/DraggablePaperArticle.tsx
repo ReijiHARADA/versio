@@ -23,6 +23,8 @@ export function DraggablePaperArticle({
   const drag = useDraggablePaper(paperId, label, enabled, sourceNodeId);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    // Keys typed in menus / sheets / popovers rendered inside the card (even via portal) bubble here.
+    if (event.target !== event.currentTarget) return;
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       onOpen();
