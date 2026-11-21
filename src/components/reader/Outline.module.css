@@ -48,14 +48,14 @@
 }
 
 .link.active {
-  background-color: var(--color-selection-bg);
-  color: var(--color-selection-fg);
+  background-color: var(--color-text);
+  color: var(--color-bg);
   font-weight: 500;
 }
 
 .link.active:hover {
-  background-color: var(--color-selection-bg);
-  color: var(--color-selection-fg);
+  background-color: var(--color-text);
+  color: var(--color-bg);
 }
 
 .title {
