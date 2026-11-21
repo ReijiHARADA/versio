@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-21T04:15:43.636Z",
+  "generatedAt": "2026-11-21T20:55:02.206Z",
   "generatorVersion": 2,
   "inclusionPolicy": {
     "distributedOnly": true,
@@ -2333,6 +2333,17 @@
       "status": "ok"
     },
     {
+      "id": "rust:tauri-plugin-window-state@2.4.1",
+      "name": "tauri-plugin-window-state",
+      "version": "2.4.1",
+      "ecosystem": "rust",
+      "license": "Apache-2.0 OR MIT",
+      "copyright": "Copyright (c) 2017 - Present Tauri Apps Contributors",
+      "textKey": "9dd42ea92cff2ede5cd477cbfcce051b2d0115c0ac7f368ee88cb545055dff1d",
+      "noticeKey": null,
+      "status": "ok"
+    },
+    {
       "id": "rust:tauri-runtime@2.11.3",
       "name": "tauri-runtime",
       "version": "2.11.3",
@@ -2928,16 +2939,16 @@
   },
   "warnings": [],
   "summary": {
-    "total": 251,
+    "total": 252,
     "byEcosystem": {
       "app": 1,
       "asset": 3,
       "model": 1,
       "npm": 16,
-      "rust": 230
+      "rust": 231
     },
     "byStatus": {
-      "ok": 221,
+      "ok": 222,
       "partial": 30
     },
     "uniqueTexts": 113,

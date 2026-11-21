@@ -50,6 +50,17 @@ pub fn run() {
     tauri::Builder::default()
         .manage(plamo::PlamoState::default())
         .manage(opened_files::OpenedPdfQueue::default())
+        // Restore window size/position only; other flags (visibility,
+        // decorations) would fight the macOS chrome setup.
+        .plugin(
+            tauri_plugin_window_state::Builder::default()
+                .with_state_flags(
+                    tauri_plugin_window_state::StateFlags::SIZE
+                        | tauri_plugin_window_state::StateFlags::POSITION
+                        | tauri_plugin_window_state::StateFlags::MAXIMIZED,
+                )
+                .build(),
+        )
         .menu(menu::build)
         .on_menu_event(|app, event| menu::handle(app, event.id().as_ref()))
         .setup(|app| {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
-import { useAppStore } from "../../stores/appStore";
+import { DEFAULT_FONT_SIZE, MAX_FONT_SIZE, MIN_FONT_SIZE, useAppStore } from "../../stores/appStore";
 import { getAllPapers, getAllWorkspacePapers } from "../../services/database";
 import { seedIntroductionPaper } from "../../services/introductionPaper";
 import { addPaperToWorkspace, createWorkspaceNode, listWorkspace, movePaperInWorkspace, removePaperFromAllWorkspaces, removeWorkspaceItem } from "../../services/projectService";
@@ -11,6 +11,7 @@ import type { WorkspaceNode } from "../../types/project";
 import { AppSidebar } from "./AppSidebar";
 import { PaperDragPreview } from "./PaperDragPreview";
 import { NewWorkspaceNodeModal } from "../workspace/NewWorkspaceNodeModal";
+import { ShortcutsSheet } from "./ShortcutsSheet";
 import { setPaperDropHandler, INBOX_DROP_ID, usePaperDragStore } from "../../stores/paperDragStore";
 import { showToast, useToastStore } from "../../stores/toastStore";
 import { PlamoDownloadToast } from "./PlamoDownloadToast";
@@ -118,6 +119,7 @@ export function AppShell() {
   const addPaperFile = (node: WorkspaceNode) => { setFileNodeId(node.id); fileInputRef.current?.click(); };
 
   // Native menu bar items (src-tauri/src/menu.rs). Adding a paper from a folder screen files it there.
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const menuActionRef = useRef<(id: string) => void>(() => {});
   menuActionRef.current = (id) => {
     if (id === "settings") navigate("/settings");
@@ -127,6 +129,12 @@ export function AppShell() {
       const { displaySettings, setDisplaySettings } = useAppStore.getState();
       setDisplaySettings({ sidebarMode: displaySettings.sidebarMode === "expanded" ? "auto" : "expanded" });
     }
+    else if (id === "text-bigger" || id === "text-smaller" || id === "text-reset") {
+      const { displaySettings, setDisplaySettings } = useAppStore.getState();
+      const next = id === "text-reset" ? DEFAULT_FONT_SIZE : displaySettings.fontSize + (id === "text-bigger" ? 1 : -1);
+      setDisplaySettings({ fontSize: Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, next)) });
+    }
+    else if (id === "shortcuts") setShortcutsOpen(true);
   };
   useEffect(() => {
     if (!isTauriApp()) return;
@@ -185,6 +193,7 @@ export function AppShell() {
     <div className={styles.main}><div className={styles.mainBody}>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><div className={styles.mainRim} aria-hidden /></div><PaperDragPreview />
     <PlamoDownloadToast raised={Boolean(toast)} />
     {toast && <div className={`${styles.toast} ${toast.kind === "error" ? styles.toastError : toast.kind === "info" ? styles.toastInfo : styles.toastOk}`} role="status"><span className={styles.toastMessage}>{toast.message}</span>{toast.actionLabel && toast.onAction && <button type="button" className={styles.toastAction} onClick={() => { toast.onAction?.(); clearToast(); }}>{toast.actionLabel}</button>}</div>}
+    {shortcutsOpen && <ShortcutsSheet onClose={() => setShortcutsOpen(false)} />}
     {createParentId !== undefined && <NewWorkspaceNodeModal parentName={createParentId ? workspaceNodes.find((node) => node.id === createParentId)?.name : undefined} onClose={() => setCreateParentId(undefined)} onCreate={create} />}
   </div>;
 }

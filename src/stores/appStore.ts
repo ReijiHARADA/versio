@@ -13,6 +13,9 @@ export type LibrarySortKey = "added" | "opened" | "title" | "year";
 export type LibrarySort = { key: LibrarySortKey; dir: "asc" | "desc" };
 
 /** Default expanded sidebar width (px). Double-click the resize edge to restore. */
+export const DEFAULT_FONT_SIZE = 16;
+export const MIN_FONT_SIZE = 12;
+export const MAX_FONT_SIZE = 24;
 export const DEFAULT_SIDEBAR_WIDTH = 220;
 export const MIN_SIDEBAR_WIDTH = 160;
 export const MAX_SIDEBAR_WIDTH = 420;
@@ -48,7 +51,7 @@ type AppUiState = {
 };
 
 const defaultDisplaySettings: DisplaySettings = {
-  fontSize: 16,
+  fontSize: DEFAULT_FONT_SIZE,
   lineHeight: 1.8,
   contentWidth: 720,
   theme: "system",

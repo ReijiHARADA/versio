@@ -1,5 +1,5 @@
 import { Sun, Moon, Monitor } from "lucide-react";
-import { useAppStore, type Theme } from "../../stores/appStore";
+import { MAX_FONT_SIZE, MIN_FONT_SIZE, useAppStore, type Theme } from "../../stores/appStore";
 import styles from "./DisplaySettingsControls.module.css";
 
 export function DisplaySettingsControls({ onReset }: { onReset?: () => void }) {
@@ -60,7 +60,7 @@ export function DisplaySettingsControls({ onReset }: { onReset?: () => void }) {
       <div className={styles.setting}>
         <label className={styles.label}>文字サイズ</label>
         <p className={styles.description}>本文の文字を読みやすい大きさに調整します。</p>
-        <div className={styles.sliderRow}><span>小さい</span><input aria-label="文字サイズ" type="range" min="12" max="24" step="1" value={displaySettings.fontSize} onChange={(e) => setDisplaySettings({ fontSize: Number(e.target.value) })} /><span>大きい</span></div>
+        <div className={styles.sliderRow}><span>小さい</span><input aria-label="文字サイズ" type="range" min={MIN_FONT_SIZE} max={MAX_FONT_SIZE} step="1" value={displaySettings.fontSize} onChange={(e) => setDisplaySettings({ fontSize: Number(e.target.value) })} /><span>大きい</span></div>
       </div>
 
       <div className={styles.setting}>
