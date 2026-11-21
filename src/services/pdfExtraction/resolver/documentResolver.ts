@@ -4966,6 +4966,8 @@ export function resolveCanonicalDocument(input: {
       /^(?:figure|fig\.?|table|表)\s*\d+[a-z]?\s+(?:maps?|shows?|illustrates?|presents?|summarizes?|depicts?|reports?|describes?|highlights?|provides?|compares?)\b/i.test(
         t,
       ) &&
+      // Prose has a lowercase verb (`Figure 5 maps the…`); a caption is capitalized (`Fig. 4 Map showing…`).
+      /^\S+\s*\d+[a-z]?\s+[a-z]/.test(t) &&
       t.split(/\s+/).filter(Boolean).length >= 10;
     if (!narrative) return node;
     return {
