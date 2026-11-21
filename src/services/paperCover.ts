@@ -58,6 +58,10 @@ export function getPaperCover(paperId: string): Promise<string | null> {
   if (!entry) {
     entry = loadCover(paperId).catch(() => null);
     cache.set(paperId, entry);
+    // A paper still importing has no source.pdf yet; let the next mount try again.
+    void entry.then((url) => {
+      if (!url) cache.delete(paperId);
+    });
   }
   return entry;
 }

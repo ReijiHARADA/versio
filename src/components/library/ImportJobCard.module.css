@@ -153,3 +153,23 @@
     display: none;
   }
 }
+
+/* Grid tile: status and actions stack under the placeholder sheet. */
+.gridTile {
+  cursor: default;
+}
+
+.gridTile .importTrailing,
+.gridTile .statusProgress {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  max-width: 100%;
+  gap: 4px;
+  text-align: center;
+}
+
+.gridTile .failureTitle {
+  text-align: center;
+}

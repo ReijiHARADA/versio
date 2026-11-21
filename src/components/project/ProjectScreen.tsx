@@ -195,12 +195,10 @@ export function ProjectScreen() {
               })}
             </div>
           )}
-          <div className={styles.paperList}>
-            {jobs.map((job) => (
-              <ImportJobCard key={job.id} job={job} {...recovery} />
-            ))}
-          </div>
           <div className={view === "grid" ? styles.tileGrid : styles.paperList}>
+            {jobs.map((job) => (
+              <ImportJobCard key={job.id} job={job} layout={view} {...recovery} />
+            ))}
             {merged.map((paper) => (
               <PaperCard
                 key={paper.id}
