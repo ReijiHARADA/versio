@@ -112,12 +112,21 @@
 }
 
 .folderArt {
-  --folder-back: #4c4c4f;
-  --folder-front: #66666a;
+  /* Finder-like folder tinted from the accent so it follows light/dark themes. */
+  --folder-back: color-mix(in srgb, var(--color-accent) 62%, white);
+  --folder-front-top: color-mix(in srgb, var(--color-accent) 42%, white);
+  --folder-front-bottom: color-mix(in srgb, var(--color-accent) 58%, white);
   position: relative;
-  width: 100%;
+  width: 82%;
   aspect-ratio: 130 / 100;
-  margin-bottom: 8px;
+  margin: 4px 0 8px;
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.1));
+}
+
+[data-theme="dark"] .folderArt {
+  --folder-back: color-mix(in srgb, var(--color-accent) 55%, #1e1e1e);
+  --folder-front-top: color-mix(in srgb, var(--color-accent) 78%, #1e1e1e);
+  --folder-front-bottom: color-mix(in srgb, var(--color-accent) 62%, #1e1e1e);
 }
 
 .folderBack {
@@ -157,12 +166,12 @@
 
 .folderFront {
   position: absolute;
-  inset: 36% 0 0;
-  border-radius: 6px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--folder-front) 88%, white), var(--folder-front) 12%);
+  inset: 24% 0 0;
+  border-radius: 7px;
+  background: linear-gradient(180deg, var(--folder-front-top), var(--folder-front-bottom));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 1px 2px rgba(0, 0, 0, 0.12);
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 -1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .tileTitle {
