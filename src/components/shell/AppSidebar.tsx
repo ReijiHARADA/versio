@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import {
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Inbox,
   Library,
@@ -77,6 +79,28 @@ export function AppSidebar({
   const sidebarMode = narrow ? "auto" : storedMode === "expanded" ? "expanded" : "collapsed";
   const storedWidth = useAppStore((state) => state.displaySettings.sidebarWidth);
   const setDisplaySettings = useAppStore((state) => state.setDisplaySettings);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  // HashRouter stores the entry index in history.state.idx; track the furthest one for "forward".
+  const historyIdx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+  const maxHistoryIdx = useRef(historyIdx);
+  if (navigationType === "PUSH") maxHistoryIdx.current = historyIdx;
+  else maxHistoryIdx.current = Math.max(maxHistoryIdx.current, historyIdx);
+  void location; // re-render on every navigation so the idx above stays current
+  const canGoBack = historyIdx > 0;
+  const canGoForward = historyIdx < maxHistoryIdx.current;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.metaKey || e.altKey || e.ctrlKey || e.shiftKey) return;
+      if (e.key === "[") navigate(-1);
+      else if (e.key === "]") navigate(1);
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [navigate]);
   const draggingPaperId = usePaperDragStore((state) => state.draggingPaperId);
   const dropTargetId = usePaperDragStore((state) => state.dropTargetId);
   const pointerX = usePaperDragStore((state) => state.pointerX);
@@ -233,6 +257,28 @@ export function AppSidebar({
                   {storedMode === "expanded" ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
                 </button>
               )}
+              <div className={`${styles.historyNav} ${narrow ? styles.historyNavNarrow : ""}`}>
+                <button
+                  type="button"
+                  className={styles.historyButton}
+                  onClick={() => navigate(-1)}
+                  disabled={!canGoBack}
+                  title="戻る (⌘[)"
+                  aria-label="戻る"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  type="button"
+                  className={styles.historyButton}
+                  onClick={() => navigate(1)}
+                  disabled={!canGoForward}
+                  title="進む (⌘])"
+                  aria-label="進む"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
               <label className={`${styles.search} ${styles.titleSearch}`} title="ライブラリを検索 (⌘K)">
                 <input
                   id="library-search"
