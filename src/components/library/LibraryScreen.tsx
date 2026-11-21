@@ -11,6 +11,7 @@ import { tryStartPdfImport } from "../../services/pdfImport";
 import { PaperCard } from "./PaperCard";
 import { PaperMenu } from "./PaperMenu";
 import { ImportJobCard } from "./ImportJobCard";
+import { LibraryViewToggle, useLibraryView } from "./LibraryViewToggle";
 import { useDeletePaper } from "../../hooks/useDeletePaper";
 import { useImportJobRecovery } from "./useImportJobRecovery";
 import styles from "./LibraryScreen.module.css";
@@ -25,6 +26,7 @@ export function LibraryScreen() {
   const jobs = useMemo(() => visibleImportJobs(importJobs), [importJobs]);
   const visiblePapers = useLibraryPaperSearch(papers, searchQuery);
   const recovery = useImportJobRecovery({ fileInputRef });
+  const view = useLibraryView();
 
   const { busyId, requestDelete } = useDeletePaper();
 
@@ -69,6 +71,7 @@ export function LibraryScreen() {
           <h1 className={styles.title}>すべての論文</h1>
         </div>
         <div className={styles.headerRight}>
+          <LibraryViewToggle />
           <button
             type="button"
             className={styles.addButton}
@@ -98,26 +101,31 @@ export function LibraryScreen() {
             </p>
           </div>
         ) : (
-          <div className={styles.paperList}>
-            {jobs.map((job) => (
-              <ImportJobCard key={job.id} job={job} {...recovery} />
-            ))}
-            {visiblePapers.map((paper) => (
-              <PaperCard
-                key={paper.id}
-                paper={paper}
-                enabled={busyId !== paper.id}
-                onOpen={() => handleOpenPaper(paper.id)}
-                actions={
-                  <PaperMenu
-                    paper={paper}
-                    variant="library"
-                    onDeleteRequest={requestDelete}
-                  />
-                }
-              />
-            ))}
-          </div>
+          <>
+            <div className={styles.paperList}>
+              {jobs.map((job) => (
+                <ImportJobCard key={job.id} job={job} {...recovery} />
+              ))}
+            </div>
+            <div className={view === "grid" ? styles.tileGrid : styles.paperList}>
+              {visiblePapers.map((paper) => (
+                <PaperCard
+                  key={paper.id}
+                  paper={paper}
+                  layout={view}
+                  enabled={busyId !== paper.id}
+                  onOpen={() => handleOpenPaper(paper.id)}
+                  actions={
+                    <PaperMenu
+                      paper={paper}
+                      variant="library"
+                      onDeleteRequest={requestDelete}
+                    />
+                  }
+                />
+              ))}
+            </div>
+          </>
         )}
       </main>
     </div>

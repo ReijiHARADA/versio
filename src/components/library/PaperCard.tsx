@@ -18,6 +18,7 @@ import {
 import { displayPaperTitle } from "../../services/translation/quality";
 import { DraggablePaperArticle } from "./DraggablePaperArticle";
 import { PaperEpubSyncControl } from "./PaperEpubSyncControl";
+import { PaperCover } from "./PaperCover";
 import styles from "./PaperCard.module.css";
 
 type PaperCardProps = {
@@ -25,6 +26,7 @@ type PaperCardProps = {
   enabled?: boolean;
   onOpen: () => void;
   actions?: ReactNode;
+  layout?: "list" | "grid";
 };
 
 function getStatusIcon(readiness: ReturnType<typeof derivePaperReadiness>["readiness"]) {
@@ -40,7 +42,7 @@ function getStatusIcon(readiness: ReturnType<typeof derivePaperReadiness>["readi
   return <Clock size={14} className={styles.statusPending} />;
 }
 
-export function PaperCard({ paper, enabled = true, onOpen, actions }: PaperCardProps) {
+export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "list" }: PaperCardProps) {
   const blocks = useLibraryCache((state) => state.blocks[paper.id]);
   const [favoriting, setFavoriting] = useState(false);
   const view = derivePaperReadiness({
@@ -81,61 +83,91 @@ export function PaperCard({ paper, enabled = true, onOpen, actions }: PaperCardP
     }
   };
 
+  const favoriteButton = (
+    <button
+      type="button"
+      className={`${styles.favoriteButton} ${paper.favorite ? styles.favoriteOn : ""}`}
+      title={paper.favorite ? "お気に入りを外す" : "お気に入りに追加"}
+      aria-label={paper.favorite ? "お気に入りを外す" : "お気に入りに追加"}
+      aria-pressed={paper.favorite}
+      disabled={favoriting}
+      data-testid="paper-favorite-toggle"
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => void toggleFavorite(event)}
+    >
+      <Star
+        size={14}
+        fill={paper.favorite ? "currentColor" : "none"}
+        aria-hidden="true"
+      />
+    </button>
+  );
+  const status = showStatus ? (
+    <span className={styles.status}>
+      {getStatusIcon(view.readiness)}
+      <span className={styles.statusLabel} data-testid="paper-readiness">
+        {statusLabel}
+      </span>
+      {view.readiness === "translating" && percent != null ? (
+        <span
+          className={styles.translateProgress}
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={percent}
+          aria-label={`日本語化 ${percent}%`}
+          data-testid="paper-translation-progress"
+        >
+          <span
+            className={styles.translateProgressFill}
+            style={{ width: `${percent}%` }}
+          />
+        </span>
+      ) : null}
+    </span>
+  ) : null;
+  const label = displayPaperTitle(paper);
+
+  if (layout === "grid") {
+    return (
+      <DraggablePaperArticle
+        paperId={paper.id}
+        label={label}
+        className={styles.tile}
+        enabled={enabled}
+        onOpen={onOpen}
+      >
+        <div className={styles.tileCover}>
+          <PaperCover paperId={paper.id} />
+          <div className={styles.tileOverlay}>
+            {favoriteButton}
+            <div className={styles.actions}>{actions}</div>
+          </div>
+        </div>
+        <h3 className={styles.tileTitle} title={label}>
+          {label}
+        </h3>
+        {status}
+      </DraggablePaperArticle>
+    );
+  }
+
   return (
     <DraggablePaperArticle
       paperId={paper.id}
-      label={displayPaperTitle(paper)}
+      label={label}
       className={styles.row}
       enabled={enabled}
       onOpen={onOpen}
     >
       <div className={styles.info}>
         <div className={styles.titleRow}>
-          <button
-            type="button"
-            className={`${styles.favoriteButton} ${paper.favorite ? styles.favoriteOn : ""}`}
-            title={paper.favorite ? "お気に入りを外す" : "お気に入りに追加"}
-            aria-label={paper.favorite ? "お気に入りを外す" : "お気に入りに追加"}
-            aria-pressed={paper.favorite}
-            disabled={favoriting}
-            data-testid="paper-favorite-toggle"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => void toggleFavorite(event)}
-          >
-            <Star
-              size={14}
-              fill={paper.favorite ? "currentColor" : "none"}
-              aria-hidden="true"
-            />
-          </button>
-          <h3 className={styles.title}>{displayPaperTitle(paper)}</h3>
+          {favoriteButton}
+          <h3 className={styles.title}>{label}</h3>
         </div>
       </div>
       <div className={styles.trailing}>
-        {showStatus ? (
-          <span className={styles.status}>
-            {getStatusIcon(view.readiness)}
-            <span className={styles.statusLabel} data-testid="paper-readiness">
-              {statusLabel}
-            </span>
-            {view.readiness === "translating" && percent != null ? (
-              <span
-                className={styles.translateProgress}
-                role="progressbar"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={percent}
-                aria-label={`日本語化 ${percent}%`}
-                data-testid="paper-translation-progress"
-              >
-                <span
-                  className={styles.translateProgressFill}
-                  style={{ width: `${percent}%` }}
-                />
-              </span>
-            ) : null}
-          </span>
-        ) : null}
+        {status}
         <div className={styles.actions}>
           <PaperEpubSyncControl paperId={paper.id} disabled={!enabled} />
           {actions}

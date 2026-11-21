@@ -9,7 +9,7 @@ import { SettingsCard, SettingsRow } from "./SettingsPrimitives";
 import { ReadingPreview } from "./ReadingPreview";
 import styles from "./SettingsScreen.module.css";
 
-const DEFAULT_READING_SETTINGS: DisplaySettings = {
+const DEFAULT_READING_SETTINGS: Omit<DisplaySettings, "libraryView"> = {
   fontSize: 16,
   lineHeight: 1.8,
   contentWidth: 720,
