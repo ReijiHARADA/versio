@@ -4,11 +4,19 @@
 
 use std::process::Command;
 
-const USER_AGENT: &str = concat!("Versio/", env!("CARGO_PKG_VERSION"), " (desktop paper reader)");
+const USER_AGENT: &str = concat!(
+    "Versio/",
+    env!("CARGO_PKG_VERSION"),
+    " (desktop paper reader)"
+);
 
 fn is_valid_doi(doi: &str) -> bool {
-    let Some(rest) = doi.strip_prefix("10.") else { return false };
-    let Some((registrant, suffix)) = rest.split_once('/') else { return false };
+    let Some(rest) = doi.strip_prefix("10.") else {
+        return false;
+    };
+    let Some((registrant, suffix)) = rest.split_once('/') else {
+        return false;
+    };
     registrant.len() >= 4
         && registrant.chars().all(|c| c.is_ascii_digit() || c == '.')
         && !suffix.is_empty()
@@ -19,7 +27,9 @@ fn is_valid_doi(doi: &str) -> bool {
 fn is_valid_arxiv_id(id: &str) -> bool {
     // New style 2101.01234(v2) or old style hep-th/9901001(v1).
     let core = match id.rfind('v') {
-        Some(i) if i > 0 && id[i + 1..].chars().all(|c| c.is_ascii_digit()) && i + 1 < id.len() => &id[..i],
+        Some(i) if i > 0 && id[i + 1..].chars().all(|c| c.is_ascii_digit()) && i + 1 < id.len() => {
+            &id[..i]
+        }
         _ => id,
     };
     if let Some((yymm, num)) = core.split_once('.') {
@@ -33,7 +43,9 @@ fn is_valid_arxiv_id(id: &str) -> bool {
     }
     if let Some((archive, num)) = core.split_once('/') {
         return !archive.is_empty()
-            && archive.chars().all(|c| c.is_ascii_lowercase() || c == '-' || c == '.' || c.is_ascii_uppercase())
+            && archive
+                .chars()
+                .all(|c| c.is_ascii_lowercase() || c == '-' || c == '.' || c.is_ascii_uppercase())
             && num.len() == 7
             && num.chars().all(|c| c.is_ascii_digit());
     }
@@ -72,7 +84,16 @@ pub async fn fetch_bibliographic_record(kind: String, id: String) -> Result<Stri
     let url = endpoint(&kind, id.trim())?;
     tauri::async_runtime::spawn_blocking(move || {
         let output = Command::new("/usr/bin/curl")
-            .args(["-sS", "-L", "--max-time", "20", "--proto", "=https", "-A", USER_AGENT])
+            .args([
+                "-sS",
+                "-L",
+                "--max-time",
+                "20",
+                "--proto",
+                "=https",
+                "-A",
+                USER_AGENT,
+            ])
             .args(["-w", "\n%{http_code}", &url])
             .output()
             .map_err(|e| format!("通信を開始できませんでした: {e}"))?;
