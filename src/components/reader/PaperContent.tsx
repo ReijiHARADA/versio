@@ -43,12 +43,10 @@ import {
   shouldVirtualizeSections,
 } from "./virtualization/sectionVirtualization";
 import {
-  alignElementTopInScrollContainer,
   applyIntersectionDelta,
+  glideToElement,
   isSectionBodyMounted,
   pickActiveSectionId,
-  readScrollMarginTop,
-  scrollTopToAlignElementTop,
   waitForPaint,
 } from "./virtualization/sectionScroll";
 import styles from "./PaperContent.module.css";
@@ -596,61 +594,54 @@ export const PaperContent = memo(
       [virtualize, addSectionPin, removeSectionPin]
     );
 
+    const scrollToSectionTokenRef = useRef(0);
     const scrollToSection = useCallback(
       async (sectionId: string) => {
         const container = scrollContainerRef?.current;
         const sectionEl = () => document.getElementById(`section-${sectionId}`);
+        const token = ++scrollToSectionTokenRef.current;
         programmaticActiveLockRef.current = sectionId;
         publishActiveSection(sectionId);
 
+        // The reader's own wheel / touch / keys take over from an in-flight glide.
+        let userScrolled = false;
+        const onUserScroll = () => {
+          userScrolled = true;
+        };
+        const userEvents = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
+        for (const type of userEvents) container?.addEventListener(type, onUserScroll, { passive: true });
+        if (virtualize) addSectionPin(sectionId);
+
         try {
-          if (!virtualize) {
-            const el = sectionEl();
-            if (container && el) alignElementTopInScrollContainer(container, el);
-            else el?.scrollIntoView({ behavior: "auto", block: "start" });
+          if (!container) {
+            await waitForPaint();
+            sectionEl()?.scrollIntoView({ behavior: "auto", block: "start" });
             return;
           }
-
-          addSectionPin(sectionId);
-          try {
-            let alignedFrames = 0;
-            for (let attempt = 0; attempt < 48; attempt++) {
-              await waitForPaint();
-              const el = sectionEl();
-              if (!el || !container) continue;
-
-              if (attempt === 0) {
-                container.scrollTop = scrollTopToAlignElementTop(container, el);
-              } else {
-                alignElementTopInScrollContainer(container, el);
-              }
-
-              const mounted = isSectionBodyMounted(sectionId);
-              if (!mounted) {
-                alignedFrames = 0;
-                continue;
-              }
-
-              const margin = readScrollMarginTop(el);
-              const delta =
-                el.getBoundingClientRect().top -
-                container.getBoundingClientRect().top -
-                margin;
-              if (Math.abs(delta) <= 6) alignedFrames += 1;
-              else alignedFrames = 0;
-
-              if (alignedFrames >= 2) return;
-            }
-          } finally {
-            removeSectionPin(sectionId);
-          }
+          await glideToElement({
+            container,
+            getElement: sectionEl,
+            isReady: () => !virtualize || isSectionBodyMounted(sectionId),
+            shouldStop: () => userScrolled || token !== scrollToSectionTokenRef.current,
+            animate: !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+          });
         } finally {
-          programmaticActiveLockRef.current = null;
-          const settled = pickActiveSectionId(
-            orderedSectionIdsRef.current,
-            intersectingSectionIdsRef.current
-          );
-          publishActiveSection(settled ?? sectionId);
+          for (const type of userEvents) container?.removeEventListener(type, onUserScroll);
+          if (virtualize) removeSectionPin(sectionId);
+          // A newer jump owns the lock and the highlight now.
+          if (token === scrollToSectionTokenRef.current) {
+            programmaticActiveLockRef.current = null;
+            // Keep the clicked section: its top lands on scroll-margin-top, a hair above the
+            // observer band (15%), so the previous section's last pixel still "intersects".
+            // Only a reader who scrolled away mid-glide gets the position-based pick.
+            if (userScrolled) {
+              const settled = pickActiveSectionId(
+                orderedSectionIdsRef.current,
+                intersectingSectionIdsRef.current
+              );
+              publishActiveSection(settled ?? sectionId);
+            }
+          }
         }
       },
       [
