@@ -3,7 +3,7 @@ type: Spec
 title: Introduction 論文によるオンボーディング
 description: 配布前に、初回起動で使い方を一通り覚えてもらうための同梱論文「Introduction」と PLaMo 導入案内の設計
 tags: [onboarding, intro, plamo, library]
-status: draft
+status: stable
 ---
 
 # Introduction 論文によるオンボーディング

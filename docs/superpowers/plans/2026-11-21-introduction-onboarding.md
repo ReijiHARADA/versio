@@ -3,7 +3,7 @@ type: Playbook
 title: Introduction オンボーディング実装計画
 description: 同梱 Introduction 論文の初回投入、設定のサンプル追加削除、動画後の PLaMo 導入ステップ
 tags: [onboarding, plan]
-status: draft
+status: stable
 ---
 
 # Introduction Onboarding Implementation Plan

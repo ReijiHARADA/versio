@@ -8,6 +8,8 @@ const db = vi.hoisted(() => ({
   saveBlocks: vi.fn(),
 }));
 vi.mock("./database", () => db);
+const trash = vi.hoisted(() => ({ listTrashItems: vi.fn() }));
+vi.mock("./trashService", () => trash);
 
 import { seedIntroductionPaper } from "./introductionPaper";
 import { useLibraryCache } from "../stores/libraryCache";
@@ -17,6 +19,7 @@ const FLAG = "onboarding.introductionSeeded";
 describe("seedIntroductionPaper", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    trash.listTrashItems.mockResolvedValue([]);
     useLibraryCache.setState({ papers: [] });
   });
 
@@ -39,6 +42,14 @@ describe("seedIntroductionPaper", () => {
   it("skips existing users and marks them so it never appears later", async () => {
     db.getSetting.mockResolvedValue(undefined);
     expect(await seedIntroductionPaper(1)).toBe("skipped");
+    expect(db.savePaper).not.toHaveBeenCalled();
+    expect(db.saveSetting).toHaveBeenCalledWith(FLAG, true);
+  });
+
+  it("treats a library whose papers are all in the trash as an existing user", async () => {
+    db.getSetting.mockResolvedValue(undefined);
+    trash.listTrashItems.mockResolvedValue([{ kind: "paper" }]);
+    expect(await seedIntroductionPaper(0)).toBe("skipped");
     expect(db.savePaper).not.toHaveBeenCalled();
     expect(db.saveSetting).toHaveBeenCalledWith(FLAG, true);
   });

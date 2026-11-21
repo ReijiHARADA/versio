@@ -115,8 +115,8 @@ const chapters: Chapter[] = [
     parts: [
       h("4 Notes and Glossary", "4 メモと用語集"),
       p(
-        "Select any phrase in the text to highlight it or attach a note with “Add note”. Notes stay anchored to the paragraph even if the paper is extracted again, and the notes list in the toolbar collects every note in this paper.",
-        "本文の語句を選択すると、ハイライトしたり「メモを追加」でメモを付けたりできます。メモは論文を抽出し直しても段落に結びついたまま残り、ツールバーのメモ一覧にこの論文のメモがすべて集まります。"
+        "Select any phrase in the text and choose “Add note” to highlight it; type a comment, or leave it empty to keep a plain highlight. Notes stay anchored to the paragraph even if the paper is extracted again, and the notes list in the toolbar collects every note in this paper.",
+        "本文の語句を選択して「メモを追加」を選ぶとハイライトされます。コメントを書けばメモに、空のままならハイライトだけが残ります。メモは論文を抽出し直しても段落に結びついたまま残り、ツールバーのメモ一覧にこの論文のメモがすべて集まります。"
       ),
       p(
         "Try it: select the words “stay anchored” in the paragraph above and add a short note.",
@@ -140,8 +140,8 @@ const chapters: Chapter[] = [
         "⌘K を押すと、タイトル・著者・本文でライブラリ全体を検索できます。論文の中で ⌘F を押すと、その論文だけを検索してヒットを順にたどれます。"
       ),
       p(
-        "Try it: press ⌘F now and search for “glossary”.",
-        "試してみよう：いま ⌘F を押して「glossary」を検索してください。"
+        "Try it: press ⌘F now and search for “翻訳”.",
+        "試してみよう：いま ⌘F を押して「翻訳」を検索してください。"
       ),
     ],
   },
@@ -170,8 +170,8 @@ const chapters: Chapter[] = [
     parts: [
       h("7 Exporting", "7 書き出し"),
       p(
-        "Use “Export” in the Reader toolbar to save a paper as Markdown or EPUB. An EPUB opens in e-book readers such as Apple Books or Kindle, and the Markdown export can be imported into Notion.",
-        "Reader のツールバーの「書き出す」を使うと、論文を Markdown や EPUB として保存できます。EPUB は Apple Books や Kindle などの電子書籍リーダーで開け、Markdown の書き出しは Notion に読み込めます。"
+        "Use “Export” in the Reader toolbar to save a paper as Markdown or EPUB. An EPUB opens in e-book readers such as Apple Books or Kindle, and the “Notion import ZIP” option produces a file you can import into Notion.",
+        "Reader のツールバーの「書き出す」を使うと、論文を Markdown や EPUB として保存できます。EPUB は Apple Books や Kindle などの電子書籍リーダーで開け、「Notion インポート用 ZIP」を選べば Notion に読み込めるファイルになります。"
       ),
     ],
   },
