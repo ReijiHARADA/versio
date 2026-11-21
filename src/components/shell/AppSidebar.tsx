@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { createPortal, flushSync } from "react-dom";
+import { createPortal } from "react-dom";
 import { NavLink, useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import {
   ChevronLeft,
@@ -29,6 +29,7 @@ import {
 import { setTranslationUiDeferReason } from "../../utils/batchBlockUpdates";
 import { WorkspaceTree } from "./WorkspaceTree";
 import styles from "./AppSidebar.module.css";
+import { useSelectionSlide } from "./useSelectionSlide";
 
 type AppSidebarProps = {
   workspaceNodes: WorkspaceNode[];
@@ -73,17 +74,14 @@ export function AppSidebar({
   initialCollapsedIds,
 }: AppSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const asideRef = useRef<HTMLElement>(null);
+  useSelectionSlide(asideRef, {
+    item: styles.item,
+    active: styles.active,
+    ghost: styles.selectionGhost,
+    arriving: styles.selectionArriving,
+  });
 
-  // Sidebar links navigate inside a View Transition so the selection pill slides to the new item.
-  const handleNavClickCapture = (event: React.MouseEvent) => {
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    const link = (event.target as HTMLElement).closest<HTMLAnchorElement>("a[href^='#/']");
-    if (!link || link.getAttribute("aria-current") === "page") return;
-    if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    event.preventDefault(); // NavLink skips its own navigation when defaultPrevented
-    const to = link.getAttribute("href")!.slice(1);
-    document.startViewTransition(() => flushSync(() => navigate(to)));
-  };
   const storedMode = useAppStore((state) => state.displaySettings.sidebarMode);
   const narrow = useSyncExternalStore(subscribeNarrow, isNarrowWindow);
   // Hover-to-open only in narrow windows; a wide window is either pinned open or collapsed.
@@ -241,7 +239,7 @@ export function AppSidebar({
       <div
         className={`${styles.shell} ${modeClass} ${pointerOverSidebar ? styles.sidebarDropReady : ""} ${resizing ? styles.sidebarResizing : ""}`}
       >
-        <aside className={styles.sidebar} onClickCapture={handleNavClickCapture}>
+        <aside className={styles.sidebar} ref={asideRef}>
           <div
             className={styles.resizeHandle}
             role="separator"
