@@ -521,3 +521,9 @@
 .tile .status {
   justify-content: center;
 }
+
+.tile .importActions {
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
+}

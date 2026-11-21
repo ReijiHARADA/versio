@@ -8,6 +8,7 @@ import {
 } from "../../services/import/classifyFailure";
 import styles from "./PaperCard.module.css";
 import jobStyles from "./ImportJobCard.module.css";
+import coverStyles from "./PaperCover.module.css";
 
 type ImportJobCardProps = {
   job: ImportJob;
@@ -16,6 +17,7 @@ type ImportJobCardProps = {
   onDismiss?: (jobId: string) => void;
   onCancel?: (jobId: string) => void;
   onOpenExisting?: (paperId: string) => void;
+  layout?: "list" | "grid";
   onReadd?: () => void;
 };
 
@@ -27,6 +29,7 @@ export function ImportJobCard({
   onCancel,
   onOpenExisting,
   onReadd,
+  layout = "list",
 }: ImportJobCardProps) {
   const failed = job.stage === "failed" || job.stage === "duplicate";
   const cancelling = job.stage === "cancel_requested";
@@ -80,6 +83,130 @@ export function ImportJobCard({
     ? [classified.primaryAction, ...classified.secondaryActions.filter((a) => a !== classified.primaryAction)]
     : [];
 
+  const trailing = (
+    <div
+      className={`${styles.trailing} ${jobStyles.importTrailing} ${failed ? jobStyles.failedTrailing : ""}`}
+    >
+      {!isDuplicate ? (
+        <div className={jobStyles.statusProgress}>
+          <span className={styles.status}>
+            {failed || cancelled ? (
+              <AlertCircle size={14} className={styles.statusFailed} />
+            ) : (
+              <Loader2 size={14} className={styles.statusProcessing} />
+            )}
+            <span className={styles.statusLabel}>
+              {failed
+                ? "要確認"
+                : cancelling
+                  ? "キャンセル中"
+                  : cancelled
+                    ? "キャンセル済"
+                    : "準備中"}
+            </span>
+          </span>
+          {running && !cancelling && (
+            <span className={styles.date}>{percent > 0 ? `${percent}%` : job.message}</span>
+          )}
+          {cancelling && <span className={styles.date}>{job.message}</span>}
+        </div>
+      ) : null}
+      {running && onCancel && (
+        <div className={styles.importActions}>
+          <button
+            type="button"
+            className={`${styles.actionButton} ${jobStyles.cancelAction}`}
+            title="キャンセル"
+            aria-label="インポートをキャンセル"
+            disabled={cancelling}
+            onClick={() => onCancel(job.id)}
+          >
+            <X size={14} />
+            <span className={jobStyles.actionText}>キャンセル</span>
+          </button>
+        </div>
+      )}
+      {failed && (
+        <div className={styles.importActions}>
+          {actions.map((action) => {
+            if (action === "open_existing" && !job.existingPaperId) return null;
+            if (action === "restore_existing" && !job.existingPaperId) return null;
+            if (action === "readd" && !onReadd) return null;
+            const label = actionLabel(action);
+            if (action === "dismiss") {
+              return (
+                <button
+                  key={action}
+                  type="button"
+                  className={jobStyles.dismissAction}
+                  title={label}
+                  aria-label={label}
+                  onClick={() => runAction(action)}
+                >
+                  <X size={14} />
+                </button>
+              );
+            }
+            const icon =
+              action === "open_existing" || action === "restore_existing" ? (
+                <ExternalLink size={14} />
+              ) : (
+                <RotateCcw size={14} />
+              );
+            return (
+              <button
+                key={action}
+                type="button"
+                className={
+                  action === classified?.primaryAction
+                    ? jobStyles.primaryAction
+                    : styles.actionButton
+                }
+                title={label}
+                aria-label={label}
+                onClick={() => runAction(action)}
+              >
+                {icon}
+                <span className={jobStyles.actionText}>{label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  if (layout === "grid") {
+    return (
+      <article
+        className={`${styles.tile} ${jobStyles.gridTile}`}
+        aria-busy={running && !cancelling}
+        aria-label={
+          failed
+            ? `${job.fileName}の読み込み失敗`
+            : cancelled
+              ? `${job.fileName}をキャンセル済み`
+              : `${job.fileName}を準備中`
+        }
+      >
+        <div className={styles.tileCover}>
+          <div className={coverStyles.sheet}>
+            {failed || cancelled ? (
+              <AlertCircle size={20} className={styles.statusFailed} />
+            ) : (
+              <Loader2 size={20} className={styles.statusProcessing} />
+            )}
+          </div>
+        </div>
+        <h3 className={styles.tileTitle} title={job.fileName}>
+          {job.fileName}
+        </h3>
+        {failed && classified ? <p className={jobStyles.failureTitle}>{classified.title}</p> : null}
+        {trailing}
+      </article>
+    );
+  }
+
   return (
     <article
       className={`${styles.row} ${failed ? jobStyles.failedRow : ""} ${isDuplicate ? jobStyles.duplicateRow : ""}`}
@@ -110,96 +237,7 @@ export function ImportJobCard({
           </div>
         ) : null}
       </div>
-      <div
-        className={`${styles.trailing} ${jobStyles.importTrailing} ${failed ? jobStyles.failedTrailing : ""}`}
-      >
-        {!isDuplicate ? (
-          <div className={jobStyles.statusProgress}>
-            <span className={styles.status}>
-              {failed || cancelled ? (
-                <AlertCircle size={14} className={styles.statusFailed} />
-              ) : (
-                <Loader2 size={14} className={styles.statusProcessing} />
-              )}
-              <span className={styles.statusLabel}>
-                {failed
-                  ? "要確認"
-                  : cancelling
-                    ? "キャンセル中"
-                    : cancelled
-                      ? "キャンセル済"
-                      : "準備中"}
-              </span>
-            </span>
-            {running && !cancelling && (
-              <span className={styles.date}>{percent > 0 ? `${percent}%` : job.message}</span>
-            )}
-            {cancelling && <span className={styles.date}>{job.message}</span>}
-          </div>
-        ) : null}
-        {running && onCancel && (
-          <div className={styles.importActions}>
-            <button
-              type="button"
-              className={`${styles.actionButton} ${jobStyles.cancelAction}`}
-              title="キャンセル"
-              aria-label="インポートをキャンセル"
-              disabled={cancelling}
-              onClick={() => onCancel(job.id)}
-            >
-              <X size={14} />
-              <span className={jobStyles.actionText}>キャンセル</span>
-            </button>
-          </div>
-        )}
-        {failed && (
-          <div className={styles.importActions}>
-            {actions.map((action) => {
-              if (action === "open_existing" && !job.existingPaperId) return null;
-              if (action === "restore_existing" && !job.existingPaperId) return null;
-              if (action === "readd" && !onReadd) return null;
-              const label = actionLabel(action);
-              if (action === "dismiss") {
-                return (
-                  <button
-                    key={action}
-                    type="button"
-                    className={jobStyles.dismissAction}
-                    title={label}
-                    aria-label={label}
-                    onClick={() => runAction(action)}
-                  >
-                    <X size={14} />
-                  </button>
-                );
-              }
-              const icon =
-                action === "open_existing" || action === "restore_existing" ? (
-                  <ExternalLink size={14} />
-                ) : (
-                  <RotateCcw size={14} />
-                );
-              return (
-                <button
-                  key={action}
-                  type="button"
-                  className={
-                    action === classified?.primaryAction
-                      ? jobStyles.primaryAction
-                      : styles.actionButton
-                  }
-                  title={label}
-                  aria-label={label}
-                  onClick={() => runAction(action)}
-                >
-                  {icon}
-                  <span className={jobStyles.actionText}>{label}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      {trailing}
     </article>
   );
 }
