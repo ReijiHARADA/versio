@@ -122,10 +122,10 @@
   cursor: not-allowed;
 }
 
-/* Header: solid red hold-to-empty; gauge fills left → right.
+/* Header: red CTA (lit like the other primary buttons) hold-to-empty; gauge fills left → right.
    Width is set in TS to match `.actions` (元に戻す + 削除). */
 .emptyHoldButton {
-  composes: surface from "../../styles/squircle.module.css";
+  composes: surface cta from "../../styles/squircle.module.css";
   --hold-t: 0;
   position: relative;
   overflow: hidden;
@@ -134,10 +134,8 @@
   justify-content: center;
   gap: var(--spacing-sm);
   border: 1px solid transparent;
-  --sq-line: var(--color-danger);
   --sq-bw: 1px;
   --sq-fill: var(--sq-fill-md);
-  --sq-ring: var(--sq-ring-md);
   border-radius: var(--sq-radius-md);
   --sq-bg: var(--color-danger);
   color: #fff;
