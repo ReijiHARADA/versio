@@ -8,8 +8,17 @@ import { filterPapersByLibraryQuery } from "../domain/librarySearch";
  */
 export function useLibraryPaperSearch(papers: Paper[], query: string): Paper[] {
   const [results, setResults] = useState(() => filterPapersByLibraryQuery(papers, query));
+  const empty = !query.trim();
+  const [wasEmpty, setWasEmpty] = useState(empty);
+  if (empty !== wasEmpty) {
+    setWasEmpty(empty);
+    // Clearing the query resets to the full list, so retyping narrows from it as before.
+    if (empty) setResults(papers);
+  }
 
   useEffect(() => {
+    // An empty query shows `papers` as-is; don't re-run search on every paper update.
+    if (empty) return;
     let cancelled = false;
     const handle = window.setTimeout(() => {
       void searchLibraryPapers(papers, query).then((next) => {
@@ -20,9 +29,9 @@ export function useLibraryPaperSearch(papers: Paper[], query: string): Paper[] {
       cancelled = true;
       window.clearTimeout(handle);
     };
-  }, [papers, query]);
+  }, [empty, papers, query]);
 
   // Keep immediate metadata filter while FTS is in flight for empty→typed UX.
-  if (!query.trim()) return papers;
+  if (empty) return papers;
   return results;
 }

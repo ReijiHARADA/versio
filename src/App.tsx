@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppShell } from "./components/shell/AppShell";
 import { LibraryScreen } from "./components/library/LibraryScreen";
@@ -7,9 +7,6 @@ import { InboxScreen } from "./components/library/InboxScreen";
 import { FavoritesScreen } from "./components/library/FavoritesScreen";
 import { RecentScreen } from "./components/library/RecentScreen";
 import { TrashScreen } from "./components/library/TrashScreen";
-import { ReaderScreen } from "./components/reader/ReaderScreen";
-import { ImportScreen } from "./components/import/ImportScreen";
-import { SettingsScreen } from "./components/settings/SettingsScreen";
 import { PdfFileDropLayer } from "./components/shell/PdfFileDropLayer";
 import { IntroOverlay } from "./components/intro/IntroOverlay";
 import { useAppStore } from "./stores/appStore";
@@ -23,7 +20,22 @@ import { maybeStartUiE2eWatcher } from "./services/uiE2eWatch";
 import { invoke } from "@tauri-apps/api/core";
 import styles from "./App.module.css";
 
+// Reader / Settings / Import load on demand to shrink startup; preloaded once the app is idle
+// so the first open does not wait on the chunk.
+const loadReader = () => import("./components/reader/ReaderScreen");
+const loadSettings = () => import("./components/settings/SettingsScreen");
+const loadImport = () => import("./components/import/ImportScreen");
+const ReaderScreen = lazy(() => loadReader().then((m) => ({ default: m.ReaderScreen })));
+const SettingsScreen = lazy(() => loadSettings().then((m) => ({ default: m.SettingsScreen })));
+const ImportScreen = lazy(() => loadImport().then((m) => ({ default: m.ImportScreen })));
+
 function App() {
+  useEffect(() => {
+    const preload = () => void Promise.all([loadReader(), loadSettings(), loadImport()]);
+    // WKWebView has no requestIdleCallback; a short delay keeps first paint free.
+    const id = window.setTimeout(preload, 1500);
+    return () => window.clearTimeout(id);
+  }, []);
   const displaySettings = useAppStore((state) => state.displaySettings);
 
   useEffect(() => {
@@ -102,7 +114,7 @@ function App() {
       <div className={`${styles.root} ${isTauriApp() ? styles.rootDesktop : ""}`}>
         <div className={styles.routes}>
           <Routes>
-            <Route path="/import" element={<ImportScreen />} />
+            <Route path="/import" element={<Suspense fallback={null}><ImportScreen /></Suspense>} />
             <Route element={<AppShell />}>
               <Route path="/" element={<LibraryScreen />} />
               <Route path="/inbox" element={<InboxScreen />} />
@@ -110,8 +122,8 @@ function App() {
               <Route path="/recent" element={<RecentScreen />} />
               <Route path="/trash" element={<TrashScreen />} />
               <Route path="/project/:projectId" element={<ProjectScreen />} />
-              <Route path="/settings" element={<SettingsScreen />} />
-              <Route path="/reader/:paperId" element={<ReaderScreen />} />
+              <Route path="/settings" element={<Suspense fallback={null}><SettingsScreen /></Suspense>} />
+              <Route path="/reader/:paperId" element={<Suspense fallback={null}><ReaderScreen /></Suspense>} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

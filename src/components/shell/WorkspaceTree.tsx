@@ -76,6 +76,7 @@ export function WorkspaceTree({
   const tree = useMemo(() => buildWorkspaceTree(nodes), [nodes]);
   const memberships = useProjectStore((state) => state.memberships);
   const papers = useLibraryCache((state) => state.papers);
+  const papersById = useMemo(() => new Map(papers.map((paper) => [paper.id, paper])), [papers]);
   const folderExport = useFolderExport();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
@@ -296,7 +297,7 @@ export function WorkspaceTree({
             >
               {node.children.map((child) => renderNode(child, depth + 1))}
               {links.map((link) => {
-                const paper = papers.find((item) => item.id === link.paperId);
+                const paper = papersById.get(link.paperId);
                 return paper ? (
                   <PaperItem
                     key={`${node.id}-${paper.id}`}
