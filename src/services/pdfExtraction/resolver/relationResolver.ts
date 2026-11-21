@@ -303,6 +303,29 @@ export function pageBoundaryContinuationRelations(
 }
 
 /**
+ * A heading-shaped row that ended in a comma or dash was demoted to a paragraph
+ * (`MG: Formal analysis, Methodology, Writing –`). It sits inside one paragraph:
+ * link it from an unfinished paragraph just before it and to the paragraph just after it.
+ */
+export function demotedRowContinuationRelations(nodes: CanonicalNode[]): CanonicalRelation[] {
+  const relations: CanonicalRelation[] = [];
+  for (let i = 0; i < nodes.length; i += 1) {
+    const row = nodes[i];
+    if (row.role !== "paragraph" || !row.evidence.some((entry) => entry.label === "unfinished-heading-demotion")) continue;
+    const previous = nodes[i - 1];
+    const next = nodes[i + 1];
+    if (previous?.role === "paragraph" && previous.text && previous.pageEnd === row.pageStart &&
+      !/[.!?:]\s*$/.test(previous.text.trim())) {
+      relations.push({ kind: "CONTINUES", from: previous.id, to: row.id, score: 0.8 });
+    }
+    if (next?.role === "paragraph" && next.text && (next.pageStart === row.pageEnd || next.pageStart === row.pageEnd + 1)) {
+      relations.push({ kind: "CONTINUES", from: row.id, to: next.id, score: 0.8 });
+    }
+  }
+  return relations;
+}
+
+/**
  * Link a paragraph that resumes below a floated table to its unfinished
  * cross-column source paragraph. The table and caption remain independent
  * canonical nodes. This relation is emitted only when the source text is

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pageBoundaryContinuationRelations } from "../../services/pdfExtraction/resolver/relationResolver";
+import { demotedRowContinuationRelations, pageBoundaryContinuationRelations } from "../../services/pdfExtraction/resolver/relationResolver";
 import type { CanonicalNode } from "../../services/pdfExtraction/canonical/types";
 
 const node = (id: string, page: number, text: string, y: number, column: string): CanonicalNode => ({
@@ -36,5 +36,19 @@ describe("pageBoundaryContinuationRelations", () => {
       node("p3", 2, "and this begins in the middle of the page.", 420, "left"),
     ], layouts);
     expect(relations).toEqual([]);
+  });
+});
+
+describe("demotedRowContinuationRelations", () => {
+  it("links a demoted unfinished row to an open paragraph before it and the paragraph after it", () => {
+    const row = { ...node("row", 1, "MG: Formal analysis, Methodology, Writing –", 300, "left"), evidence: [{ source: "generic-heuristic" as const, label: "unfinished-heading-demotion", confidence: 0.8 }] };
+    expect(demotedRowContinuationRelations([
+      node("a", 1, "BS: Conceptualization, Data curation, Writing –", 280, "left"),
+      row,
+      node("b", 1, "review & editing, Supervision.", 320, "left"),
+    ])).toEqual([
+      { kind: "CONTINUES", from: "a", to: "row", score: 0.8 },
+      { kind: "CONTINUES", from: "row", to: "b", score: 0.8 },
+    ]);
   });
 });
