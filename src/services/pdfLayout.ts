@@ -2887,6 +2887,11 @@ function detectMastheadEnd(lines: LayoutLine[], baseFont: number): number {
   return body ? body.y : -1;
 }
 
+// An equal-contribution note (`†These authors have contributed equally…`) is a footnote,
+// even inside a masthead affiliation list or a side-rail copyright run.
+const EQUAL_CONTRIBUTION_NOTE =
+  /^[*∗†‡§¶#☯\d\s]*(?:(?:these|both|the (?:first|last) two) authors (?:have )?(?:contributed equally|share (?:first|senior|last|co-first) authorship))/i;
+
 function roleForLine(
   line: LayoutLine,
   baseFont: number,
@@ -2900,6 +2905,7 @@ function roleForLine(
   // top margin and interleave it with the first body column. It is publication
   // metadata, not translatable prose.
   if (/^(?:[*∗†‡§]\s*)?this is the unedited author(?:'|’)?s copy\b/i.test(text)) return "chrome";
+  if (EQUAL_CONTRIBUTION_NOTE.test(text)) return "footnote";
   // Repeated proceedings URLs in the top margin are publisher chrome. Keep
   // URL-only lines out of page-boundary paragraph stitching; inline URLs in
   // ordinary prose remain unchanged.
@@ -3317,11 +3323,15 @@ function groupLinesIntoBlocks(
       copyrightColumn = line.column;
     }
     const isSplitTail = line !== sourceLine;
-    const role = roleForLine(line, baseFont, mastheadEndY, isSplitTail ? false : copyrightStarted, titleFont, mastheadTitleTexts);
+    const noteLine = current.at(-1);
+    const continuesNote: boolean = currentRole === "footnote" && !!noteLine && EQUAL_CONTRIBUTION_NOTE.test(current[0].text.trim()) &&
+      noteLine.page === line.page && /^[a-z]/.test(line.text.trim()) && Math.abs(line.x - noteLine.x) <= 4 &&
+      line.y - noteLine.y > 0 && line.y - noteLine.y < noteLine.fontSize * 2.2;
+    const role: LayoutRole = continuesNote ? "footnote" : roleForLine(line, baseFont, mastheadEndY, isSplitTail ? false : copyrightStarted, titleFont, mastheadTitleTexts);
     if (isReferencesHeading(line.text)) {
       inReferences = true;
     }
-    let forcedRole =
+    let forcedRole: LayoutRole =
       inReferences &&
       role === "heading" &&
       !isReferencesHeading(line.text)
