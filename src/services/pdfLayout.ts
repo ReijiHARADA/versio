@@ -6420,6 +6420,30 @@ export function reconstructDocument(pages: ExtractedPage[]): {
 
   const blocks = groupLinesIntoBlocks(lines, bodyFont);
   const mastheadBoundary = blocks.find((block) => block.pageStart === 1 && block.role === "paragraph" && block.text.length >= 240)?.bbox.y ?? 420;
+  // A full-width caption on a two-column page can be cut at the gutter: the right
+  // half of a row (`) Walk straight, U shape…`) starts where the caption row ends,
+  // on the same baseline and in the same font. Give it back to the caption.
+  for (const caption of blocks.filter((block) => block.role === "figure_caption" || block.role === "table_caption")) {
+    for (const row of [...caption.lines]) {
+      for (const other of blocks) {
+        if (other === caption || other.role === "figure_caption" || other.role === "table_caption") continue;
+        const tail = other.lines.find((line) => line.page === row.page && Math.abs(line.y - row.y) <= 1 &&
+          Math.abs(line.fontSize - row.fontSize) <= 0.3 && line.x - (row.x + row.width) >= -1 && line.x - (row.x + row.width) <= 6);
+        if (!tail) continue;
+        other.lines = other.lines.filter((line) => line !== tail);
+        caption.lines.splice(caption.lines.indexOf(row) + 1, 0, tail);
+        caption.text = joinLines(caption.lines);
+        caption.bbox = blockBbox(caption.lines);
+        if (other.lines.length) {
+          other.text = joinLines(other.lines);
+          other.bbox = blockBbox(other.lines);
+        } else {
+          blocks.splice(blocks.indexOf(other), 1);
+        }
+        break;
+      }
+    }
+  }
   // Some native streams split a title at a column/font-run boundary. Merge
   // only strongly aligned title fragments, and recover a preceding title
   // prefix that was conservatively labelled as an author when it ends in a
