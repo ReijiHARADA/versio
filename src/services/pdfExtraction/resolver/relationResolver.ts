@@ -397,7 +397,8 @@ export type TopologicalOrderKey = {
 export function topologicalOrder(
   ids: string[],
   relations: CanonicalRelation[],
-  orderKey?: (id: string) => TopologicalOrderKey
+  orderKey?: (id: string) => TopologicalOrderKey,
+  canBridge: (from: string, to: string) => boolean = () => false
 ): string[] | null {
   const incoming = new Map<string, number>();
   const outgoing = new Map<string, string[]>();
@@ -406,11 +407,23 @@ export function topologicalOrder(
     incoming.set(id, 0);
     outgoing.set(id, []);
   }
+  const successors = new Map<string, string[]>();
   for (const rel of relations) {
-    if (rel.kind !== "READS_BEFORE") continue;
-    if (!incoming.has(rel.from) || !incoming.has(rel.to)) continue;
-    outgoing.get(rel.from)?.push(rel.to);
-    incoming.set(rel.to, (incoming.get(rel.to) ?? 0) + 1);
+    if (rel.kind === "READS_BEFORE") successors.set(rel.from, [...(successors.get(rel.from) ?? []), rel.to]);
+  }
+  for (const rel of relations) {
+    if (rel.kind !== "READS_BEFORE" || !incoming.has(rel.from)) continue;
+    // Bridge over nodes left out of `ids` (figure labels) so the chain does not fall back to y order;
+    // `canBridge` keeps chart fragments on the y fallback that groups them into one region.
+    let to: string | undefined = rel.to;
+    const seen = new Set<string>();
+    while (to && !incoming.has(to) && !seen.has(to)) {
+      seen.add(to);
+      to = successors.get(to)?.[0];
+    }
+    if (!to || !incoming.has(to) || to === rel.from || (to !== rel.to && !canBridge(rel.from, to))) continue;
+    outgoing.get(rel.from)?.push(to);
+    incoming.set(to, (incoming.get(to) ?? 0) + 1);
   }
   const compareReady = (a: string, b: string) => {
     if (orderKey) {

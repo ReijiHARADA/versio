@@ -5086,6 +5086,12 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
         y: box?.y ?? Number.MAX_SAFE_INTEGER,
         x: box?.x ?? Number.MAX_SAFE_INTEGER,
       };
+    }, (from, to) => {
+      // A table caption stays on the y fallback that keeps it with its table region.
+      const target = nodeById.get(to);
+      if (target?.role === "caption" && /^\s*tab(?:le|\.)/i.test(target.text ?? "")) return false;
+      return target?.role === "caption" ||
+        (nodeById.get(from)?.role === "paragraph" && isLikelyNarrativeText(nodeById.get(from)?.text ?? ""));
     }) ?? fallbackIds;
   const orderedNodes = orderedIds
     .map((id) => nodeById.get(id))
