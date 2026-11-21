@@ -1,5 +1,23 @@
 import { describe, expect, it, vi } from "vitest";
-import { ocrDocument } from "../services/ocrService";
+import { ocrDocument, ocrPage } from "../services/ocrService";
+
+const invoke = vi.hoisted(() => vi.fn(async () => [{ text: "GROUNDING", confidence: 1 }]));
+vi.mock("@tauri-apps/api/core", () => ({ invoke }));
+
+describe("ocrPage Tauri call", () => {
+  it("sends the argument key Tauri derives from the Rust `image_b64` parameter", async () => {
+    vi.stubGlobal("window", { __TAURI_INTERNALS__: {} });
+    vi.stubGlobal("document", {
+      createElement: () => ({ getContext: () => ({}), toDataURL: () => "data:image/png;base64,AAAA" }),
+    });
+    const page = { getViewport: () => ({ width: 10, height: 10 }), render: () => ({ promise: Promise.resolve() }) };
+    const result = await ocrPage(page, 1, ["en-US"]);
+    // Tauri v2 camelCases command args: `image_b64` is only accepted as `imageB64`.
+    expect(invoke).toHaveBeenCalledWith("ocr_image", { imageB64: "AAAA", languages: ["en-US"] });
+    expect(result.fullText).toBe("GROUNDING");
+    vi.unstubAllGlobals();
+  });
+});
 
 describe("ocrDocument page selection", () => {
   it("requests only pages selected by the extraction classifier", async () => {

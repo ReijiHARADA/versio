@@ -80,7 +80,7 @@ export async function ocrPage(
 
   const { invoke } = await import("@tauri-apps/api/core");
   const base64 = await pageToBase64(pdfPage, 2.0);
-  const lines: OcrLine[] = await invoke("ocr_image", { imageb64: base64, languages });
+  const lines: OcrLine[] = await invoke("ocr_image", { imageB64: base64, languages });
 
   return {
     pageNumber,
