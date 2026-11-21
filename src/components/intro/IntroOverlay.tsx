@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import introMp4 from "../../assets/intro/intro.mp4";
 import finalPng from "../../assets/intro/final.png";
-import { hasSeenIntro, markIntroSeen } from "./introSeen";
+import { markIntroSeen } from "./introSeen";
 import { playStapleSound, STAPLE_FIRST_CLICK_S } from "./stapleSound";
 import styles from "./IntroOverlay.module.css";
 
@@ -12,8 +12,9 @@ const CTA_TIME_S = 84 / 30; // a beat after the base leaves the frame (GONE = 78
 const CTA_LABEL = "Versioを使い始める";
 
 export function IntroOverlay() {
-  // Automated browsers (Playwright verify scripts) start with fresh storage; keep them out of the intro.
-  const [open, setOpen] = useState(() => !hasSeenIntro() && !navigator.webdriver);
+  // Automated browsers (Playwright verify scripts) are kept out of the intro.
+  // shortcut: shown on every launch for now (user request); restore the `!hasSeenIntro() &&` gate when told.
+  const [open, setOpen] = useState(() => !navigator.webdriver);
   const [still] = useState(() => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
   const [videoFailed, setVideoFailed] = useState(false);
   const [ctaShown, setCtaShown] = useState(still);
