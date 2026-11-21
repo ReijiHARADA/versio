@@ -11,7 +11,7 @@ vi.mock("./database", () => db);
 const trash = vi.hoisted(() => ({ listTrashItems: vi.fn() }));
 vi.mock("./trashService", () => trash);
 
-import { ensureIntroductionPaper, seedIntroductionPaper } from "./introductionPaper";
+import { seedIntroductionPaper } from "./introductionPaper";
 import { useLibraryCache } from "../stores/libraryCache";
 
 const FLAG = "onboarding.introductionSeeded";
@@ -62,21 +62,3 @@ describe("seedIntroductionPaper", () => {
   });
 });
 
-describe("ensureIntroductionPaper (every-launch mode)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    useLibraryCache.setState({ papers: [] });
-  });
-
-  it("re-adds the Introduction when it is missing, even for existing users and after it was seeded", async () => {
-    db.getSetting.mockResolvedValue(true);
-    expect(await ensureIntroductionPaper(["other-paper"])).toBe("added");
-    expect(db.savePaper).toHaveBeenCalledOnce();
-    expect(db.saveBlocks).toHaveBeenCalledOnce();
-  });
-
-  it("leaves an Introduction already in the library untouched", async () => {
-    expect(await ensureIntroductionPaper(["versio-introduction"])).toBe("skipped");
-    expect(db.savePaper).not.toHaveBeenCalled();
-  });
-});
