@@ -4,21 +4,36 @@
   /* Main card inset from the window's right and bottom edges, and its corner radius. */
   --card-gap: 10px;
   --card-radius: 10px;
+  /* Gray ramp: one cool (blue-tinted, OKLCH hue 250) scale shared by both
+     themes. Semantic tokens below map onto it; use those in components. */
+  --gray-50: #f8f9fa;
+  --gray-100: #f1f3f5;
+  --gray-200: #e7eaed;
+  --gray-300: #dde0e3;
+  --gray-400: #b9bec3;
+  --gray-500: #9aa0a6;
+  --gray-600: #767b81;
+  --gray-700: #5f6368;
+  --gray-800: #383b3e;
+  --gray-850: #2d2f32;
+  --gray-900: #232528;
+  --gray-950: #1a1c1e;
+
   /* Neutrals (light). Two families by role:
      --color-bg-*      : flat layers, page → secondary → tertiary (darker)
      --color-surface-* : grouped panels, hover fill, raised controls */
   --color-bg: #ffffff;
-  --color-bg-secondary: #f8f9fa;
-  --color-bg-tertiary: #f1f3f4;
+  --color-bg-secondary: var(--gray-50);
+  --color-bg-tertiary: var(--gray-100);
   --color-surface-page: var(--color-bg);
-  --color-surface-grouped: #f7f8fa;
-  --color-surface-hover: #e8eaed;
+  --color-surface-grouped: var(--gray-50);
+  --color-surface-hover: var(--gray-200);
   --color-surface-control: #ffffff;
-  --color-text: #1a1a1a;
-  --color-text-secondary: #5f6368;
-  --color-text-tertiary: #9aa0a6;
-  --color-border: #e0e0e0;
-  --color-border-light: #eeeeee;
+  --color-text: var(--gray-950);
+  --color-text-secondary: var(--gray-700);
+  --color-text-tertiary: var(--gray-500);
+  --color-border: var(--gray-300);
+  --color-border-light: var(--gray-200);
   --color-separator-subtle: color-mix(in srgb, var(--color-text) 8%, transparent);
   --color-shadow: rgba(0, 0, 0, 0.1);
 
@@ -110,17 +125,17 @@
 
 [data-theme="dark"] {
   /* Neutrals (dark) */
-  --color-bg: #1e1e1e;
-  --color-bg-secondary: #252526;
-  --color-bg-tertiary: #2d2d30;
-  --color-surface-grouped: #323234;
-  --color-surface-hover: #353538;
-  --color-surface-control: #3a3a3c;
-  --color-text: #e0e0e0;
-  --color-text-secondary: #a0a0a0;
-  --color-text-tertiary: #6e6e6e;
-  --color-border: #3c3c3c;
-  --color-border-light: #333333;
+  --color-bg: var(--gray-950);
+  --color-bg-secondary: var(--gray-900);
+  --color-bg-tertiary: var(--gray-850);
+  --color-surface-grouped: var(--gray-850);
+  --color-surface-hover: var(--gray-800);
+  --color-surface-control: var(--gray-800);
+  --color-text: var(--gray-300);
+  --color-text-secondary: var(--gray-500);
+  --color-text-tertiary: var(--gray-600);
+  --color-border: var(--gray-800);
+  --color-border-light: var(--gray-850);
   --color-separator-subtle: color-mix(in srgb, var(--color-text) 12%, transparent);
   --color-shadow: rgba(0, 0, 0, 0.3);
   --scrollbar-thumb: rgba(255, 255, 255, 0.16);
