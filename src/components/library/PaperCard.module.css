@@ -491,6 +491,16 @@
   outline-offset: -2px;
 }
 
+/* Marquee / ⌘-click selection (Finder): tinted tile, accent title. */
+.tile[data-selected],
+.tile[data-selected]:hover {
+  background-color: var(--color-accent-light);
+}
+
+.tile[data-selected] .tileTitle {
+  color: var(--color-accent);
+}
+
 .tileCover {
   position: relative;
   padding: 0 6%;

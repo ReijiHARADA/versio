@@ -4,8 +4,23 @@ import {
   paperDropTargetAtPoint,
   usePaperDragStore,
 } from "../../stores/paperDragStore";
+import { usePaperSelectionStore } from "../../stores/paperSelectionStore";
 
 const DRAG_THRESHOLD_PX = 8;
+const MAX_DRAG_COVERS = 3;
+
+/** Finder rule: dragging a selected grid tile drags the whole selection; an unselected one becomes the selection. */
+function dragPayload(paperId: string, grid: boolean): { ids: string[]; covers: string[] } {
+  if (!grid) return { ids: [paperId], covers: [] };
+  const selection = usePaperSelectionStore.getState();
+  const ids = selection.ids.has(paperId) ? [paperId, ...[...selection.ids].filter((id) => id !== paperId)] : [paperId];
+  if (!selection.ids.has(paperId)) selection.select(ids);
+  const covers = ids.slice(0, MAX_DRAG_COVERS).flatMap((id) => {
+    const img = document.querySelector<HTMLImageElement>(`article[data-layout="grid"][data-paper-id="${CSS.escape(id)}"] img`);
+    return img?.currentSrc || img?.src ? [img.currentSrc || img.src] : [];
+  });
+  return { ids, covers };
+}
 
 export function useDraggablePaper(
   paperId: string,
@@ -34,6 +49,8 @@ export function useDraggablePaper(
       if (target?.closest("button")) return;
 
       skipClick.current = false;
+      const grid = Boolean((event.currentTarget as HTMLElement).closest('[data-layout="grid"]'));
+      let draggedIds: string[] = [];
       const pointerId = event.pointerId;
       const originX = event.clientX;
       const originY = event.clientY;
@@ -52,7 +69,9 @@ export function useDraggablePaper(
         if (!dragging) {
           if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
           dragging = true;
-          beginDrag(paperIdRef.current, labelRef.current, moveEvent.clientX, moveEvent.clientY, sourceNodeIdRef.current);
+          const payload = dragPayload(paperIdRef.current, grid);
+          draggedIds = payload.ids;
+          beginDrag(draggedIds, labelRef.current, moveEvent.clientX, moveEvent.clientY, sourceNodeIdRef.current, payload.covers);
         }
         moveEvent.preventDefault();
         movePointer(
@@ -70,7 +89,7 @@ export function useDraggablePaper(
         const targetId = paperDropTargetAtPoint(upEvent.clientX, upEvent.clientY);
         endDrag();
         if (targetId && upEvent.type !== "pointercancel") {
-          void completePaperDrop(targetId, paperIdRef.current, sourceNodeIdRef.current ?? null);
+          void completePaperDrop(targetId, draggedIds, sourceNodeIdRef.current ?? null);
         }
       };
 

@@ -1,4 +1,5 @@
 import type { KeyboardEvent, ReactNode } from "react";
+import { usePaperSelectionStore } from "../../stores/paperSelectionStore";
 import { useDraggablePaper } from "./useDraggablePaper";
 
 type DraggablePaperArticleProps = {
@@ -7,6 +8,8 @@ type DraggablePaperArticleProps = {
   className: string;
   enabled?: boolean;
   sourceNodeId?: string;
+  /** Grid tile: joins marquee / ⌘-click selection and drags as a cover. */
+  selectable?: boolean;
   onOpen: () => void;
   children: ReactNode;
 };
@@ -17,10 +20,12 @@ export function DraggablePaperArticle({
   className,
   enabled = true,
   sourceNodeId,
+  selectable = false,
   onOpen,
   children,
 }: DraggablePaperArticleProps) {
   const drag = useDraggablePaper(paperId, label, enabled, sourceNodeId);
+  const selected = usePaperSelectionStore((state) => selectable && state.ids.has(paperId));
 
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     // Keys typed in menus / sheets / popovers rendered inside the card (even via portal) bubble here.
@@ -36,8 +41,12 @@ export function DraggablePaperArticle({
       className={className}
       onPointerDown={drag.onPointerDown}
       onDragStart={(event) => event.preventDefault()}
-      onClick={() => {
+      onClick={(event) => {
         if (drag.consumeClickIfDragged()) return;
+        if (selectable && event.metaKey) {
+          usePaperSelectionStore.getState().toggle(paperId);
+          return;
+        }
         onOpen();
       }}
       role="button"
@@ -51,6 +60,8 @@ export function DraggablePaperArticle({
       }}
       data-testid="paper-card"
       data-paper-id={paperId}
+      data-layout={selectable ? "grid" : undefined}
+      data-selected={selected || undefined}
       aria-label={`論文 ${label}`}
     >
       {children}

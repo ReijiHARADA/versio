@@ -17,13 +17,17 @@ export type PaperDropHandler = (
 ) => void | Promise<void>;
 
 type PaperDragState = {
+  /** First dragged paper; non-null while any drag is active. */
   draggingPaperId: string | null;
+  draggingPaperIds: string[];
+  /** Cover image URLs of grid tiles being dragged (empty for list rows). */
+  dragCovers: string[];
   sourceNodeId: string | null;
   dragLabel: string;
   pointerX: number;
   pointerY: number;
   dropTargetId: string | null;
-  beginDrag: (paperId: string, label: string, x: number, y: number, sourceNodeId?: string) => void;
+  beginDrag: (paperIds: string[], label: string, x: number, y: number, sourceNodeId?: string, covers?: string[]) => void;
   movePointer: (x: number, y: number, dropTargetId: string | null) => void;
   endDrag: () => void;
   showToast: (toast: PaperDropToast) => void;
@@ -45,24 +49,29 @@ export function paperDropTargetAtPoint(x: number, y: number): string | null {
 
 export async function completePaperDrop(
   targetId: string,
-  paperId: string,
+  paperIds: string[],
   sourceNodeId: string | null
 ): Promise<void> {
-  await paperDropHandler?.(targetId, paperId, sourceNodeId);
+  // Sequential so SQLite writes and membership updates stay ordered; the last toast wins.
+  for (const paperId of paperIds) await paperDropHandler?.(targetId, paperId, sourceNodeId);
 }
 
 export const usePaperDragStore = create<PaperDragState>((set) => ({
   draggingPaperId: null,
+  draggingPaperIds: [],
+  dragCovers: [],
   sourceNodeId: null,
   dragLabel: "",
   pointerX: 0,
   pointerY: 0,
   dropTargetId: null,
 
-  beginDrag: (paperId, label, x, y, sourceNodeId) => {
+  beginDrag: (paperIds, label, x, y, sourceNodeId, covers = []) => {
     document.body.classList.add("paper-dragging");
     set({
-      draggingPaperId: paperId,
+      draggingPaperId: paperIds[0] ?? null,
+      draggingPaperIds: paperIds,
+      dragCovers: covers,
       sourceNodeId: sourceNodeId ?? null,
       dragLabel: label,
       pointerX: x,
@@ -78,6 +87,8 @@ export const usePaperDragStore = create<PaperDragState>((set) => ({
     document.body.classList.remove("paper-dragging");
     set({
       draggingPaperId: null,
+      draggingPaperIds: [],
+      dragCovers: [],
       sourceNodeId: null,
       dragLabel: "",
       dropTargetId: null,
