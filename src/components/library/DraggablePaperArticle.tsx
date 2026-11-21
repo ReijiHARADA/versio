@@ -39,6 +39,12 @@ export function DraggablePaperArticle({
       role="button"
       tabIndex={0}
       onKeyDown={handleKeyDown}
+      onContextMenu={(event) => {
+        // Right-click opens the paper's own "…" menu instead of WebKit's (image) menu.
+        event.preventDefault();
+        const trigger = event.currentTarget.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]');
+        if (trigger?.getAttribute("aria-expanded") !== "true") trigger?.click();
+      }}
       data-testid="paper-card"
       data-paper-id={paperId}
       aria-label={`論文 ${label}`}
