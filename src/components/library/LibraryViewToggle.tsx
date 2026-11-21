@@ -29,7 +29,9 @@ export function LibraryViewToggle() {
           onClick={() => setDisplaySettings({ libraryView: value })}
         >
           <Icon size={15} aria-hidden="true" />
-          {view === value ? <span>{label}</span> : null}
+          <span className={styles.label} aria-hidden="true">
+            <span>{label}</span>
+          </span>
         </button>
       ))}
     </div>
