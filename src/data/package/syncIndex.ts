@@ -33,6 +33,7 @@ function stubIndexFromPackage(
     publication: pkg.paper.publication,
     year: pkg.paper.year,
     doi: pkg.paper.doi,
+    bibliography: pkg.paper.bibliography,
     pageCount: pkg.paper.pageCount,
     processingStatus: "ready",
     needsTranslationResume: false,

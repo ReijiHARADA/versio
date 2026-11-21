@@ -5,6 +5,7 @@ import type { GlossaryEntry } from "./llm/types";
 import type { TranslationCacheEntry } from "./translation/types";
 import type { BenchmarkEntry } from "../data/types/benchmark";
 import { getStorage } from "../data/runtime";
+import { applyMetadataPatch, type PaperMetadataPatch } from "./bibliography/applyPatch";
 import { migrateIndexedDbV4IfNeeded } from "../data/migration/migrate";
 import {
   deletePaperIndex,
@@ -20,6 +21,7 @@ import {
   forgetDocument,
   getDocumentBlocks,
   getDocumentSections,
+  loadDocument,
   peekDocument,
   persistAfterMutation,
   rememberDocument,
@@ -117,7 +119,8 @@ export async function markPaperOpened(paperId: string): Promise<void> {
   const lastOpenedAt = new Date().toISOString();
   upsertPaperIndex(db, { ...paper, lastOpenedAt });
   const cached = peekDocument(paperId);
-  rememberDocument({ ...paper, lastOpenedAt }, cached?.sections, cached?.blocks);
+  // The SQLite row lacks package-only fields (DOI, structured authors); keep the cached ones.
+  rememberDocument({ ...(cached?.paper ?? paper), lastOpenedAt }, cached?.sections, cached?.blocks);
 }
 
 export async function setPaperFavorite(paperId: string, favorite: boolean): Promise<void> {
@@ -126,7 +129,31 @@ export async function setPaperFavorite(paperId: string, favorite: boolean): Prom
   if (!paper) return;
   upsertPaperIndex(db, { ...paper, favorite });
   const cached = peekDocument(paperId);
-  rememberDocument({ ...paper, favorite }, cached?.sections, cached?.blocks);
+  rememberDocument({ ...(cached?.paper ?? paper), favorite }, cached?.sections, cached?.blocks);
+}
+
+/** Edit citation metadata. Written to paper.json (the source of truth), then the index. */
+export async function updatePaperMetadata(
+  paperId: string,
+  patch: PaperMetadataPatch
+): Promise<Paper | undefined> {
+  const { fs, db } = await ready();
+  const index = getPaperIndex(db, paperId);
+  if (!index) return undefined;
+  const doc = await loadDocument(fs, index);
+  const paper = applyMetadataPatch(doc.paper, patch, new Date().toISOString());
+  rememberDocument(paper, doc.sections, doc.blocks);
+  if (doc.blocks.length) await persistAfterMutation(fs, db, paperId);
+  else upsertPaperIndex(db, paper);
+  return paper;
+}
+
+/** Full paper record including package-only fields (DOI, bibliography). */
+export async function getPaperWithPackageMetadata(paperId: string): Promise<Paper | undefined> {
+  const { fs, db } = await ready();
+  const index = getPaperIndex(db, paperId);
+  if (!index) return undefined;
+  return (await loadDocument(fs, index)).paper;
 }
 
 export async function flushPaperPersist(paperId?: string): Promise<void> {

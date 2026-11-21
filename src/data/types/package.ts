@@ -1,6 +1,7 @@
 import type { StructureFile } from "./structure";
 import type { LayoutFile } from "./layout";
 import type { TranslationFile } from "./translation";
+import type { PaperBibliography } from "../../types/paper";
 
 export type PaperJsonAuthor = {
   id: string;
@@ -27,6 +28,7 @@ export type PaperJson = {
   publication: string | null;
   year: number | null;
   doi: string | null;
+  bibliography?: PaperBibliography;
   pageCount: number;
   sourceFileHash: string;
   sourceFileName?: string;

@@ -224,6 +224,7 @@ export function packageToProjection(
     affiliations: pkg.paper.affiliations,
     keywords: pkg.paper.keywords,
     doi: pkg.paper.doi,
+    bibliography: pkg.paper.bibliography,
     packageRevision: pkg.paper.revision,
     publication: pkg.paper.publication,
     year: pkg.paper.year,

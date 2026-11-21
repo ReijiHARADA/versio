@@ -37,6 +37,9 @@ export function paperToPaperJson(paper: Paper, revision = 1): PaperJson {
     publication: paper.publication,
     year: paper.year,
     doi: paper.doi ?? null,
+    ...(paper.bibliography && Object.keys(paper.bibliography).length
+      ? { bibliography: paper.bibliography }
+      : {}),
     pageCount: paper.pageCount,
     sourceFileHash: paper.sourceFileHash,
     sourceFileName: paper.sourceFileName,

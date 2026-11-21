@@ -1,0 +1,127 @@
+.overlay {
+  composes: overlay from "../settings/LicenseTextSheet.module.css";
+}
+
+.sheet {
+  composes: sheet from "../settings/LicenseTextSheet.module.css";
+  width: min(100%, 34rem);
+}
+
+.header {
+  composes: header from "../settings/LicenseTextSheet.module.css";
+  align-items: center;
+}
+
+.title {
+  composes: title from "../settings/LicenseTextSheet.module.css";
+}
+
+.closeButton {
+  composes: closeButton from "../settings/LicenseTextSheet.module.css";
+}
+
+.body {
+  composes: body from "../settings/LicenseTextSheet.module.css";
+  gap: var(--spacing-md);
+}
+
+.lookupRow {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-end;
+}
+
+.lookupRow > label {
+  flex: 1;
+  min-width: 0;
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+.error {
+  composes: hint;
+  color: var(--color-danger);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.label {
+  composes: fieldLabel from "../settings/SettingsScreen.module.css";
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+}
+
+.field {
+  composes: inputField from "../settings/SettingsScreen.module.css";
+  display: flex;
+}
+
+.input {
+  composes: input from "../settings/SettingsScreen.module.css";
+}
+
+.textarea {
+  composes: input;
+}
+
+/* Raised specificity: composed settings classes load later and would win. */
+.sheet .input {
+  font-family: var(--font-family-sans);
+  border: none;
+  background: transparent;
+  outline: none;
+}
+
+.sheet .textarea {
+  min-height: 5.5rem;
+  padding-top: var(--spacing-xs);
+  padding-bottom: var(--spacing-xs);
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: 1px solid var(--color-border-light);
+  flex-shrink: 0;
+}
+
+.button {
+  composes: button from "../settings/SettingsScreen.module.css";
+}
+
+.ghostButton {
+  composes: ghostButton from "../settings/SettingsScreen.module.css";
+}
+
+.primaryButton {
+  composes: button from "../settings/SettingsScreen.module.css";
+}
+
+.sheet .primaryButton {
+  --sq-bg: var(--color-accent);
+  color: #fff;
+}
+
+.sheet .primaryButton:hover:not(:disabled) {
+  --sq-bg: var(--color-accent-hover);
+}
+
+@media (max-width: 560px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
