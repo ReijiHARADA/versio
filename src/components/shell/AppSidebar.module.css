@@ -205,11 +205,6 @@
 /* Sits in the title bar right after the macOS traffic lights (tauri.conf.json x12). */
 .brandToggle {
   composes: surface from "../../styles/squircle.module.css";
-  position: fixed;
-  /* Fixed beside the traffic lights (center 17px), independent of the band height. */
-  top: 5px;
-  left: 80px;
-  z-index: 1001;
   display: grid;
   place-items: center;
   width: 24px;
@@ -243,23 +238,23 @@
   pointer-events: auto;
 }
 
-/* Back / forward, right after the sidebar toggle (Finder-style). */
-.historyNav {
+/* Sidebar toggle + back/forward. Beside the traffic lights (center 17px); right-aligned to a pinned sidebar. */
+.titleControls {
   position: fixed;
   top: 5px;
-  left: 108px;
+  left: 80px;
   z-index: 1001;
   display: flex;
   gap: 2px;
 }
 
-.historyNavNarrow {
-  left: 80px;
+.titleControlsEnd {
+  left: calc(var(--sidebar-expanded-w) - var(--title-controls-end-inset, 6px));
+  transform: translateX(-100%);
 }
 
 .historyButton {
   composes: brandToggle;
-  position: static;
 }
 
 .historyButton:disabled {

@@ -255,6 +255,10 @@ export function AppSidebar({
           {/* Title bar controls, portaled above the drag band and outside the rail stacking context. */}
           {createPortal(
             <>
+              <div
+                className={`${styles.titleControls} ${sidebarMode === "expanded" ? styles.titleControlsEnd : ""}`}
+                style={{ "--sidebar-expanded-w": `${sidebarWidth}px` } as React.CSSProperties}
+              >
               {!narrow && (
                 <button
                   type="button"
@@ -268,7 +272,6 @@ export function AppSidebar({
                   {storedMode === "expanded" ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
                 </button>
               )}
-              <div className={`${styles.historyNav} ${narrow ? styles.historyNavNarrow : ""}`}>
                 <button
                   type="button"
                   className={styles.historyButton}
