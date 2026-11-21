@@ -1,22 +1,16 @@
 import { useEffect, useRef } from "react";
 import { HardDriveDownload, Languages, Settings, WifiOff } from "lucide-react";
-import type { PlamoModelState } from "../settings/usePlamoModel";
 import styles from "./PlamoSetupScreen.module.css";
 
 type Props = {
-  state: PlamoModelState;
-  percent: number;
-  error: string | null;
   onDownload: () => void;
   onClose: () => void;
 };
 
 /** Dedicated step after the intro animation: fetch the PLaMo model, or skip it for now. */
-export function PlamoSetupScreen({ state, percent, error, onDownload, onClose }: Props) {
+export function PlamoSetupScreen({ onDownload, onClose }: Props) {
   const primary = useRef<HTMLButtonElement>(null);
-  useEffect(() => primary.current?.focus(), [state]);
-
-  const started = state === "downloading" || state === "present";
+  useEffect(() => primary.current?.focus(), []);
 
   return (
     <section className={styles.screen} aria-labelledby="plamo-setup-title" data-tauri-drag-region>
@@ -46,35 +40,13 @@ export function PlamoSetupScreen({ state, percent, error, onDownload, onClose }:
           </li>
         </ul>
 
-        {started ? (
-          <div className={styles.progress} role="status">
-            <div className={styles.bar}>
-              <div className={styles.fill} style={{ width: `${state === "present" ? 100 : percent}%` }} />
-            </div>
-            <p className={styles.progressText}>
-              {state === "present"
-                ? "準備ができました"
-                : `ダウンロード中… ${percent}%（このまま使い始めても裏で続きます）`}
-            </p>
-          </div>
-        ) : null}
-        {state === "error" && error ? <p className={styles.error}>{error}</p> : null}
-
         <div className={styles.actions}>
-          {started ? (
-            <button ref={primary} type="button" className={styles.primary} onClick={onClose}>
-              Versio を使い始める
-            </button>
-          ) : (
-            <>
-              <button type="button" className={styles.secondary} onClick={onClose}>
-                あとで
-              </button>
-              <button ref={primary} type="button" className={styles.primary} onClick={onDownload}>
-                {state === "error" ? "もう一度ダウンロード" : "ダウンロード"}
-              </button>
-            </>
-          )}
+          <button type="button" className={styles.secondary} onClick={onClose}>
+            あとで
+          </button>
+          <button ref={primary} type="button" className={styles.primary} onClick={onDownload}>
+            ダウンロード
+          </button>
         </div>
       </div>
     </section>

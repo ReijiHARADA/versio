@@ -3,9 +3,9 @@ import introMp4 from "../../assets/intro/intro.mp4";
 import finalPng from "../../assets/intro/final.png";
 import { usePlamoModel } from "../settings/usePlamoModel";
 import { PlamoSetupScreen } from "./PlamoSetupScreen";
-import { ONBOARDING_PREVIEW, introStepAfterCta } from "./introSteps";
+import { introStepAfterCta } from "./introSteps";
 import { hasSeenIntro, markIntroSeen } from "./introSeen";
-import { playStapleSound, STAPLE_FIRST_CLICK_S } from "./stapleSound";
+import { playStapleSound, primeStapleSound, STAPLE_FIRST_CLICK_S } from "./stapleSound";
 import styles from "./IntroOverlay.module.css";
 
 // Timeline of design/intro/stapler_intro.py at 30 fps (frame N plays at (N - 1) / 30 s).
@@ -16,14 +16,17 @@ const CTA_LABEL = "Versioを使い始める";
 
 export function IntroOverlay() {
   // Automated browsers (Playwright verify scripts) are kept out of the intro.
-  const [open, setOpen] = useState(() => !navigator.webdriver && !hasSeenIntro());
+  const [open, setOpen] = useState(() => {
+    const show = !navigator.webdriver && !hasSeenIntro();
+    if (show) primeStapleSound();
+    return show;
+  });
   const [still] = useState(() => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
   const [videoFailed, setVideoFailed] = useState(false);
   const [ctaShown, setCtaShown] = useState(still);
   const [leaving, setLeaving] = useState(false);
   const [step, setStep] = useState<"intro" | "plamo">("intro");
   const plamo = usePlamoModel();
-  const [downloadPressed, setDownloadPressed] = useState(false);
   const timers = useRef<number[]>([]);
 
   useEffect(() => {
@@ -84,13 +87,10 @@ export function IntroOverlay() {
       </button>
       {step === "plamo" ? (
         <PlamoSetupScreen
-          // preview builds show the first-run screen even though the model is already installed
-          state={ONBOARDING_PREVIEW && plamo.state === "present" && !downloadPressed ? "absent" : plamo.state}
-          percent={plamo.percent}
-          error={plamo.error}
           onDownload={() => {
-            setDownloadPressed(true);
+            // installs in the background; the shell shows progress at the bottom
             void plamo.download();
+            close();
           }}
           onClose={close}
         />

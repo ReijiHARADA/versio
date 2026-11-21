@@ -25,12 +25,12 @@ FPS = 30
 SUN = float(os.environ.get("INTRO_SUN", "4.4"))  # sheet brightness; calibrated so flat paper ~ #fbfbfb
 # timeline (frames @30fps); static stretches before LAND_START and after GONE are duplicated by render.sh
 # A real stapler gives in two stages: the first click (the staple is driven through), then the snap (the clinch).
-# Stage times follow the recorded sound (src/assets/intro/staple.m4a: clicks 0.264 s apart, release ~0.37 s later).
+# Stage times follow the recorded sound (src/assets/intro/staple.wav: clicks 0.264 s apart, release ~0.37 s later).
 LAND_START, LAND = 10, 22  # glide in -> land under the sheet
 STAGE1 = 27                # first click
 CONTACT = 35               # the snap
 # The sound is "tu, TAAN, ta-ta-ta": the staple is bent on TAAN; ta-ta-ta is the spring kicking the stapler back open,
-# so the base rises in three steps on those hits (frames from the onsets in staple.m4a), then pulls away.
+# so the base rises in three steps on those hits (frames from the onsets in staple.wav), then pulls away.
 REBOUND = ((55, 0.9), (59, 0.6), (67, 0.4))  # (frame of the hit, rise in units)
 LIFT, GONE = 70, 78
 
