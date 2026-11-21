@@ -280,14 +280,15 @@ export function pageBoundaryContinuationRelations(
   const relations: CanonicalRelation[] = [];
   // A table floated to the top of the next page (rows may resolve as `equation`) sits between the two halves.
   const isTopTable = (node: CanonicalNode) => node.role === "table" || node.role === "caption" ||
-    ((node.role === "equation" || node.role === "other") && node.evidence.some((entry) =>
+    ((node.role === "equation" || node.role === "other" || node.role === "header") && node.evidence.some((entry) =>
       entry.label === "table-row-geometry" || entry.label === "table-region-member"));
   for (let i = 0; i + 1 < nodes.length; i += 1) {
     const previous = nodes[i];
     let j = i + 1;
-    // Page numbers, figures and tables listed after the last text line of the page do not break the pair.
+    // Page numbers, footnotes, figures and tables listed after the last text line of the page do not break the pair.
     while (j < nodes.length && nodes[j].pageStart === previous.pageEnd &&
-      (isTopTable(nodes[j]) || nodes[j].role === "figure" || /^\s*\d{1,5}\s*$/.test(nodes[j].text ?? ""))) j += 1;
+      (isTopTable(nodes[j]) || nodes[j].role === "figure" || nodes[j].role === "footnote" ||
+        /^\s*\d{1,5}\s*$/.test(nodes[j].text ?? ""))) j += 1;
     const tailEnd = j;
     while (j < nodes.length && nodes[j].pageStart === previous.pageEnd + 1 && isTopTable(nodes[j])) j += 1;
     const next = nodes[j];
@@ -297,6 +298,9 @@ export function pageBoundaryContinuationRelations(
     if (!previous.text || !next.text || previous.pageEnd + 1 !== next.pageStart) continue;
     if (previous.text.trim().length < 120 || /[.!?:]\s*$/.test(previous.text.trim())) continue;
     if (!/^(?:[a-z(]|(?:and|or|but|which|that|where|while|because|although|including)\b)/i.test(next.text.trim())) continue;
+    // Past a footnote or table the next paragraph may be a stray table row or figure text: insist on a lowercase start.
+    const skippedContent = nodes.slice(i + 1, j).some((node) => !/^\s*\d{1,5}\s*$/.test(node.text ?? ""));
+    if (skippedContent && !/^[a-z]/.test(next.text.trim())) continue;
     const pageLayout = layouts.find((layout) => layout.page === previous.pageEnd);
     if (!pageLayout) continue;
     const previousTail = previous.boundingBoxes.at(-1);
