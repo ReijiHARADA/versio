@@ -19,20 +19,21 @@ import { useImportJobRecovery } from "../library/useImportJobRecovery";
 import { useDeletePaper } from "../../hooks/useDeletePaper";
 import { ExportDialog } from "../reader/ExportDialog";
 import { WorkspaceFolderCard } from "./WorkspaceFolderCard";
+import { LibraryViewToggle, useLibraryView } from "../library/LibraryViewToggle";
 import { WorkspacePathTrail } from "../workspace/WorkspacePathTrail";
 import type { Paper } from "../../types/paper";
 import type { WorkspaceNode, WorkspacePaper } from "../../types/project";
 import styles from "./ProjectScreen.module.css";
 
-function subtreePaperCount(
+function subtreePaperIds(
   nodeId: string,
   nodes: WorkspaceNode[],
   memberships: WorkspacePaper[]
-): number {
+): string[] {
   const ids = new Set([nodeId, ...collectDescendantIds(nodes, nodeId)]);
-  return new Set(
-    memberships.filter((link) => ids.has(link.nodeId)).map((link) => link.paperId)
-  ).size;
+  return [
+    ...new Set(memberships.filter((link) => ids.has(link.nodeId)).map((link) => link.paperId)),
+  ];
 }
 
 /** Compatibility route component for /project/:id; every id is a WorkspaceNode. */
@@ -50,13 +51,14 @@ export function ProjectScreen() {
   const draggingPaperId = usePaperDragStore((state) => state.draggingPaperId);
   const { requestDelete } = useDeletePaper();
   const folderExport = useFolderExport();
+  const view = useLibraryView();
   const jobs = useMemo(
     () => visibleImportJobs(importJobs, { workspaceNodeId: nodeId }),
     [importJobs, nodeId]
   );
   const node = workspaceNodes.find((item) => item.id === nodeId);
   const subtreeCount = useMemo(
-    () => (nodeId ? subtreePaperCount(nodeId, workspaceNodes, memberships) : 0),
+    () => (nodeId ? subtreePaperIds(nodeId, workspaceNodes, memberships).length : 0),
     [memberships, nodeId, workspaceNodes]
   );
   const [nodePapers, setNodePapers] = useState<Paper[]>([]);
@@ -132,6 +134,7 @@ export function ProjectScreen() {
           {node?.description && <p className={styles.description}>{node.description}</p>}
         </div>
         <div className={styles.headerActions}>
+          <LibraryViewToggle />
           <button
             type="button"
             className={styles.exportButton}
@@ -171,30 +174,38 @@ export function ProjectScreen() {
       ) : (
         <div className={styles.list}>
           {childFolders.length > 0 && (
-            <div className={styles.folderList}>
-              {childFolders.map((folder) => (
-                <WorkspaceFolderCard
-                  key={folder.id}
-                  node={folder}
-                  childFolderCount={listChildWorkspaceNodes(workspaceNodes, folder.id).length}
-                  paperCount={subtreePaperCount(folder.id, workspaceNodes, memberships)}
-                  dropTarget={dropTargetId === folder.id}
-                  onOpen={() => {
-                    if (draggingPaperId) return;
-                    navigate(`/project/${folder.id}`);
-                  }}
-                />
-              ))}
+            <div className={view === "grid" ? styles.tileGrid : styles.folderList}>
+              {childFolders.map((folder) => {
+                const paperIds = subtreePaperIds(folder.id, workspaceNodes, memberships);
+                return (
+                  <WorkspaceFolderCard
+                    key={folder.id}
+                    node={folder}
+                    layout={view}
+                    coverPaperIds={paperIds}
+                    childFolderCount={listChildWorkspaceNodes(workspaceNodes, folder.id).length}
+                    paperCount={paperIds.length}
+                    dropTarget={dropTargetId === folder.id}
+                    onOpen={() => {
+                      if (draggingPaperId) return;
+                      navigate(`/project/${folder.id}`);
+                    }}
+                  />
+                );
+              })}
             </div>
           )}
           <div className={styles.paperList}>
             {jobs.map((job) => (
               <ImportJobCard key={job.id} job={job} {...recovery} />
             ))}
+          </div>
+          <div className={view === "grid" ? styles.tileGrid : styles.paperList}>
             {merged.map((paper) => (
               <PaperCard
                 key={paper.id}
                 paper={paper}
+                layout={view}
                 onOpen={() => {
                   const state = derivePaperReadiness({
                     processingStatus: paper.processingStatus,
@@ -232,7 +243,7 @@ export function ProjectScreen() {
         title="フォルダを書き出す"
         scopeNote={
           folderExport.target
-            ? `「${folderExport.target.name}」とその子フォルダの論文 ${subtreePaperCount(folderExport.target.id, workspaceNodes, memberships)} 件を、フォルダ階層つき ZIP にまとめます。失敗した論文はスキップし report に残します。`
+            ? `「${folderExport.target.name}」とその子フォルダの論文 ${subtreePaperIds(folderExport.target.id, workspaceNodes, memberships).length} 件を、フォルダ階層つき ZIP にまとめます。失敗した論文はスキップし report に残します。`
             : null
         }
         allowEpubSync={false}

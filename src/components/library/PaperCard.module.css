@@ -79,6 +79,7 @@
 }
 
 .row:hover .favoriteButton,
+.tile:hover .favoriteButton,
 .favoriteButton:focus-visible,
 .favoriteButton.favoriteOn {
   opacity: 1;
@@ -454,4 +455,69 @@
     justify-content: center;
     --sq-fill: var(--sq-fill-sm);
   }
+}
+
+/* Grid tiles: the paper's first page stands in for the paper. */
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  transition: background-color var(--transition-fast);
+}
+
+.tile:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.tile:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.tileCover {
+  position: relative;
+  padding: 0 6%;
+}
+
+.tileOverlay {
+  position: absolute;
+  inset: 4px calc(6% + 4px) auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.tileOverlay .favoriteButton {
+  --sq-bg: rgba(255, 255, 255, 0.9);
+}
+
+.tile:hover .tileOverlay,
+.tile:focus-within .tileOverlay,
+.tileOverlay:has(.favoriteOn) {
+  opacity: 1;
+}
+
+.tileTitle {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.tile .status {
+  justify-content: center;
 }

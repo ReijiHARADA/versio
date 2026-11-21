@@ -1,0 +1,42 @@
+.group {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: none;
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
+  --sq-bg: var(--color-surface-control, var(--color-bg-secondary));
+}
+
+.option {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 26px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  --sq-fill: var(--sq-fill-sm);
+  border-radius: var(--sq-radius-sm);
+  --sq-bg: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    --sq-bg var(--transition-fast);
+}
+
+.option:hover {
+  color: var(--color-text);
+}
+
+.option.active {
+  --sq-bg: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: 0 1px 2px var(--color-shadow);
+}

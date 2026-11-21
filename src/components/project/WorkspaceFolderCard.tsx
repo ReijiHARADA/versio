@@ -1,5 +1,6 @@
 import { Folder } from "lucide-react";
 import type { WorkspaceNode } from "../../types/project";
+import { PaperCover } from "../library/PaperCover";
 import styles from "./WorkspaceFolderCard.module.css";
 
 type WorkspaceFolderCardProps = {
@@ -8,6 +9,9 @@ type WorkspaceFolderCardProps = {
   paperCount: number;
   dropTarget?: boolean;
   onOpen: () => void;
+  layout?: "list" | "grid";
+  /** Papers shown peeking out of the folder in grid layout (first two are used). */
+  coverPaperIds?: string[];
 };
 
 export function WorkspaceFolderCard({
@@ -16,6 +20,8 @@ export function WorkspaceFolderCard({
   paperCount,
   dropTarget = false,
   onOpen,
+  layout = "list",
+  coverPaperIds = [],
 }: WorkspaceFolderCardProps) {
   const meta = [
     "フォルダ",
@@ -25,19 +31,47 @@ export function WorkspaceFolderCard({
     .filter(Boolean)
     .join(" · ");
 
+  const open = {
+    "data-project-drop-id": node.id,
+    role: "button",
+    tabIndex: 0,
+    onClick: onOpen,
+    onKeyDown: (event: React.KeyboardEvent) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        onOpen();
+      }
+    },
+  } as const;
+
+  if (layout === "grid") {
+    return (
+      <article className={`${styles.tile} ${dropTarget ? styles.dropTarget : ""}`} {...open}>
+        <div className={styles.folderArt} aria-hidden="true">
+          <svg className={styles.folderBack} viewBox="0 0 130 100">
+            <path d="M0 6Q0 0 6 0H42Q46 0 48.5 3L53 8.5Q55 11 59 11H124Q130 11 130 17V94Q130 100 124 100H6Q0 100 0 94Z" />
+          </svg>
+          {coverPaperIds.slice(0, 2).map((paperId, index) => (
+            <PaperCover
+              key={paperId}
+              paperId={paperId}
+              className={index === 0 ? styles.coverA : styles.coverB}
+            />
+          ))}
+          <div className={styles.folderFront} />
+        </div>
+        <h3 className={styles.tileTitle} title={node.name}>
+          {node.name}
+        </h3>
+        <p className={styles.tileMeta}>論文 {paperCount} 件</p>
+      </article>
+    );
+  }
+
   return (
     <article
       className={`${styles.card} ${dropTarget ? styles.dropTarget : ""}`}
-      data-project-drop-id={node.id}
-      role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onOpen();
-        }
-      }}
+      {...open}
     >
       <div className={styles.icon}>
         <Folder size={22} strokeWidth={1.5} />

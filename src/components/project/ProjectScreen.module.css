@@ -154,3 +154,9 @@
 }
 
 .spin { animation: spin 1s linear infinite; }
+
+.tileGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 4px;
+}

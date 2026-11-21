@@ -81,3 +81,103 @@
   font-size: 0.8125rem;
   color: var(--color-text-tertiary);
 }
+
+/* Grid tile: a folder with its first papers peeking out. */
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 10px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--transition-fast);
+}
+
+.tile:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.tile:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.tile.dropTarget {
+  background-color: var(--color-accent-light);
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.folderArt {
+  --folder-back: #4c4c4f;
+  --folder-front: #66666a;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 130 / 100;
+  margin-bottom: 8px;
+}
+
+.folderBack {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: var(--folder-back);
+}
+
+.coverA,
+.coverB {
+  position: absolute;
+  top: 7%;
+  width: 38%;
+  transition: transform var(--transition-fast);
+}
+
+.coverA {
+  left: 14%;
+  transform: rotate(-5deg);
+}
+
+.coverB {
+  left: 46%;
+  top: 10%;
+  transform: rotate(4deg);
+}
+
+.tile:hover .coverA {
+  transform: translateY(-6%) rotate(-7deg);
+}
+
+.tile:hover .coverB {
+  transform: translateY(-6%) rotate(6deg);
+}
+
+.folderFront {
+  position: absolute;
+  inset: 36% 0 0;
+  border-radius: 6px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--folder-front) 88%, white), var(--folder-front) 12%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.tileTitle {
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.tileMeta {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
