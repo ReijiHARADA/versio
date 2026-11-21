@@ -501,7 +501,8 @@
 
 .tile:hover .tileOverlay,
 .tile:focus-within .tileOverlay,
-.tileOverlay:has(.favoriteOn) {
+.tileOverlay:has(.favoriteOn),
+.tileOverlay:has([aria-expanded="true"]) {
   opacity: 1;
 }
 
@@ -526,4 +527,11 @@
   flex-wrap: wrap;
   justify-content: center;
   max-width: 100%;
+}
+
+/* A right-anchored menu spills out of the first tile; center it under the "…" button. */
+.tileOverlay .menu {
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
 }
