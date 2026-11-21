@@ -26,11 +26,11 @@
   --color-shadow: rgba(0, 0, 0, 0.1);
   /* Surface edges, opted in via squircle.module.css .edged / .cta: OKLCH
      lightness shift of the ring at top / bottom, and alpha of the CTA's inner
-     1px highlight / shade. */
+     rim at its top-left / bottom-right. */
   --edge-lift: 0.05;
   --edge-sink: 0.09;
   --edge-highlight: 0.5;
-  --edge-shade: 0.2;
+  --edge-shade: 0.14;
   --color-danger: #c5221f;
   --color-success: #16803c;
   --color-favorite: #f4b400;
@@ -128,8 +128,8 @@
   --color-shadow: rgba(0, 0, 0, 0.3);
   --edge-lift: 0.1;
   --edge-sink: 0.04;
-  --edge-highlight: 0.18;
-  --edge-shade: 0.35;
+  --edge-highlight: 0.55;
+  --edge-shade: 0.16;
   --color-danger: #f28b82;
   --color-success: #6ee7b7;
   --color-favorite: #fdd663;
