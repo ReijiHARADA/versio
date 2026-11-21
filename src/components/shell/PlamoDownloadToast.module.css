@@ -1,3 +1,4 @@
+/* Same pill as the shell's regular toast (AppShell.module.css .toast / .toastOk) so the two read as one family. */
 .toast {
   composes: surface from "../../styles/squircle.module.css";
   position: fixed;
@@ -5,28 +6,40 @@
   bottom: 28px;
   transform: translateX(-50%);
   z-index: 39;
-  width: min(320px, calc(100vw - 32px));
-  padding: 10px 16px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(640px, calc(100vw - 32px));
+  padding: 10px 16px;
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
-  background: #3c4043;
+  background: var(--color-accent);
   color: #fff;
   font-size: 0.875rem;
   font-weight: 500;
+  white-space: nowrap;
   box-shadow: 0 8px 24px var(--color-shadow);
-  transition: bottom var(--transition-normal);
+  transition:
+    bottom var(--transition-normal),
+    background-color 0.3s ease;
 }
 
-/* sits above a regular toast instead of covering it */
 .toast[data-raised="true"] {
   bottom: 84px;
 }
 
-.row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
+.toast[data-state="failed"] {
+  background: #c5221f;
+}
+
+.message {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: swap 0.3s ease;
 }
 
 .percent {
@@ -34,16 +47,50 @@
   opacity: 0.8;
 }
 
+/* inline bar: fills while installing, then folds away as the result takes its place */
 .bar {
+  flex: none;
+  width: 72px;
   height: 4px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.3);
   overflow: hidden;
+  transition:
+    width 0.35s ease 0.25s,
+    margin 0.35s ease 0.25s,
+    opacity 0.25s ease 0.25s;
+}
+
+.toast[data-state="done"] .bar,
+.toast[data-state="failed"] .bar {
+  width: 0;
+  margin-left: -12px; /* give back the flex gap */
+  opacity: 0;
 }
 
 .fill {
+  display: block;
   height: 100%;
   border-radius: inherit;
   background: #fff;
   transition: width 0.3s ease;
+}
+
+@keyframes swap {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .message {
+    animation: none;
+  }
+
+  .toast,
+  .bar,
+  .fill {
+    transition: none;
+  }
 }
