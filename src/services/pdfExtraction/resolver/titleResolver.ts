@@ -1325,8 +1325,25 @@ export function resolveTitle(input: {
     c.pageStart === 1 && /^\s*(?:research\s+)?(?:book\s+)?title\s*:/i.test(c.text) &&
     !looksLikeRotatedMasthead(c) && !looksLikeDecoderGarbageTitle(c.text)
   );
-  const titles = [...nativeTitles, ...labeledTitles.filter((candidate) => !nativeTitles.includes(candidate))]
+  const sortedTitles = [...nativeTitles, ...labeledTitles.filter((candidate) => !nativeTitles.includes(candidate))]
     .sort((a, b) => (a.pageStart - b.pageStart) || ((a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0)));
+  // A display-size line between two title pieces, at the same font and left edge, is part of the title
+  // even when it scored as an author row (`Facilitating Systems Thinking` / `Through Arts-Based STEM` / `Integration`).
+  const fontOf = (c: (typeof sortedTitles)[number]) => c.layoutBlock.lines[0]?.fontSize ?? 0;
+  const sandwiched = new Set<(typeof sortedTitles)[number]>();
+  const titles = sortedTitles.flatMap((title, index) => {
+    const next = sortedTitles[index + 1];
+    if (!next || title.pageStart !== 1 || next.pageStart !== 1 || fontOf(title) < 14 ||
+      Math.abs(fontOf(title) - fontOf(next)) > 0.5) return [title];
+    const top = title.boundingBoxes[0]?.y ?? 0;
+    const bottom = next.boundingBoxes[0]?.y ?? 0;
+    const between = input.candidates.filter((c) => c.pageStart === 1 && !sortedTitles.includes(c) &&
+      (c.boundingBoxes[0]?.y ?? 0) > top && (c.boundingBoxes[0]?.y ?? 0) < bottom &&
+      Math.abs(fontOf(c) - fontOf(title)) <= 0.5 &&
+      Math.abs((c.boundingBoxes[0]?.x ?? 0) - (title.boundingBoxes[0]?.x ?? 0)) <= 4);
+    between.forEach((c) => sandwiched.add(c));
+    return [title, ...between.sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0))];
+  });
   const uppercaseTitleCluster = titles.filter((candidate) =>
     candidate.pageStart === 1 &&
     isUppercaseTitleLine(candidate.text) &&
@@ -1382,10 +1399,11 @@ export function resolveTitle(input: {
         const authorishContinuation =
           (looksLikeAuthorish(cur.text) || looksLikeAuthorish(piece)) &&
           !isIncompleteTitleEnd(combined);
-        if (authorishContinuation) break;
+        // A line sandwiched between two same-font title pieces is part of the stack, whatever it looks like.
+        if (authorishContinuation && !sandwiched.has(cur)) break;
         // Bare First Last rows painted in the title font (`Qiuxia Guo`) must
         // stop the join even when looksLikeAuthorish is false.
-        if (looksLikePersonNameTitleTrap(cur.text) || looksLikePersonNameTitleTrap(piece)) break;
+        if (!sandwiched.has(cur) && (looksLikePersonNameTitleTrap(cur.text) || looksLikePersonNameTitleTrap(piece))) break;
         // A publication line can be emitted as a second `title` candidate
         // immediately below the real title.  Do not concatenate it into the
         // article title merely because its baseline is close.

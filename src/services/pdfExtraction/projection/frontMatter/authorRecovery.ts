@@ -204,7 +204,7 @@ export function recoverEarlyMastheadAuthors(
     if (
       !isNonAuthorMastheadLine(normalizedName) &&
       normalizedName.split(/\s+/).length <= 6 &&
-      !/\b(?:university|institute|department|faculty|laboratory|hospital|research|united states|united kingdom)\b/i.test(normalizedName) &&
+      !/\b(?:university|institute|department|faculty|laboratory|hospital|research|engineering|united states|united kingdom)\b/i.test(normalizedName) &&
       !state.authorNames.some((existing) => existing.toLocaleLowerCase() === normalizedName.toLocaleLowerCase())
     ) {
       state.authorNames.push(normalizedName);
