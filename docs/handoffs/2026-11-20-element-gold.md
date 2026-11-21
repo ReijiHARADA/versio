@@ -12,7 +12,7 @@ status: draft
 
 ## 今の状態
 
-- 2026-11-21：小文字で続く見出しを段落・脚注に戻す変更（ブランチ `fix/footnote-remainders`）。main 2175dfd。
+- 2026-11-21：小文字で続く見出しを段落・脚注に戻す変更は #177 でマージ。アルゴリズムの囲みの題の変更はブランチ `fix/element-next`。
 - 比べる基準 run: `b0-elementgold` / `b0-paragold106`（main 2175dfd、worktree `../app-worktrees/element-authors`。`test-data/extraction-audit` は main へのリンク）。変更後 `h3-*`、段落正解 dev `h3-dev`。
 - Europe PMC 106 本の ID は `/tmp/claude-501/ids106.txt`。消えていたら `b0-paragold106` の docs のファイル名から作り直す。
 - Europe PMC の脚注の取りこぼしは 10 件まで減り、大半は Frontiers（段落正解のセッションの担当）。残りは Cambridge の左の側欄の連絡先（`PMC12094662`、側欄全体が 1 ブロック）など 1 本ずつ。
