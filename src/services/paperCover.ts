@@ -1,5 +1,7 @@
 import { getStorage } from "../data/runtime";
 import { openPdfDocument } from "./pdfjsRuntime";
+import { introductionPaper } from "../data/introductionPaper";
+import introductionCover from "../assets/introduction-cover.svg";
 
 const COVER_WIDTH = 360;
 const cache = new Map<string, Promise<string | null>>();
@@ -54,6 +56,8 @@ async function loadCover(paperId: string): Promise<string | null> {
 
 /** Object URL of the paper's first PDF page, or null when there is no source PDF. */
 export function getPaperCover(paperId: string): Promise<string | null> {
+  // The bundled Introduction has no source PDF, so it ships a drawn first page.
+  if (paperId === introductionPaper.id) return Promise.resolve(introductionCover);
   let entry = cache.get(paperId);
   if (!entry) {
     entry = loadCover(paperId).catch(() => null);
