@@ -20,6 +20,7 @@ import { useDeletePaper } from "../../hooks/useDeletePaper";
 import { ExportDialog } from "../reader/ExportDialog";
 import { WorkspaceFolderCard } from "./WorkspaceFolderCard";
 import { LibraryViewToggle, useLibraryView } from "../library/LibraryViewToggle";
+import { LibrarySortMenu, useSortedPapers } from "../library/LibrarySortMenu";
 import { WorkspacePathTrail } from "../workspace/WorkspacePathTrail";
 import type { Paper } from "../../types/paper";
 import type { WorkspaceNode, WorkspacePaper } from "../../types/project";
@@ -76,7 +77,7 @@ export function ProjectScreen() {
     () => nodePapers.map((paper) => storePapers.find((item) => item.id === paper.id) ?? paper),
     [nodePapers, storePapers]
   );
-  const merged = useLibraryPaperSearch(projectBase, searchQuery);
+  const merged = useSortedPapers(useLibraryPaperSearch(projectBase, searchQuery));
 
   const childFolders = useMemo(() => {
     if (!nodeId) return [];
@@ -134,6 +135,7 @@ export function ProjectScreen() {
           {node?.description && <p className={styles.description}>{node.description}</p>}
         </div>
         <div className={styles.headerActions}>
+          <LibrarySortMenu />
           <LibraryViewToggle />
           <button
             type="button"
