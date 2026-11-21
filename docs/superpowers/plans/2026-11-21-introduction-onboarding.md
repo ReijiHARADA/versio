@@ -23,7 +23,7 @@ status: draft
 - 論文 id: `versio-introduction`。投入済みフラグの setting key: `onboarding.introductionSeeded`（値 `true`）。
 - 投入条件: フラグ未設定 **かつ** `getAllPapers()` が 0 件。投入したら（成否に関わらず試行後でなく、成功後に）フラグを立てる。
 - 新しい route を作らない。PLaMo は `download_plamo_model` / `plamo_model_status` の既存コマンドだけを使う。
-- PLaMo ステップの文言: 見出し「翻訳モデルを入れる」、本文「英語論文を日本語で読むために、翻訳モデル（約 1.5 GB）をダウンロードします。あとで設定からも入れられます。」、ボタン「ダウンロード」「あとで」。
+- PLaMo ステップの文言: 見出し「翻訳モデルを入れる」、本文「英語論文を日本語で読むために、翻訳モデル（約 1.8 GB）をダウンロードします。あとで設定からも入れられます。」、ボタン「ダウンロード」「あとで」。
 
 ## Review Focus
 

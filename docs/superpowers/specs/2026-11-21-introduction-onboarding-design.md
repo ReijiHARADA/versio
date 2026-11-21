@@ -25,7 +25,7 @@ status: draft
 1. `src/data/samplePaper.ts`（Attention 論文）を Introduction 論文のデータに置き換える。id は新しく `versio-introduction` とする。Abstract と章立てのある論文の体裁で書く。章案: Abstract / 1 Introduction / 2 Importing Papers / 3 Reading and Translation / 4 Notes and Glossary / 5 Search / 6 Organizing with Workspaces / 7 Exporting / 8 Translation Model (PLaMo) / References。各章で「いまこの段落で試してみて」と実際の操作を促す。図・数式・参照も少し入れて、Reader の各要素を見せる。
 2. 初回に入れる処理: `addSamplePaper` を `seedIntroductionPaper` に改める。起動時に「この端末でまだ一度も入れておらず、かつライブラリが空」のときだけ追加し、入れたことを記録する（localStorage ではなく SQLite の settings 系に保存して確実に残す。保存先の具体はビルダーに任せる）。削除後や既存ユーザーには入れない。
 3. 設定画面の「サンプル論文を追加」ボタンと、関連する state / メッセージを削除する。Diagnostics 側に参照があれば合わせて整理する。
-4. PLaMo 案内: `IntroOverlay` の CTA を押した後、`usePlamoModel().state` が `absent` なら「翻訳モデルをダウンロード（約 1.5 GB）／あとで」のステップを同じオーバーレイ内に表示する。「ダウンロード」を押したら `download()` を呼んでオーバーレイを閉じる。ダウンロードは裏で続き、進み具合は既存の設定画面で見られる。`present` / `unavailable`（ブラウザ）なら、このステップは出さずにそのまま閉じる。
+4. PLaMo 案内: `IntroOverlay` の CTA を押した後、`usePlamoModel().state` が `absent` なら「翻訳モデルをダウンロード（約 1.8 GB）／あとで」のステップを同じオーバーレイ内に表示する。「ダウンロード」を押したら `download()` を呼んでオーバーレイを閉じる。ダウンロードは裏で続き、進み具合は既存の設定画面で見られる。`present` / `unavailable`（ブラウザ）なら、このステップは出さずにそのまま閉じる。
 5. `scripts/verify-browser.mjs` は設定のボタンを押して sample を作っている。これを、自動で入る Introduction を使う形に直す。`scripts/bench-translation-ui.ts` の参照も追従させる。
 6. 文書: CURRENT_STATE.md の機能一覧を更新する。
 
