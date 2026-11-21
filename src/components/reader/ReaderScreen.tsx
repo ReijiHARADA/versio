@@ -68,7 +68,7 @@ export function ReaderScreen() {
     paperId ? s.blocks[paperId] ?? EMPTY_BLOCKS : EMPTY_BLOCKS
   );
 
-  const [showOutline, setShowOutline] = useState(true);
+  const [showOutline, setShowOutline] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [rightPanel, setRightPanel] = useState<ReaderRightPanel>("none");
