@@ -238,7 +238,7 @@
   pointer-events: auto;
 }
 
-/* Sidebar toggle + back/forward. Beside the traffic lights (center 17px); right-aligned to a pinned sidebar. */
+/* Sidebar toggle + back/forward. Always beside the traffic lights (center 17px), in every sidebar mode. */
 .titleControls {
   position: fixed;
   top: 5px;
@@ -246,11 +246,6 @@
   z-index: 1001;
   display: flex;
   gap: 2px;
-}
-
-.titleControlsEnd {
-  left: calc(var(--sidebar-expanded-w) - var(--title-controls-end-inset, 6px));
-  transform: translateX(-100%);
 }
 
 .historyButton {
