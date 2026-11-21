@@ -89,7 +89,7 @@ export function WorkspaceTree({
   const [deleting, setDeleting] = useState(false);
   const treeRef = useRef<HTMLElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const lastNodeClick = useRef<{ nodeId: string; at: number } | null>(null);
+  const lastNodeClick = useRef<{ nodeId: string; at: number; toggled?: boolean } | null>(null);
 
   const drag = useWorkspaceDrag(nodes, (id) => {
     if (id) setCollapsed((current) => ({ ...current, [id]: false }));
@@ -272,10 +272,13 @@ export function WorkspaceTree({
                   event.preventDefault();
                   return;
                 }
-                // Icon and name are one target: a click opens the folder page and toggles its children.
+                // Navigating to a folder only expands it; clicking the folder you are already in toggles it.
                 const rename = isWorkspaceRenameDoubleClick(lastNodeClick.current, node.id, event.timeStamp);
-                lastNodeClick.current = rename ? null : { nodeId: node.id, at: event.timeStamp };
-                if (hasNested) toggle();
+                const toggled = hasNested && activeNodeId === node.id;
+                // A rename double-click undoes the fold its first click caused.
+                if (rename ? lastNodeClick.current?.toggled : toggled) toggle();
+                else if (hasNested && !rename) setCollapsed((current) => ({ ...current, [node.id]: false }));
+                lastNodeClick.current = rename ? null : { nodeId: node.id, at: event.timeStamp, toggled };
                 setOpenMenuId(null);
                 if (rename) setEditingId(node.id);
               }}
