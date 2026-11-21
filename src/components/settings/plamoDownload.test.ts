@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { currentPlamoDownload, downloadPlamoModelOnce, usePlamoDownloadStore } from "./plamoDownload";
+import { currentPlamoDownload, downloadPlamoModelOnce, simulatePlamoDownload, usePlamoDownloadStore } from "./plamoDownload";
 import { introStepAfterCta } from "../intro/introSteps";
 
 describe("downloadPlamoModelOnce", () => {
@@ -24,6 +24,22 @@ describe("downloadPlamoModelOnce", () => {
     expect(currentPlamoDownload()).toBeNull();
     await downloadPlamoModelOnce(invoke);
     expect(invoke).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("simulatePlamoDownload (onboarding test builds)", () => {
+  it("walks the shared progress from 0 to 100 before resolving", async () => {
+    vi.useFakeTimers();
+    const done = downloadPlamoModelOnce(simulatePlamoDownload);
+    expect(usePlamoDownloadStore.getState()).toMatchObject({ downloading: true, percent: 0 });
+    await vi.advanceTimersByTimeAsync(3000);
+    const mid = usePlamoDownloadStore.getState().percent;
+    expect(mid).toBeGreaterThan(0);
+    expect(mid).toBeLessThan(100);
+    await vi.advanceTimersByTimeAsync(10_000);
+    await done;
+    expect(usePlamoDownloadStore.getState()).toMatchObject({ downloading: false, percent: 100 });
+    vi.useRealTimers();
   });
 });
 
