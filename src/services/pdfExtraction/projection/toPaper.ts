@@ -2129,8 +2129,13 @@ const stripConsortiumTail = (text: string): string =>
 const looksLikePersonName = (name: string): boolean =>
   /^[A-ZÀ-ÖØ-Ý][\p{L}'’-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’.%-]+){1,4}$/u.test(name.trim());
 
-const normalizeDoi = (raw: string): string =>
-  raw.replace(/[.,;:]+$/g, "").replace(/\.(?:g|t|fig|table)\d+$/i, "");
+// A dated label glued to the DOI (`10.2147/JPR.S557124Received`) is not part of it.
+export const normalizeDoi = (raw: string): string =>
+  raw.replace(/[.,;:]+$/g, "").replace(/\.(?:g|t|fig|table)\d+$/i, "").replace(/(?:Received|Accepted|Published|Revised)$/, "");
+// A line wrap inside a DOI (`10.1371/journal. pone.0319664`, `10.1371/ journal.pone…`).
+export const joinWrappedDois = (text: string): string => text.replace(/(10\.\d{4,9}\/(?:\S*[A-Za-z]\.)?)\s+(?=[a-z])/g, "$1");
+// Data and preprint repositories (figshare, Dryad, Zenodo, OSF, Research Square) are not the article.
+const isRepositoryDoi = (doi: string): boolean => /^10\.(?:6084|5061|5281|17605|21203)\//.test(doi);
 
 function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterProjection {
   const { canonical, layoutBlocks } = input;
@@ -2578,7 +2583,7 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
   const doiPattern = /(?:doi\s*:?\s*)?(?:https?:\/\/(?:dx\.)?doi\.org\/)?(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)/gi;
   const pageOneTexts = canonical.nodes
     .filter((node) => node.pageStart === 1)
-    .map((node) => node.text ?? "");
+    .map((node) => joinWrappedDois(node.text ?? ""));
   const collectDois = (texts: string[]): string[] => {
     const found: string[] = [];
     for (const text of texts) {
@@ -2598,7 +2603,8 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
   const pageOneDois = collectDois(pageOneTexts);
   // Page-1 only. Later-page `doi:` hits are almost always bibliography
   // entries, including labelled ones (`doi: 10.1016/j.ijmedinf…`).
-  const doiMatch = labelledPageOne[0] ?? pageOneDois[0] ?? null;
+  const candidates = [...labelledPageOne, ...pageOneDois];
+  const doiMatch = candidates.find((doi) => !isRepositoryDoi(doi)) ?? candidates[0] ?? null;
 
 
   return { titleNode, firstBodyY, hasSidebarBody, authorNames, authorsStructured, affiliations, doiMatch };

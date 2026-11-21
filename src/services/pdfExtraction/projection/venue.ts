@@ -47,6 +47,18 @@ export function cleanRunningVenue(text: string): string {
  * `Proceedings of …, pages N–M` line (ACL, ACM), otherwise the journal name
  * repeated in the running header or footer of most pages.
  */
+/**
+ * The article DOI in page 1's raw text, including the running header/footer
+ * (`PLOS Computational Biology | https://doi.org/10.1371/…`), which never
+ * becomes a document node. A fallback for when the projection found none.
+ */
+export function findDoi(pages: ExtractedPage[]): string | null {
+  if (!pages.length) return null;
+  const text = pageLines(pages[0]).map((line) => line.text).join(" ");
+  const match = text.match(/(?:\bdoi\s*:?\s*|https?:\/\/(?:dx\.)?doi\.org\/)(10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+)/i);
+  return match ? match[1].replace(/[.,;:]+$/, "") : null;
+}
+
 export function findVenue(pages: ExtractedPage[]): string | null {
   if (!pages.length) return null;
   const first = pageLines(pages[0]);
