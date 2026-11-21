@@ -369,7 +369,8 @@ export function floatedTableContinuationRelations(
       if (!previousTail || !nextStart) continue;
       if (previousTail.y <= pageLayout.pageHeight * 0.68 || nextStart.y >= pageLayout.pageHeight * 0.32) continue;
       if (intervening.some((node) =>
-        node.column !== "right" || node.pageStart !== previous.pageEnd ||
+        // A full-width top table (and its caption) also sits above the right-column start.
+        (node.column !== "right" && node.role !== "table" && node.role !== "caption") || node.pageStart !== previous.pageEnd ||
         node.boundingBoxes.length === 0 ||
         node.boundingBoxes.some((box) => box.y + box.height >= nextStart.y)
       )) continue;
