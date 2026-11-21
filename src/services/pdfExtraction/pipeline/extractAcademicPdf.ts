@@ -1,5 +1,5 @@
 import { extractPDFContent, extractFigureImages, graphicsToExtractionEvidence, type ExtractedPage } from "../../pdfService";
-import { findVenue } from "../projection/venue";
+import { findDoi, findVenue } from "../projection/venue";
 import { figureLookupKey, formatReadingOrderLog } from "../../pdfLayout";
 import { repairLineBreakHyphens } from "../projection/repairHyphens";
 import { collapseTableCellRuns } from "../projection/tableCellRuns";
@@ -394,7 +394,7 @@ export function extractFromPages(input: {
   return {
     native,
     canonical,
-    paper: { ...projected.paper, publication: projected.paper.publication ?? findVenue(input.pages) },
+    paper: { ...projected.paper, publication: projected.paper.publication ?? findVenue(input.pages), doi: projected.paper.doi ?? findDoi(input.pages) },
     sections: projected.sections,
     // Paragraphs interrupted by figures, tables, footnotes or page breaks are rejoined.
     blocks: reconcileTranslationWarnings(repairLineBreakHyphens(stitchParagraphContinuations(collapseTableCellRuns(projected.blocks, projected.sections), projected.sections))),
