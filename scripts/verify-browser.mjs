@@ -22,7 +22,7 @@ const renamedProjectName = `${verifyProjectName} Renamed`;
 const parentFolderName = `Browser Verify Parent ${runId}`;
 const childFolderName = `${parentFolderName} Child`;
 
-const SAMPLE_TITLE_JA = "Versio：言語を越えて論文を読む";
+const SAMPLE_TITLE_JA = "Versio: 言語を越えて論文を読む";
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });

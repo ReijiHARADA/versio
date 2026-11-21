@@ -9,7 +9,7 @@ export const introductionPaper: Paper = {
   sourceFilePath: "",
   sourceFileHash: "bundled:versio-introduction",
   titleOriginal: "Versio: Reading Papers Across Languages",
-  titleTranslated: "Versio：言語を越えて論文を読む",
+  titleTranslated: "Versio: 言語を越えて論文を読む",
   authors: ["The Versio Team"],
   publication: "Bundled with Versio",
   year: 2026,
@@ -40,7 +40,7 @@ const chapters: Chapter[] = [
     parts: [
       p(
         "Versio is a desktop reader that turns English research papers into Japanese you can read at a natural pace, while keeping the original one click away. This paper is itself a Versio document: every chapter explains one feature and asks you to try it on the text in front of you. Reading it from start to finish takes about five minutes and covers importing, translation, notes, the glossary, search, workspaces, and export.",
-        "Versio は、英語の研究論文を自然な速さで読める日本語にし、原文もワンクリックで確かめられるデスクトップ用リーダーです。この論文そのものが Versio の文書になっていて、各章でひとつの機能を説明し、目の前の文章で試してもらいます。最後まで読むのにかかるのは約 5 分で、取り込み、翻訳、メモ、用語集、検索、Workspace、書き出しを一通り扱います。"
+        "Versio は、英語の研究論文を自然な速さで読める日本語にし、原文もワンクリックで確かめられるデスクトップ用リーダーです。この論文そのものが Versio の文書になっていて、各章でひとつの機能を説明し、目の前の文章で試してもらいます。最後まで読むのにかかるのは約 5 分で、取り込み、翻訳、メモ、用語集、検索、ワークスペース、書き出しを一通り扱います。"
       ),
     ],
   },
@@ -149,16 +149,16 @@ const chapters: Chapter[] = [
     id: "workspace",
     kind: "method",
     en: "6 Organizing with Workspaces",
-    ja: "6 Workspace で整理する",
+    ja: "6 ワークスペースで整理する",
     parts: [
-      h("6 Organizing with Workspaces", "6 Workspace で整理する"),
+      h("6 Organizing with Workspaces", "6 ワークスペースで整理する"),
       p(
         "Workspaces are folders for research projects, and they can be nested as deeply as you like. Create one with “New folder” in the sidebar, then drag a paper row from the library onto it. A paper can belong to several workspaces at once without being copied.",
-        "Workspace は研究プロジェクトごとのフォルダで、いくらでも入れ子にできます。サイドバーの「新規フォルダ」で作り、ライブラリの論文の行をそこへドラッグします。ひとつの論文を、複製することなく複数の Workspace に同時に入れられます。"
+        "ワークスペースは研究プロジェクトごとのフォルダで、いくらでも入れ子にできます。サイドバーの「新規フォルダ」で作り、ライブラリの論文の行をそこへドラッグします。ひとつの論文を、複製することなく複数の ワークスペースに同時に入れられます。"
       ),
       p(
         "Papers that belong to no workspace appear in Inbox. Dragging a paper onto Inbox removes it from all workspaces; the paper itself is never deleted this way.",
-        "どの Workspace にも入っていない論文は Inbox に表示されます。論文を Inbox にドラッグするとすべての Workspace から外れますが、この操作で論文そのものが消えることはありません。"
+        "どの ワークスペースにも入っていない論文は Inbox に表示されます。論文を Inbox にドラッグするとすべての ワークスペースから外れますが、この操作で論文そのものが消えることはありません。"
       ),
     ],
   },

@@ -118,7 +118,7 @@
 .plamo {
   position: absolute;
   left: 50%;
-  bottom: max(10vh, 40px);
+  bottom: max(6vh, 32px);
   transform: translateX(-50%);
   width: min(420px, calc(100vw - 32px));
   padding: 24px 24px 20px;
