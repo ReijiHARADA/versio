@@ -278,9 +278,21 @@ export function pageBoundaryContinuationRelations(
   layouts: PageColumnLayout[],
 ): CanonicalRelation[] {
   const relations: CanonicalRelation[] = [];
+  // A table floated to the top of the next page (rows may resolve as `equation`) sits between the two halves.
+  const isTopTable = (node: CanonicalNode) => node.role === "table" || node.role === "caption" ||
+    ((node.role === "equation" || node.role === "other") && node.evidence.some((entry) =>
+      entry.label === "table-row-geometry" || entry.label === "table-region-member"));
   for (let i = 0; i + 1 < nodes.length; i += 1) {
     const previous = nodes[i];
-    const next = nodes[i + 1];
+    let j = i + 1;
+    // Page numbers, figures and tables listed after the last text line of the page do not break the pair.
+    while (j < nodes.length && nodes[j].pageStart === previous.pageEnd &&
+      (isTopTable(nodes[j]) || nodes[j].role === "figure" || /^\s*\d{1,5}\s*$/.test(nodes[j].text ?? ""))) j += 1;
+    const tailEnd = j;
+    while (j < nodes.length && nodes[j].pageStart === previous.pageEnd + 1 && isTopTable(nodes[j])) j += 1;
+    const next = nodes[j];
+    if (!next) continue;
+    const skipped = nodes.slice(tailEnd, j);
     if (previous.role !== "paragraph" || next.role !== "paragraph") continue;
     if (!previous.text || !next.text || previous.pageEnd + 1 !== next.pageStart) continue;
     if (previous.text.trim().length < 120 || /[.!?:]\s*$/.test(previous.text.trim())) continue;
@@ -292,7 +304,9 @@ export function pageBoundaryContinuationRelations(
     if (!previousTail || !nextStart) continue;
     if (previousTail.y + previousTail.height <= pageLayout.pageHeight * 0.55) continue;
     const nextLayout = layouts.find((layout) => layout.page === next.pageStart);
-    if (nextLayout && nextStart.y >= nextLayout.pageHeight * 0.42) continue;
+    if (nextLayout && nextStart.y >= nextLayout.pageHeight * (skipped.length > 0 ? 0.6 : 0.42)) continue;
+    if (skipped.some((node) => node.boundingBoxes.length === 0 ||
+      node.boundingBoxes.some((box) => box.y + box.height > nextStart.y + 2))) continue;
     const compatibleColumns = previous.column === next.column
       || (previous.column === "right" && next.column === "left")
       || previous.column === "single";
