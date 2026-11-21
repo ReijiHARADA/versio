@@ -1,0 +1,147 @@
+.screen {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 48px 16px;
+  overflow-y: auto;
+  background: var(--color-bg);
+  color: var(--color-text);
+  animation: enter 0.45s ease;
+}
+
+.column {
+  width: min(440px, 100%);
+}
+
+.tile {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 24px;
+  border-radius: 14px;
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: 24px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.01em;
+}
+
+.lead {
+  margin: 0 0 24px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+}
+
+.facts {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 32px;
+  padding: 16px 18px;
+  list-style: none;
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-secondary);
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.facts li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.facts svg {
+  flex: none;
+  color: var(--color-text-tertiary);
+}
+
+.progress {
+  margin: -8px 0 28px;
+}
+
+.bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-bg-tertiary);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-accent);
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.error {
+  margin: -12px 0 24px;
+  font-size: 13px;
+  color: var(--color-danger);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.primary,
+.secondary {
+  height: 36px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.primary {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.primary:hover {
+  background: var(--color-accent-hover);
+}
+
+.secondary {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.secondary:hover {
+  background: var(--color-surface-hover);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen {
+    animation: none;
+  }
+}
