@@ -115,7 +115,87 @@
   }
 }
 
+.plamo {
+  position: absolute;
+  left: 50%;
+  bottom: max(6vh, 32px);
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 32px));
+  padding: 24px 24px 20px;
+  border-radius: 16px;
+  background: #fff;
+  color: #1d1d1f;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  animation: rise 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.plamoTitle {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.plamoBody {
+  margin: 0 0 20px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #48484a;
+}
+
+.plamoActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.plamoLater,
+.plamoDownload {
+  height: 34px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.plamoLater {
+  background: transparent;
+  color: #48484a;
+}
+
+.plamoLater:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.plamoDownload {
+  background: var(--intro-blue, #1a73e8);
+  color: #fff;
+}
+
+.plamoDownload:hover {
+  filter: brightness(0.92);
+}
+
+.plamoLater:focus-visible,
+.plamoDownload:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: 2px;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .plamo {
+    animation: none;
+  }
+
   .cta[data-visible="true"] .letter,
   .cta[data-visible="true"] .pill,
   .cta[data-visible="true"] .pill::before {

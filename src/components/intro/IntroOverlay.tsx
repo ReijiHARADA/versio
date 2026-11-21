@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import introMp4 from "../../assets/intro/intro.mp4";
 import finalPng from "../../assets/intro/final.png";
+import { usePlamoModel } from "../settings/usePlamoModel";
+import { introStepAfterCta } from "./introSteps";
 import { markIntroSeen } from "./introSeen";
 import { playStapleSound, STAPLE_FIRST_CLICK_S } from "./stapleSound";
 import styles from "./IntroOverlay.module.css";
@@ -19,6 +21,9 @@ export function IntroOverlay() {
   const [videoFailed, setVideoFailed] = useState(false);
   const [ctaShown, setCtaShown] = useState(still);
   const [leaving, setLeaving] = useState(false);
+  const [step, setStep] = useState<"intro" | "plamo">("intro");
+  const plamo = usePlamoModel();
+  const downloadButton = useRef<HTMLButtonElement>(null);
   const timers = useRef<number[]>([]);
 
   useEffect(() => {
@@ -30,12 +35,21 @@ export function IntroOverlay() {
     };
   }, []);
 
+  useEffect(() => {
+    if (step === "plamo") downloadButton.current?.focus();
+  }, [step]);
+
   if (!open) return null;
 
   const close = () => {
     markIntroSeen();
     setLeaving(true);
     window.setTimeout(() => setOpen(false), 400);
+  };
+
+  const onCta = () => {
+    if (introStepAfterCta(plamo.state) === "plamo") setStep("plamo");
+    else close();
   };
 
   return (
@@ -62,7 +76,7 @@ export function IntroOverlay() {
           }}
         />
       )}
-      <button type="button" className={styles.cta} data-visible={ctaShown} tabIndex={ctaShown ? 0 : -1} aria-label={CTA_LABEL} onClick={close}>
+      <button type="button" className={styles.cta} data-visible={ctaShown && step === "intro"} tabIndex={ctaShown && step === "intro" ? 0 : -1} aria-label={CTA_LABEL} onClick={onCta}>
         {/* letters settle in one by one, then the pill grows behind them */}
         <span className={styles.pill} aria-hidden>
           {[...CTA_LABEL].map((c, i) => (
@@ -72,6 +86,31 @@ export function IntroOverlay() {
           ))}
         </span>
       </button>
+      {step === "plamo" ? (
+        <section className={styles.plamo} aria-labelledby="intro-plamo-title">
+          <h2 id="intro-plamo-title" className={styles.plamoTitle}>翻訳モデルを入れる</h2>
+          <p className={styles.plamoBody}>
+            英語論文を日本語で読むために、翻訳モデル（約 1.8 GB）をダウンロードします。あとで設定からも入れられます。
+          </p>
+          <div className={styles.plamoActions}>
+            <button type="button" className={styles.plamoLater} onClick={close}>
+              あとで
+            </button>
+            <button
+              ref={downloadButton}
+              type="button"
+              className={styles.plamoDownload}
+              onClick={() => {
+                // keeps running after the overlay closes; Settings → 翻訳 shows progress
+                void plamo.download();
+                close();
+              }}
+            >
+              ダウンロード
+            </button>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

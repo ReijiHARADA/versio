@@ -14,7 +14,7 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 
 | 領域 | 状態 |
 | --- | --- |
-| 初回起動 | 紙を裏から見た画面に青いホチキスの受け皿が迫り、二段階で綴じて（録音した音に同期）バネの反動で浮き上がって去るイントロ（Blender 動画、`design/intro/`）→「Versioを使い始める」。当面は起動ごとに毎回表示（初回のみへの切り替えは `IntroOverlay` の1行） |
+| 初回起動 | 紙を裏から見た画面に青いホチキスの受け皿が迫り、二段階で綴じて（録音した音に同期）バネの反動で浮き上がって去るイントロ（Blender 動画、`design/intro/`）→「Versioを使い始める」。翻訳モデル未導入ならそのまま同じ画面で PLaMo のダウンロード（1.8 GB）を案内（「あとで」可、設定と同じダウンロードを共有）。当面は起動ごとに毎回表示（初回のみへの切り替えは `IntroOverlay` の1行）。ライブラリが空の初回だけ、使い方を章立てで説明する英日対訳の同梱論文「Versio: 言語を越えて論文を読む」（`src/data/introductionPaper.ts`）を投入。ゴミ箱に入れても再投入しない。既存ユーザーには入れない |
 | 取り込み | ウィンドウへの PDF ドロップ、または Finder の「このアプリケーションで開く」/ `open -a Versio a.pdf b.pdf`（複数可・起動前でも可）でバックグラウンド取り込み。カードに readiness（preparing / readable / translating / needs_attention）。スキャン PDF は Apple Vision OCR（デスクトップ版のみ）。複数取り込み時は 1 本ずつ順番に処理（抽出→翻訳、他は一時停止）し、Reader で開いた論文の翻訳へ即座に切り替える |
 | ライブラリ | 階層 WorkspaceNode、Inbox / お気に入り / 最近 / ゴミ箱、論文行のサイドバーへのドラッグ割り当て、サイドバーは常時表示（幅 1024px 未満では畳んでホバーで開く・ロゴ横のボタンで手動開閉）、⌘K 横断検索（題・著者・本文・訳文・ハイライト・メモ、FTS5 → LIKE fallback） |
 | リーダー | 日本語 1 カラム、目次、原文段落展開、読書位置保存、⌘F 論文内検索、図表の本文内表示と拡大 |
@@ -22,7 +22,7 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 | 書き出し | 訳文 Markdown / Notion 用 ZIP / EPUB（スマホ同期）、フォルダ単位 ZIP。保存先は Rust save dialog |
 | 元 PDF | 読んでいる付近のページを Preview で開く（macOS のみ） |
 | 翻訳 | 既定は PLaMo 3 Translate 2B（同梱 `llama-server`、`127.0.0.1:8766`、起動ごとのトークン）。モデル（1.8 GB）は初回利用時に設定画面または取り込み時にダウンロード。旧 MADLAD-400 3B と Python 翻訳サーバーは削除済み（2026-11-17）。根拠: [docs/research/local-llm-translation-bench-2026-11.md](./docs/research/local-llm-translation-bench-2026-11.md) |
-| 設定 | 表示設定、ライセンス一覧（Versio MIT + 必須 third-party notices） |
+| 設定 | 表示設定、ライセンス一覧（Versio MIT + 必須 third-party notices）。「サンプル論文を追加」（開発者カード）は廃止 |
 
 ## 検証状況
 

@@ -315,11 +315,11 @@ async function browserBench() {
 
   const seed = await page.evaluate(async () => {
     const cacheMod = await import("/src/stores/libraryCache.ts");
-    const sampleMod = await import("/src/data/samplePaper.ts");
+    const sampleMod = await import("/src/data/introductionPaper.ts");
     const cache = cacheMod.useLibraryCache.getState();
-    const sample = sampleMod.samplePaper;
-    const sections = sampleMod.sampleSections as Array<{ id: string; paperId: string }>;
-    const baseBlocks = sampleMod.sampleBlocks as Array<Record<string, unknown>>;
+    const sample = sampleMod.introductionPaper;
+    const sections = sampleMod.introductionSections as Array<{ id: string; paperId: string }>;
+    const baseBlocks = sampleMod.introductionBlocks as Array<Record<string, unknown>>;
     const blocks = Array.from({ length: 360 }, (_, index) => {
       const template = baseBlocks[index % baseBlocks.length];
       return {

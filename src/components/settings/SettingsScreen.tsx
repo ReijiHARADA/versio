@@ -2,10 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Settings } from "lucide-react";
 import { getSetting, saveSetting, clearTranslationCache, restoreTranslationCache } from "../../services/database";
 import { checkOllamaAvailability } from "../../services/llm/ollamaProvider";
-import { addSamplePaper } from "../../services/samplePaper";
-import { useLibraryCache } from "../../stores/libraryCache";
 import { showToast } from "../../stores/toastStore";
-import { samplePaper } from "../../data/samplePaper";
 import {
   mergeTranslationSettingsV2,
   type TranslationSettingsV2,
@@ -75,15 +72,10 @@ function PullCommitGauge({
 }
 
 export function SettingsScreen() {
-  const sampleAlreadyAdded = useLibraryCache((state) =>
-    state.papers.some((paper) => paper.id === samplePaper.id)
-  );
   const [settings, setSettings] = useState<TranslationSettingsV2>(
     mergeTranslationSettingsV2(null)
   );
   const [loaded, setLoaded] = useState(false);
-  const [isAddingSample, setIsAddingSample] = useState(false);
-  const [sampleMessage, setSampleMessage] = useState<string | null>(null);
   const [ollamaStatus, setOllamaStatus] = useState<ServiceStatus>({
     ...IDLE_STATUS,
     models: [],
@@ -189,25 +181,6 @@ export function SettingsScreen() {
 
   const updateSettings = (patch: Partial<TranslationSettingsV2>) => {
     setSettings((prev) => ({ ...prev, ...patch }));
-  };
-
-  const handleAddSample = async () => {
-    if (isAddingSample) return;
-    setIsAddingSample(true);
-    setSampleMessage(null);
-    try {
-      const result = await addSamplePaper();
-      if (result === "exists") {
-        setSampleMessage("すでにライブラリにあります");
-      } else {
-        setSampleMessage("ライブラリに追加しました");
-      }
-    } catch (error) {
-      console.error("Failed to add sample paper:", error);
-      setSampleMessage("追加に失敗しました");
-    } finally {
-      setIsAddingSample(false);
-    }
   };
 
   const handleClearCache = async () => {
@@ -388,10 +361,6 @@ export function SettingsScreen() {
                   onRecheck={() => {
                     void checkOllama();
                   }}
-                  sampleAlreadyAdded={sampleAlreadyAdded}
-                  isAddingSample={isAddingSample}
-                  sampleMessage={sampleMessage}
-                  onAddSample={() => void handleAddSample()}
                 />
               </section>
             </main>
