@@ -15,6 +15,7 @@ import {
   wrapSearchHitIndex,
 } from "../../../utils/searchHits";
 import { isImeComposing } from "../../../utils/ime";
+import { useProjectStore } from "../../../stores/projectStore";
 import type { ReaderContentHandle } from "../PaperContent";
 
 export function useReaderSearch(opts: {
@@ -24,8 +25,10 @@ export function useReaderSearch(opts: {
 }) {
   const { contentRef, paperContentRef, storeBlocks } = opts;
 
-  const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  // The title bar search field drives in-paper search while Reader is open.
+  const searchQuery = useProjectStore((state) => state.searchQuery);
+  const setSearchQuery = useProjectStore((state) => state.setSearchQuery);
+  const showSearch = searchQuery.length > 0;
   const [searchHitIndex, setSearchHitIndex] = useState(0);
   const [searchHitCount, setSearchHitCount] = useState(0);
   const searchHitIndexRef = useRef(0);
@@ -40,17 +43,18 @@ export function useReaderSearch(opts: {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "f") {
         e.preventDefault();
-        setShowSearch(true);
+        const input = document.getElementById("library-search") as HTMLInputElement | null;
+        input?.focus();
+        input?.select();
       }
       if (e.key === "Escape" && showSearch) {
-        setShowSearch(false);
         setSearchQuery("");
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showSearch]);
+  }, [showSearch, setSearchQuery]);
 
   const mountAndScrollToHit = useCallback(
     async (index: number, blockIds: string[]) => {
@@ -132,7 +136,8 @@ export function useReaderSearch(opts: {
 
       const target = e.target;
       if (target instanceof HTMLElement) {
-        const inSearchPanel = Boolean(target.closest("[data-search-panel]"));
+        const inSearchPanel =
+          Boolean(target.closest("[data-search-panel]")) || target.id === "library-search";
         const tag = target.tagName;
         const typingElsewhere =
           !inSearchPanel &&
@@ -180,16 +185,11 @@ export function useReaderSearch(opts: {
     [contentRef, paperContentRef]
   );
 
-  const handleSearchClose = useCallback(() => {
-    setShowSearch(false);
-    setSearchQuery("");
-  }, []);
+  const handleSearchClose = useCallback(() => setSearchQuery(""), [setSearchQuery]);
 
   return {
     showSearch,
-    setShowSearch,
     searchQuery,
-    setSearchQuery,
     searchHitIndex,
     searchHitCount,
     applySearchHits,

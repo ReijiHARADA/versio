@@ -292,11 +292,12 @@ try {
     });
 
     await check("reader search UI", async () => {
-      await page.getByRole("button", { name: "検索 (⌘F)" }).click();
+      await page.keyboard.press("Meta+f");
       const field = page.getByPlaceholder("この論文を検索");
       await field.waitFor({ state: "visible", timeout: 10_000 });
       await field.fill("glossary");
       await page.locator("[data-search-panel]").waitFor({ state: "visible", timeout: 5_000 });
+      await shot("reader-search");
       await page.keyboard.press("Escape");
       await page.locator("[data-search-panel]").waitFor({ state: "detached", timeout: 5_000 });
     });

@@ -2,7 +2,6 @@ import { useEffect, useRef, useCallback, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
-  Search,
   Settings2,
   ExternalLink,
   FileUp,
@@ -153,9 +152,7 @@ export function ReaderScreen() {
 
   const {
     showSearch,
-    setShowSearch,
     searchQuery,
-    setSearchQuery,
     searchHitIndex,
     searchHitCount,
     applySearchHits,
@@ -351,15 +348,6 @@ export function ReaderScreen() {
             <StickyNote size={iconSize.md} />
           </button>
           <button
-            className={`${styles.iconButton} ${showSearch ? styles.active : ""}`}
-            onClick={() => setShowSearch(!showSearch)}
-            aria-label="検索 (⌘F)"
-            data-tooltip="検索 (⌘F)"
-            data-testid="reader-search-open"
-          >
-            <Search size={iconSize.md} />
-          </button>
-          <button
             className={`${styles.iconButton} ${showSettings ? styles.active : ""}`}
             onClick={() => setShowSettings(!showSettings)}
             aria-label="表示設定"
@@ -516,9 +504,9 @@ export function ReaderScreen() {
           sections={storeSections}
           hitIndex={searchHitIndex}
           hitCount={searchHitCount}
+          query={searchQuery}
           onClose={handleSearchClose}
           onResultClick={handleSearchResultClick}
-          onSearchChange={setSearchQuery}
           onStep={(delta) => applySearchHits({ delta, scroll: true })}
         />
       )}
