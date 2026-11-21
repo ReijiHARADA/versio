@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { downloadPlamoModelOnce, currentPlamoDownload } from "./plamoDownload";
+import { currentPlamoDownload, downloadPlamoModelOnce, usePlamoDownloadStore } from "./plamoDownload";
 import { introStepAfterCta } from "../intro/introSteps";
 
 describe("downloadPlamoModelOnce", () => {
@@ -11,9 +11,11 @@ describe("downloadPlamoModelOnce", () => {
     expect(invoke).toHaveBeenCalledTimes(1);
     expect(invoke).toHaveBeenCalledWith("download_plamo_model");
     expect(currentPlamoDownload()).not.toBeNull();
+    expect(usePlamoDownloadStore.getState().downloading).toBe(true);
     finish();
     await Promise.all([a, b]);
     expect(currentPlamoDownload()).toBeNull();
+    expect(usePlamoDownloadStore.getState().downloading).toBe(false);
   });
 
   it("allows a retry after a failed download", async () => {

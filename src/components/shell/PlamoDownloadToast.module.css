@@ -1,0 +1,49 @@
+.toast {
+  composes: surface from "../../styles/squircle.module.css";
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 39;
+  width: min(320px, calc(100vw - 32px));
+  padding: 10px 16px 12px;
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
+  background: #3c4043;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 8px 24px var(--color-shadow);
+  transition: bottom var(--transition-normal);
+}
+
+/* sits above a regular toast instead of covering it */
+.toast[data-raised="true"] {
+  bottom: 84px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.percent {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+.bar {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: inherit;
+  background: #fff;
+  transition: width 0.3s ease;
+}

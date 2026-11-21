@@ -62,36 +62,6 @@
   color: var(--color-text-tertiary);
 }
 
-.progress {
-  margin: -8px 0 28px;
-}
-
-.bar {
-  height: 6px;
-  border-radius: 999px;
-  background: var(--color-bg-tertiary);
-  overflow: hidden;
-}
-
-.fill {
-  height: 100%;
-  border-radius: inherit;
-  background: var(--color-accent);
-  transition: width 0.3s ease;
-}
-
-.progressText {
-  margin: 10px 0 0;
-  font-size: 12px;
-  color: var(--color-text-secondary);
-}
-
-.error {
-  margin: -12px 0 24px;
-  font-size: 13px;
-  color: var(--color-danger);
-}
-
 .actions {
   display: flex;
   justify-content: flex-end;

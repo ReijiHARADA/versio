@@ -1,9 +1,21 @@
-import stapleM4a from "../../assets/intro/staple.m4a";
+import stapleWav from "../../assets/intro/staple.wav";
 
-// Recorded two-stage press (design/intro/sound/): first click at 0.083 s, snap at 0.347 s.
-export const STAPLE_FIRST_CLICK_S = 0.083;
+// Measured on the shipped file (design/intro/sound/make.sh output, 1 ms envelope): first click 0.105 s, snap 0.365 s.
+// The raw take has them at 0.083 / 0.347; denoise + ring processing moves them ~22 ms later.
+export const STAPLE_FIRST_CLICK_S = 0.105;
+
+let audio: HTMLAudioElement | null = null;
+
+/** Load ahead of the click so fetching/decoding does not delay the first play. */
+export function primeStapleSound(): void {
+  if (audio) return;
+  audio = new Audio(stapleWav);
+  audio.preload = "auto";
+  audio.load();
+}
 
 export function playStapleSound(): void {
+  primeStapleSound();
   // autoplay refusal or missing codec: the intro continues silently
-  new Audio(stapleM4a).play().catch(() => {});
+  audio?.play().catch(() => {});
 }
