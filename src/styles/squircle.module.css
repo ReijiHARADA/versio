@@ -39,21 +39,7 @@
 
 .surface::before {
   z-index: -1;
-  background-color: var(--sq-bg);
-  /* Inner top highlight and bottom shade just inside the ring; their alpha
-     follows --sq-bg so unfilled (ghost) surfaces stay flat. */
-  background-image:
-    linear-gradient(
-      transparent var(--sq-bw, 0px),
-      rgb(from var(--sq-bg) 255 255 255 / calc(alpha * var(--sq-edge-highlight, 0))) var(--sq-bw, 0px) calc(var(--sq-bw, 0px) + 1px),
-      transparent calc(var(--sq-bw, 0px) + 1px)
-    ),
-    linear-gradient(
-      0deg,
-      transparent var(--sq-bw, 0px),
-      rgb(from var(--sq-bg) 0 0 0 / calc(alpha * var(--sq-edge-shade, 0))) var(--sq-bw, 0px) calc(var(--sq-bw, 0px) + 1px),
-      transparent calc(var(--sq-bw, 0px) + 1px)
-    );
+  background: var(--sq-bg);
   -webkit-mask-box-image: var(--sq-fill);
 }
 
@@ -72,11 +58,44 @@
   --sq-edge-lift: var(--edge-lift);
   --sq-edge-sink: var(--edge-sink);
 }
-/* Primary (accent) buttons: lit edge plus a crisp inner highlight and shade. */
+/* Primary (accent) buttons, lit from the top-left like the app icon. Three
+   layers, all derived from --sq-bg so hover follows: ::before is the outer
+   ring (the whole shape, darker toward the bottom-right), ::after sits 1px
+   inside it with the face and a 1px inner rim that is bright at the top-left
+   and shaded at the bottom-right. `to bottom right` puts the light/dark split
+   on the other diagonal, so the top and left edges stay lit at any width. */
 .cta {
-  composes: edged;
-  --sq-edge-highlight: var(--edge-highlight);
-  --sq-edge-shade: var(--edge-shade);
+  --cta-ring: color-mix(in oklab, var(--sq-bg), #000 12%);
+  --cta-face: linear-gradient(
+    to bottom right,
+    color-mix(in oklab, var(--sq-bg), #fff 6%),
+    var(--sq-bg) 50%,
+    color-mix(in oklab, var(--sq-bg), #000 4%)
+  );
+}
+.cta::before {
+  inset: 0;
+  background: linear-gradient(
+    to bottom right,
+    color-mix(in oklab, var(--cta-ring), #fff 10%),
+    color-mix(in oklab, var(--cta-ring), #000 22%)
+  );
+}
+.cta::after {
+  inset: 1px;
+  z-index: -1;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  background:
+    var(--cta-face) padding-box,
+    linear-gradient(
+      to bottom right,
+      rgb(255 255 255 / var(--edge-highlight)),
+      transparent 50%,
+      rgb(0 0 0 / var(--edge-shade))
+    ) border-box,
+    var(--cta-face) border-box;
+  -webkit-mask-box-image: var(--sq-fill);
 }
 
 .clip {
