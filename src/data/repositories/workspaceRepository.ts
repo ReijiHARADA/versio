@@ -295,7 +295,9 @@ export function addPaperToWorkspace(db: SqliteClient, input: Omit<WorkspacePaper
   const link = { ...input, order: listWorkspacePapersByNode(db, input.nodeId).length, createdAt: stamp, updatedAt: stamp }; saveWorkspacePaper(db, link); return link;
 }
 export function movePaperInWorkspace(db: SqliteClient, paperId: string, sourceNodeId: string, targetNodeId: string): WorkspacePaper {
-  const source = getWorkspacePaper(db, sourceNodeId, paperId); if (!source) throw new Error("Workspace paper not found"); if (sourceNodeId === targetNodeId || getWorkspacePaper(db, targetNodeId, paperId)) throw new Error("この場所にはすでに入っています");
+  const source = getWorkspacePaper(db, sourceNodeId, paperId); if (!source) throw new Error("Workspace paper not found"); if (sourceNodeId === targetNodeId) throw new Error("この場所にはすでに入っています");
+  // Already placed at the target: the move just drops the source placement.
+  const existing = getWorkspacePaper(db, targetNodeId, paperId); if (existing) { deleteWorkspacePaper(db, sourceNodeId, paperId); return existing; }
   const next = { ...source, nodeId: targetNodeId, order: listWorkspacePapersByNode(db, targetNodeId).length, updatedAt: nowIso() };
   db.transaction(() => { db.exec("DELETE FROM workspace_papers WHERE node_id = ? AND paper_id = ?", [sourceNodeId, paperId]); saveWorkspacePaper(db, next); }); return next;
 }

@@ -27,6 +27,8 @@ type PaperCardProps = {
   onOpen: () => void;
   actions?: ReactNode;
   layout?: "list" | "grid";
+  /** Workspace node the paper is dragged out of; a drop then moves instead of adding. */
+  sourceNodeId?: string;
 };
 
 function getStatusIcon(readiness: ReturnType<typeof derivePaperReadiness>["readiness"]) {
@@ -42,7 +44,7 @@ function getStatusIcon(readiness: ReturnType<typeof derivePaperReadiness>["readi
   return <Clock size={14} className={styles.statusPending} />;
 }
 
-export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "list" }: PaperCardProps) {
+export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "list", sourceNodeId }: PaperCardProps) {
   const blocks = useLibraryCache((state) => state.blocks[paper.id]);
   const [favoriting, setFavoriting] = useState(false);
   const view = derivePaperReadiness({
@@ -135,6 +137,7 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
         label={label}
         className={styles.tile}
         enabled={enabled}
+        sourceNodeId={sourceNodeId}
         onOpen={onOpen}
       >
         <div className={styles.tileCover}>
@@ -158,6 +161,7 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
       label={label}
       className={styles.row}
       enabled={enabled}
+      sourceNodeId={sourceNodeId}
       onOpen={onOpen}
     >
       <div className={styles.info}>
