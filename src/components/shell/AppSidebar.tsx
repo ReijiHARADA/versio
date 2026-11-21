@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { createPortal } from "react-dom";
-import { NavLink } from "react-router-dom";
+import { createPortal, flushSync } from "react-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   Clock,
   Inbox,
@@ -71,6 +71,18 @@ export function AppSidebar({
   initialCollapsedIds,
 }: AppSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  // Sidebar links navigate inside a View Transition so the selection pill slides to the new item.
+  const handleNavClickCapture = (event: React.MouseEvent) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const link = (event.target as HTMLElement).closest<HTMLAnchorElement>("a[href^='#/']");
+    if (!link || link.getAttribute("aria-current") === "page") return;
+    if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    event.preventDefault(); // NavLink skips its own navigation when defaultPrevented
+    const to = link.getAttribute("href")!.slice(1);
+    document.startViewTransition(() => flushSync(() => navigate(to)));
+  };
   const storedMode = useAppStore((state) => state.displaySettings.sidebarMode);
   const narrow = useSyncExternalStore(subscribeNarrow, isNarrowWindow);
   // Hover-to-open only in narrow windows; a wide window is either pinned open or collapsed.
@@ -206,7 +218,7 @@ export function AppSidebar({
       <div
         className={`${styles.shell} ${modeClass} ${pointerOverSidebar ? styles.sidebarDropReady : ""} ${resizing ? styles.sidebarResizing : ""}`}
       >
-        <aside className={styles.sidebar}>
+        <aside className={styles.sidebar} onClickCapture={handleNavClickCapture}>
           <div
             className={styles.resizeHandle}
             role="separator"
