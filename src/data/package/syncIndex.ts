@@ -7,6 +7,7 @@ import {
   getTrashedPaperIndexes,
   indexPaperText,
   upsertPaperIndex,
+  setPaperDoiIndex,
 } from "../repositories/paperRepository";
 import { rememberDocument } from "../repositories/documentRepository";
 import type { SqliteClient } from "../sqlite/client";
@@ -93,6 +94,7 @@ export async function syncPaperIndexesFromPackages(
   db: SqliteClient
 ): Promise<number> {
   let rebuilt = 0;
+  let backfilled = false;
 
   const known = [...getAllPaperIndexes(db), ...getTrashedPaperIndexes(db)];
   for (const index of known) {
@@ -112,10 +114,18 @@ export async function syncPaperIndexesFromPackages(
     const paperText = await fs.readText(`papers/${index.id}/paper.json`);
     if (!paperText) continue;
     let revision = 0;
+    let doi: string | null = null;
     try {
-      revision = Number(JSON.parse(paperText).revision ?? 0);
+      const parsed = JSON.parse(paperText) as { revision?: number; doi?: string | null };
+      revision = Number(parsed.revision ?? 0);
+      doi = parsed.doi?.trim().toLowerCase() || null;
     } catch {
       continue;
+    }
+    // Libraries from before schema v9 have no DOI column values yet.
+    if (doi !== (index.doi ?? null)) {
+      setPaperDoiIndex(db, index.id, doi);
+      backfilled = true;
     }
     if (revision === (index.packageRevision ?? 0)) continue;
     if (await rebuildIndexFromPackage(fs, db, index.id, index)) rebuilt += 1;
@@ -127,7 +137,7 @@ export async function syncPaperIndexesFromPackages(
     if (await rebuildIndexFromPackage(fs, db, paperId)) rebuilt += 1;
   }
 
-  if (rebuilt > 0) {
+  if (rebuilt > 0 || backfilled) {
     await db.persist();
   }
   return rebuilt;

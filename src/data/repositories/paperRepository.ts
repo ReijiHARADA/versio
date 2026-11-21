@@ -43,12 +43,18 @@ function rowToPaper(row: Record<string, unknown>): Paper {
       ? (String(row.read_status) as PaperReadStatus)
       : "unread",
     tags: parseJson<string[]>(row.tags_json, []),
+    doi: row.doi == null ? null : String(row.doi),
     lastOpenedAt: row.last_opened_at ? String(row.last_opened_at) : undefined,
     packageRevision: Number(row.package_revision ?? 0),
     trashedAt: row.trashed_at == null ? null : String(row.trashed_at),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
   };
+}
+
+function doiParam(doi: string | null | undefined): string | null {
+  if (doi === undefined) return null;
+  return doi?.trim().toLowerCase() ?? "";
 }
 
 export function upsertPaperIndex(db: SqliteClient, paper: Paper): void {
@@ -62,8 +68,8 @@ export function upsertPaperIndex(db: SqliteClient, paper: Paper): void {
       publication, year, page_count, processing_status, favorite, last_opened_at,
       last_read_block_id, last_read_offset, source_file_name, source_stored_path,
       package_revision, needs_translation_resume, trashed_at, created_at, updated_at,
-      read_status, tags_json
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'unread'), COALESCE(?, '[]'))
+      read_status, tags_json, doi
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'unread'), COALESCE(?, '[]'), NULLIF(?, ''))
     ON CONFLICT(id) DO UPDATE SET
       source_file_hash=excluded.source_file_hash,
       title_original=excluded.title_original,
@@ -85,7 +91,9 @@ export function upsertPaperIndex(db: SqliteClient, paper: Paper): void {
       updated_at=excluded.updated_at,
       -- Papers rebuilt from a package carry no library state; keep the stored one.
       read_status=COALESCE(?, papers.read_status),
-      tags_json=COALESCE(?, papers.tags_json)`,
+      tags_json=COALESCE(?, papers.tags_json),
+      -- undefined DOI (index-only Paper) keeps the stored one; null / "" clears it.
+      doi=CASE WHEN ? IS NULL THEN papers.doi ELSE NULLIF(?, '') END`,
     [
       paper.id,
       paper.sourceFileHash,
@@ -109,10 +117,17 @@ export function upsertPaperIndex(db: SqliteClient, paper: Paper): void {
       paper.updatedAt,
       paper.readStatus ?? null,
       paper.tags ? JSON.stringify(paper.tags) : null,
+      doiParam(paper.doi),
       paper.readStatus ?? null,
       paper.tags ? JSON.stringify(paper.tags) : null,
+      doiParam(paper.doi),
+      doiParam(paper.doi),
     ]
   );
+}
+
+export function setPaperDoiIndex(db: SqliteClient, paperId: string, doi: string | null): void {
+  db.exec("UPDATE papers SET doi = NULLIF(?, '') WHERE id = ?", [doi?.trim().toLowerCase() ?? "", paperId]);
 }
 
 export function getPaperIndex(db: SqliteClient, id: string): Paper | undefined {

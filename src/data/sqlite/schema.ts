@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS papers (
   favorite INTEGER NOT NULL DEFAULT 0,
   read_status TEXT NOT NULL DEFAULT 'unread',
   tags_json TEXT NOT NULL DEFAULT '[]',
+  doi TEXT,
   last_opened_at TEXT,
   last_read_block_id TEXT,
   last_read_offset REAL,

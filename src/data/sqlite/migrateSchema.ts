@@ -329,6 +329,13 @@ function migrateV7ToV8(db: Database): void {
   }
 }
 
+/** DOI copy of paper.json for duplicate lookup; filled by the package sync on startup. */
+function migrateV8ToV9(db: Database): void {
+  const paperColumns = tableInfo(db, "papers").map((column) => column.name);
+  if (!paperColumns.includes("doi")) db.run("ALTER TABLE papers ADD COLUMN doi TEXT");
+  db.run("CREATE INDEX IF NOT EXISTS papers_by_doi ON papers(doi)");
+}
+
 const MIGRATIONS: SchemaMigration[] = [
   { from: 1, to: 2, run: migrateV1ToV2 },
   { from: 2, to: 3, run: migrateV2ToV3 },
@@ -337,6 +344,7 @@ const MIGRATIONS: SchemaMigration[] = [
   { from: 5, to: 6, run: migrateV5ToV6 },
   { from: 6, to: 7, run: migrateV6ToV7 },
   { from: 7, to: 8, run: migrateV7ToV8 },
+  { from: 8, to: 9, run: migrateV8ToV9 },
 ];
 
 export function applySqliteSchemaMigrations(db: Database): number {
@@ -346,6 +354,7 @@ export function applySqliteSchemaMigrations(db: Database): number {
     db.run("CREATE UNIQUE INDEX IF NOT EXISTS papers_unique_hash ON papers(source_file_hash)");
     db.run("CREATE INDEX IF NOT EXISTS annotations_by_paper_block ON annotations(paper_id, block_id)");
     db.run("CREATE INDEX IF NOT EXISTS papers_by_trashed ON papers(trashed_at)");
+    db.run("CREATE INDEX IF NOT EXISTS papers_by_doi ON papers(doi)");
     db.run("CREATE INDEX IF NOT EXISTS workspace_nodes_trashed ON workspace_nodes(trashed_at)");
     db.run("CREATE INDEX IF NOT EXISTS workspace_nodes_trash_root ON workspace_nodes(trash_root_id)");
     setSchemaVersion(db, SQLITE_SCHEMA_VERSION);

@@ -4,6 +4,7 @@ import { useAppStore, type LibraryFilter, type LibrarySort, type LibrarySortKey 
 import { useLibraryCache } from "../../stores/libraryCache";
 import { READ_STATUS_LABELS } from "../../services/paperLibraryState";
 import type { PaperReadStatus } from "../../types/paper";
+import { findDuplicatePaperIds } from "../../domain/duplicatePapers";
 import { displayPaperTitle } from "../../services/translation/quality";
 import type { Paper } from "../../types/paper";
 import menuStyles from "./PaperCard.module.css";
@@ -37,20 +38,46 @@ export function sortPapers(papers: Paper[], sort: LibrarySort): Paper[] {
   );
 }
 
-export function filterPapers(papers: Paper[], filter: LibraryFilter): Paper[] {
-  if (!filter.status && !filter.tag) return papers;
+export function filterPapers(
+  papers: Paper[],
+  filter: LibraryFilter,
+  duplicateIds: Map<string, string> = new Map()
+): Paper[] {
+  if (!filter.status && !filter.tag && !filter.duplicates) return papers;
   return papers.filter(
     (paper) =>
       (!filter.status || (paper.readStatus ?? "unread") === filter.status) &&
-      (!filter.tag || (paper.tags ?? []).includes(filter.tag))
+      (!filter.tag || (paper.tags ?? []).includes(filter.tag)) &&
+      (!filter.duplicates || duplicateIds.has(paper.id))
   );
+}
+
+/** Duplicates are judged against the whole library, not only the current folder. */
+function useDuplicatePaperIds(): Map<string, string> {
+  const papers = useLibraryCache((state) => state.papers);
+  return useMemo(() => findDuplicatePaperIds(papers), [papers]);
 }
 
 /** Sorted and filtered by the library-wide (transient) read-status / tag filter. */
 export function useSortedPapers(papers: Paper[]): Paper[] {
   const sort = useLibrarySort();
   const filter = useAppStore((state) => state.libraryFilter);
-  return useMemo(() => sortPapers(filterPapers(papers, filter), sort), [papers, sort, filter]);
+  const duplicateIds = useDuplicatePaperIds();
+  return useMemo(
+    () => {
+      const sorted = sortPapers(filterPapers(papers, filter, duplicateIds), sort);
+      if (!filter.duplicates) return sorted;
+      // Keep each duplicate group adjacent, groups ordered by their first member.
+      const firstIndex = new Map<string, number>();
+      sorted.forEach((paper, index) => {
+        const group = duplicateIds.get(paper.id) ?? paper.id;
+        if (!firstIndex.has(group)) firstIndex.set(group, index);
+      });
+      const rank = (paper: Paper) => firstIndex.get(duplicateIds.get(paper.id) ?? paper.id) ?? 0;
+      return [...sorted].sort((a, b) => rank(a) - rank(b));
+    },
+    [papers, sort, filter, duplicateIds]
+  );
 }
 
 const STATUSES: PaperReadStatus[] = ["unread", "reading", "read"];
@@ -71,10 +98,12 @@ export function LibrarySortMenu() {
       ),
     [papers]
   );
-  const filtering = filter.status != null || filter.tag != null;
+  const duplicateIds = useDuplicatePaperIds();
+  const filtering = filter.status != null || filter.tag != null || filter.duplicates;
   const filterLabel = [
     filter.status ? READ_STATUS_LABELS[filter.status] : null,
     filter.tag ? `#${filter.tag}` : null,
+    filter.duplicates ? "重複の可能性" : null,
   ]
     .filter(Boolean)
     .join("・");
@@ -161,6 +190,21 @@ export function LibrarySortMenu() {
               {status ? READ_STATUS_LABELS[status] : "すべて"}
             </button>
           ))}
+          {(duplicateIds.size > 0 || filter.duplicates) && (
+            <>
+              <div className={menuStyles.menuSep} />
+              <button
+                type="button"
+                role="menuitemcheckbox"
+                aria-checked={filter.duplicates}
+                className={menuStyles.menuItem}
+                onClick={() => setLibraryFilter({ duplicates: !filter.duplicates })}
+              >
+                <Check size={14} className={filter.duplicates ? "" : styles.hidden} />
+                重複の可能性（{duplicateIds.size}）
+              </button>
+            </>
+          )}
           {allTags.length > 0 && (
             <>
               <div className={menuStyles.menuSep} />

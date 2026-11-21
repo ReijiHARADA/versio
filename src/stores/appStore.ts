@@ -39,7 +39,12 @@ export type DisplaySettings = {
 };
 
 /** Transient library filter (not persisted, so papers never stay hidden across launches). */
-export type LibraryFilter = { status: import("../types/paper").PaperReadStatus | null; tag: string | null };
+export type LibraryFilter = {
+  status: import("../types/paper").PaperReadStatus | null;
+  tag: string | null;
+  /** Only papers sharing a DOI / title with another one. */
+  duplicates: boolean;
+};
 
 type AppUiState = {
   currentPaperId: string | null;
@@ -71,7 +76,7 @@ export const useAppStore = create<AppUiState>()(
   persist(
     (set) => ({
       currentPaperId: null,
-      libraryFilter: { status: null, tag: null },
+      libraryFilter: { status: null, tag: null, duplicates: false },
       setLibraryFilter: (filter) =>
         set((state) => ({ libraryFilter: { ...state.libraryFilter, ...filter } })),
       displaySettings: defaultDisplaySettings,
