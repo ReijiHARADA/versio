@@ -27,9 +27,14 @@ describe("downloadPlamoModelOnce", () => {
 
 describe("introStepAfterCta", () => {
   it("offers the PLaMo download only when the model is missing", () => {
-    expect(introStepAfterCta("absent")).toBe("plamo");
+    expect(introStepAfterCta("absent", false)).toBe("plamo");
     for (const state of ["present", "unavailable", "downloading", "checking", "error"] as const) {
-      expect(introStepAfterCta(state)).toBe("close");
+      expect(introStepAfterCta(state, false)).toBe("close");
     }
+  });
+
+  it("shows the PLaMo screen in onboarding preview builds even when the model is installed", () => {
+    expect(introStepAfterCta("present", true)).toBe("plamo");
+    expect(introStepAfterCta("unavailable", true)).toBe("close");
   });
 });

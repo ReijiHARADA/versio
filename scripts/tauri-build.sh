@@ -97,7 +97,8 @@ fi
 # DMG is still built later from the finalized .app so signed releases never
 # package a pre-sign snapshot.
 t0="$(now_ms)"
-npx tauri build --bundles app --ci
+# VERSIO_TAURI_CONFIG: extra JSON merged into tauri.conf (e.g. the separate onboarding test app identity).
+npx tauri build --bundles app --ci ${VERSIO_TAURI_CONFIG:+--config "$VERSIO_TAURI_CONFIG"}
 rust_bundle_s="$(elapsed_s "$t0")"
 echo "rust_s=$rust_bundle_s" >>"$TIMING_FILE"
 echo "app_bundle_s=included_in_rust_s" >>"$TIMING_FILE"

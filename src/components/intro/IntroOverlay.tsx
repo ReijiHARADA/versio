@@ -3,8 +3,8 @@ import introMp4 from "../../assets/intro/intro.mp4";
 import finalPng from "../../assets/intro/final.png";
 import { usePlamoModel } from "../settings/usePlamoModel";
 import { PlamoSetupScreen } from "./PlamoSetupScreen";
-import { introStepAfterCta } from "./introSteps";
-import { markIntroSeen } from "./introSeen";
+import { ONBOARDING_PREVIEW, introStepAfterCta } from "./introSteps";
+import { hasSeenIntro, markIntroSeen } from "./introSeen";
 import { playStapleSound, STAPLE_FIRST_CLICK_S } from "./stapleSound";
 import styles from "./IntroOverlay.module.css";
 
@@ -16,14 +16,14 @@ const CTA_LABEL = "Versioを使い始める";
 
 export function IntroOverlay() {
   // Automated browsers (Playwright verify scripts) are kept out of the intro.
-  // shortcut: shown on every launch for now (user request); restore the `!hasSeenIntro() &&` gate when told.
-  const [open, setOpen] = useState(() => !navigator.webdriver);
+  const [open, setOpen] = useState(() => !navigator.webdriver && !hasSeenIntro());
   const [still] = useState(() => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
   const [videoFailed, setVideoFailed] = useState(false);
   const [ctaShown, setCtaShown] = useState(still);
   const [leaving, setLeaving] = useState(false);
   const [step, setStep] = useState<"intro" | "plamo">("intro");
   const plamo = usePlamoModel();
+  const [downloadPressed, setDownloadPressed] = useState(false);
   const timers = useRef<number[]>([]);
 
   useEffect(() => {
@@ -84,10 +84,14 @@ export function IntroOverlay() {
       </button>
       {step === "plamo" ? (
         <PlamoSetupScreen
-          state={plamo.state}
+          // preview builds show the first-run screen even though the model is already installed
+          state={ONBOARDING_PREVIEW && plamo.state === "present" && !downloadPressed ? "absent" : plamo.state}
           percent={plamo.percent}
           error={plamo.error}
-          onDownload={() => void plamo.download()}
+          onDownload={() => {
+            setDownloadPressed(true);
+            void plamo.download();
+          }}
           onClose={close}
         />
       ) : null}

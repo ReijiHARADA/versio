@@ -33,6 +33,7 @@
 - `src-tauri/` が Tauri v2 のシェル。`npm run tauri:dev` で開発。日常の `.app` 確認は `npm run tauri:build:fast`（`.app` のみ）。リリース確認は `npm run tauri:build:clean`（`.app` + `.dmg`）。`npm run tauri:build` は clean のエイリアス。
 - 生成物: `src-tauri/target/release/bundle/macos/Versio.app`
 - アプリアイコンは Icon Composer 形式 `src-tauri/icons/AppIcon.icon`（ライト/ダーク）。`npm run build:icon` で `src-tauri/icons/Assets.car` にコンパイルしてコミットし、bundler はその `.car` を同梱する（bundler 内の actool は ibtoold デーモンが壊れて失敗するため使わない）。`icon.icns` はフォールバック。元画像は `design/icon/staple_icon.py`（`-- out.png 1024 384 light|dark layer|flat [shadow_gain]`）。現行ライトは `light layer 0.295`（左上キーライト、影は大きな影用ライトで物理的にぼかしてピーク約20%）、ダークは `dark layer`。V字影の試作は `design/icon/explorations/v-shadow/`。
+- オンボーディング（イントロ動画・Introduction 論文・PLaMo 画面）の確認は `npm run onboarding:test`（`-- build` で再ビルド）。別 identity `com.harada.versio.onboarding` の「Versio Onboarding.app」を毎回データ初期化して開く。PLaMo モデルは日常用からハードリンクし、`VITE_VERSIO_ONBOARDING_PREVIEW=1` でモデル導入済みでも PLaMo 画面を出す。配布版のオンボーディングは初回 1 回だけ。
 - 日常使いの Versio は `npm run install:app`（main をビルドして `/Applications/Versio.app` に置く）の1本に統一する。worktree の `.app` は確認用の使い捨て。
 - PR をマージしたら `npm run prune:worktrees` でマージ済み worktree とローカルブランチを消す（未コミット変更あり・1時間以内に触った worktree は残す）。廃止したエンジンのモデル・venv・HF キャッシュは、コード削除と同じ PR の作業中にローカルからも消す。ベンチ／監査の出力先は作ったときに `.gitignore` へ入れる。
 - Xcode は `/Applications/Xcode-beta.app` を使用。ビルド時は `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer` を設定すること。
