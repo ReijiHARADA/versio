@@ -20,15 +20,17 @@ export function withCorrespondenceNotes(nodes: CanonicalNode[]): CanonicalNode[]
   const consumed = new Set<string>();
   const replaced = new Map<string, CanonicalNode>();
   for (const node of nodes) {
-    if (node.pageStart > 2 || consumed.has(node.id) || !MASTHEAD_ROLES.has(node.role)) continue;
     const text = (node.text ?? "").trim();
+    // A bare label can be filed as an affiliation when a rail is read as its own column.
+    if (node.pageStart > 2 || consumed.has(node.id) ||
+      !(MASTHEAD_ROLES.has(node.role) || (node.role === "affiliation" && LABEL_ONLY.test(text)))) continue;
     const box = node.boundingBoxes[0];
     if (LABEL_ONLY.test(text) && box) {
       // Sidebar rows sit directly below the label in the same column, left- or
-      // right-aligned with it; the name row may already be filed as an author.
+      // right-aligned with it; the name row may already be filed as an author or, in a rail, a heading.
       const parts = nodes.filter((n) => {
         const b = n.boundingBoxes[0];
-        return n.pageStart === node.pageStart && n.id !== node.id && b && (MASTHEAD_ROLES.has(n.role) || n.role === "author") &&
+        return n.pageStart === node.pageStart && n.id !== node.id && b && (MASTHEAD_ROLES.has(n.role) || n.role === "author" || n.role === "heading") &&
           (Math.abs(b.x - box.x) <= 12 || Math.abs(b.x + b.width - (box.x + box.width)) <= 12) &&
           b.y > box.y && b.y - box.y <= 40 && !/^\P{Ll}+$/u.test(n.text ?? "") && !SIDEBAR_FIELD.test(n.text ?? "");
       });
@@ -38,6 +40,17 @@ export function withCorrespondenceNotes(nodes: CanonicalNode[]): CanonicalNode[]
       replaced.set(node.id, { ...node, role: "footnote", text: `${label}: ${parts.map((n) => n.text!.trim()).join(", ")}` });
     } else if ((INLINE_NOTE.test(text) && (text.match(EMAIL_TAIL)?.[1].length ?? 99) <= 40) || (node.role !== "paragraph" && MARKED_EMAIL.test(text))) {
       replaced.set(node.id, { ...node, role: "footnote" });
+    } else if (INLINE_NOTE.test(text) && !EMAIL.test(text) && text.length <= 80 && box) {
+      // `*Correspondence: Name` with the address alone on the row below.
+      const address = nodes.find((n) => {
+        const b = n.boundingBoxes[0];
+        return n.pageStart === node.pageStart && n.id !== node.id && b && MASTHEAD_ROLES.has(n.role) &&
+          /^\s*[\w.+-]+@[\w-]+(?:\.[\w-]+)+\s*$/.test(n.text ?? "") && b.y > box.y && b.y - box.y <= 30 &&
+          b.x < box.x + box.width && b.x + b.width > box.x;
+      });
+      if (!address) continue;
+      consumed.add(address.id);
+      replaced.set(node.id, { ...node, role: "footnote", text: `${text}, ${address.text!.trim()}` });
     }
   }
   if (replaced.size === 0) return nodes;

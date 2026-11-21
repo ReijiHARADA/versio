@@ -2976,7 +2976,9 @@ function roleForLine(
   // with “and”). Resolve this geometry before masthead name heuristics.
   if (line.page === 1 && line.y < 230 && line.fontSize >= baseFont * 1.22 &&
       line.width >= (line.pageWidth ?? 612) * 0.42 &&
-      !looksLikePersonName(text) && !looksLikeAffiliation(text)) {
+      !looksLikePersonName(text) && !looksLikeAffiliation(text) &&
+      // A byline with affiliation markers (`Name 1* and Name 2`) beside a small-type rail can clear the size test.
+      !/^\p{Lu}[\p{L}'’-]+(?:\s+\p{Lu}[\p{L}'’-]+)+\s*\d[\d,*†‡]*\s*(?:,|and\b)/u.test(text)) {
     return "title";
   }
   // JMIR / preprint covers continue a display title below y=230 at the same
@@ -3234,15 +3236,18 @@ function groupLinesIntoBlocks(
   const pageOne = lines.filter((line) => line.page === 1);
   const firstAuthorY = pageOne
     .filter((line) => {
-      if (looksLikePersonName(line.text) || looksLikeLatinAuthorLine(line.text)) return true;
       const text = line.text.trim();
+      // All-caps labels (`EDITED BY`, `OPEN ACCESS`) are rail chrome, not a byline.
+      if (/\p{Lu}/u.test(text) && text === text.toUpperCase()) return false;
+      if (looksLikePersonName(line.text) || looksLikeLatinAuthorLine(line.text)) return true;
       const capitalWords = text.split(/\s+/).filter((word) => /^[A-Z][A-Za-z.'’-]{1,}$/.test(word));
       return capitalWords.length >= 2 && capitalWords.length <= 12 &&
         text.length <= 140 && !/^(?:arxiv|doi|http)/i.test(text) &&
         !/[.!?]$/.test(text);
     })
     .map((line) => line.y)
-    .filter((y) => y > (pageOne[0]?.y ?? 0) + 8)
+    // The topmost line, not the first in reading order (a page-one rail is read before the wide column).
+    .filter((y) => y > Math.min(...pageOne.map((line) => line.y)) + 8)
     .sort((a, b) => a - b)[0];
   if (firstAuthorY !== undefined) {
     for (const line of pageOne) {
