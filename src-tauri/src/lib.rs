@@ -1,5 +1,5 @@
-#[cfg(target_os = "macos")]
 mod bibliography;
+#[cfg(target_os = "macos")]
 mod legacy_data;
 #[cfg(target_os = "macos")]
 mod macos_chrome;
