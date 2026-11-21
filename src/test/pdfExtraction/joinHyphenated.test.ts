@@ -13,4 +13,8 @@ describe("joinHyphenated", () => {
     expect(joinHyphenated("a non-", "linear model")).toBe("a non-linear model");
     expect(joinHyphenated("memory- and interaction-", "perspectives")).toBe("memory- and interaction-perspectives");
   });
+
+  it("keeps a spaced dash at the line end", () => {
+    expect(joinHyphenated("Methodology, Writing –", "review & editing")).toBe("Methodology, Writing – review & editing");
+  });
 });

@@ -52,6 +52,7 @@ import {
   captionOfRelations,
   childOfRelations,
   floatedTableContinuationRelations,
+  demotedRowContinuationRelations,
   pageBoundaryContinuationRelations,
   figureNodesForCaptions,
   readsBeforeRelations,
@@ -4616,6 +4617,20 @@ export function resolveCanonicalDocument(input: {
   nodes = demoteEditorialChromeHeadings(nodes);
   // Several promotion paths can make a display-math or chart fragment a heading
   // (`1 u(s, x, l)`, `S∈[Y ]\\k |S|`); none of them is a section title.
+  // A line ending in a comma or a dash (`MG: Formal analysis, Methodology, Writing –`) is a wrapped row, not a title.
+  nodes = nodes.map((node) => node.role !== "heading" || !/[,–—]\s*$/.test(node.text ?? "") ? node : {
+    ...node,
+    role: "paragraph" as const,
+    confidence: Math.min(node.confidence, 0.55),
+    evidence: [...node.evidence, {
+      source: "generic-heuristic" as const,
+      label: "unfinished-heading-demotion",
+      confidence: 0.8,
+      page: node.pageStart,
+      bbox: node.boundingBoxes[0],
+      reason: "heading-shaped line ends in a comma or dash",
+    }],
+  });
   nodes = nodes.map((node) => node.role !== "heading" || !node.text || !looksLikeMathOrDataFragment(node.text.trim()) ? node : {
     ...node,
     role: "paragraph" as const,
@@ -5085,6 +5100,7 @@ export function resolveCanonicalDocument(input: {
     ...affiliatedWithRelations(nodes),
     ...pageBoundaryContinuationRelations(nodes, input.layouts),
     ...floatedTableContinuationRelations(nodes, input.layouts),
+    ...demotedRowContinuationRelations(nodes),
   ];
 
   const layoutScores = input.blocks.map((block) => {

@@ -12,24 +12,24 @@ status: draft
 
 ## 依頼
 
-評価用 split（Europe PMC 405 本）で intact 98% 以上、警告ブロック 500 以下、誤警告 50 以下。ゲートを緩めて警告を外すのは禁止。今は intact 89.4%、警告 2,644、誤警告 382（評価用、側欄の段 PR の途中版）。
+評価用 split（Europe PMC 405 本）で intact 98% 以上、警告ブロック 500 以下、誤警告 50 以下。ゲートを緩めて警告を外すのは禁止。今は intact 89.4%、警告 2,563、誤警告 378（評価用、2026-11-21）。
 
 ## 今の状態
 
-- ブランチ `fix/frontiers-rail`（`EDITED BY` / `REVIEWED BY` の側欄を独立した段として読む）。ユーザーの判断「取り組む」（2026-11-21）を受けた作業。マージ後は main で基準を取り直す。
-- 比べる基準 run（worktree `../app-worktrees/keywords` の `test-data/extraction-audit/`）: main 7f1dfbb の dev `frb13` / 要素正解 `egb13`・`pgb13`、変更後 `fr13` / `eg13` / `pg13`。評価用は途中版で `eval-fr0` → `eval-fr1`。
+- 側欄の段は #165 でマージ済み。ブランチ `fix/cross-page-float`（名前は最初の試みのまま。中身はカンマ・ダッシュで終わる見出しを段落に戻す変更）。
+- 比べる基準 run（worktree `../app-worktrees/keywords` の `test-data/extraction-audit/`）: main 582a123 の dev `fr13` / 要素正解 `eg13`・`pg13`、変更後 `fr16` / `eg16` / `pg16`。評価用 `eval-hd0` → `eval-hd1`（この変更で 1 回）。
 - 評価用はこの変更で 1 回使った。
 
 ## worktree（`/Users/harada/Desktop/MyProjects/projects/versio/app-worktrees/`）
 
 - `keywords`: 上の基準 run と古い run（`fr*`、`kw1`、`rl1`〜`rl4`、`eval-*`）。`test-data/element-gold` を main へリンク済み。
-- `main-ref`: main を比べるための使い捨て（detached）。不要なら削除してよい。
 - `word-space` / `figure-swallow`: 古い基準。不要なら削除してよい。
 
 ## 次の一手
 
-1. 2 ページ目以降の split-interrupted を `interrupt.ts fr13` で型分けする。
+1. 同じページの split-interrupted（dev 159）: 正解外の段落（表の略語の注、図のラベル、`Although` だけの断片）が間に入る型。1 つずつ原因が違う。
 2. 側欄の下半分が抄録の途中に入るページ（`PMC13454063`）。
+3. ページをまたぐ分断で前半が文末で終わる型は、字下げ・余白の手がかりが要る（見送ったことを参照）。
 
 ## 判断待ち・未確認
 
