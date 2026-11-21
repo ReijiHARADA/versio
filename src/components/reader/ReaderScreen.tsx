@@ -67,7 +67,7 @@ export function ReaderScreen() {
     paperId ? s.blocks[paperId] ?? EMPTY_BLOCKS : EMPTY_BLOCKS
   );
 
-  const [showOutline, setShowOutline] = useState(false);
+  const [showOutline, setShowOutline] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [rightPanel, setRightPanel] = useState<ReaderRightPanel>("none");
@@ -321,10 +321,9 @@ export function ReaderScreen() {
         </div>
         <div className={styles.headerRight}>
           <button
-            className={`${styles.iconButton} ${showOutline ? styles.active : ""}`}
+            className={styles.iconButton}
             onClick={() => setShowOutline((value) => !value)}
             aria-label={showOutline ? "目次を隠す" : "目次を表示"}
-            aria-pressed={showOutline}
             data-tooltip={showOutline ? "目次を隠す" : "目次を表示"}
           >
             <PanelLeft size={iconSize.md} />
