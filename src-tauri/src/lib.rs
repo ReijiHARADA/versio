@@ -101,6 +101,7 @@ pub fn run() {
             sync_window_chrome_theme,
             ocr::ocr_image,
             bibliography::fetch_bibliographic_record,
+            bibliography::download_open_access_pdf,
             source_pdf::save_source_pdf,
             source_pdf::copy_source_pdf,
             source_pdf::open_source_pdf,

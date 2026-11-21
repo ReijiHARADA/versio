@@ -24,6 +24,7 @@ import { LibrarySortMenu, useSortedPapers } from "../library/LibrarySortMenu";
 import { WorkspacePathTrail } from "../workspace/WorkspacePathTrail";
 import type { Paper } from "../../types/paper";
 import type { WorkspaceNode, WorkspacePaper } from "../../types/project";
+import { AddByIdentifierButton } from "../library/AddByIdentifierButton";
 import styles from "./ProjectScreen.module.css";
 
 function subtreePaperIds(
@@ -159,6 +160,7 @@ export function ProjectScreen() {
             <Upload size={18} />
             書き出す
           </button>
+          <AddByIdentifierButton workspaceNodeId={nodeId} />
           <button
             type="button"
             className={styles.addButton}
