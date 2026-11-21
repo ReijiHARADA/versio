@@ -67,6 +67,14 @@ signed acceptance not executed
 
 Do **not** treat unsigned artifacts as a signed release.
 
+## In-app updates (GitHub Releases)
+
+The app checks `https://github.com/ReijiHARADA/versio/releases/latest/download/latest.json` on launch (silent) and from Versio → アップデートを確認…. Updates are verified with the updater key, separate from the Apple signature.
+
+- Private key: `~/.tauri/versio-updater.key` (outside the repo, empty password). Public key: `plugins.updater.pubkey` in `src-tauri/tauri.conf.json`. Losing the private key means existing installs can no longer update; back it up.
+- Release: bump `version` in `src-tauri/tauri.conf.json` → `VERSIO_SIGN=1 npm run tauri:build:clean` → `bash scripts/macos-publish-update.sh --publish`. The archive is made from the final (notarized) `.app`, so it must run after signing.
+- Without `--publish` the script only writes `src-tauri/target/release/bundle/updater/` (archive, `.sig`, `latest.json`).
+
 ## GitHub Actions secrets (recommended names)
 
 Store credentials in repository / org secrets — never in git.
