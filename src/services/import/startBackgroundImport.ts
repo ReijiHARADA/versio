@@ -1,5 +1,7 @@
 import { resumeIncompleteTranslation } from "./resume";
 import { classifyImportFailure } from "./classifyFailure";
+import { findSimilarPaper } from "../../domain/duplicatePapers";
+import { displayPaperTitle } from "../translation/quality";
 import { showToast } from "../../stores/toastStore";
 import { useImportJobStore } from "../../stores/importJobStore";
 import { useLibraryCache } from "../../stores/libraryCache";
@@ -108,6 +110,7 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
   // Extraction proceeds without waiting for the translation model.
   const settings = await getSetting<ImportConfig>("translationSettingsV2");
   let attached = false;
+  let similarChecked = false;
   let duplicatePaperId: string | undefined;
   const controller = importAbortControllers.get(jobId) ?? new AbortController();
   importAbortControllers.set(jobId, controller);
@@ -180,6 +183,17 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
           patch(jobId, { stage });
         },
         onPartialReady: (paper, sections, blocks) => {
+          if (!similarChecked) {
+            similarChecked = true;
+            // Same DOI / title but a different PDF (e.g. preprint vs. published): keep it, but say so.
+            const similar = findSimilarPaper(paper, useLibraryCache.getState().papers);
+            if (similar) {
+              showToast({
+                kind: "info",
+                message: `似た論文がすでにあります:「${displayPaperTitle(similar)}」`,
+              });
+            }
+          }
           useLibraryCache.getState().addPaper(paper);
           useLibraryCache.getState().setSections(paper.id, sections);
           useLibraryCache.getState().setBlocks(paper.id, blocks);

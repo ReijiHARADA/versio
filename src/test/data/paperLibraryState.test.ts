@@ -70,7 +70,7 @@ describe("paper library state in SQLite", () => {
       INSERT INTO meta (key, value) VALUES ('schema_version', '7');
       INSERT INTO papers (id, last_opened_at) VALUES ('opened', 't'), ('fresh', NULL);
     `);
-    expect(applySqliteSchemaMigrations(raw)).toBe(8);
+    expect(applySqliteSchemaMigrations(raw)).toBe(9);
     const rows = raw.exec("SELECT id, read_status, tags_json FROM papers ORDER BY id")[0].values;
     expect(rows).toEqual([
       ["fresh", "unread", "[]"],
@@ -97,9 +97,9 @@ describe("filterPapers", () => {
     makePaper("c"),
   ];
   it("filters by status (missing status counts as unread) and tag", () => {
-    expect(filterPapers(papers, { status: null, tag: null })).toBe(papers);
-    expect(filterPapers(papers, { status: "unread", tag: null }).map((p) => p.id)).toEqual(["c"]);
-    expect(filterPapers(papers, { status: null, tag: "HCI" }).map((p) => p.id)).toEqual(["a", "b"]);
-    expect(filterPapers(papers, { status: "reading", tag: "HCI" }).map((p) => p.id)).toEqual(["b"]);
+    expect(filterPapers(papers, { status: null, tag: null, duplicates: false })).toBe(papers);
+    expect(filterPapers(papers, { status: "unread", tag: null, duplicates: false }).map((p) => p.id)).toEqual(["c"]);
+    expect(filterPapers(papers, { status: null, tag: "HCI", duplicates: false }).map((p) => p.id)).toEqual(["a", "b"]);
+    expect(filterPapers(papers, { status: "reading", tag: "HCI", duplicates: false }).map((p) => p.id)).toEqual(["b"]);
   });
 });
