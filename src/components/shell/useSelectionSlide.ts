@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 
 /**
  * Slides the sidebar's selection pill from the previously active item to the new one.
@@ -11,8 +11,11 @@ export function useSelectionSlide(
   classes: { item: string; active: string; ghost: string; arriving: string }
 ) {
   const last = useRef<{ el: Element; rect: DOMRect } | null>(null);
+  const running = useRef<Animation | null>(null);
+  useEffect(() => () => running.current?.cancel(), []);
 
   // No deps: the active item can change from the route or from props (activeNodeId).
+  // Only a querySelector runs per render; layout is read just when the selection changes.
   useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -20,41 +23,57 @@ export function useSelectionSlide(
     const sel = (name: string) => `.${name.split(" ")[0]}`;
     const el = container.querySelector(`${sel(classes.item)}${sel(classes.active)}:not(${sel(classes.ghost)})`);
     const prev = last.current;
-    last.current = el ? { el, rect: el.getBoundingClientRect() } : null;
-    if (!el || !prev || prev.el === el || !prev.el.isConnected) return;
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (el === prev?.el) return;
+    if (!el) {
+      last.current = null;
+      return;
+    }
+    const to = el.getBoundingClientRect();
+    last.current = { el, rect: to };
+    if (!prev || !to.width || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const to = last.current!.rect;
-    const from = prev.el.getBoundingClientRect(); // fresh: the list may have scrolled since
-    if (!to.width || !from.width) return;
+    // Clicking a parent folder collapses it and unmounts the old child row: fall back to
+    // where that row was when it was selected.
+    const from = prev.el.isConnected ? prev.el.getBoundingClientRect() : prev.rect;
+    if (!from.width) return;
     const base = container.getBoundingClientRect();
-    const box = (r: DOMRect) => ({
-      left: `${r.left - base.left}px`,
-      top: `${r.top - base.top}px`,
-      width: `${r.width}px`,
-      height: `${r.height}px`,
-    });
 
+    running.current?.cancel(); // a newer selection takes over mid-slide
     const ghost = document.createElement("div");
     ghost.className = `${classes.item} ${classes.active} ${classes.ghost}`;
     ghost.setAttribute("aria-hidden", "true");
-    Object.assign(ghost.style, box(to));
+    Object.assign(ghost.style, {
+      left: `${to.left - base.left}px`,
+      top: `${to.top - base.top}px`,
+      width: `${to.width}px`,
+      height: `${to.height}px`,
+    });
     container.prepend(ghost); // first child: paints under the item labels
     el.classList.add(classes.arriving);
     // The old item would also fade its own fill out; the ghost already carries it away.
-    const left = prev.el as HTMLElement;
-    left.style.transition = "none";
-    const animation = ghost.animate([box(from), box(to)], {
+    const left = prev.el instanceof HTMLElement ? prev.el : null;
+    if (left) left.style.transition = "none";
+
+    // Position moves on the compositor; width only changes between tree depths.
+    const translate = `translate(${from.left - to.left}px, ${from.top - to.top}px)`;
+    const keyframes: Keyframe[] =
+      from.width === to.width && from.height === to.height
+        ? [{ transform: translate }, { transform: "none" }]
+        : [
+            { transform: translate, width: `${from.width}px`, height: `${from.height}px` },
+            { transform: "none", width: `${to.width}px`, height: `${to.height}px` },
+          ];
+    const animation = ghost.animate(keyframes, {
       duration: 280,
       easing: "cubic-bezier(0.32, 0.72, 0, 1)",
     });
     const done = () => {
       ghost.remove();
       el.classList.remove(classes.arriving);
-      left.style.transition = "";
+      if (left) left.style.transition = "";
     };
     animation.onfinish = done;
     animation.oncancel = done;
-    return () => animation.cancel(); // a newer selection takes over mid-slide
+    running.current = animation;
   });
 }
