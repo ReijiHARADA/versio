@@ -30,7 +30,7 @@ export function LibraryViewToggle() {
         >
           <Icon size={15} aria-hidden="true" />
           <span className={styles.label} aria-hidden="true">
-            <span>{label}</span>
+            <span><span className={styles.text}>{label}</span></span>
           </span>
         </button>
       ))}
