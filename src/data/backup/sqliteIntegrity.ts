@@ -1,4 +1,6 @@
 import initSqlJs, { type Database, type SqlJsStatic } from "sql.js";
+// A fixed ?url import: a templated path made Vite bundle every sql.js build (~25 MB).
+import sqlWasmUrl from "sql.js/dist/sql-wasm-browser.wasm?url";
 import { SQLITE_SCHEMA_VERSION } from "../schemaVersion";
 
 export type SqliteIntegrityResult = {
@@ -32,7 +34,7 @@ async function loadSqlEngine(): Promise<SqlJsStatic> {
     return SQL;
   }
   SQL = await initSqlJs({
-    locateFile: (file) => new URL(`../../../node_modules/sql.js/dist/${file}`, import.meta.url).href,
+    locateFile: () => sqlWasmUrl,
   });
   return SQL;
 }
