@@ -1,4 +1,4 @@
-import type { Paper, Section, PaperBlock } from "../types/paper";
+import type { Paper, PaperReadStatus, Section, PaperBlock } from "../types/paper";
 import type { WorkspacePaper } from "../types/project";
 import type { Annotation } from "../types/annotation";
 import type { GlossaryEntry } from "./llm/types";
@@ -112,15 +112,20 @@ export async function savePaper(paper: Paper): Promise<void> {
   }
 }
 
-export async function markPaperOpened(paperId: string): Promise<void> {
+export async function markPaperOpened(
+  paperId: string
+): Promise<Pick<Paper, "lastOpenedAt" | "readStatus"> | undefined> {
   const { db } = await ready();
   const paper = getPaperIndex(db, paperId);
-  if (!paper) return;
+  if (!paper) return undefined;
   const lastOpenedAt = new Date().toISOString();
-  upsertPaperIndex(db, { ...paper, lastOpenedAt });
+  // First open moves an unread paper to "reading"; finishing stays a manual choice.
+  const readStatus: PaperReadStatus = paper.readStatus === "unread" ? "reading" : paper.readStatus ?? "reading";
+  upsertPaperIndex(db, { ...paper, lastOpenedAt, readStatus });
   const cached = peekDocument(paperId);
   // The SQLite row lacks package-only fields (DOI, structured authors); keep the cached ones.
-  rememberDocument({ ...(cached?.paper ?? paper), lastOpenedAt }, cached?.sections, cached?.blocks);
+  rememberDocument({ ...(cached?.paper ?? paper), lastOpenedAt, readStatus }, cached?.sections, cached?.blocks);
+  return { lastOpenedAt, readStatus };
 }
 
 export async function setPaperFavorite(paperId: string, favorite: boolean): Promise<void> {
@@ -130,6 +135,19 @@ export async function setPaperFavorite(paperId: string, favorite: boolean): Prom
   upsertPaperIndex(db, { ...paper, favorite });
   const cached = peekDocument(paperId);
   rememberDocument({ ...(cached?.paper ?? paper), favorite }, cached?.sections, cached?.blocks);
+}
+
+/** Library state (read status / tags) lives in SQLite only, like favorite. */
+export async function setPaperLibraryState(
+  paperId: string,
+  state: { readStatus?: PaperReadStatus; tags?: string[] }
+): Promise<void> {
+  const { db } = await ready();
+  const paper = getPaperIndex(db, paperId);
+  if (!paper) return;
+  upsertPaperIndex(db, { ...paper, ...state });
+  const cached = peekDocument(paperId);
+  if (cached) rememberDocument({ ...cached.paper, ...state }, cached.sections, cached.blocks);
 }
 
 /** Edit citation metadata. Written to paper.json (the source of truth), then the index. */

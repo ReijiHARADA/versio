@@ -1,4 +1,6 @@
-import type { Paper } from "../../types/paper";
+import type { Paper, PaperReadStatus } from "../../types/paper";
+
+const READ_STATUSES = new Set<string>(["unread", "reading", "read"]);
 import { listAnnotationsByPaper } from "./annotationRepository";
 import { rebuildPaperFts } from "../sqlite/fts";
 import type { SqliteClient } from "../sqlite/client";
@@ -37,6 +39,10 @@ function rowToPaper(row: Record<string, unknown>): Paper {
     lastReadBlockId: row.last_read_block_id == null ? null : String(row.last_read_block_id),
     lastReadOffset: row.last_read_offset == null ? null : Number(row.last_read_offset),
     favorite: Number(row.favorite ?? 0) === 1,
+    readStatus: READ_STATUSES.has(String(row.read_status))
+      ? (String(row.read_status) as PaperReadStatus)
+      : "unread",
+    tags: parseJson<string[]>(row.tags_json, []),
     lastOpenedAt: row.last_opened_at ? String(row.last_opened_at) : undefined,
     packageRevision: Number(row.package_revision ?? 0),
     trashedAt: row.trashed_at == null ? null : String(row.trashed_at),
@@ -55,8 +61,9 @@ export function upsertPaperIndex(db: SqliteClient, paper: Paper): void {
       id, source_file_hash, title_original, title_translated, authors_json,
       publication, year, page_count, processing_status, favorite, last_opened_at,
       last_read_block_id, last_read_offset, source_file_name, source_stored_path,
-      package_revision, needs_translation_resume, trashed_at, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      package_revision, needs_translation_resume, trashed_at, created_at, updated_at,
+      read_status, tags_json
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'unread'), COALESCE(?, '[]'))
     ON CONFLICT(id) DO UPDATE SET
       source_file_hash=excluded.source_file_hash,
       title_original=excluded.title_original,
@@ -75,7 +82,10 @@ export function upsertPaperIndex(db: SqliteClient, paper: Paper): void {
       package_revision=excluded.package_revision,
       needs_translation_resume=excluded.needs_translation_resume,
       trashed_at=excluded.trashed_at,
-      updated_at=excluded.updated_at`,
+      updated_at=excluded.updated_at,
+      -- Papers rebuilt from a package carry no library state; keep the stored one.
+      read_status=COALESCE(?, papers.read_status),
+      tags_json=COALESCE(?, papers.tags_json)`,
     [
       paper.id,
       paper.sourceFileHash,
@@ -97,6 +107,10 @@ export function upsertPaperIndex(db: SqliteClient, paper: Paper): void {
       paper.trashedAt ?? null,
       paper.createdAt,
       paper.updatedAt,
+      paper.readStatus ?? null,
+      paper.tags ? JSON.stringify(paper.tags) : null,
+      paper.readStatus ?? null,
+      paper.tags ? JSON.stringify(paper.tags) : null,
     ]
   );
 }

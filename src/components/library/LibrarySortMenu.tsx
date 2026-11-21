@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpDown, Check } from "lucide-react";
-import { useAppStore, type LibrarySort, type LibrarySortKey } from "../../stores/appStore";
+import { useAppStore, type LibraryFilter, type LibrarySort, type LibrarySortKey } from "../../stores/appStore";
+import { useLibraryCache } from "../../stores/libraryCache";
+import { READ_STATUS_LABELS } from "../../services/paperLibraryState";
+import type { PaperReadStatus } from "../../types/paper";
 import { displayPaperTitle } from "../../services/translation/quality";
 import type { Paper } from "../../types/paper";
 import menuStyles from "./PaperCard.module.css";
@@ -34,10 +37,23 @@ export function sortPapers(papers: Paper[], sort: LibrarySort): Paper[] {
   );
 }
 
+export function filterPapers(papers: Paper[], filter: LibraryFilter): Paper[] {
+  if (!filter.status && !filter.tag) return papers;
+  return papers.filter(
+    (paper) =>
+      (!filter.status || (paper.readStatus ?? "unread") === filter.status) &&
+      (!filter.tag || (paper.tags ?? []).includes(filter.tag))
+  );
+}
+
+/** Sorted and filtered by the library-wide (transient) read-status / tag filter. */
 export function useSortedPapers(papers: Paper[]): Paper[] {
   const sort = useLibrarySort();
-  return useMemo(() => sortPapers(papers, sort), [papers, sort]);
+  const filter = useAppStore((state) => state.libraryFilter);
+  return useMemo(() => sortPapers(filterPapers(papers, filter), sort), [papers, sort, filter]);
 }
+
+const STATUSES: PaperReadStatus[] = ["unread", "reading", "read"];
 
 export function LibrarySortMenu() {
   const sort = useLibrarySort();
@@ -45,6 +61,24 @@ export function LibrarySortMenu() {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const current = KEYS.find((item) => item.key === sort.key) ?? KEYS[0];
+  const filter = useAppStore((state) => state.libraryFilter);
+  const setLibraryFilter = useAppStore((state) => state.setLibraryFilter);
+  const papers = useLibraryCache((state) => state.papers);
+  const allTags = useMemo(
+    () =>
+      [...new Set(papers.filter((paper) => !paper.trashedAt).flatMap((paper) => paper.tags ?? []))].sort(
+        (a, b) => a.localeCompare(b, "ja")
+      ),
+    [papers]
+  );
+  const filtering = filter.status != null || filter.tag != null;
+  const filterLabel = [
+    filter.status ? READ_STATUS_LABELS[filter.status] : null,
+    filter.tag ? `#${filter.tag}` : null,
+  ]
+    .filter(Boolean)
+    .join("・");
+  const title = `並べ替え: ${current.label}（${sort.dir === "asc" ? "昇順" : "降順"}）${filtering ? ` / 絞り込み: ${filterLabel}` : ""}`;
 
   useEffect(() => {
     if (!open) return;
@@ -74,12 +108,14 @@ export function LibrarySortMenu() {
         className={styles.trigger}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`並べ替え: ${current.label}（${sort.dir === "asc" ? "昇順" : "降順"}）`}
-        title={`並べ替え: ${current.label}（${sort.dir === "asc" ? "昇順" : "降順"}）`}
+        aria-label={title}
+        title={title}
+        data-filtering={filtering || undefined}
         data-testid="library-sort"
         onClick={() => setOpen((value) => !value)}
       >
         <ArrowUpDown size={15} aria-hidden="true" />
+        {filtering ? <span className={styles.filterDot} aria-hidden="true" /> : null}
       </button>
       {open && (
         <div className={menuStyles.menu} role="menu">
@@ -110,6 +146,42 @@ export function LibrarySortMenu() {
               {dir === "asc" ? "昇順" : "降順"}
             </button>
           ))}
+          <div className={menuStyles.menuSep} />
+          <p className={styles.sectionLabel}>読書ステータス</p>
+          {[null, ...STATUSES].map((status) => (
+            <button
+              key={status ?? "all"}
+              type="button"
+              role="menuitemradio"
+              aria-checked={filter.status === status}
+              className={menuStyles.menuItem}
+              onClick={() => setLibraryFilter({ status })}
+            >
+              <Check size={14} className={filter.status === status ? "" : styles.hidden} />
+              {status ? READ_STATUS_LABELS[status] : "すべて"}
+            </button>
+          ))}
+          {allTags.length > 0 && (
+            <>
+              <div className={menuStyles.menuSep} />
+              <p className={styles.sectionLabel}>タグ</p>
+              <div className={styles.tagList}>
+                {[null, ...allTags].map((tag) => (
+                  <button
+                    key={tag ?? "all"}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={filter.tag === tag}
+                    className={menuStyles.menuItem}
+                    onClick={() => setLibraryFilter({ tag })}
+                  >
+                    <Check size={14} className={filter.tag === tag ? "" : styles.hidden} />
+                    {tag ?? "すべて"}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

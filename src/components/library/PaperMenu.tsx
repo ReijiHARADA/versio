@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BookText, FolderPlus, MoreHorizontal, Quote, Pause, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
+import { BookText, Check, FolderPlus, MoreHorizontal, Quote, Tag, Pause, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
 import type { Paper } from "../../types/paper";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
@@ -16,6 +16,9 @@ import {
 } from "../../services/projectService";
 import { PaperEpubSyncControl } from "./PaperEpubSyncControl";
 import { PaperMetadataSheet } from "./PaperMetadataSheet";
+import { PaperTagsPopover } from "./PaperTagsPopover";
+import { applyPaperReadStatus, READ_STATUS_LABELS } from "../../services/paperLibraryState";
+import type { AnchorBox } from "../reader/memo/popoverPosition";
 import styles from "./PaperCard.module.css";
 
 async function copyBibTeX(paper: Paper): Promise<void> {
@@ -59,6 +62,7 @@ export function PaperMenu({
   const [reextracting, setReextracting] = useState(false);
   const [favoriting, setFavoriting] = useState(false);
   const [editingMetadata, setEditingMetadata] = useState(false);
+  const [tagsAnchor, setTagsAnchor] = useState<AnchorBox | null>(null);
   const workspaceNodes = useProjectStore((state) => state.workspaceNodes);
   const memberships = useProjectStore((state) => state.memberships);
   const upsertMembership = useProjectStore((state) => state.upsertMembership);
@@ -209,6 +213,42 @@ export function PaperMenu({
             variant="menu"
             onFinished={() => setOpen(false)}
           />
+          <div className={styles.menuSep} />
+          {(["unread", "reading", "read"] as const).map((status) => {
+            const checked = (paper.readStatus ?? "unread") === status;
+            return (
+              <button
+                key={status}
+                type="button"
+                className={styles.menuItem}
+                role="menuitemradio"
+                aria-checked={checked}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setOpen(false);
+                  if (!checked) void applyPaperReadStatus(paper.id, status);
+                }}
+              >
+                <Check size={14} style={checked ? undefined : { visibility: "hidden" }} />
+                {READ_STATUS_LABELS[status]}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            className={styles.menuItem}
+            role="menuitem"
+            onClick={(event) => {
+              event.stopPropagation();
+              setOpen(false);
+              const rect = rootRef.current?.getBoundingClientRect();
+              if (rect) setTagsAnchor({ top: rect.top, left: rect.left, width: rect.width, height: rect.height, element: rootRef.current ?? undefined });
+            }}
+          >
+            <Tag size={14} />
+            タグを編集…
+          </button>
+          <div className={styles.menuSep} />
           {variant === "library" && (
             <button
               type="button"
@@ -336,6 +376,9 @@ export function PaperMenu({
             })
           )}
         </div>
+      )}
+      {tagsAnchor && (
+        <PaperTagsPopover paper={paper} anchor={tagsAnchor} onClose={() => setTagsAnchor(null)} />
       )}
       {editingMetadata && (
         <PaperMetadataSheet paper={paper} onClose={() => setEditingMetadata(false)} />

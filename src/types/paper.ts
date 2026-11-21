@@ -93,6 +93,8 @@ export type PaperBibliography = {
   arxivId?: string;
 };
 
+export type PaperReadStatus = "unread" | "reading" | "read";
+
 export type Paper = {
   id: string;
   sourceFilePath: string;
@@ -116,6 +118,10 @@ export type Paper = {
   lastReadBlockId: string | null;
   lastReadOffset: number | null;
   favorite?: boolean;
+  /** Library-level reading state (SQLite only, like favorite). */
+  readStatus?: PaperReadStatus;
+  /** User tags (SQLite only). */
+  tags?: string[];
   lastOpenedAt?: string;
   packageRevision?: number;
   /** ISO timestamp when moved to Trash; null/undefined means active in library. */

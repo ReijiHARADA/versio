@@ -315,6 +315,20 @@ function migrateV6ToV7(db: Database): void {
   db.run("CREATE INDEX IF NOT EXISTS workspace_nodes_trash_root ON workspace_nodes(trash_root_id)");
 }
 
+function migrateV7ToV8(db: Database): void {
+  const paperColumns = tableInfo(db, "papers").map((column) => column.name);
+  if (!paperColumns.includes("read_status")) {
+    db.run("ALTER TABLE papers ADD COLUMN read_status TEXT NOT NULL DEFAULT 'unread'");
+    // Papers already opened before this column existed are at least being read.
+    if (paperColumns.includes("last_opened_at")) {
+      db.run("UPDATE papers SET read_status = 'reading' WHERE last_opened_at IS NOT NULL");
+    }
+  }
+  if (!paperColumns.includes("tags_json")) {
+    db.run("ALTER TABLE papers ADD COLUMN tags_json TEXT NOT NULL DEFAULT '[]'");
+  }
+}
+
 const MIGRATIONS: SchemaMigration[] = [
   { from: 1, to: 2, run: migrateV1ToV2 },
   { from: 2, to: 3, run: migrateV2ToV3 },
@@ -322,6 +336,7 @@ const MIGRATIONS: SchemaMigration[] = [
   { from: 4, to: 5, run: migrateV4ToV5 },
   { from: 5, to: 6, run: migrateV5ToV6 },
   { from: 6, to: 7, run: migrateV6ToV7 },
+  { from: 7, to: 8, run: migrateV7ToV8 },
 ];
 
 export function applySqliteSchemaMigrations(db: Database): number {

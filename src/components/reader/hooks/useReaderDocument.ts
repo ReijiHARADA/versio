@@ -45,8 +45,8 @@ export function useReaderDocument(paperId: string | undefined) {
         if (cancelled) return;
         if (dbPaper) {
           updatePaper(dbPaper.id, dbPaper);
-          void markPaperOpened(dbPaper.id).then(() => {
-            updatePaper(dbPaper.id, { lastOpenedAt: new Date().toISOString() });
+          void markPaperOpened(dbPaper.id).then((opened) => {
+            if (opened) updatePaper(dbPaper.id, opened);
           });
         }
         // Package reads can briefly race SQLite/package startup (especially

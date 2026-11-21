@@ -38,8 +38,13 @@ export type DisplaySettings = {
   librarySort: LibrarySort;
 };
 
+/** Transient library filter (not persisted, so papers never stay hidden across launches). */
+export type LibraryFilter = { status: import("../types/paper").PaperReadStatus | null; tag: string | null };
+
 type AppUiState = {
   currentPaperId: string | null;
+  libraryFilter: LibraryFilter;
+  setLibraryFilter: (filter: Partial<LibraryFilter>) => void;
   displaySettings: DisplaySettings;
   expandedOriginalBlocks: Set<string>;
 
@@ -66,6 +71,9 @@ export const useAppStore = create<AppUiState>()(
   persist(
     (set) => ({
       currentPaperId: null,
+      libraryFilter: { status: null, tag: null },
+      setLibraryFilter: (filter) =>
+        set((state) => ({ libraryFilter: { ...state.libraryFilter, ...filter } })),
       displaySettings: defaultDisplaySettings,
       expandedOriginalBlocks: new Set<string>(),
 
