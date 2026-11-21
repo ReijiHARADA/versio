@@ -4,7 +4,7 @@
 use tauri::menu::{AboutMetadata, Menu, MenuItemBuilder, SubmenuBuilder};
 use tauri::{AppHandle, Emitter, Runtime};
 
-pub const ACTIONS: [&str; 8] = [
+pub const ACTIONS: [&str; 9] = [
     "settings",
     "add-paper",
     "new-folder",
@@ -13,6 +13,7 @@ pub const ACTIONS: [&str; 8] = [
     "text-smaller",
     "text-reset",
     "shortcuts",
+    "check-update",
 ];
 
 pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
@@ -24,6 +25,7 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
 
     let app_menu = SubmenuBuilder::new(app, "Versio")
         .about_with_text("Versio について", Some(AboutMetadata::default()))
+        .item(&MenuItemBuilder::with_id("check-update", "アップデートを確認…").build(app)?)
         .separator()
         .item(&item("settings", "設定…", "CmdOrCtrl+,")?)
         .separator()

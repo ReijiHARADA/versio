@@ -21,6 +21,7 @@ import { createPresentationCaptureSeed } from "../../services/presentationDemo";
 import { useImportJobStore } from "../../stores/importJobStore";
 import { setTranslationUiDeferReason } from "../../utils/batchBlockUpdates";
 import { isTauriApp } from "../../utils/serverReady";
+import { checkForAppUpdate } from "../../services/appUpdate";
 import styles from "./AppShell.module.css";
 
 export function AppShell() {
@@ -125,6 +126,7 @@ export function AppShell() {
     if (id === "settings") navigate("/settings");
     else if (id === "add-paper") { setFileNodeId(routeNodeId); fileInputRef.current?.click(); }
     else if (id === "new-folder") setCreateParentId(null);
+    else if (id === "check-update") void checkForAppUpdate({ quiet: false });
     else if (id === "toggle-sidebar") {
       const { displaySettings, setDisplaySettings } = useAppStore.getState();
       setDisplaySettings({ sidebarMode: displaySettings.sidebarMode === "expanded" ? "auto" : "expanded" });
@@ -136,6 +138,9 @@ export function AppShell() {
     }
     else if (id === "shortcuts") setShortcutsOpen(true);
   };
+  useEffect(() => {
+    if (isTauriApp() && import.meta.env.PROD) void checkForAppUpdate({ quiet: true });
+  }, []);
   useEffect(() => {
     if (!isTauriApp()) return;
     let stop: (() => void) | undefined;

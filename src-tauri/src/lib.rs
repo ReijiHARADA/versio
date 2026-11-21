@@ -9,6 +9,7 @@ mod opened_files;
 mod paper_fs;
 mod plamo;
 mod source_pdf;
+mod updater;
 
 use tauri::Manager;
 
@@ -62,6 +63,7 @@ pub fn run() {
                 )
                 .build(),
         )
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .menu(menu::build)
         .on_menu_event(|app, event| menu::handle(app, event.id().as_ref()))
         .setup(|app| {
@@ -91,6 +93,8 @@ pub fn run() {
             }
         })
         .invoke_handler(tauri::generate_handler![
+            updater::check_for_update,
+            updater::install_update,
             plamo::plamo_model_status,
             plamo::download_plamo_model,
             plamo::ensure_plamo_server,

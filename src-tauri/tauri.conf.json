@@ -70,5 +70,11 @@
         "rank": "Alternate"
       }
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZFQ0JDNUQzMDMwNDc5QwpSV1NjUnpBd1hienNEMlF0MkE4WWdYdDd0dEZMeFVWT0JYd1ZFcFE5eFJrSUZUWWFoYUw0bkxLMwo=",
+      "endpoints": ["https://github.com/ReijiHARADA/versio/releases/latest/download/latest.json"]
+    }
   }
 }
