@@ -706,15 +706,16 @@
  */
 .treeNestedClip > * {
   position: relative;
+  --tree-line-color: color-mix(in srgb, var(--color-border) 40%, var(--color-text-tertiary));
 }
 
 .treeNestedClip > *::before,
 .treeNestedClip > *:not(:last-child)::after {
   content: "";
   position: absolute;
-  left: calc(var(--tree-line-x, 9px) - 0.5px);
+  left: calc(var(--tree-line-x, 9px) - 0.75px);
   pointer-events: none;
-  border-left: 1px solid var(--color-border);
+  border-left: 1.5px solid var(--tree-line-color);
 }
 
 /*
@@ -727,14 +728,14 @@
   width: 11px;
   height: calc(var(--sidebar-icon-box) / 2 + 2px);
   border-left: 0;
-  background: var(--color-border);
-  --tree-elbow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='12'%3E%3Cpath d='M0.5 0L0.5 0.80L0.51 1.99L0.55 3.18L0.66 4.37L0.88 5.54L1.23 6.68L1.75 7.75L2.44 8.72L3.28 9.56L4.25 10.25L5.32 10.77L6.46 11.12L7.63 11.34L8.82 11.45L10.01 11.49L11.20 11.50L11 11.5' fill='none' stroke='black'/%3E%3C/svg%3E");
+  background: var(--tree-line-color);
+  --tree-elbow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='12'%3E%3Cpath d='M0.75 0.00L0.75 0.55L0.76 1.74L0.80 2.93L0.91 4.12L1.13 5.29L1.48 6.43L2.00 7.50L2.69 8.47L3.53 9.31L4.50 10.00L5.57 10.52L6.71 10.87L7.88 11.09L9.07 11.20L10.26 11.24L11.45 11.25L11.25 11.25' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E");
   -webkit-mask:
     var(--tree-elbow) no-repeat left bottom / 11px 12px,
-    linear-gradient(#000, #000) no-repeat left top / 1px calc(100% - 11px);
+    linear-gradient(#000, #000) no-repeat left top / 1.5px calc(100% - 11px);
   mask:
     var(--tree-elbow) no-repeat left bottom / 11px 12px,
-    linear-gradient(#000, #000) no-repeat left top / 1px calc(100% - 11px);
+    linear-gradient(#000, #000) no-repeat left top / 1.5px calc(100% - 11px);
 }
 
 .treeNestedClip > *:not(:last-child)::after {
