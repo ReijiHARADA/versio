@@ -17,6 +17,7 @@ status: draft
 - 2026-11-22：段抜きの表をまたぐ段落の続きは #216 でマージ（main 949f0b2）。基準 run `fn3-*`（main d458d9f）、変更後 `fn4-*`。このセッションは arXiv・ACL の段落（3 番）を扱う。
 - 2026-11-22：図のラベルで読む順序の鎖が切れる件を fix/arxiv-paragraphs-2 で直した。基準 run `fn4-*`、変更後 `fn7-*`。監査の分割番号は 0〜4。
 - 2026-11-22：ページ番号・上部の表を飛ばしたページ間の続きを fix/arxiv-paragraphs-3 で。基準 run `fn9base-*`（main、他のセッションのマージ後）、変更後 `fn8-*`。
+- 2026-11-22：脚注を飛ばす・飛ばしたときは小文字始まりに限る、を fix/acl-paragraphs-4 で。基準 `fn8-*`、変更後 `fn11-*`。
 - 比べる基準 run: `b0-elementgold` / `b0-paragold106`（main 2175dfd、worktree `../app-worktrees/element-authors`。`test-data/extraction-audit` は main へのリンク）。変更後 `h3-*`、段落正解 dev `h3-dev`。
 - Europe PMC 106 本の ID は `/tmp/claude-501/ids106.txt`。消えていたら `b0-paragold106` の docs のファイル名から作り直す。
 - Europe PMC の脚注の取りこぼしは 10 件まで減り、大半は Frontiers（段落正解のセッションの担当）。残りは Cambridge の左の側欄の連絡先（`PMC12094662`、側欄全体が 1 ブロック）など 1 本ずつ。

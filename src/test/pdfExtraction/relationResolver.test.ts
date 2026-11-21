@@ -40,6 +40,17 @@ describe("pageBoundaryContinuationRelations", () => {
     expect(relations).toEqual([{ kind: "CONTINUES", from: "p1", to: "p2", score: 0.88 }]);
   });
 
+  it("skips a footnote at the bottom of the page but not into a stray table row", () => {
+    const open = "We evaluate the proposed method on the described data update scenarios with the development instances. The classification performance";
+    const footnote = { ...node("fn", 1, "1https://example.org/code", 760, "right"), role: "footnote" };
+    expect(pageBoundaryContinuationRelations([
+      node("p1", 1, open, 690, "right"), footnote, node("p2", 2, "of each model is reported as accuracy on the test set.", 80, "left"),
+    ], layouts)).toEqual([{ kind: "CONTINUES", from: "p1", to: "p2", score: 0.88 }]);
+    expect(pageBoundaryContinuationRelations([
+      node("p1", 1, open, 690, "right"), footnote, node("row", 2, "BCWI 83.4 ±0.1 1.4 ±0.1 85.5 ±0.3", 80, "left"),
+    ], layouts)).toEqual([]);
+  });
+
   it("does not link complete or mid-page paragraphs", () => {
     const relations = pageBoundaryContinuationRelations([
       node("p1", 1, "A complete paragraph ends here.", 690, "right"),
