@@ -452,6 +452,11 @@
   text-decoration: none;
 }
 
+/* Selected row: same top-left lit double rim as the accent CTA buttons. */
+.active {
+  composes: cta from "../../styles/squircle.module.css";
+}
+
 .item.active {
   --sq-bg: var(--color-selection-bg);
   color: var(--color-selection-fg);
