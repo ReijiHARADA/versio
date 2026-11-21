@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, Check } from "lucide-react";
+import { ArrowUpDown, Check } from "lucide-react";
 import { useAppStore, type LibrarySort, type LibrarySortKey } from "../../stores/appStore";
 import { displayPaperTitle } from "../../services/translation/quality";
 import type { Paper } from "../../types/paper";
@@ -45,7 +45,6 @@ export function LibrarySortMenu() {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const current = KEYS.find((item) => item.key === sort.key) ?? KEYS[0];
-  const DirIcon = sort.dir === "asc" ? ArrowUp : ArrowDown;
 
   useEffect(() => {
     if (!open) return;
@@ -76,11 +75,11 @@ export function LibrarySortMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`並べ替え: ${current.label}（${sort.dir === "asc" ? "昇順" : "降順"}）`}
+        title={`並べ替え: ${current.label}（${sort.dir === "asc" ? "昇順" : "降順"}）`}
         data-testid="library-sort"
         onClick={() => setOpen((value) => !value)}
       >
-        <DirIcon size={14} aria-hidden="true" />
-        {current.label}
+        <ArrowUpDown size={15} aria-hidden="true" />
       </button>
       {open && (
         <div className={menuStyles.menu} role="menu">

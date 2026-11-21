@@ -2,21 +2,19 @@
   position: relative;
 }
 
-/* Same grey pill as the view toggle. */
+/* Grey circle matching the view toggle pill. */
 .trigger {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  width: 34px;
   height: 34px;
   margin: 0;
-  padding: 0 13px 0 11px;
+  padding: 0;
   border: none;
   border-radius: 999px;
   background: color-mix(in srgb, var(--color-text) 6%, transparent);
   color: var(--color-text-secondary);
-  font: inherit;
-  font-size: 0.8125rem;
-  white-space: nowrap;
   cursor: pointer;
   transition:
     color 240ms ease,
