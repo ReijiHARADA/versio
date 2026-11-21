@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import introMp4 from "../../assets/intro/intro.mp4";
 import finalPng from "../../assets/intro/final.png";
 import { usePlamoModel } from "../settings/usePlamoModel";
+import { PlamoSetupScreen } from "./PlamoSetupScreen";
 import { introStepAfterCta } from "./introSteps";
 import { markIntroSeen } from "./introSeen";
 import { playStapleSound, STAPLE_FIRST_CLICK_S } from "./stapleSound";
@@ -23,7 +24,6 @@ export function IntroOverlay() {
   const [leaving, setLeaving] = useState(false);
   const [step, setStep] = useState<"intro" | "plamo">("intro");
   const plamo = usePlamoModel();
-  const downloadButton = useRef<HTMLButtonElement>(null);
   const timers = useRef<number[]>([]);
 
   useEffect(() => {
@@ -34,10 +34,6 @@ export function IntroOverlay() {
       timers.current.forEach((t) => window.clearTimeout(t));
     };
   }, []);
-
-  useEffect(() => {
-    if (step === "plamo") downloadButton.current?.focus();
-  }, [step]);
 
   if (!open) return null;
 
@@ -87,29 +83,13 @@ export function IntroOverlay() {
         </span>
       </button>
       {step === "plamo" ? (
-        <section className={styles.plamo} aria-labelledby="intro-plamo-title">
-          <h2 id="intro-plamo-title" className={styles.plamoTitle}>翻訳モデルを入れる</h2>
-          <p className={styles.plamoBody}>
-            英語論文を日本語で読むために、翻訳モデル（約 1.8 GB）をダウンロードします。あとで設定からも入れられます。
-          </p>
-          <div className={styles.plamoActions}>
-            <button type="button" className={styles.plamoLater} onClick={close}>
-              あとで
-            </button>
-            <button
-              ref={downloadButton}
-              type="button"
-              className={styles.plamoDownload}
-              onClick={() => {
-                // keeps running after the overlay closes; Settings → 翻訳 shows progress
-                void plamo.download();
-                close();
-              }}
-            >
-              ダウンロード
-            </button>
-          </div>
-        </section>
+        <PlamoSetupScreen
+          state={plamo.state}
+          percent={plamo.percent}
+          error={plamo.error}
+          onDownload={() => void plamo.download()}
+          onClose={close}
+        />
       ) : null}
     </div>
   );
