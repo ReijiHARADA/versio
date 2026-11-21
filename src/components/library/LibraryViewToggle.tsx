@@ -3,8 +3,8 @@ import { useAppStore, type LibraryView } from "../../stores/appStore";
 import styles from "./LibraryViewToggle.module.css";
 
 const OPTIONS: Array<{ value: LibraryView; label: string; Icon: typeof List }> = [
-  { value: "list", label: "リスト表示", Icon: List },
-  { value: "grid", label: "アイテム表示", Icon: LayoutGrid },
+  { value: "list", label: "リスト", Icon: List },
+  { value: "grid", label: "アイテム", Icon: LayoutGrid },
 ];
 
 export function useLibraryView(): LibraryView {
@@ -22,13 +22,14 @@ export function LibraryViewToggle() {
           type="button"
           role="radio"
           aria-checked={view === value}
-          aria-label={label}
-          title={label}
+          aria-label={`${label}表示`}
+          title={`${label}表示`}
           data-testid={`library-view-${value}`}
           className={`${styles.option} ${view === value ? styles.active : ""}`}
           onClick={() => setDisplaySettings({ libraryView: value })}
         >
-          <Icon size={16} />
+          <Icon size={15} aria-hidden="true" />
+          {view === value ? <span>{label}</span> : null}
         </button>
       ))}
     </div>
