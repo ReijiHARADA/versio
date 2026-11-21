@@ -2,6 +2,7 @@
 mod legacy_data;
 #[cfg(target_os = "macos")]
 mod macos_chrome;
+mod menu;
 mod ocr;
 mod opened_files;
 mod paper_fs;
@@ -49,6 +50,8 @@ pub fn run() {
     tauri::Builder::default()
         .manage(plamo::PlamoState::default())
         .manage(opened_files::OpenedPdfQueue::default())
+        .menu(menu::build)
+        .on_menu_event(|app, event| menu::handle(app, event.id().as_ref()))
         .setup(|app| {
             // Release keeps warnings and errors in the app log dir so a
             // distributed `.app` failure can be diagnosed after the fact.
