@@ -205,6 +205,8 @@
 /* Sits in the title bar right after the macOS traffic lights (tauri.conf.json x12). */
 .brandToggle {
   composes: surface from "../../styles/squircle.module.css";
+  /* Contain the squircle pseudo-elements; without it a hovered button paints over its neighbours. */
+  position: relative;
   display: grid;
   place-items: center;
   width: 24px;
