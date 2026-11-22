@@ -177,6 +177,7 @@
 }
 
 .dragCover {
+  /* squircle-exempt: a printed page has near-square paper corners */
   position: absolute;
   top: 0;
   left: 0;

@@ -727,6 +727,7 @@
  * same device pixels (an SVG mask elbow rendered offset and thinner).
  */
 .treeNestedClip > *::before {
+  /* squircle-exempt: tree elbow line, a stroke bend rather than a surface corner */
   top: -2px;
   width: 11px;
   height: calc(var(--sidebar-icon-box) / 2 + 2.75px);

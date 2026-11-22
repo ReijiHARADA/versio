@@ -1,4 +1,5 @@
 .sheet {
+  /* squircle-exempt: a printed page has near-square paper corners */
   position: relative;
   display: flex;
   align-items: center;
