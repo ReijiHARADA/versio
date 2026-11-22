@@ -10,7 +10,7 @@ export type ReaderArticleParagraph = {
   original?: string | null;
 };
 
-export type ReaderArticleSurfaceProps = {
+type ReaderArticleSurfaceProps = {
   /** When omitted, the paper header (title + rule) is not rendered. */
   title?: string;
   sectionTitle?: string;

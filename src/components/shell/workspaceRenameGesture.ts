@@ -1,4 +1,4 @@
-export const WORKSPACE_RENAME_DOUBLE_CLICK_MS = 250;
+const WORKSPACE_RENAME_DOUBLE_CLICK_MS = 250;
 
 export function isWorkspaceRenameDoubleClick(
   previous: { nodeId: string; at: number } | null,

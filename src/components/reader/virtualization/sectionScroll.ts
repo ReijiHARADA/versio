@@ -1,5 +1,5 @@
 /** Align an element's top with the reader scroll container, honoring scroll-margin-top. */
-export function readScrollMarginTop(element: HTMLElement): number {
+function readScrollMarginTop(element: HTMLElement): number {
   const parsed = parseFloat(getComputedStyle(element).scrollMarginTop || "0");
   return Number.isFinite(parsed) ? parsed : 0;
 }
@@ -52,7 +52,7 @@ export function computeAlignedScrollTop(args: {
   return Math.max(0, args.containerScrollTop + delta);
 }
 
-export function scrollTopToAlignElementTop(
+function scrollTopToAlignElementTop(
   container: HTMLElement,
   element: HTMLElement,
   marginTop = readScrollMarginTop(element)

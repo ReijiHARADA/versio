@@ -1,8 +1,8 @@
 import { create } from "zustand";
 
-export type ToastKind = "success" | "error" | "info";
+type ToastKind = "success" | "error" | "info";
 
-export type AppToast = {
+type AppToast = {
   kind: ToastKind;
   message: string;
   actionLabel?: string;

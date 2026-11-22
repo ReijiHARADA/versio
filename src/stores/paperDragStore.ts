@@ -1,16 +1,16 @@
 import { create } from "zustand";
 import { showToast as showAppToast } from "./toastStore";
 
-export type PaperDropToast = {
+type PaperDropToast = {
   kind: "duplicate" | "added" | "error";
   message: string;
 };
 
 export const INBOX_DROP_ID = "inbox";
-export const PROJECT_DROP_ATTR = "data-project-drop-id";
-export const INBOX_DROP_ATTR = "data-inbox-drop";
+const PROJECT_DROP_ATTR = "data-project-drop-id";
+const INBOX_DROP_ATTR = "data-inbox-drop";
 
-export type PaperDropHandler = (
+type PaperDropHandler = (
   targetId: string,
   paperId: string,
   sourceNodeId: string | null

@@ -65,7 +65,7 @@ export function buildCitationPreview(
   };
 }
 
-export function referenceBlockForTarget(
+function referenceBlockForTarget(
   targetId: string,
   blocks: PaperBlock[]
 ): PaperBlock | undefined {
