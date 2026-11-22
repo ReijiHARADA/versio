@@ -14,6 +14,21 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  /* Transform + opacity only: animating width would reflow the paper every frame. */
+  animation: sidePanelIn 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes sidePanelIn {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
 }
 
 .header {
