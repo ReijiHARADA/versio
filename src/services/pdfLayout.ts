@@ -3767,6 +3767,8 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     const first = run(b, 0, 1);
     return first.length >= 2 ? first[0].x - Math.min(...first.slice(1).map((l) => l.x)) : undefined;
   };
+  const bodyColumnLines = new Map<string, LayoutLine[]>();
+  for (const l of blocks.filter(isBody).flatMap((b) => b.lines)) bodyColumnLines.set(`${l.page}:${l.column}`, [...(bodyColumnLines.get(`${l.page}:${l.column}`) ?? []), l]);
   const indents = blocks.filter(isBody).map(indentOf).filter((x): x is number => x !== undefined);
   const indentStyle = indents.length >= 4 && indents.filter((x) => x >= font * 0.8 && x <= font * 4).length >= indents.length * 0.4;
   const result = [...blocks];
@@ -3787,15 +3789,20 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     const head = run(b, 0, 1);
     const last = tail[0];
     const first = head[0];
-    if (head.length < 2 || (tail.length < 2 && (head[0].column !== last.column || head[0].page !== last.page))) continue;
+    // A one-line run is measured against its column's own body lines.
+    const columnLines = (l: LayoutLine) => bodyColumnLines.get(`${l.page}:${l.column}`) ?? [];
+    // A one-line B could be a heading or a note: only a lower-case start continues.
+    if (head.length < 2 && (columnLines(head[0]).length < 6 || !/^\p{Ll}/u.test(b.text.trim()))) continue;
+    if (tail.length < 2 && (head[0].column !== last.column || head[0].page !== last.page) && columnLines(last).length < 6) continue;
     // A sentence cut mid-way (`Supplementary` / `Table 8)`, `record` / `(EHR)`) is no list or caption start.
     const midSentence = /[\p{L}\p{N},]$/u.test(a.text.trim());
     if (!midSentence && /^(?:[•‣▪∙*–-]\s|\(?\d{1,3}[.)]\s|\[\d+\]|\(?[a-z]{1,3}\)\s|(?:Fig\.?|Figure|Table)\s*\d)/i.test(b.text.trim())) continue;
     const right = (l: LayoutLine) => l.x + l.width;
     // The column's right margin and line width, from A's last run or, when that is one line, from B's first.
-    const ref = tail.length >= 2 ? tail.slice(1) : head;
+    const ref = tail.length >= 2 ? tail.slice(1) : head.length >= 2 ? head : columnLines(last);
     const full = right(last) >= Math.max(...ref.map(right)) - font * 0.6 && last.width >= Math.max(...ref.map((l) => l.width)) * 0.92;
-    const unindented = Math.abs(first.x - Math.min(...head.slice(1).map((l) => l.x))) <= font * 0.4;
+    const left = head.length >= 2 ? Math.min(...head.slice(1).map((l) => l.x)) : median(columnLines(first).map((l) => l.x));
+    const unindented = Math.abs(first.x - left) <= font * 0.4;
     if (!full || !unindented) continue;
     // A physical break: another page or column, or the text resumes after skipped floats.
     const broken = last.page !== first.page || last.column !== first.column || first.y < last.y || j > i + 1;
