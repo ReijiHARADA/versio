@@ -160,13 +160,22 @@ const CONTEXT_WARNINGS = [/^後続ブロックが前段の文を継続/, /^repea
 /** A display equation split into pieces leaves short symbol-only paragraphs around it (`1 Xn`, `n i = 1`). */
 const isEquationDebris = (b: PaperBlock) => b.type === "paragraph" && !/\p{L}{4,}/u.test(b.original ?? "") && (b.original ?? "").trim().length <= 40;
 /**
+ * A display equation the layout left as a short paragraph: an operator or an
+ * equation number, and no run of words (`TP + FP (1)`, `MaxIt − 1`, `Drender − Dgt ‖2`).
+ */
+function isDisplayFragment(b: PaperBlock): boolean {
+  const text = (b.original ?? "").trim();
+  if (b.type !== "paragraph" || text.length > 60 || /\p{Ll}{3,}\s+\p{Ll}{3,}\s+\p{Ll}{3,}/u.test(text)) return false;
+  return /[=+−×·‖∈∑∏√≤≥<>^]/.test(text) || /\(\d{1,3}\)$/.test(text);
+}
+/**
  * Whether the neighbours (nearest first) start with a display equation, looking past equation debris,
  * within the section. A lead-in may also introduce a table or a list.
  */
 function adjacentDisplay(neighbours: PaperBlock[], block: PaperBlock, leadIn: boolean): boolean {
   for (const [i, b] of neighbours.entries()) {
     if (b.sectionId !== block.sectionId || Math.abs(b.pageStart - block.pageStart) > 1) return false;
-    if (b.type === "equation" || (leadIn && b.type === "table")) return true;
+    if (b.type === "equation" || isDisplayFragment(b) || (leadIn && b.type === "table")) return true;
     if (leadIn && b.type === "paragraph" && b.metadata.listRole === "item") return true;
     // As in the projection's list-intro rule, the list may start a few blocks later (after a figure or a wrapped line).
     if (!isEquationDebris(b) && !(leadIn && i < 4)) return false;
