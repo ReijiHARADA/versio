@@ -4,6 +4,7 @@
 
 ## 進行中
 
+- [抽出・翻訳の残りを続けて直す](./2026-11-22-fulltime-extraction.md) — 確認なしで PR を回している作業。基準 run は `ft*`
 - [段落の抽出品質（段落正解）](./2026-11-20-paragraph-quality.md) — intact 98% / 警告 500 / 誤警告 50 の依頼。作業内容は [extraction-next-steps.md](../extraction-next-steps.md)
 - [要素ごとの抽出（要素正解）](./2026-11-20-element-gold.md) — タイトル・著者・見出し・脚注・図・表の改善。作業内容は [extraction-next-steps.md](../extraction-next-steps.md)
 
