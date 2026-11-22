@@ -6,15 +6,8 @@ export function DisplaySettingsControls({ onReset }: { onReset?: () => void }) {
   const displaySettings = useAppStore((state) => state.displaySettings);
   const setDisplaySettings = useAppStore((state) => state.setDisplaySettings);
 
-  const handleThemeChange = (theme: Theme) => {
-    setDisplaySettings({ theme });
-    if (theme === "system") {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      document.documentElement.setAttribute("data-theme", prefersDark ? "dark" : "light");
-    } else {
-      document.documentElement.setAttribute("data-theme", theme);
-    }
-  };
+  // App.tsx applies data-theme (and the native window chrome) whenever the theme changes.
+  const handleThemeChange = (theme: Theme) => setDisplaySettings({ theme });
 
   return (
     <div className={styles.content}>

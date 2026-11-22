@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
-import { Maximize2, Eye, EyeOff } from "lucide-react";
+import { Maximize2 } from "lucide-react";
 import type { PaperBlock, FigureMetadata } from "../../types/paper";
 import { usePaperAssetUrl } from "../../hooks/usePaperAssetUrl";
 import styles from "./Figure.module.css";
 import { splitCaptionLabel } from "./caption";
 import { MediaLightbox } from "./MediaLightbox";
+import { MediaCaption } from "./MediaCaption";
 
 type FigureProps = {
   block: PaperBlock;
@@ -14,7 +15,6 @@ type FigureProps = {
 export function Figure({ block, metadata }: FigureProps) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [surfaceActive, setSurfaceActive] = useState(false);
-  const [showOriginalCaption, setShowOriginalCaption] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const imageUrl = usePaperAssetUrl(block.paperId, metadata.imageUrl);
 
@@ -65,29 +65,12 @@ export function Figure({ block, metadata }: FigureProps) {
             </button>
           )}
         </div>
-        <figcaption className={styles.caption}>
-          <span className={styles.figureNumber}>{displayedCaption.label}</span>
-          {displayedCaption.text && (
-            <span className={styles.captionText}>{displayedCaption.text}</span>
-          )}
-
-          {hasTranslatedCaption && (
-            <button
-              type="button"
-              className={styles.toggleOriginal}
-              onClick={() => setShowOriginalCaption(!showOriginalCaption)}
-              title={
-                showOriginalCaption ? "原文キャプションを隠す" : "原文キャプションを表示"
-              }
-            >
-              {showOriginalCaption ? <EyeOff size={12} /> : <Eye size={12} />}
-            </button>
-          )}
-
-          {showOriginalCaption && metadata.captionOriginal && (
-            <p className={styles.originalCaption}>{metadata.captionOriginal}</p>
-          )}
-        </figcaption>
+        <MediaCaption
+          label={displayedCaption.label}
+          text={displayedCaption.text}
+          captionOriginal={metadata.captionOriginal}
+          canToggleOriginal={Boolean(hasTranslatedCaption)}
+        />
       </figure>
 
       {hasImage && (
