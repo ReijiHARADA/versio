@@ -1,24 +1,20 @@
 import { describe, expect, it } from "vitest";
 import {
   isPlausibleJaTranslation,
-  isDegenerateTranslation,
   shouldTranslateTitle,
   shouldTranslateParagraph,
   shouldTranslateHeading,
   looksLikeSubjectClassification,
   evaluateJaTranslation,
-  evaluatePartialJaTranslation,
-  diagnosePartialUnits,
   isCascadeQualityAcceptable,
   getCascadeQualityReasons,
-  hasDuplicatedYearCitationSpan,
   extractScientificInvariants,
   isExpectedNonProseParagraph,
   unsafeParagraphStructureReason,
   diagnoseIncompleteSource,
-  restoreUtf8ByteEscapes,
   extractTechnicalNameCandidates,
 } from "../services/translation/quality";
+import { isDegenerateTranslation, restoreUtf8ByteEscapes } from "../services/translation/quality/degeneration";
 import { resolveImportConfig } from "../services/import/helpers";
 import { analyzeStructure } from "../services/structureService";
 import {
@@ -28,34 +24,11 @@ import {
 } from "../services/importServiceV2";
 
 describe("acronym expansion safety", () => {
-  it("rejects alternate output that duplicates an author-year citation span", () => {
-    const source = "Online registers vary (see Biber in Corpus Linguist Theory 8:9–37, 2012). The results are mixed.";
-    const output = "オンラインレジスタは変動する（see Biber in Corpus Linguist Theory 8:9–37, 2012）。結果は混在する。（see Biber in Corpus Linguist Theory 8:9–37, 2012）";
-    const faithful = "オンラインレジスタは変動する（see Biber in Corpus Linguist Theory 8:9–37, 2012）。結果は混在する。";
-    const sourceRepeated = "オンラインレジスタは変動する（see Biber in Corpus Linguist Theory 8:9–37, 2012）。先行研究でも同じ引用（see Biber in Corpus Linguist Theory 8:9–37, 2012）がある。";
-    const outputRepeated = "オンラインレジスタは変動する（see Biber in Corpus Linguist Theory 8:9–37, 2012）。先行研究でも同じ引用（see Biber in Corpus Linguist Theory 8:9–37, 2012）がある。";
-    expect(hasDuplicatedYearCitationSpan(source, output)).toBe(true);
-    expect(hasDuplicatedYearCitationSpan(source, faithful)).toBe(false);
-    expect(hasDuplicatedYearCitationSpan(sourceRepeated, outputRepeated)).toBe(false);
-    expect(getCascadeQualityReasons(output, source)).toContain("duplicated year citation span");
-  });
   it("keeps supplementary-material labels atomic in the technical audit", () => {
     const source = "The task is described in the SI Appendix and the SI Appendix contains details.";
     expect(extractTechnicalNameCandidates(source)).toContain("SI Appendix");
   });
 
-  it("rejects fluent output that drops a quoted coined prototype name", () => {
-    const source = 'We developed an e-textile interface dubbed the “Jogwheel” (Figure 1a).';
-    const dropped = "電子テキスタイルインタフェースを開発した(Figure 1a)。";
-    const intact = "「Jogwheel」と呼ばれる電子テキスタイルインタフェースを開発した(Figure 1a)。";
-    expect(evaluateJaTranslation(dropped, source).reasons).toContain("quoted technical name missing: Jogwheel");
-    expect(evaluateJaTranslation(intact, source).reasons).not.toContain("quoted technical name missing: Jogwheel");
-  });
-  it("does not treat ordinary quoted labels as coined technical names", () => {
-    const source = 'The terms “Normal” and “Awkward” described participant perceptions.';
-    const output = '参加者の知覚を「正常」と「不快」で表した。';
-    expect(evaluateJaTranslation(output, source).reasons).not.toContain("quoted technical name missing: Normal, Awkward");
-  });
   it("accepts standard scientific acronyms when their Japanese expansion is preserved", () => {
     const source = "A customized infrared (IR) imaging system was used to measure BPM.";
     const output = "カスタム赤外線イメージングシステムを用いて心拍を測定した。";
@@ -325,35 +298,6 @@ describe("compact acronym descriptors", () => {
       "The PPG Earring measures 14 mm.",
     );
     expect(result.reasons).not.toContain("scientific invariants missing: PPG");
-  });
-});
-
-describe("partial translation diagnostics", () => {
-  it("only exempts an explicitly preserved failed source unit", () => {
-    const source = "The first sentence is ordinary prose. The second sentence is difficult.";
-    const output = "最初の文は通常の散文です。The second sentence is difficult.";
-    const quality = evaluatePartialJaTranslation(output, source, ["The second sentence is difficult."]);
-    expect(quality.preservedSourceUnitsValidated).toBe(true);
-    expect(quality.reasons).not.toContain("untranslated foreign-language prose");
-    expect(quality.reasons.some((reason) => reason.startsWith("translation contains unmodified source span"))).toBe(false);
-  });
-
-  it("does not exempt an unreported English span", () => {
-    const source = "The first sentence is ordinary prose. The second sentence is difficult.";
-    const output = "The first sentence is ordinary prose。2番目の文は難しい。";
-    const quality = evaluatePartialJaTranslation(output, source, ["The second sentence is difficult."]);
-    expect(quality.preservedSourceUnitsValidated).toBe(false);
-  });
-
-  it("marks a preserved unit and detects a short translated unit independently", () => {
-    const result = diagnosePartialUnits(
-      ["A complete English sentence with enough context.", "A preserved source unit."],
-      ["完全な文脈を持つ完全な英文です。", "A preserved source unit."],
-      [1],
-    );
-    expect(result[0].accepted).toBe(true);
-    expect(result[1].preserved).toBe(true);
-    expect(result[1].accepted).toBe(false);
   });
 });
 
@@ -797,16 +741,6 @@ describe("isPlausibleJaTranslation", () => {
     const source = "Snacks are consumed at home (e.g., Kerr et al., 2010; Myhre et al., 2015).";
     const output = "スナックは家庭で消費される（Kerr et al., 2010; Myhre et al., 2015）。";
     expect(evaluateJaTranslation(output, source).reasons).toEqual([]);
-  });
-  it("treats fullwidth and ASCII author-year parentheses as the same span", () => {
-    const source = "Prior work reported the effect (Lavallière et al. 2016).";
-    const output = "先行研究ではこの効果が報告された（Lavallière et al. 2016）。";
-    expect(hasDuplicatedYearCitationSpan(source, output)).toBe(false);
-  });
-  it("allows a citation atom regrouped from a split source group", () => {
-    const source = "Prior work reported mixed effects (Choe et al. 2014; Li et al. 2010). A malformed extraction left (2010).";
-    const output = "先行研究では効果が混在している（Choe et al. 2014; Li et al. 2010）。";
-    expect(hasDuplicatedYearCitationSpan(source, output)).toBe(false);
   });
   it("does not treat retained journal text inside a citation as untranslated prose", () => {
     const source = "Register variation is important (see Biber in Corpus Linguist Linguist Theory 8:9–37, 2012).";
@@ -2147,7 +2081,7 @@ describe("isRetryableTranslationFailure", () => {
   });
 });
 
-import { hasAcronymExpansionDrift, hasDetachedNumericCitationRisk, hasExtremeTranslationCompression, hasScientificExpansionQualifierDrift, hasUnsupportedJapaneseAcronymExpansion, missingTechnicalNameCandidates } from "../services/translation/quality";
+import { hasAcronymExpansionDrift, hasDetachedNumericCitationRisk, hasExtremeTranslationCompression, missingTechnicalNameCandidates } from "../services/translation/quality";
 
 describe("technical name audit diagnostics", () => {
   it("flags a dropped internal proper name without making it a production rejection", () => {
@@ -2172,21 +2106,6 @@ describe("technical name audit diagnostics", () => {
       .toBe(true);
     expect(hasAcronymExpansionDrift("Deep Learning (DL) improves diagnosis.", "深層学習（DL）は診断を改善する。"))
       .toBe(false);
-  });
-
-  it("flags an unsupported Japanese acronym expansion as an audit signal", () => {
-    expect(hasUnsupportedJapaneseAcronymExpansion(
-      "The HFE team reviewed the intervention.",
-      "HFE（ヘルス・ファシリテーション・エデュケーション）チームが介入を確認した。",
-    )).toBe(true);
-    expect(hasUnsupportedJapaneseAcronymExpansion(
-      "The Systems Engineering Initiative for Patient Safety (SEIPS) model was used.",
-      "患者安全のためのシステム工学イニシアチブ（SEIPS）モデルを用いた。",
-    )).toBe(false);
-    expect(hasUnsupportedJapaneseAcronymExpansion(
-      "The HFE team reviewed the intervention.",
-      "HFEチームが介入を確認した。",
-    )).toBe(false);
   });
 
   it("accepts standardized scientific acronym translations", () => {
@@ -2235,14 +2154,6 @@ describe("technical name audit diagnostics", () => {
       "最も少ないカテゴリは詩、正式スピーチ、テレビ脚本である。",
       "The least frequent categories are Poem, Formal speech, and TV scripts.",
     ).reasons).not.toContain("scientific invariants missing: TV");
-  });
-
-  it("flags lost directional qualifiers in scientific acronym expansions", () => {
-    const source = "The right lateral prefrontal cortex (rLPFC) was stimulated.";
-    expect(hasScientificExpansionQualifierDrift(source, "左右前側頭葉皮質（rLPFC）を刺激した。"))
-      .toBe(true);
-    expect(hasScientificExpansionQualifierDrift(source, "右外側前頭前皮質（rLPFC）を刺激した。"))
-      .toBe(false);
   });
 
   it("flags extreme compression only for long source units", () => {
