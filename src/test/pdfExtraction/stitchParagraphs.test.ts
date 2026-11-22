@@ -217,4 +217,12 @@ describe("stitchParagraphContinuations past full-page figures", () => {
     const b = block("b", "paragraph", "2022). The extent to which curricula embrace research evidence remains unclear.", 15);
     expect(stitchParagraphContinuations([a, head, b], sections)[0].original).toMatch(/et al\. 2022\)\./);
   });
+  it("continues an open paragraph in a bracket, unless a lower-case continuation follows", () => {
+    const a = block("a", "paragraph", "Among the articles in the data set, women had high middle authorship rates and low first authorship", 1);
+    const b = block("b", "paragraph", "(1.9%–2.1%) and higher last authorship rates than men in every field.", 2);
+    expect(stitchParagraphContinuations([a, block("n", "footnote", "1 / 29", 1), b], sections).map((x) => x.id)).toEqual(["a", "n"]);
+    const note = block("t", "paragraph", "(Compl). Scores are up to 5, higher is better.", 2);
+    const c = block("c", "paragraph", "based model, in addition to two variants of our method.", 2);
+    expect(stitchParagraphContinuations([a, note, c], sections).map((x) => x.id)).toEqual(["a", "t"]);
+  });
 });

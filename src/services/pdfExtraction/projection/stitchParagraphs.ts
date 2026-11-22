@@ -161,6 +161,13 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j;
           break;
         }
+        // Any open paragraph goes on in a bracket (`… with low first authorship` + `(1.9%–2.1%) and …`, `… is limited` + `(75). Our …`).
+        if (!hardOpen && !skippedParagraph && !skippedFragment && eligible(candidate) && /^[([]/.test(candidateText) && looseContinuation(currentText, candidateText, true) &&
+          // A lower-case continuation a little later wins (`(Compl). Scores are …` is a table note).
+          !out.slice(j + 1, j + 5).some((b) => eligible(b) && CONTINUATION_START.test(b.original?.trim() ?? ""))) {
+          target = j;
+          break;
+        }
         // After a figure or table, its notes and legend can be full sentences; a lower-case start still marks the continuation.
         if (!interruptionAllowed(candidate) && !(sawFloat && candidate.type === "paragraph" && TERMINAL.test(candidateText))) break;
         if (candidate.type === "figure" || candidate.type === "table") sawFloat = true;
