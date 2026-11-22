@@ -3340,7 +3340,13 @@ function groupLinesIntoBlocks(
     const continuesNote: boolean = currentRole === "footnote" && !!noteLine && EQUAL_CONTRIBUTION_NOTE.test(current[0].text.trim()) &&
       noteLine.page === line.page && /^[a-z]/.test(line.text.trim()) && Math.abs(line.x - noteLine.x) <= 4 &&
       line.y - noteLine.y > 0 && line.y - noteLine.y < noteLine.fontSize * 2.2;
-    const role: LayoutRole = continuesNote ? "footnote" : roleForLine(line, baseFont, mastheadEndY, isSplitTail ? false : copyrightStarted, titleFont, mastheadTitleTexts);
+    const lineRole: LayoutRole = continuesNote ? "footnote" : roleForLine(line, baseFont, mastheadEndY, isSplitTail ? false : copyrightStarted, titleFont, mastheadTitleTexts);
+    // `… are summarized in` + a line `Table 6.`: an in-text reference wrapped to a line start, not a caption.
+    const role: LayoutRole = (lineRole === "table_caption" || lineRole === "figure_caption") && currentRole === "paragraph" && noteLine &&
+      /^(?:tables?|fig(?:ure)?s?\.?)\s*\d+[a-z]?[.,;)]?$/i.test(line.text.trim()) &&
+      /\b(?:in|see|of|from|to|and|with|by|on|as)$/i.test(noteLine.text.trim()) &&
+      noteLine.page === line.page && noteLine.column === line.column && Math.abs(line.fontSize - noteLine.fontSize) <= 0.5 &&
+      line.y - noteLine.y > 0 && line.y - noteLine.y <= noteLine.fontSize * 1.8 ? "paragraph" : lineRole;
     if (isReferencesHeading(line.text)) {
       inReferences = true;
     }
