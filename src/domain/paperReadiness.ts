@@ -56,7 +56,7 @@ export function derivePaperReadiness(input: {
   if (processingStatus === "translating" || processingStatus === "glossary") {
     return {
       readiness: "translating",
-      label: "日本語化中",
+      label: "翻訳中",
       canOpen: true,
     };
   }
@@ -67,13 +67,13 @@ export function derivePaperReadiness(input: {
     if (!readable) {
       return { readiness: "preparing", label: "準備中", canOpen: false };
     }
-    return { readiness: "translating", label: "日本語化中", canOpen: true };
+    return { readiness: "translating", label: "翻訳中", canOpen: true };
   }
   if (isBusyProcessingStatus(processingStatus) && !readable) {
     return { readiness: "preparing", label: "準備中", canOpen: false };
   }
   if (isBusyProcessingStatus(processingStatus) && readable) {
-    return { readiness: "translating", label: "日本語化中", canOpen: true };
+    return { readiness: "translating", label: "翻訳中", canOpen: true };
   }
   // ready / unknown — openable from library without loading body first
   return { readiness: "readable", label: "読めます", canOpen: true };
@@ -81,7 +81,7 @@ export function derivePaperReadiness(input: {
 
 /** Text label only — progress is shown as a bar in the library row. */
 export function formatTranslationProgressLabel(readiness: PaperReadiness): string {
-  if (readiness === "translating") return "日本語化中";
+  if (readiness === "translating") return "翻訳中";
   if (readiness === "preparing") return "準備中";
   if (readiness === "needs_attention") return "要確認";
   return "読めます";

@@ -406,7 +406,7 @@ export function cancelPaperWork(paperId: string): boolean {
     const ok = cancelBackgroundImport(job.id);
     if (ok) {
       // Optimistic UI: ImportJobCard is hidden once paperId is set, so flip the
-      // paper card off "日本語化中" immediately while the abort settles.
+      // paper card off "翻訳中" immediately while the abort settles.
       useLibraryCache.getState().updatePaper(paperId, {
         processingStatus: "partial",
         needsTranslationResume: false,
