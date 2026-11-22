@@ -1,6 +1,6 @@
 import type { GlossaryEntry } from "../../../services/llm/types";
 
-export type GlossaryTermMatch = {
+type GlossaryTermMatch = {
   start: number;
   end: number;
   entry: GlossaryEntry;
@@ -52,7 +52,7 @@ export function findGlossaryTermMatches(
   return matches.sort((a, b) => a.start - b.start);
 }
 
-export type TextSegment =
+type TextSegment =
   | { kind: "text"; text: string }
   | { kind: "term"; text: string; entry: GlossaryEntry };
 

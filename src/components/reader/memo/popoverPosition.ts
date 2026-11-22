@@ -7,7 +7,7 @@ export type AnchorBox = {
   element?: Element;
 };
 
-export type PopoverPlacement = {
+type PopoverPlacement = {
   top: number;
   left: number;
 };
@@ -56,13 +56,13 @@ export function clampPopoverPosition(
   };
 }
 
-export function findTranslationRoot(blockId: string): HTMLElement | null {
+function findTranslationRoot(blockId: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(
     `[data-paper-block-id="${blockId}"][data-text-role="translation"]`
   );
 }
 
-export function measureOffsetsInElement(
+function measureOffsetsInElement(
   element: HTMLElement,
   startOffset: number,
   endOffset: number

@@ -7,7 +7,7 @@ import {
 import styles from "./MemoPopover.module.css";
 import { isImeComposing } from "../../../utils/ime";
 
-export type MemoPopoverMode = "compose" | "view" | "edit" | "cross-block";
+type MemoPopoverMode = "compose" | "view" | "edit" | "cross-block";
 
 type MemoPopoverProps = {
   mode: MemoPopoverMode;

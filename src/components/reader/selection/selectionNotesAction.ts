@@ -1,6 +1,6 @@
 import type { SelectionResult } from "./selectionAnchor";
 
-export type SelectionNotesAction = "show-compose" | "show-cross-block" | "none";
+type SelectionNotesAction = "show-compose" | "show-cross-block" | "none";
 
 /** Selection never opens Notes. Compose / highlight review stay on the page. */
 export function selectionNotesAction(

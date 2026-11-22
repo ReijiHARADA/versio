@@ -2,7 +2,7 @@ import type { PaperBlock } from "../../types/paper";
 import { shouldTranslateBlock } from "../../services/import/policy";
 import { usableTranslatedText } from "../../services/translation/quality";
 
-export type ParagraphTranslationUi = {
+type ParagraphTranslationUi = {
   translated: string | null;
   hasTranslation: boolean;
   skipTranslation: boolean;

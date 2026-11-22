@@ -1,4 +1,4 @@
-export const SEARCH_HIT_ATTR = "data-search-hit";
+const SEARCH_HIT_ATTR = "data-search-hit";
 
 export function wrapSearchHitIndex(
   current: number,
@@ -44,8 +44,3 @@ export function findSearchHitBlockIds(
     .map((block) => block.id);
 }
 
-export function blockIdFromSearchHitElement(hit: HTMLElement): string | null {
-  const blockEl = hit.closest<HTMLElement>("[id^='block-']");
-  if (!blockEl?.id.startsWith("block-")) return null;
-  return blockEl.id.slice("block-".length);
-}

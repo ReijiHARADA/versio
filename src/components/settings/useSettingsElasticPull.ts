@@ -71,17 +71,6 @@ export function wheelStep(deltaY: number, maxStep = MAX_WHEEL_STEP, scale = WHEE
   return Math.min(abs, maxStep) * scale;
 }
 
-/** @deprecated latch removed — edge arming replaced velocity latch. */
-export function latchOverflowCap(commitPull = COMMIT_PULL_PX): number {
-  return commitPull * 0.88;
-}
-
-/** @deprecated full-page reveal during pull removed. */
-export function overflowToReveal(overflow: number, viewportH: number): number {
-  if (viewportH <= 0 || overflow <= 0) return 0;
-  return pullVisualOffset(overflow, false, Math.min(viewportH * 0.28, 120));
-}
-
 function atBottom(el: HTMLElement): boolean {
   return el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
 }

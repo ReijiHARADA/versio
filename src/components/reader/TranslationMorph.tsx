@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./TranslationMorph.module.css";
 
-export type TranslationMorphPhase = "waiting" | "revealing";
+type TranslationMorphPhase = "waiting" | "revealing";
 
 type TranslationMorphProps = {
   fromText: string;

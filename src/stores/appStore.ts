@@ -17,8 +17,8 @@ export const DEFAULT_FONT_SIZE = 16;
 export const MIN_FONT_SIZE = 12;
 export const MAX_FONT_SIZE = 24;
 export const DEFAULT_SIDEBAR_WIDTH = 220;
-export const MIN_SIDEBAR_WIDTH = 160;
-export const MAX_SIDEBAR_WIDTH = 420;
+const MIN_SIDEBAR_WIDTH = 160;
+const MAX_SIDEBAR_WIDTH = 420;
 
 export function clampSidebarWidth(width: number): number {
   return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, Math.round(width)));

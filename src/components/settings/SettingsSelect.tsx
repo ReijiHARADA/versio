@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import styles from "./SettingsSelect.module.css";
 
-export type SettingsSelectOption<T extends string | number> = {
+type SettingsSelectOption<T extends string | number> = {
   value: T;
   label: string;
 };

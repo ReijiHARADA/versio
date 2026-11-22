@@ -4,10 +4,10 @@
  * bodies mount only near the viewport (plus pinned targets).
  */
 
-export const DEFAULT_OVERSCAN = 2;
-export const DEFAULT_BLOCK_HEIGHT = 72;
-export const SHORT_PAPER_SECTION_LIMIT = 12;
-export const SHORT_PAPER_BLOCK_LIMIT = 80;
+const DEFAULT_OVERSCAN = 2;
+const DEFAULT_BLOCK_HEIGHT = 72;
+const SHORT_PAPER_SECTION_LIMIT = 12;
+const SHORT_PAPER_BLOCK_LIMIT = 80;
 
 /** Short papers mount every section; long papers virtualize by viewport + transient pins only. */
 export function shouldVirtualizeSections(sectionCount: number, blockCount: number): boolean {
@@ -34,7 +34,7 @@ const BLOCK_HEIGHT_BY_TYPE: Record<string, number> = {
   heading: 0,
 };
 
-export function estimateBlockHeight(type: string): number {
+function estimateBlockHeight(type: string): number {
   return BLOCK_HEIGHT_BY_TYPE[type] ?? DEFAULT_BLOCK_HEIGHT;
 }
 

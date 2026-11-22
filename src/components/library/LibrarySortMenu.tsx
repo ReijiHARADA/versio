@@ -19,7 +19,7 @@ const KEYS: Array<{ key: LibrarySortKey; label: string }> = [
 
 const DEFAULT_SORT: LibrarySort = { key: "added", dir: "desc" };
 
-export function useLibrarySort(): LibrarySort {
+function useLibrarySort(): LibrarySort {
   return useAppStore((state) => state.displaySettings.librarySort ?? DEFAULT_SORT);
 }
 

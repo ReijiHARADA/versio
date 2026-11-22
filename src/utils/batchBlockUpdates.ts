@@ -34,10 +34,6 @@ export function setTranslationUiScrollPaused(paused: boolean): void {
   setTranslationUiDeferReason("reader-scroll", paused);
 }
 
-export function isTranslationUiScrollPaused(): boolean {
-  return isDeferred();
-}
-
 export function activeBlockUpdateBatcherCount(): number {
   return batchers.size;
 }

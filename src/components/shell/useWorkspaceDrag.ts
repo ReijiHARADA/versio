@@ -8,7 +8,7 @@ import { showToast } from "../../stores/toastStore";
 
 type Drop = { id: string; parentId: string | null; order?: number; edge: string; error?: string };
 
-export function workspaceDropAtPoint(nodes: WorkspaceNode[], sourceId: string, x: number, y: number): Drop | null {
+function workspaceDropAtPoint(nodes: WorkspaceNode[], sourceId: string, x: number, y: number): Drop | null {
   const element = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-workspace-id]");
   if (!element) return null;
   const id = element.dataset.workspaceId!;
