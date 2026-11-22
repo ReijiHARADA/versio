@@ -116,6 +116,12 @@ describe("reconcileTranslationWarnings around display equations", () => {
     const orphan = reconcileTranslationWarnings([block("p", "paragraph", "A complete sentence before the cut."), where]);
     expect(orphan[1].metadata.translationInputWarning).toMatch(/先頭/);
   });
+
+  it("treats an equation left as a short paragraph as the display", () => {
+    const where = block("w", "paragraph", "where TP denotes the number of answers correctly marked as relevant.", 1, { translationInputWarning: "段落の先頭が前段から続いている可能性があります" });
+    expect(reconcileTranslationWarnings([block("eq", "paragraph", "TP + FP (1)"), where])[1].metadata.translationInputWarning).toBeUndefined();
+    expect(reconcileTranslationWarnings([block("p", "paragraph", "and the results were given in"), where])[1].metadata.translationInputWarning).toMatch(/先頭/);
+  });
 });
 
 describe("stitchParagraphContinuations after a paragraph that cannot end", () => {
