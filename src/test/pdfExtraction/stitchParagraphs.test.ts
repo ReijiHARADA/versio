@@ -202,4 +202,19 @@ describe("stitchParagraphContinuations past full-page figures", () => {
     const between = [block("n", "footnote", "13 / 17", 4), block("f1", "figure", "Fig. 10", 5), block("f2", "figure", "Fig. 11", 6)];
     expect(stitchParagraphContinuations([a, ...between, b], sections)[0].original).toMatch(/regulates these targets/);
   });
+  it("joins a full-width prose line typed as an equation, but not a centred display", () => {
+    const a = block("a", "paragraph", "Participants reported somatic complaints such as rapid physical exhaustion after exertion", 5);
+    const line = { ...block("e", "equation", "(M = 3.79, SD = 1.18), concentration difficulties (M = 3.31,", 5), boundingBoxes: [{ page: 5, x: 40, y: 150, width: 296, height: 10 }] };
+    const b = block("b", "paragraph", "SD = 1.17), and memory difficulties (M = 3.21, SD = 1.20) were reported by most participants.", 5);
+    expect(stitchParagraphContinuations([a, line, b], sections).map((x) => x.id)).toEqual(["a"]);
+    const display = { ...line, boundingBoxes: [{ page: 5, x: 120, y: 150, width: 140, height: 10 }] };
+    expect(stitchParagraphContinuations([a, display, b], sections).map((x) => x.id)).toEqual(["a", "e", "b"]);
+  });
+
+  it("keeps a paragraph that ends with et al. open", () => {
+    const a = block("a", "paragraph", "Implementation science may help once evidence is mobilised and practice improved (Rapport et al.", 15);
+    const head = block("h", "paragraph", "International Journal of Language & Communication Disorders, 2026", 15);
+    const b = block("b", "paragraph", "2022). The extent to which curricula embrace research evidence remains unclear.", 15);
+    expect(stitchParagraphContinuations([a, head, b], sections)[0].original).toMatch(/et al\. 2022\)\./);
+  });
 });
