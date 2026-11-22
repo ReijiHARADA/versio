@@ -15,10 +15,6 @@
   height: var(--titlebar-h);
 }
 
-.hiddenInput {
-  display: none;
-}
-
 .main {
   composes: surface edged from "../../styles/squircle.module.css";
   position: relative;

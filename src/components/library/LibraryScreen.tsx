@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import { FileText, Upload } from "lucide-react";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useImportJobStore, visibleImportJobs } from "../../stores/importJobStore";
@@ -12,6 +12,7 @@ import { useImportJobRecovery } from "./useImportJobRecovery";
 import { AddPaperButton } from "./AddPaperButton";
 import { LibraryEmptyState, LibraryPaperList } from "./LibraryPaperList";
 import { useOpenPaper } from "./useOpenPaper";
+import { PdfFileInput } from "../ui/PdfFileInput";
 import styles from "./LibraryScreen.module.css";
 
 export function LibraryScreen() {
@@ -27,26 +28,14 @@ export function LibraryScreen() {
 
   const { busyId, requestDelete } = useDeletePaper();
 
-  const handleFileSelect = useCallback(async (file: File) => {
-    await tryStartPdfImport(file);
-  }, []);
-
   const isEmpty = visiblePapers.length === 0 && jobs.length === 0;
 
   return (
     <div className={styles.container}>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="application/pdf,.pdf"
-        data-testid="library-add-pdf-input"
-        aria-label="PDFファイルを選択"
-        className={styles.hiddenInput}
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) void handleFileSelect(f);
-          e.target.value = "";
-        }}
+      <PdfFileInput
+        inputRef={fileInputRef}
+        testId="library-add-pdf-input"
+        onFile={(file) => void tryStartPdfImport(file)}
       />
 
       <header className={styles.header} data-tauri-drag-region>

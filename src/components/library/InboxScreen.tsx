@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import { Upload, Inbox } from "lucide-react";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useImportJobStore, visibleImportJobs } from "../../stores/importJobStore";
@@ -12,6 +12,7 @@ import { LibrarySortMenu, useSortedPapers } from "./LibrarySortMenu";
 import { AddPaperButton } from "./AddPaperButton";
 import { LibraryEmptyState, LibraryPaperList } from "./LibraryPaperList";
 import { useOpenPaper } from "./useOpenPaper";
+import { PdfFileInput } from "../ui/PdfFileInput";
 import styles from "./LibraryScreen.module.css";
 
 export function InboxScreen() {
@@ -42,23 +43,9 @@ export function InboxScreen() {
   const view = useLibraryView();
   const openPaper = useOpenPaper();
 
-  const handleFileSelect = useCallback(async (file: File) => {
-    await tryStartPdfImport(file);
-  }, []);
-
   return (
     <div className={styles.container}>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".pdf"
-        className={styles.hiddenInput}
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) void handleFileSelect(f);
-          e.target.value = "";
-        }}
-      />
+      <PdfFileInput inputRef={fileInputRef} onFile={(file) => void tryStartPdfImport(file)} />
 
       <header className={styles.header} data-tauri-drag-region>
         <div className={styles.headerLeft}>

@@ -5,8 +5,6 @@
   overflow: hidden;
 }
 
-.hiddenInput { display: none; }
-
 /* Matches the Library / Inbox header (LibraryScreen.module.css). */
 .header {
   display: flex;
