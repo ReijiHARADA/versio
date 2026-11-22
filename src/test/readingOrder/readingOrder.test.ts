@@ -48,6 +48,9 @@ describe("Japanese figure and table captions", () => {
     );
     expect(isFigureCaption("図1：先行研究で利用された映像の一例")).toBe(true);
     expect(isFigureCaption("Figure 2. A workshop layout.")).toBe(true);
+    expect(isFigureCaption("FIGURE 1PRISMA flow diagram of the study selection")).toBe(true);
+    expect(isFigureCaption("Figure 1 contrasts two trajectories arising from repeated interaction.")).toBe(false);
+    expect(isFigureCaption("Figure 2c also shows that the model captures the trend.")).toBe(false);
     expect(isFigureCaption("Fig. 1, The general areas for wearable objects")).toBe(true);
     expect(isFigureCaption("Figure 3, Even simple motions change body shape")).toBe(true);
     expect(isFigureCaption("FIGURE 1 | Experimental design of the dual-task study.")).toBe(true);

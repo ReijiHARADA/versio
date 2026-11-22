@@ -1663,7 +1663,8 @@ export function isFigureCaption(text: string): boolean {
   const gluedNumber = Boolean(
     unpunctuatedMatch?.[1] &&
       /\d(?:[a-z](?![a-z]))?$/i.test(unpunctuatedMatch[1]) &&
-      !/\s$/.test(unpunctuatedMatch[1]) &&
+      // Glued means no space after the number (`FIGURE 1PRISMA`), not `Figure 1 contrasts …`.
+      !/\s/.test(caption.charAt(unpunctuatedMatch[1].length)) &&
       /^[A-Za-z]/.test(unpunctuated)
   );
   const titleLikeStart =
