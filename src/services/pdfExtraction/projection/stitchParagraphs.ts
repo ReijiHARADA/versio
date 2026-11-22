@@ -19,6 +19,7 @@ import type { PaperBlock, Section } from "../../../types/paper";
 import { isExpectedNonProseParagraph, unsafeParagraphStructureReason } from "../../translation/quality";
 
 const words = (text: string) => text.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu)?.length ?? 0;
+const PAGE_NUMBER = /^\d{1,4}(?:\s*\/\s*\d{1,4})?$/;
 const TERMINAL = /[.!?。！？][”"’')\]]*\s*$/;
 const isOpenEnded = (text: string) => !TERMINAL.test(text) && !/:\s*$/.test(text);
 const CONTINUATION_START = /^(?:[a-z]|(?:which|that|and|or|but|where|while|whereas|because|although|including|with|for|of|to|in)\b)/;
@@ -137,7 +138,8 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         if (!interruptionAllowed(candidate) && !(sawFloat && candidate.type === "paragraph" && TERMINAL.test(candidateText))) break;
         if (candidate.type === "figure" || candidate.type === "table") sawFloat = true;
         if (candidate.type === "paragraph") skippedParagraph = true;
-        if (candidate.type !== "figure" && candidate.type !== "table") onlyFloats = false;
+        // A page number (`10 / 23`) between the pages does not stop the look past full-page floats.
+        if (candidate.type !== "figure" && candidate.type !== "table" && !PAGE_NUMBER.test(candidateText)) onlyFloats = false;
       }
       if (target < 0) break;
       const next = out[target];
