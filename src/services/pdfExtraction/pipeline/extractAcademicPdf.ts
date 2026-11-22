@@ -2,6 +2,7 @@ import { extractPDFContent, extractFigureImages, graphicsToExtractionEvidence, t
 import { findDoi, findVenue } from "../projection/venue";
 import { figureLookupKey, formatReadingOrderLog } from "../../pdfLayout";
 import { repairLineBreakHyphens } from "../projection/repairHyphens";
+import { dropDuplicateBylineRows } from "../projection/bylineRows";
 import { collapseTableCellRuns } from "../projection/tableCellRuns";
 import { reconcileTranslationWarnings, stitchParagraphContinuations } from "../projection/stitchParagraphs";
 import type { Paper, Section, PaperBlock } from "../../../types/paper";
@@ -397,7 +398,7 @@ export function extractFromPages(input: {
     paper: { ...projected.paper, publication: projected.paper.publication ?? findVenue(input.pages), doi: projected.paper.doi ?? findDoi(input.pages) },
     sections: projected.sections,
     // Paragraphs interrupted by figures, tables, footnotes or page breaks are rejoined.
-    blocks: reconcileTranslationWarnings(repairLineBreakHyphens(stitchParagraphContinuations(collapseTableCellRuns(projected.blocks, projected.sections), projected.sections))),
+    blocks: reconcileTranslationWarnings(repairLineBreakHyphens(stitchParagraphContinuations(collapseTableCellRuns(dropDuplicateBylineRows(projected.blocks, projected.paper.authors ?? []), projected.sections), projected.sections))),
     layoutBlocks: generic.blocks,
     layouts: generic.layouts,
     pageKind,
