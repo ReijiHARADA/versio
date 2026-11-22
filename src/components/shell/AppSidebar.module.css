@@ -722,26 +722,21 @@
 
 /*
  * Elbow: down to the row centre, then right, ending 4px inside the row.
- * The corner is a clothoid (r 7px, 60% transition, G2) drawn as a mask; a
- * straight 1px mask layer above it keeps the elbow height-agnostic.
+ * Drawn with the same border as the through-line so both rasterize on the
+ * same device pixels (an SVG mask elbow rendered offset and thinner).
  */
 .treeNestedClip > *::before {
   top: -2px;
   width: 11px;
-  height: calc(var(--sidebar-icon-box) / 2 + 2px);
-  border-left: 0;
-  background: var(--tree-line-color);
-  --tree-elbow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='12'%3E%3Cpath d='M0.75 0.00L0.75 0.55L0.76 1.74L0.80 2.93L0.91 4.12L1.13 5.29L1.48 6.43L2.00 7.50L2.69 8.47L3.53 9.31L4.50 10.00L5.57 10.52L6.71 10.87L7.88 11.09L9.07 11.20L10.26 11.24L11.45 11.25L11.25 11.25' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E");
-  -webkit-mask:
-    var(--tree-elbow) no-repeat left bottom / 11px 12px,
-    linear-gradient(#000, #000) no-repeat left top / 1.5px calc(100% - 11px);
-  mask:
-    var(--tree-elbow) no-repeat left bottom / 11px 12px,
-    linear-gradient(#000, #000) no-repeat left top / 1.5px calc(100% - 11px);
+  height: calc(var(--sidebar-icon-box) / 2 + 2.75px);
+  box-sizing: border-box;
+  border-bottom: 1.5px solid var(--tree-line-color);
+  border-bottom-left-radius: 7px;
 }
 
 .treeNestedClip > *:not(:last-child)::after {
-  top: calc(var(--sidebar-icon-box) / 2);
+  /* Full height, so the rounded elbow branches off an unbroken line. */
+  top: -2px;
   bottom: -2px;
 }
 
