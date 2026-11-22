@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { GlossaryEntry } from "../../services/llm/types";
+import panelStyles from "./SidePanel.module.css";
 import styles from "./GlossaryPanel.module.css";
 
 type GlossaryPanelProps = {
@@ -32,10 +33,10 @@ export function GlossaryPanel({ entries, onChange, onClose }: GlossaryPanelProps
   };
 
   return (
-    <aside className={styles.panel} aria-label="用語集">
-      <header className={styles.header}>
-        <h2 className={styles.title}>用語集</h2>
-        <button type="button" className={styles.close} onClick={onClose}>
+    <aside className={panelStyles.panel} aria-label="用語集">
+      <header className={panelStyles.header}>
+        <h2 className={panelStyles.title}>用語集</h2>
+        <button type="button" className={panelStyles.close} onClick={onClose}>
           閉じる
         </button>
       </header>
