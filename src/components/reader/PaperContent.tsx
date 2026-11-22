@@ -8,34 +8,19 @@ import {
   useState,
   useImperativeHandle,
   forwardRef,
-  type ReactNode,
   type RefObject,
 } from "react";
-import type { Paper, Section, PaperBlock, FigureMetadata, EquationMetadata, TableMetadata } from "../../types/paper";
+import type { Paper, Section, PaperBlock } from "../../types/paper";
 import type { Annotation } from "../../types/annotation";
 import type { GlossaryEntry } from "../../services/llm/types";
-import { Paragraph } from "./Paragraph";
-import { Figure } from "./Figure";
-import { Equation } from "./Equation";
-import { Table } from "./Table";
-import { Footnote } from "./Footnote";
 import { displayPaperTitle, usableTranslatedText, isGarbageTitle, sectionDisplayTitle, isReferencesHeading } from "../../services/translation/quality";
 import { shouldTranslateBlock, isRetryableTranslationFailure } from "../../services/importServiceV2";
 import { isBusyProcessingStatus } from "../../services/paperStatus";
-import {
-  coalesceSplitReferenceBlocks,
-  indexReferenceBlocks,
-  isPageNumberArtifactBlock,
-  looksLikeBibliographyEntry,
-  looksLikeConferenceRunningHeader,
-  looksLikeYearTitleReferenceContinuation,
-  parseReferenceLinks,
-} from "../../services/citations";
+import { coalesceSplitReferenceBlocks } from "../../services/citations";
 import {
   countLowConfidenceBlocks,
   isLowExtractionConfidence,
 } from "../../services/extractionConfidence";
-import { openExternalUrl } from "../../services/openExternalUrl";
 import {
   computeMountedSectionIds,
   estimateSectionBodyHeight,
@@ -49,36 +34,19 @@ import {
   pickActiveSectionId,
   waitForPaint,
 } from "./virtualization/sectionScroll";
+import { PaperBlockView } from "./PaperBlockView";
+import {
+  groupAnnotationsByBlock,
+  groupVisibleBlocksBySection,
+  orphanVisibleBlocks,
+  referenceSectionIds,
+  useStableReferenceBlocks,
+  useStableReferenceIndex,
+} from "./paperContentData";
 import styles from "./PaperContent.module.css";
 
 const EMPTY_ANNOTATIONS: Annotation[] = [];
 const EMPTY_GLOSSARY: GlossaryEntry[] = [];
-
-function renderReferenceText(text: string): ReactNode {
-  const links = parseReferenceLinks(text);
-  if (links.length === 0) return text;
-  const parts: ReactNode[] = [];
-  let cursor = 0;
-  links.forEach((link, index) => {
-    if (link.start > cursor) parts.push(text.slice(cursor, link.start));
-    parts.push(
-      <a
-        key={`${link.href}-${index}`}
-        className={styles.referenceLink}
-        href={link.href}
-        onClick={(event) => {
-          event.preventDefault();
-          void openExternalUrl(link.href);
-        }}
-      >
-        {text.slice(link.start, link.end)}
-      </a>
-    );
-    cursor = link.end;
-  });
-  if (cursor < text.length) parts.push(text.slice(cursor));
-  return parts;
-}
 
 export type ReaderContentHandle = {
   ensureBlockMounted: (blockId: string) => Promise<void>;
@@ -104,117 +72,6 @@ type PaperContentProps = {
   onOpenGlossaryInspector?: () => void;
 };
 
-type PaperBlockViewProps = {
-  block: PaperBlock;
-  highlightText?: string;
-  onBlockUpdated?: (block: PaperBlock) => void;
-  annotations: Annotation[];
-  draftHighlight?: { start: number; end: number } | null;
-  flashAnnotationIds?: string[];
-  onHighlightClick?: (annotationIds: string[], rect: DOMRect) => void;
-  onOpenSourcePdf?: (block: PaperBlock) => void;
-  referenceIndex: Map<string, string>;
-  /** Stable reference-only list so memo survives body translation patches. */
-  referenceBlocks: PaperBlock[];
-  glossaryEntries: GlossaryEntry[];
-  onOpenGlossaryInspector?: () => void;
-  onJumpToTarget: (targetId: string) => void;
-  inReferencesSection?: boolean;
-  refSectionIds?: Set<string>;
-};
-
-const PaperBlockView = memo(function PaperBlockView({
-  block,
-  highlightText,
-  onBlockUpdated,
-  annotations,
-  draftHighlight,
-  flashAnnotationIds,
-  onHighlightClick,
-  onOpenSourcePdf,
-  referenceIndex,
-  referenceBlocks,
-  glossaryEntries,
-  onOpenGlossaryInspector,
-  onJumpToTarget,
-  inReferencesSection = false,
-  refSectionIds,
-}: PaperBlockViewProps) {
-  const original = block.original?.trim() ?? "";
-  // PDF page markers often land as body footnotes (border-top + muted digit).
-  // Hide in every section, including when only the translated digit remains.
-  if (isPageNumberArtifactBlock(block.original, block.translated)) {
-    return null;
-  }
-  // Conference running headers interrupting REFERENCES render as body paragraphs.
-  if (
-    looksLikeConferenceRunningHeader(original) ||
-    (inReferencesSection && looksLikeConferenceRunningHeader(block.translated ?? ""))
-  ) {
-    return null;
-  }
-
-  const effectiveType =
-    inReferencesSection &&
-    block.type === "paragraph" &&
-    (looksLikeBibliographyEntry(original) || looksLikeYearTitleReferenceContinuation(original))
-      ? "reference"
-      : block.type;
-
-  let content: React.ReactNode = null;
-
-  switch (effectiveType) {
-    case "heading":
-      return null;
-    case "paragraph":
-      content = (
-        <Paragraph
-          block={block}
-          highlightText={highlightText}
-          onBlockUpdated={onBlockUpdated}
-          annotations={annotations}
-          draftHighlight={draftHighlight}
-          flashAnnotationIds={flashAnnotationIds}
-          onHighlightClick={onHighlightClick}
-          onOpenSourcePdf={onOpenSourcePdf}
-          referenceIndex={referenceIndex}
-          referenceBlocks={referenceBlocks}
-          glossaryEntries={glossaryEntries}
-          onOpenGlossaryInspector={onOpenGlossaryInspector}
-          onJumpToTarget={onJumpToTarget}
-          refSectionIds={refSectionIds}
-        />
-      );
-      break;
-    case "figure":
-      content = <Figure block={block} metadata={block.metadata as FigureMetadata} />;
-      break;
-    case "table":
-      content = <Table block={block} metadata={block.metadata as TableMetadata} />;
-      break;
-    case "equation":
-      content = <Equation block={block} metadata={block.metadata as EquationMetadata} />;
-      break;
-    case "footnote":
-      content = <Footnote block={block} />;
-      break;
-    case "reference": {
-      const referenceId =
-        typeof block.metadata.referenceId === "string" ? block.metadata.referenceId : undefined;
-      content = (
-        <p id={referenceId} className={styles.reference}>
-          {renderReferenceText(block.original || "")}
-        </p>
-      );
-      break;
-    }
-    default:
-      return null;
-  }
-
-  return <div id={`block-${block.id}`}>{content}</div>;
-});
-
 function SectionBodySpacer({
   sectionId,
   blocks,
@@ -237,43 +94,6 @@ function SectionBodySpacer({
       data-section-body={sectionId}
     />
   );
-}
-
-function isVisibleContentBlock(block: PaperBlock): boolean {
-  if (block.type === "heading") return false;
-  if (isPageNumberArtifactBlock(block.original, block.translated)) return false;
-  if (looksLikeConferenceRunningHeader(block.original ?? "")) return false;
-  const role = String(block.metadata?.role ?? "");
-  return role !== "author" && role !== "affiliation" && role !== "copyright";
-}
-
-function isCitationReferenceBlock(block: PaperBlock): boolean {
-  return (
-    block.type === "reference" ||
-    typeof block.metadata?.referenceId === "string"
-  );
-}
-
-/** Keep a stable array identity while only body paragraphs are translating. */
-function useStableReferenceBlocks(blocks: PaperBlock[]): PaperBlock[] {
-  const stableRef = useRef<PaperBlock[]>([]);
-  return useMemo(() => {
-    const next = blocks.filter(isCitationReferenceBlock);
-    const prev = stableRef.current;
-    if (
-      prev.length === next.length &&
-      prev.every(
-        (block, index) =>
-          block.id === next[index].id &&
-          block.original === next[index].original &&
-          block.metadata?.referenceId === next[index].metadata?.referenceId
-      )
-    ) {
-      return prev;
-    }
-    stableRef.current = next;
-    return next;
-  }, [blocks]);
 }
 
 export const PaperContent = memo(
@@ -411,33 +231,9 @@ export const PaperContent = memo(
     );
 
     const referenceBlocks = useStableReferenceBlocks(blocks);
-    const referenceIndexRef = useRef<Map<string, string>>(new Map());
-    const referenceIndex = useMemo(() => {
-      const next = indexReferenceBlocks(blocks);
-      const prev = referenceIndexRef.current;
-      if (prev.size === next.size) {
-        let same = true;
-        for (const [key, value] of next) {
-          if (prev.get(key) !== value) {
-            same = false;
-            break;
-          }
-        }
-        if (same) return prev;
-      }
-      referenceIndexRef.current = next;
-      return next;
-    }, [blocks]);
+    const referenceIndex = useStableReferenceIndex(blocks);
 
-    const annotationsByBlock = useMemo(() => {
-      const map = new Map<string, Annotation[]>();
-      for (const annotation of annotations) {
-        const list = map.get(annotation.blockId);
-        if (list) list.push(annotation);
-        else map.set(annotation.blockId, [annotation]);
-      }
-      return map;
-    }, [annotations]);
+    const annotationsByBlock = useMemo(() => groupAnnotationsByBlock(annotations), [annotations]);
 
     const allSectionsOrdered = useMemo(
       () => [...sections].sort((a, b) => a.order - b.order),
@@ -459,41 +255,11 @@ export const PaperContent = memo(
       [allSectionsOrdered]
     );
 
-    const refSectionIds = useMemo(
-      () =>
-        new Set(
-          allSectionsOrdered
-            .filter(
-              (section) =>
-                section.normalizedKind === "references" ||
-                isReferencesHeading(section.originalTitle)
-            )
-            .map((section) => section.id)
-        ),
-      [allSectionsOrdered]
-    );
+    const refSectionIds = useMemo(() => referenceSectionIds(allSectionsOrdered), [allSectionsOrdered]);
 
-    const blocksBySection = useMemo(() => {
-      const map = new Map<string, PaperBlock[]>();
-      for (const block of blocks) {
-        if (!block.sectionId || !isVisibleContentBlock(block)) continue;
-        const list = map.get(block.sectionId);
-        if (list) list.push(block);
-        else map.set(block.sectionId, [block]);
-      }
-      return map;
-    }, [blocks]);
+    const blocksBySection = useMemo(() => groupVisibleBlocksBySection(blocks), [blocks]);
 
-    const orphanBlocks = useMemo(
-      () =>
-        blocks
-          .filter((block) => {
-            if (!isVisibleContentBlock(block)) return false;
-            return !block.sectionId || !sectionIds.has(block.sectionId);
-          })
-          .sort((a, b) => a.order - b.order),
-      [blocks, sectionIds]
-    );
+    const orphanBlocks = useMemo(() => orphanVisibleBlocks(blocks, sectionIds), [blocks, sectionIds]);
 
     const virtualize = shouldVirtualizeSections(allSectionsOrdered.length, blocks.length);
 
