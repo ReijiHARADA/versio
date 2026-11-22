@@ -7,11 +7,13 @@ import { useLibraryCache } from "../stores/libraryCache";
 import { showToast } from "../stores/toastStore";
 
 export async function applyPaperFavorite(
-  paperId: string,
+  paperIds: string | string[],
   favorite: boolean
 ): Promise<void> {
-  await setPaperFavorite(paperId, favorite);
-  useLibraryCache.getState().updatePaper(paperId, { favorite });
+  for (const paperId of typeof paperIds === "string" ? [paperIds] : paperIds) {
+    await setPaperFavorite(paperId, favorite);
+    useLibraryCache.getState().updatePaper(paperId, { favorite });
+  }
   showToast({
     kind: "success",
     message: favorite ? "お気に入りに追加しました" : "お気に入りを外しました",

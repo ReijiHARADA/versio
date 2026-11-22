@@ -61,6 +61,8 @@ export function DraggablePaperArticle({
       onContextMenu={(event) => {
         // Right-click opens the paper's own "…" menu instead of WebKit's (image) menu.
         event.preventDefault();
+        // Like Finder: right-clicking outside the selection targets just that card.
+        if (!selected) usePaperSelectionStore.getState().clear();
         const trigger = event.currentTarget.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]');
         if (trigger?.getAttribute("aria-expanded") !== "true") trigger?.click();
       }}
