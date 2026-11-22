@@ -187,7 +187,7 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
       <div className={styles.info}>
         <div className={styles.titleRow}>
           {/* List: only favorites show a star, hung left of the title; unfavorite via the menu too. */}
-          {paper.favorite ? favoriteButton(styles.listFavorite, 11) : null}
+          {paper.favorite ? favoriteButton(styles.listFavorite, 8) : null}
           <h3 className={styles.title}>{label}</h3>
           {libraryMeta}
         </div>
