@@ -4680,6 +4680,19 @@ export function resolveCanonicalDocument(input: {
       reason: "heading-shaped line ends in a comma or dash, or its sentence carries on below",
     }],
   });
+  // A numbered web footnote (`8 https://ncses.nsf.gov/… 9 https://www.nsf.gov/…`) is not a section heading.
+  nodes = nodes.map((node) => node.role !== "heading" || !node.text || !/^\d{1,3}\s*(?:https?:\/\/|www\.)\S+/i.test(node.text.trim()) ? node : {
+    ...node,
+    role: "footnote" as const,
+    evidence: [...node.evidence, {
+      source: "generic-heuristic" as const,
+      label: "url-footnote-heading-demotion",
+      confidence: 0.8,
+      page: node.pageStart,
+      bbox: node.boundingBoxes[0],
+      reason: "heading-shaped line is a footnote number followed by a URL",
+    }],
+  });
   nodes = nodes.map((node) => node.role !== "heading" || !node.text || !looksLikeMathOrDataFragment(node.text.trim()) ? node : {
     ...node,
     role: "paragraph" as const,
