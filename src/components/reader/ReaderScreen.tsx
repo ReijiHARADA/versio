@@ -1,4 +1,7 @@
 import { useEffect, useRef, useCallback, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import type { ReactNode } from "react";
+import { INSPECTOR_ON_GROUND_QUERY, INSPECTOR_SLOT_ID } from "../shell/inspectorSlot";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -48,6 +51,10 @@ import styles from "./ReaderScreen.module.css";
 const EMPTY_BLOCKS: PaperBlock[] = [];
 const EMPTY_SECTIONS: Section[] = [];
 
+function placeInspector(panel: ReactNode, slot: HTMLElement | null): ReactNode {
+  return slot ? createPortal(panel, slot) : panel;
+}
+
 export function ReaderScreen() {
   const navigate = useNavigate();
   const { paperId } = useParams<{ paperId: string }>();
@@ -71,6 +78,16 @@ export function ReaderScreen() {
   const [showSettings, setShowSettings] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [rightPanel, setRightPanel] = useState<ReaderRightPanel>("none");
+  // Wide windows draw the inspector on the ground beside the card (AppShell slot, present only after the
+  // first commit); narrow ones keep it inside the card as an overlay so it never covers the toolbar.
+  const [inspectorSlot, setInspectorSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    const wide = window.matchMedia(INSPECTOR_ON_GROUND_QUERY);
+    const sync = () => setInspectorSlot(wide.matches ? document.getElementById(INSPECTOR_SLOT_ID) : null);
+    sync();
+    wide.addEventListener("change", sync);
+    return () => wide.removeEventListener("change", sync);
+  }, []);
 
   const contentRef = useRef<HTMLDivElement>(null);
   const paperContentRef = useRef<ReaderContentHandle>(null);
@@ -416,7 +433,7 @@ export function ReaderScreen() {
           />
         </main>
 
-        {rightPanel !== "none" && (
+        {rightPanel !== "none" && placeInspector(
           <aside className={styles.rightPane}>
             {rightPanel === "glossary" && (
               <GlossaryPanel
@@ -434,7 +451,8 @@ export function ReaderScreen() {
                 onClose={() => setRightPanel("none")}
               />
             )}
-          </aside>
+          </aside>,
+          inspectorSlot
         )}
       </div>
 
