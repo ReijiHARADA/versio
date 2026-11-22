@@ -2038,7 +2038,8 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   // or `addi- review` inside an otherwise long block. A single spaced hyphen
   // can be legitimate typography (`well- known`), so require multiple
   // occurrences before treating the block as damaged extraction.
-  const internalHyphenBreaks = t.match(/\b[A-Za-z]{3,}-\s+[a-z]{2,}\b/g) ?? [];
+  // Suspended hyphens (`pre- and post-`, `low- or middle-income`) are English, not breaks.
+  const internalHyphenBreaks = t.match(/\b[A-Za-z]{3,}-\s+(?!(?:and|or|nor|to|vs|versus)\b)[a-z]{2,}\b/g) ?? [];
   if (internalHyphenBreaks.length >= 2) {
     return "抽出時の改行ハイフンが残っている可能性があります";
   }
