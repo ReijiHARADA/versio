@@ -9,6 +9,7 @@ import { addPaperToWorkspace, createWorkspaceNode, listWorkspace, movePaperInWor
 import { tryStartPdfImport } from "../../services/pdfImport";
 import type { WorkspaceNode } from "../../types/project";
 import { AppSidebar } from "./AppSidebar";
+import { PaperMarquee } from "./PaperMarquee";
 import { PaperDragPreview } from "./PaperDragPreview";
 import { NewWorkspaceNodeModal } from "../workspace/NewWorkspaceNodeModal";
 import { ShortcutsSheet } from "./ShortcutsSheet";
@@ -195,7 +196,7 @@ export function AppShell() {
     <div className={styles.titlebarDrag} data-tauri-drag-region />
     <input ref={fileInputRef} type="file" accept=".pdf,application/pdf" className={styles.hiddenInput} onChange={(event) => { const file = event.target.files?.[0]; if (file) void tryStartPdfImport(file, fileNodeId ? { workspaceNodeId: fileNodeId } : undefined); event.target.value = ""; setFileNodeId(null); }} />
     <AppSidebar workspaceNodes={workspaceNodes} searchQuery={searchQuery} onSearchChange={setSearchQuery} onNewWorkspace={() => setCreateParentId(null)} onNewChild={(node) => setCreateParentId(node.id)} onDeleteNode={deleteNode} onAddPaperToWorkspace={addPaperFile} activeNodeId={routeNodeId} inboxCount={inboxCount} />
-    <div className={styles.main}><div className={styles.mainBody}>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><div className={styles.mainRim} aria-hidden /></div><PaperDragPreview />
+    <div className={styles.main}><div className={styles.mainBody} data-paper-marquee>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><div className={styles.mainRim} aria-hidden /></div><PaperDragPreview /><PaperMarquee />
     <PlamoDownloadToast raised={Boolean(toast)} />
     {toast && <div className={`${styles.toast} ${toast.kind === "error" ? styles.toastError : toast.kind === "info" ? styles.toastInfo : styles.toastOk}`} role="status"><span className={styles.toastMessage}>{toast.message}</span>{toast.actionLabel && toast.onAction && <button type="button" className={styles.toastAction} onClick={() => { toast.onAction?.(); clearToast(); }}>{toast.actionLabel}</button>}</div>}
     {shortcutsOpen && <ShortcutsSheet onClose={() => setShortcutsOpen(false)} />}

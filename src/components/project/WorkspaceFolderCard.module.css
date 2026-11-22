@@ -90,7 +90,7 @@
   gap: 2px;
   min-width: 0;
   padding: 10px 10px 8px;
-  border-radius: 8px;
+  border-radius: 16px;
   cursor: pointer;
   user-select: none;
   transition: background-color var(--transition-fast);
@@ -144,7 +144,7 @@
   position: absolute;
   top: 7%;
   width: 38%;
-  transition: transform var(--transition-fast);
+  transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .coverA {
@@ -159,11 +159,11 @@
 }
 
 .tile:hover .coverA {
-  transform: translateY(-6%) rotate(-7deg);
+  transform: translateY(-20%) rotate(-9deg);
 }
 
 .tile:hover .coverB {
-  transform: translateY(-6%) rotate(6deg);
+  transform: translateY(-16%) rotate(8deg);
 }
 
 .folderFront {
@@ -193,11 +193,11 @@
 }
 
 .tile.opening .coverA {
-  transform: translateY(-10%) rotate(-8deg);
+  transform: translateY(-28%) rotate(-10deg);
 }
 
 .tile.opening .coverB {
-  transform: translateY(-10%) rotate(7deg);
+  transform: translateY(-24%) rotate(9deg);
 }
 
 @media (prefers-reduced-motion: reduce) {

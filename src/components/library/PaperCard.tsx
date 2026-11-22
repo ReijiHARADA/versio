@@ -157,6 +157,7 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
         className={styles.tile}
         enabled={enabled}
         sourceNodeId={sourceNodeId}
+        layout="grid"
         onOpen={onOpen}
       >
         <div className={styles.tileCover}>
