@@ -118,7 +118,7 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={percent}
-          aria-label={`日本語化 ${percent}%`}
+          aria-label={`翻訳 ${percent}%`}
           data-testid="paper-translation-progress"
         >
           <span

@@ -128,7 +128,6 @@
   composes: surface cta from "../../styles/squircle.module.css";
   --hold-t: 0;
   position: relative;
-  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -161,11 +160,11 @@
 }
 
 .emptyHoldFill {
+  /* Clothoid-masked like the face; clip-path reveals the hold progress. */
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: calc(var(--hold-t) * 100%);
+  inset: 0;
+  -webkit-mask-box-image: var(--sq-fill);
+  clip-path: inset(0 calc((1 - var(--hold-t)) * 100%) 0 0);
   background: color-mix(in srgb, #000 22%, var(--color-danger));
   pointer-events: none;
   z-index: 0;
