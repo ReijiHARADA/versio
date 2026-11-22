@@ -3748,7 +3748,14 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     for (const item of l.items) chars.set(item.fontSize, (chars.get(item.fontSize) ?? 0) + item.text.length);
     return [...chars].reduce((best, entry) => (entry[1] > best[1] ? entry : best), [l.fontSize, 0])[0];
   };
-  const font = median(bodyLines.map(textSize));
+  // The body size is the one that carries most paragraph characters: a median over lines is pulled down by
+  // short small-type paragraphs (table cells, notes) in table-heavy papers.
+  const charsBySize = new Map<number, number>();
+  for (const l of bodyLines) {
+    const size = Math.round(textSize(l) * 2) / 2;
+    charsBySize.set(size, (charsBySize.get(size) ?? 0) + l.text.length);
+  }
+  const font = [...charsBySize].reduce((best, entry) => (entry[1] > best[1] ? entry : best), [median(bodyLines.map(textSize)), 0])[0];
   // Consecutive lines of the block on one page and column, starting at `from` and moving by `step`.
   const run = (block: LayoutBlock, from: number, step: 1 | -1) => {
     const anchor = block.lines[from];
