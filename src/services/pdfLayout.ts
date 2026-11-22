@@ -6426,12 +6426,46 @@ function commaAtSuperscriptMarkers(lines: LayoutLine[]): LayoutLine[] {
   });
 }
 
-export function reconstructDocument(pages: ExtractedPage[]): {
+/**
+ * Preprints number every line in the margin (`21 Crossing the arms …`). The
+ * numbers are separate text items in one right-aligned column, counting up
+ * down the page, on most pages at the same place; drop them so they neither
+ * start lines nor split paragraphs. A table's row numbers stay: they are on
+ * one or two pages only.
+ */
+function marginLineNumberColumns(page: ExtractedPage): Map<number, ExtractedPage["textItems"]> {
+  const columns = new Map<number, ExtractedPage["textItems"]>();
+  for (const item of page.textItems) {
+    if (!/^\d{1,4}$/.test(item.text.trim()) || (item.x + item.width > page.width * 0.2 && item.x < page.width * 0.8)) continue;
+    const key = Math.round((item.x + item.width) / 3);
+    columns.set(key, [...(columns.get(key) ?? []), item]);
+  }
+  for (const [key, column] of columns) {
+    const values = [...column].sort((a, b) => a.y - b.y).map((item) => Number(item.text.trim()));
+    const steps = values.slice(1).filter((value, i) => value - values[i] >= 1 && value - values[i] <= 3).length;
+    if (column.length < 8 || steps < (values.length - 1) * 0.8) columns.delete(key);
+  }
+  return columns;
+}
+
+export function stripMarginLineNumbers(pages: ExtractedPage[]): ExtractedPage[] {
+  const perPage = pages.map(marginLineNumberColumns);
+  const pagesWith = new Map<number, number>();
+  for (const columns of perPage) for (const key of columns.keys()) pagesWith.set(key, (pagesWith.get(key) ?? 0) + 1);
+  const recurring = (key: number) => [key - 1, key, key + 1].reduce((n, k) => n + (pagesWith.get(k) ?? 0), 0) >= Math.max(3, pages.length * 0.5);
+  return pages.map((page, index) => {
+    const drop = new Set([...perPage[index]].filter(([key]) => recurring(key)).flatMap(([, column]) => column));
+    return drop.size ? { ...page, textItems: page.textItems.filter((item) => !drop.has(item)) } : page;
+  });
+}
+
+export function reconstructDocument(inputPages: ExtractedPage[]): {
   layouts: PageColumnLayout[];
   lines: LayoutLine[];
   blocks: LayoutBlock[];
   baseFontSize: number;
 } {
+  const pages = stripMarginLineNumbers(inputPages);
   const patterns = detectHeaderFooterPatterns(pages);
   const layouts = pages.map(detectPageColumns);
   const docLayout = dominantColumnLayout(layouts);
