@@ -512,7 +512,8 @@
 
 .tileCover {
   position: relative;
-  padding: 0 6%;
+  /* % padding resolves against width, so the top inset equals the side inset. */
+  padding: 6% 6% 0;
 }
 
 /* Grid covers read as loose sheets: square corners, no outline, a soft lifted shadow. */
@@ -526,7 +527,7 @@
 
 .tileOverlay {
   position: absolute;
-  inset: 4px calc(6% + 4px) auto;
+  inset: calc(6% + 4px) calc(6% + 4px) auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
