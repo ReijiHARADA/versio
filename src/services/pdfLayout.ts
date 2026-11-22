@@ -3811,9 +3811,14 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     const full = right(last) >= Math.max(...ref.map(right)) - font * 0.6 && last.width >= Math.max(...ref.map((l) => l.width)) * 0.92;
     const left = head.length >= 2 ? Math.min(...head.slice(1).map((l) => l.x)) : median(columnLines(first).map((l) => l.x));
     const unindented = Math.abs(first.x - left) <= font * 0.4;
-    if (!full || !unindented) continue;
     // A physical break: another page or column, or the text resumes after skipped floats.
     const broken = last.page !== first.page || last.column !== first.column || first.y < last.y || j > i + 1;
+    // In an indent-marked journal an unindented line after a break is the same paragraph even when the last
+    // line falls a little short (ragged right, a trailing superscript), as long as the sentence runs on; a short
+    // last line, or a finished sentence before a capital, still ends it.
+    const nearlyFull = last.width >= Math.max(...ref.map((l) => l.width)) * 0.8;
+    const runsOn = !/[.!?][”"’')\]]*$/.test(a.text.trim()) || /^\p{Ll}/u.test(b.text.trim());
+    if (!unindented || (!full && !(indentStyle && broken && nearlyFull && runsOn))) continue;
     // Same place: an indent-marked journal needs no more; otherwise B must follow at the ordinary line pitch.
     const pitch = median(head.slice(1).map((l, k) => l.y - head[k].y));
     if (!broken && !indentStyle && first.y - last.y > pitch * 1.2) continue;
