@@ -1403,6 +1403,8 @@ describe("unsafe extracted translation input", () => {
     const damaged =
       "Physiological signals are collected from previ- psycho-physiological measurements and addi- review evidence from the literature.";
     expect(unsafeParagraphStructureReason(damaged)).toContain("改行ハイフン");
+    const suspended = "Outcomes were compared between pre- and post-treatment visits in low- and middle-income settings.";
+    expect(unsafeParagraphStructureReason(suspended)).toBeNull();
     expect(shouldTranslateParagraph(damaged)).toBe(false);
   });
 
