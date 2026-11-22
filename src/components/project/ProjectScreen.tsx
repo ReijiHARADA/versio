@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FileText, FolderX, Loader2, Plus, Upload } from "lucide-react";
+import { FileText, FolderX, Loader2, Upload } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
@@ -24,7 +24,7 @@ import { LibrarySortMenu, useSortedPapers } from "../library/LibrarySortMenu";
 import { WorkspacePathTrail } from "../workspace/WorkspacePathTrail";
 import type { Paper } from "../../types/paper";
 import type { WorkspaceNode, WorkspacePaper } from "../../types/project";
-import { AddByIdentifierButton } from "../library/AddByIdentifierButton";
+import { AddPaperButton } from "../library/AddPaperButton";
 import styles from "./ProjectScreen.module.css";
 
 function subtreePaperIds(
@@ -160,16 +160,7 @@ export function ProjectScreen() {
             <Upload size={18} />
             書き出す
           </button>
-          <AddByIdentifierButton workspaceNodeId={nodeId} />
-          <button
-            type="button"
-            className={styles.addButton}
-            onClick={() => fileInputRef.current?.click()}
-            aria-label="論文を追加"
-          >
-            <Plus size={18} />
-            論文を追加
-          </button>
+          <AddPaperButton className={styles.addButton} onPickFile={() => fileInputRef.current?.click()} workspaceNodeId={nodeId} />
         </div>
       </header>
       {loading ? (

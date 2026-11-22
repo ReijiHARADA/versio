@@ -263,8 +263,8 @@ choose_pdf_via_open_panel() {
   # Retry boundedly instead of allowing the first startup-time AX walk to
   # block the whole acceptance run.
   for _ in 1 2 3; do
-    ax_click_by_label "論文を追加" && break
-    ax_click_by_label "PDFファイルを選択" && break
+    # 「論文を追加」 opens a popover; its first action picks a PDF.
+    ax_click_by_label "論文を追加" && sleep 0.5 && ax_click_by_label "PDF ファイルを選択" && break
     sleep 2
   done
   sleep 1

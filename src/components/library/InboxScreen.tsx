@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, Plus, Inbox } from "lucide-react";
+import { Upload, Inbox } from "lucide-react";
 import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useImportJobStore, visibleImportJobs } from "../../stores/importJobStore";
@@ -16,7 +16,7 @@ import { useImportJobRecovery } from "./useImportJobRecovery";
 import type { Paper } from "../../types/paper";
 import { LibraryViewToggle, useLibraryView } from "./LibraryViewToggle";
 import { LibrarySortMenu, useSortedPapers } from "./LibrarySortMenu";
-import { AddByIdentifierButton } from "./AddByIdentifierButton";
+import { AddPaperButton } from "./AddPaperButton";
 import styles from "./LibraryScreen.module.css";
 
 export function InboxScreen() {
@@ -85,17 +85,7 @@ export function InboxScreen() {
         <div className={styles.headerRight}>
           <LibrarySortMenu />
           <LibraryViewToggle />
-          <AddByIdentifierButton />
-          <button
-            type="button"
-            className={styles.addButton}
-            onClick={() => fileInputRef.current?.click()}
-            title="論文を追加"
-            aria-label="論文を追加"
-          >
-            <Plus size={18} />
-            論文を追加
-          </button>
+          <AddPaperButton className={styles.addButton} onPickFile={() => fileInputRef.current?.click()} />
         </div>
       </header>
 
