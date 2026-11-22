@@ -622,7 +622,17 @@
   text-overflow: ellipsis;
   color: var(--color-accent);
   background: var(--color-accent-light);
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
 }
+
+.tagChip:hover,
+.tagChip[data-active] {
+  color: #fff;
+  background: var(--color-accent);
+}
+
 
 .tagMore {
   color: var(--color-text-secondary);
