@@ -4126,6 +4126,21 @@ export function looksLikeAffiliationList(text: string): boolean {
     (segments.length >= 2 || (text.match(/,/g) ?? []).length >= 2);
 }
 
+/**
+ * A consortium author list printed after the paper (`, Norbert Scherbaum , Jürgen Deckert , 28,29 30,31 ,`):
+ * comma-separated names, each two to five capitalised words, with affiliation numbers between them.
+ */
+export function looksLikeNameList(text: string): boolean {
+  const segments = text.split(/[,;]/).map((segment) => segment.trim()).filter((segment) => segment && !/^[\d\s*†‡§]+$/.test(segment));
+  const names = segments.filter((segment) => {
+    const words = segment.replace(/[\d*†‡§]+$/u, "").trim().split(/\s+/);
+    return words.length >= 2 && words.length <= 5 &&
+      words.every((word) => /^\p{Lu}[\p{L}'’.-]*$/u.test(word) || NAME_PARTICLES.has(word));
+  });
+  // Acknowledgement and contribution lists name people in prose (`thank Dr. …`, `Writing – review: …`) and carry no numbers.
+  return names.length >= 4 && names.length === segments.length && (/\d/.test(text) || /^,/.test(text.trim()));
+}
+
 export function resolveCanonicalDocument(input: {
   candidates: RoleCandidate[];
   layouts: PageColumnLayout[];
@@ -4678,19 +4693,24 @@ export function resolveCanonicalDocument(input: {
       reason: "heading-shaped line is mostly digits/symbols or has no dictionary word next to a math symbol",
     }],
   });
-  // A back-matter affiliation list (`Department of …, City, Country. Centre for …`) is not body text.
+  // A back-matter affiliation list (`Department of …, City, Country. Centre for …`) or consortium name list is not body text.
   // Keep it as a note: an `affiliation` node after page 1 reaches neither the body nor paper.affiliations.
-  nodes = nodes.map((node) => node.role !== "paragraph" || node.pageStart === 1 || !node.text || !looksLikeAffiliationList(node.text) ? node : {
-    ...node,
-    role: "footnote" as const,
-    evidence: [...node.evidence, {
-      source: "generic-heuristic" as const,
-      label: "back-matter-affiliation-list",
-      confidence: 0.75,
-      page: node.pageStart,
-      bbox: node.boundingBoxes[0],
-      reason: "every sentence is an institution and place",
-    }],
+  nodes = nodes.map((node) => {
+    if (node.role !== "paragraph" || node.pageStart === 1 || !node.text) return node;
+    const affiliations = looksLikeAffiliationList(node.text);
+    if (!affiliations && !looksLikeNameList(node.text)) return node;
+    return {
+      ...node,
+      role: "footnote" as const,
+      evidence: [...node.evidence, {
+        source: "generic-heuristic" as const,
+        label: affiliations ? "back-matter-affiliation-list" : "back-matter-name-list",
+        confidence: 0.75,
+        page: node.pageStart,
+        bbox: node.boundingBoxes[0],
+        reason: affiliations ? "every sentence is an institution and place" : "comma-separated personal names with affiliation numbers",
+      }],
+    };
   });
   // An algorithm float's title (`Algorithm fpGreed`) sits right above its `Input:` / `Require:` line.
   nodes = nodes.map((node, index) => node.role !== "heading" || !/^Algorithm\s+\S+$/.test(node.text?.trim() ?? "") ||
