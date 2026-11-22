@@ -25,6 +25,16 @@ describe("first-page metadata rail", () => {
     expect(lines.some((line) => line.text.includes("Funding") && line.text.includes("watch face"))).toBe(false);
   });
 
+  it("reads the rail's notes continued beside page 2's body as their own column", () => {
+    const items: ExtractedTextItem[] = [];
+    const rail = ["Funding: This work was supported", "by the National Institutes of", "Health and by the CDC.", "Competing interests: The", "authors have declared that no", "competing interests exist.", "Data Availability: The code", "is available on GitHub at", "https://example.org/code and", "the data are archived at", "https://doi.org/10.5281/x.", "All forecasts are in the", "repository under the model", "name used in this paper.", "Model weights are on Zenodo."];
+    rail.forEach((text, i) => items.push({ ...item(text, 36, 60 + i * 10, 140, 8), page: 2 }));
+    for (let i = 0; i < 40; i += 1) items.push({ ...item(`forecasting models of epidemics sentence number ${i} continues the introduction here`, 198, 60 + i * 14, 370, 10), page: 2 });
+    const page = { pageNumber: 2, width: 612, height: 792, textItems: items };
+    expect(detectPageColumns(page).isAsymmetricRail).toBe(true);
+    expect(detectPageColumns({ ...page, textItems: items.filter((it) => !/^(?:Funding|Competing|Data Availability)/.test(it.text)) }).isAsymmetricRail).toBeFalsy();
+  });
+
   it("does not treat a full-width page of word items as a rail", () => {
     const items: ExtractedTextItem[] = [item("Keywords:", 64, 300, 50, 9)];
     for (let row = 0; row < 30; row += 1) {

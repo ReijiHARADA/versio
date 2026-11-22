@@ -307,7 +307,7 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
   // (`... pa` + `tient data ...`). Detect this layout from persistent x bands
   // and y overlap without treating a title/author row as a column profile.
   const asymmetricRail = (() => {
-    if (page.pageNumber !== 1) return null;
+    if (page.pageNumber > 2) return null;
     // A lone `Abstract` heading is common in ordinary two-column papers and
     // is not enough to identify a metadata rail. Require the rail-specific
     // labels that distinguish article-info/keyword sidebars from a normal
@@ -318,13 +318,17 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     const plosRail = /\bcitation\s*:/i.test(pageText) && /\beditor\s*:/i.test(pageText);
     // `Edited by` / `Reviewed by` labels head the same kind of left rail beside title, byline and abstract.
     const reviewRail = /\bedited by\b/i.test(pageText) && /\breviewed by\b/i.test(pageText);
-    if (!/article\s+history|keywords\s*:/i.test(pageText) && !plosRail && !reviewRail) return null;
+    // The rail's back-matter notes (`Funding:`, `Competing interests:`) can run on beside page 2's body.
+    const continuedRail = page.pageNumber === 2 && /\b(?:competing interests|funding|data availability)\b[^:]{0,20}:/i.test(pageText);
+    if (page.pageNumber === 1 ? !/article\s+history|keywords\s*:/i.test(pageText) && !plosRail && !reviewRail : !continuedRail) return null;
+    // Below page 1's title and byline; page 2 has none.
+    const top = page.pageNumber === 1 ? page.height * 0.36 : 0;
     const left = usable.filter((item) =>
-      item.y >= page.height * 0.36 && item.x <= page.width * 0.18 && item.width <= page.width * 0.28 &&
+      item.y >= top && item.x <= page.width * 0.18 && item.width <= page.width * 0.28 &&
       Math.abs(item.rotation ?? 0) < 5
     );
     const right = usable.filter((item) =>
-      item.y >= page.height * 0.36 && item.x >= page.width * 0.28 && item.x <= page.width * 0.55 &&
+      item.y >= top && item.x >= page.width * 0.28 && item.x <= page.width * 0.55 &&
       item.width >= 8 && Math.abs(item.rotation ?? 0) < 5
     );
     // Line-level native items (PLOS) give ~30 right items per page, word-level ones far more.
@@ -361,7 +365,7 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     return {
       leftX: median(left.map((item) => item.x)),
       rightX: wideStart,
-      bridgesMidpoint: plosRail || reviewRail,
+      bridgesMidpoint: plosRail || reviewRail || continuedRail,
       mastheadRail: reviewRail,
       leftCount: left.length,
       rightCount: right.length,
