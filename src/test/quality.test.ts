@@ -1405,6 +1405,10 @@ describe("unsafe extracted translation input", () => {
     expect(unsafeParagraphStructureReason(damaged)).toContain("改行ハイフン");
     const suspended = "Outcomes were compared between pre- and post-treatment visits in low- and middle-income settings.";
     expect(unsafeParagraphStructureReason(suspended)).toBeNull();
+    const item = "a) Physical state of the system (Pps): refers to elements such as the on-off state of actuators, system modes and the readiness of each connected device in the home, as reported by the sensors";
+    expect(unsafeParagraphStructureReason(item)).toBeNull();
+    const name = "pKa estimation with PROPKA. Protonation behavior of ionizable residues was evaluated using PROPKA 3.0 at physiological pH for every structure in the set.";
+    expect(unsafeParagraphStructureReason(name)).toBeNull();
     expect(shouldTranslateParagraph(damaged)).toBe(false);
   });
 
