@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { NavLink, useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import {
@@ -13,6 +13,7 @@ import {
   Search,
   Settings,
   Star,
+  Tag,
   Trash2,
   X,
 } from "lucide-react";
@@ -28,6 +29,7 @@ import {
 } from "../../stores/paperDragStore";
 import { setTranslationUiDeferReason } from "../../utils/batchBlockUpdates";
 import { WorkspaceTree } from "./WorkspaceTree";
+import { useLibraryCache } from "../../stores/libraryCache";
 import styles from "./AppSidebar.module.css";
 import { useSelectionSlide } from "./useSelectionSlide";
 
@@ -90,6 +92,17 @@ export function AppSidebar({
   const setDisplaySettings = useAppStore((state) => state.setDisplaySettings);
   const navigate = useNavigate();
   const location = useLocation();
+  const tagFilter = useAppStore((state) => state.libraryFilter.tag);
+  const setLibraryFilter = useAppStore((state) => state.setLibraryFilter);
+  const papers = useLibraryCache((state) => state.papers);
+  const allTags = useMemo(
+    () =>
+      [...new Set(papers.filter((paper) => !paper.trashedAt).flatMap((paper) => paper.tags ?? []))].sort((a, b) =>
+        a.localeCompare(b, "ja")
+      ),
+    [papers]
+  );
+  const tagActive = location.pathname === "/" && tagFilter != null;
   const navigationType = useNavigationType();
   // HashRouter stores the entry index in history.state.idx; track the furthest one for "forward".
   const historyIdx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
@@ -356,7 +369,14 @@ export function AppSidebar({
                 <span className={styles.label}>ライブラリ</span>
               </h2>
               <nav className={styles.nav}>
-                <LibItem to="/" end icon={<Library size={16} />} label="すべての論文" />
+                <LibItem
+                  to="/"
+                  end
+                  icon={<Library size={16} />}
+                  label="すべての論文"
+                  inactive={tagActive}
+                  onNavigate={() => setLibraryFilter({ tag: null })}
+                />
                 <LibItem
                   to="/inbox"
                   icon={<Inbox size={16} />}
@@ -371,6 +391,28 @@ export function AppSidebar({
                 <LibItem to="/trash" icon={<Trash2 size={16} />} label="ゴミ箱" />
               </nav>
             </section>
+
+            {allTags.length > 0 ? (
+              <section className={styles.section}>
+                <h2 className={styles.sectionTitle}>
+                  <span className={styles.label}>タグ</span>
+                </h2>
+                <nav className={styles.nav} data-testid="sidebar-tags">
+                  {allTags.map((tag) => (
+                    <LibItem
+                      key={tag}
+                      to="/"
+                      end
+                      icon={<Tag size={16} />}
+                      label={tag}
+                      inactive={!(tagActive && tagFilter === tag)}
+                      preventNav={Boolean(draggingPaperId)}
+                      onNavigate={() => setLibraryFilter({ tag })}
+                    />
+                  ))}
+                </nav>
+              </section>
+            ) : null}
           </div>
 
           {showSettings ? (
@@ -407,6 +449,8 @@ function LibItem({
   inboxDrop,
   dropTarget,
   preventNav,
+  inactive,
+  onNavigate,
 }: {
   to: string;
   end?: boolean;
@@ -416,6 +460,9 @@ function LibItem({
   inboxDrop?: boolean;
   dropTarget?: boolean;
   preventNav?: boolean;
+  /** Same route, different filter: suppress NavLink's route-based active state. */
+  inactive?: boolean;
+  onNavigate?: () => void;
 }) {
   return (
     <NavLink
@@ -423,11 +470,16 @@ function LibItem({
       end={end}
       data-inbox-drop={inboxDrop ? "" : undefined}
       className={({ isActive }) =>
-        `${styles.item} ${isActive ? styles.active : ""} ${dropTarget ? styles.dropTarget : ""}`
+        `${styles.item} ${isActive && !inactive ? styles.active : ""} ${dropTarget ? styles.dropTarget : ""}`
       }
+      aria-current={inactive ? false : undefined}
       title={label}
       onClick={(event) => {
-        if (preventNav) event.preventDefault();
+        if (preventNav) {
+          event.preventDefault();
+          return;
+        }
+        onNavigate?.();
       }}
     >
       <span className={styles.iconSlot}>{icon}</span>
