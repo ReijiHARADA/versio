@@ -21,7 +21,9 @@ import { isExpectedNonProseParagraph, unsafeParagraphStructureReason } from "../
 const words = (text: string) => text.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu)?.length ?? 0;
 const PAGE_NUMBER = /^\d{1,4}(?:\s*\/\s*\d{1,4})?$/;
 const TERMINAL = /[.!?。！？][”"’')\]]*\s*$/;
-const isOpenEnded = (text: string) => !TERMINAL.test(text) && !/:\s*$/.test(text);
+// `(Rapport et al.` + `2022). …`: an abbreviation's period does not end the sentence.
+const ABBREVIATION_END = /\b(?:et al|e\.g|i\.e|cf|vs)\.$/i;
+const isOpenEnded = (text: string) => (!TERMINAL.test(text) || ABBREVIATION_END.test(text)) && !/:\s*$/.test(text);
 const CONTINUATION_START = /^(?:[a-z]|(?:which|that|and|or|but|where|while|whereas|because|although|including|with|for|of|to|in)\b)/;
 /**
  * A paragraph that cannot end where it does: after a comma, a function word or
@@ -29,7 +31,7 @@ const CONTINUATION_START = /^(?:[a-z]|(?:which|that|and|or|but|where|while|where
  */
 const isHardOpen = (text: string) =>
   /(?:,|\b(?:and|or|but|nor|that|which|whose|the|a|an|of|to|in|for|with|without|among|between|by|from|on|at|as|than|versus|into|onto|over|under|about|including|such|whether|its|their|our|this|these|those|is|are|was|were|be|been|has|have|had))$/i.test(text) ||
-  hasOpenParenthesis(text);
+  hasOpenParenthesis(text) || ABBREVIATION_END.test(text);
 const hasOpenParenthesis = (text: string) => (text.match(/\(/g)?.length ?? 0) > (text.match(/\)/g)?.length ?? 0);
 /**
  * The continuation of a hard-open paragraph that does not start in lower case:
@@ -65,6 +67,19 @@ function isProseLineEquation(block: PaperBlock, next: PaperBlock | undefined): b
   if (block.type !== "equation" || next?.type !== "paragraph") return false;
   const text = (block.original ?? "").trim();
   return (text.match(/\b\p{Ll}{3,}\b/gu)?.length ?? 0) >= 5 && CONTINUATION_START.test((next.original ?? "").trim());
+}
+/**
+ * A prose line typed as a display equation because it carries statistics or a
+ * formula (`(M = 3.79, SD = 1.18), concentration difficulties (M = 3.31,`):
+ * displays are set narrower and centred, this one fills the paragraph's width.
+ */
+function isFullWidthProseEquation(current: PaperBlock, block: PaperBlock): boolean {
+  if (block.type !== "equation" || block.boundingBoxes.length !== 1) return false;
+  if (((block.original ?? "").match(/\b\p{Ll}{3,}\b/gu)?.length ?? 0) < 2) return false;
+  const line = block.boundingBoxes[0];
+  const body = current.boundingBoxes.filter((box) => box.page === line.page && box.width > 0);
+  const widest = body.reduce((a, b) => (b.width > a.width ? b : a), body[0]);
+  return Boolean(widest) && Math.abs(line.x - widest.x) <= 6 && line.width >= widest.width * 0.9;
 }
 /**
  * A sentence that refers to a table or figure at a line start, read as its
@@ -125,6 +140,7 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
       let target = -1;
       const hardOpen = isHardOpen(currentText) || afterReferenceCaption;
       let skippedParagraph = false;
+      let skippedFragment = false;
       // Full-page figures and tables can push the rest of a paragraph several pages on.
       let onlyFloats = true;
       let sawFloat = false;
@@ -135,19 +151,22 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j;
           break;
         }
-        if (j === i + 1 && (isProseEquation(candidate) || isInlineReferenceCaption(currentText, candidate) || isProseLineEquation(candidate, out[j + 1]))) {
+        if (j === i + 1 && (isProseEquation(candidate) || isFullWidthProseEquation(current, candidate) || isInlineReferenceCaption(currentText, candidate) || isProseLineEquation(candidate, out[j + 1]))) {
           target = j;
           break;
         }
         // Without a lower-case start, only the first paragraph after the interruption can be the continuation.
-        if (hardOpen && !skippedParagraph && eligible(candidate) && looseContinuation(currentText, candidateText, afterReferenceCaption)) {
+        // After a skipped fragment, text opening with `,` / `;` continues that fragment.
+        if (hardOpen && !skippedParagraph && !(skippedFragment && /^[,;:.]/.test(candidateText)) && eligible(candidate) && looseContinuation(currentText, candidateText, afterReferenceCaption)) {
           target = j;
           break;
         }
         // After a figure or table, its notes and legend can be full sentences; a lower-case start still marks the continuation.
         if (!interruptionAllowed(candidate) && !(sawFloat && candidate.type === "paragraph" && TERMINAL.test(candidateText))) break;
         if (candidate.type === "figure" || candidate.type === "table") sawFloat = true;
-        if (candidate.type === "paragraph") skippedParagraph = true;
+        // A running head or a table cell (short, no sentence end) does not count as a skipped paragraph.
+        if (candidate.type === "paragraph" && (TERMINAL.test(candidateText) || words(candidateText) > 12)) skippedParagraph = true;
+        else if (candidate.type === "paragraph") skippedFragment = true;
         // A page number (`10 / 23`) between the pages does not stop the look past full-page floats.
         if (candidate.type !== "figure" && candidate.type !== "table" && !PAGE_NUMBER.test(candidateText)) onlyFloats = false;
       }
