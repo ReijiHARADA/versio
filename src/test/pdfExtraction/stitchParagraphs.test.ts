@@ -174,4 +174,12 @@ describe("stitchParagraphContinuations past full-page figures", () => {
     expect(stitchParagraphContinuations([a, ...figs, b], sections)[0].original).toMatch(/presence of a high/);
     expect(stitchParagraphContinuations([a, block("p", "paragraph", "Short label", 5), b], sections)).toHaveLength(3);
   });
+
+  it("looks past a page-number footer on the way to full-page floats", () => {
+    const sections = [{ id: "s-body", normalizedKind: "body" }];
+    const a = block("a", "paragraph", "The other prioritized targets may also be relevant, but the data do not demonstrate that OTA directly regulates", 4);
+    const b = block("b", "paragraph", "these targets in the experimental models.", 6);
+    const between = [block("n", "footnote", "13 / 17", 4), block("f1", "figure", "Fig. 10", 5), block("f2", "figure", "Fig. 11", 6)];
+    expect(stitchParagraphContinuations([a, ...between, b], sections)[0].original).toMatch(/regulates these targets/);
+  });
 });
