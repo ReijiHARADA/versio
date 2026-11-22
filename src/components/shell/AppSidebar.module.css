@@ -559,8 +559,9 @@
 }
 
 .badge {
+  composes: pill from "../../styles/squircle.module.css";
   font-size: 0.6875rem;
-  background: var(--color-bg-tertiary);
+  --sq-bg: var(--color-bg-tertiary);
   color: var(--color-text-secondary);
   border-radius: 999px;
   text-align: center;
@@ -579,7 +580,7 @@
 }
 
 .item.active .badge {
-  background: color-mix(in srgb, var(--color-selection-fg) 22%, transparent);
+  --sq-bg: color-mix(in srgb, var(--color-selection-fg) 22%, transparent);
   color: var(--color-selection-fg);
 }
 

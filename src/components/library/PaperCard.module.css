@@ -215,6 +215,7 @@
 }
 
 .translateProgress {
+  /* squircle-exempt: thin progress track; its clipped fill needs a real border-radius */
   flex-shrink: 0;
   display: block;
   width: 72px;
@@ -600,28 +601,36 @@
 .tagMore {
   flex: none;
   padding: 1px 7px;
-  border-radius: 999px;
   font-size: 0.6875rem;
   line-height: 1.5;
   white-space: nowrap;
 }
 
+.tagMore {
+  composes: pill from "../../styles/squircle.module.css";
+  border-radius: 999px;
+}
+
 .readBadge {
+  composes: pill from "../../styles/squircle.module.css";
+  border-radius: 999px;
   color: var(--color-text-secondary);
-  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+  --sq-bg: color-mix(in srgb, var(--color-text) 7%, transparent);
 }
 
 .readBadge[data-status="read"] {
   color: var(--color-success);
-  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  --sq-bg: color-mix(in srgb, var(--color-success) 12%, transparent);
 }
 
 .tagChip {
+  composes: pill from "../../styles/squircle.module.css";
+  border-radius: 999px;
   max-width: 9rem;
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--color-accent);
-  background: var(--color-accent-light);
+  --sq-bg: var(--color-accent-light);
   border: none;
   font-family: inherit;
   cursor: pointer;
@@ -630,7 +639,7 @@
 .tagChip:hover,
 .tagChip[data-active] {
   color: #fff;
-  background: var(--color-accent);
+  --sq-bg: var(--color-accent);
 }
 
 

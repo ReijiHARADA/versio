@@ -22,6 +22,7 @@
 }
 
 .cta {
+  /* squircle-exempt: focus-outline shape; the painted pill is .pill::before with the G2 mask */
   position: absolute;
   left: 50%;
   bottom: max(13vh, 48px);
@@ -40,6 +41,7 @@
 }
 
 .pill {
+  /* squircle-exempt: shape inherited by ::before, which carries the G2 mask */
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -60,6 +62,17 @@
   inset: 0;
   border-radius: inherit;
   background: var(--intro-blue, #1a73e8);
+  /* G2 pill ends, same masks as squircle.module.css .pill */
+  -webkit-mask-image: var(--sq-pill-l), var(--sq-pill-r);
+  mask-image: var(--sq-pill-l), var(--sq-pill-r);
+  -webkit-mask-position: left center, right center;
+  mask-position: left center, right center;
+  -webkit-mask-size: auto 100%;
+  mask-size: auto 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
   transform: scaleX(0);
   opacity: 0;
   transition: filter 0.15s;

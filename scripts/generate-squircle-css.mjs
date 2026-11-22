@@ -88,6 +88,54 @@ function masks(r) {
   return { fill: `${fill} ${cut} / ${slice}px`, ring: `${ring} ${cut} / ${slice}px`, rim: `${rim} ${cut} / ${slice}px`, ring2: `${ring2} ${cut} / ${slice}px` };
 }
 
+/**
+ * Pill end cap of unit height: semicircle whose curvature eases in and out with smoothstep
+ * ramps (G3 joints to the straight edges), PILL_RAMP of the 180° turn spent in the ramps.
+ * Points run from the top edge (0,0) round to the bottom edge (0,1); ext is the cap's depth.
+ */
+const PILL_RAMP = 0.3;
+export function pillCap(t = PILL_RAMP, samples = 40) {
+  const ramp = (u) => u * u * (3 - 2 * u);
+  const L = Math.PI * t; // a symmetric ramp averages half the curvature, so it turns L/2
+  const A = Math.PI * (1 - t);
+  const T = 2 * L + A;
+  const kappa = (s) => (L === 0 ? 1 : s < L ? ramp(s / L) : s < L + A ? 1 : ramp((T - s) / L));
+  const N = 4000;
+  const ds = T / N;
+  let x = 0;
+  let y = 0;
+  let phi = 0;
+  const raw = [[0, 0]];
+  for (let i = 0; i < N; i++) {
+    const s = (i + 0.5) * ds;
+    const mid = phi + (kappa(s) * ds) / 2;
+    x += Math.cos(mid) * ds;
+    y += Math.sin(mid) * ds;
+    phi += kappa(s) * ds;
+    if ((i + 1) % (N / samples) === 0) raw.push([x, y]);
+  }
+  const pts = raw.map(([px, py]) => [px / y, py / y]);
+  return { pts, ext: Math.max(...pts.map(([px]) => px)) };
+}
+
+/**
+ * Two mask layers sized `auto 100%` so they scale with the pill's height: the left cap with an
+ * opaque tail to the right, and its mirror. Their intersection is the pill at any width >= ~1.5h.
+ */
+function pillMasks() {
+  const { pts, ext } = pillCap();
+  const tail = 60; // in pill heights: wider than any pill
+  const w = ext + tail;
+  const url = (d) => {
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${f(w * 100)}' height='100' viewBox='0 0 ${f(w * 100)} 100'><path d='${d}'/></svg>`;
+    return `url("data:image/svg+xml,${encodeURIComponent(svg).replace(/%20/g, " ").replace(/%3D/g, "=").replace(/%3A/g, ":").replace(/%2F/g, "/").replace(/%27/g, "'")}")`;
+  };
+  const line = (list) => list.map(([px, py]) => `L${f(px * 100)} ${f(py * 100)}`).join("");
+  const left = `M${f(w * 100)} 0` + line(pts.map(([px, py]) => [ext - px, py])) + `L${f(w * 100)} 100Z`;
+  const right = "M0 0" + line(pts.map(([px, py]) => [tail + px, py])) + "L0 100Z";
+  return { left: url(left), right: url(right) };
+}
+
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   const lines = [
@@ -107,6 +155,8 @@ if (isMain) {
   for (const [name, r] of Object.entries(TOKENS)) {
     lines.push(`  --sq-fill-${name}: var(--sq-fill-${r});`, `  --sq-ring-${name}: var(--sq-ring-${r});`, `  --sq-rim-${name}: var(--sq-rim-${r});`, `  --sq-radius-${name}: var(--sq-radius-${r});`);
   }
+  const pill = pillMasks();
+  lines.push(`  --sq-pill-l: ${pill.left};`, `  --sq-pill-r: ${pill.right};`);
   lines.push("}", "");
   const out = path.join(path.dirname(fileURLToPath(import.meta.url)), "../src/styles/squircle.css");
   fs.writeFileSync(out, lines.join("\n"));

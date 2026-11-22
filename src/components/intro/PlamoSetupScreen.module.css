@@ -79,7 +79,6 @@
   height: 36px;
   padding: 0 20px;
   border: none;
-  border-radius: 999px;
   font: inherit;
   font-size: 13px;
   font-weight: var(--font-weight-semibold);
@@ -87,21 +86,25 @@
 }
 
 .primary {
-  background: var(--color-accent);
+  composes: pill from "../../styles/squircle.module.css";
+  border-radius: 999px;
+  --sq-bg: var(--color-accent);
   color: #fff;
 }
 
 .primary:hover {
-  background: var(--color-accent-hover);
+  --sq-bg: var(--color-accent-hover);
 }
 
 .secondary {
-  background: transparent;
+  composes: pill from "../../styles/squircle.module.css";
+  border-radius: 999px;
+  --sq-bg: transparent;
   color: var(--color-text-secondary);
 }
 
 .secondary:hover {
-  background: var(--color-surface-hover);
+  --sq-bg: var(--color-surface-hover);
 }
 
 .primary:focus-visible,
