@@ -41,7 +41,6 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 **Done when**
 
 - 設定画面の情報設計が揃っている
-- 正式名称・アイコンが決まっている
 - 公証付き配布の手順（または CI）が再現できる
 
 ### A4. ライブラリの見分けやすさ（必要になったら）
@@ -51,7 +50,7 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 **Done when**（優先度が上がった時点で具体化）
 
 - DnD のドロップ先フィードバックが分かる
-- 必要ならサムネイル / タグ / フォルダ色（過剰にしない）
+- 必要ならフォルダ色（過剰にしない）
 
 ### A5. ライブラリ検索の改善（検索範囲は実装済み）
 
@@ -137,8 +136,9 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 
 次は CURRENT_STATE に移済み。ROADMAP の「未達」としては扱わない。
 
-- ライブラリ lazy load / FTS、モデル lifecycle、セキュリティ硬化、再現 Python ビルド
+- ライブラリ lazy load / FTS、モデル lifecycle、セキュリティ硬化
 - section 遅延描画、Import 失敗分類・重複導線、citation / 用語 Popover、主要 a11y
+- 正式名称（Versio）・アプリアイコン、ライブラリの表紙サムネイル・タグ
 - インラインメモ、Shared Element 図表拡大、Rust 完結の書き出し、パス trail / サイドバーリサイズ
 - フォルダ単位の一括書き出し（Markdown / Notion / 検証 / EPUB を階層つき ZIP。入口はフォルダ画面とサイドバーメニュー）
 - Import の中断・再開（実行中ジョブ／日本語化中の論文カードから中断。成功済み抽出・訳は保持。partial は「続きから再開」、failed は「翻訳を再試行」。ユーザー中断後は auto-resume しない）
