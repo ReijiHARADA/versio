@@ -3798,8 +3798,9 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     const first = head[0];
     // A one-line run is measured against its column's own body lines.
     const columnLines = (l: LayoutLine) => bodyColumnLines.get(`${l.page}:${l.column}`) ?? [];
-    // A one-line B could be a heading or a note: only a lower-case start continues.
-    if (head.length < 2 && (columnLines(head[0]).length < 6 || !/^\p{Ll}/u.test(b.text.trim()))) continue;
+    // A one-line B could be a heading or a note: only a lower-case start continues. (A longer B whose first run is
+    // one line, the rest in the next column, is measured like any other.)
+    if (head.length < 2 && (columnLines(head[0]).length < 6 || (b.lines.length < 2 && !/^\p{Ll}/u.test(b.text.trim())))) continue;
     if (tail.length < 2 && (head[0].column !== last.column || head[0].page !== last.page) && columnLines(last).length < 6) continue;
     // A sentence cut mid-way (`Supplementary` / `Table 8)`, `record` / `(EHR)`) is no list or caption start.
     const midSentence = /[\p{L}\p{N},]$/u.test(a.text.trim());
