@@ -3,7 +3,6 @@
  */
 
 import {
-  explainDegenerateTranslation,
   hasAbnormalPhraseRepetition,
   isDegenerateTranslation,
   toHalfwidthAscii,
@@ -23,17 +22,11 @@ import {
 } from "./quality/sourceIntegrity";
 
 export {
-  explainDegenerateTranslation,
-  isDegenerateTranslation,
-  restoreUtf8ByteEscapes,
   toHalfwidthAscii,
 } from "./quality/degeneration";
 export {
   isGarbageTitle,
-  looksLikeFrontMatterLabel,
   looksLikeSubjectClassification,
-  looksLikeNamedWorkHeading,
-  formatNamedWorkHeading,
   isReferencesHeading,
   looksLikeBibliographyEntry,
 } from "./quality/documentPolicy";
@@ -212,7 +205,7 @@ function hasMalformedCitationStructure(source: string, output: string): boolean 
   return /\[\[\s*\d|\[\s*\]/.test(output);
 }
 
-export type PartialSourceFallbackDetection = { partial: boolean; reason?: string };
+type PartialSourceFallbackDetection = { partial: boolean; reason?: string };
 
 function normalizeForSourceOverlap(text: string): string {
   return text
@@ -570,68 +563,6 @@ function hasUntranslatedCascadeLexeme(source: string, output: string): boolean {
   });
 }
 
-/**
- * Detect a cascade candidate that duplicates an opaque author/year citation
- * span. A model may copy a citation once per sentence after it has been
- * detached from the source context; that is an addition even when every
- * numeric invariant is present. Compare normalized parenthesized year spans
- * against the source count and keep the rule independent of author names.
- */
-export function hasDuplicatedYearCitationSpan(source: string, output: string): boolean {
-  const spanPattern = /(?:\([^()\n]{0,180}\b(?:19|20)\d{2}\b[^()\n]{0,180}\)|（[^（）\n]{0,180}\b(?:19|20)\d{2}\b[^（）\n]{0,180}）)/g;
-  const normalize = (value: string) => value
-    .normalize("NFKC")
-    .replace(/\s+/g, " ")
-    .replace(/[、，]/g, ",")
-    .replace(/\s*:\s*/g, ":")
-    // Japanese decoders commonly emit fullwidth citation parentheses while
-    // the PDF source uses ASCII parentheses. They are the same citation span
-    // for invariant comparison and must not create a false duplicate.
-    .replace(/[（]/g, "(")
-    .replace(/[）]/g, ")")
-    // `e.g.,` is a discourse cue, not part of the author/year citation
-    // identity. Models may naturally omit it while preserving the full
-    // citation group; do not treat that formatting change as duplication.
-    .replace(/^\(?\s*e\.g\.,?\s*/i, "(")
-    .trim()
-    .toLowerCase();
-  const sourceCounts = new Map<string, number>();
-  for (const match of source.matchAll(spanPattern)) {
-    const key = normalize(match[0]);
-    sourceCounts.set(key, (sourceCounts.get(key) ?? 0) + 1);
-  }
-  if (sourceCounts.size === 0) return false;
-  const outputCounts = new Map<string, number>();
-  for (const match of output.matchAll(spanPattern)) {
-    const key = normalize(match[0]);
-    outputCounts.set(key, (outputCounts.get(key) ?? 0) + 1);
-  }
-  const citationAtomPattern = /\b[A-Z][A-Za-zÀ-ÿ'’-]+(?:\s+et\s+al\.)?\s*,?\s*(?:19|20)\d{2}[a-z]?\b/gi;
-  const atomCounts = (value: string) => {
-    const counts = new Map<string, number>();
-    for (const atom of value.match(citationAtomPattern) ?? []) {
-      const key = atom.replace(/\s+/g, " ").replace(/\s*,\s*/g, ", ").trim().toLowerCase();
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    return counts;
-  };
-  const sourceAtoms = atomCounts(source);
-  return [...outputCounts].some(([key, count]) => {
-    if (count <= (sourceCounts.get(key) ?? 0)) return false;
-    // Extraction can split one author/year group (for example a malformed
-    // trailing bare year) while the model restores the atomic author/year
-    // citation. If every atom is present no more often than in the source,
-    // this is regrouping rather than an added citation.
-    if (!sourceCounts.has(key)) {
-      const span = [...output.matchAll(spanPattern)].map((match) => match[0]).find((value) => normalize(value) === key);
-      const atoms = span ? atomCounts(span) : new Map<string, number>();
-      const regrouped = atoms.size > 0 && [...atoms].every(([atom, atomCount]) => atomCount <= (sourceAtoms.get(atom) ?? 0));
-      if (regrouped) return false;
-    }
-    return true;
-  });
-}
-
 // A citation year must not be reintroduced as a standalone calendar year in
 // unrelated Japanese prose. This catches scope drift such as a source ending
 // with `(Parker and Schrift, 2011)` becoming `2011年、研究2で...` earlier in
@@ -762,7 +693,7 @@ function hasUntranslatedSourceLabel(source: string, output: string): boolean {
   return false;
 }
 
-export type ScientificInvariant = { kind: "citation" | "doi" | "url" | "figure" | "table" | "statistic" | "measurement" | "year" | "number" | "acronym" | "structure"; value: string };
+type ScientificInvariant = { kind: "citation" | "doi" | "url" | "figure" | "table" | "statistic" | "measurement" | "year" | "number" | "acronym" | "structure"; value: string };
 
 const NON_TECHNICAL_UPPERCASE_WORDS = new Set([
   "A",
@@ -839,30 +770,6 @@ export function missingTechnicalNameCandidates(source: string, output: string): 
 }
 
 /**
- * Quoted coined names are source facts rather than ordinary prose.  A fluent
- * translation that drops one (for example a named prototype) can still pass
- * language and length checks, so keep this narrow structural invariant
- * separate from the broad technical-name audit.
- */
-export function missingQuotedTechnicalNames(source: string, output: string): string[] {
-  const names = [...source.matchAll(/[“"]([A-Z][A-Za-z0-9][A-Za-z0-9_-]{3,})[”"]/g)]
-    .filter((match) => {
-      const name = match[1];
-      if (COMMON_CAPITALIZED_PROSE.has(name)) return false;
-      // A title-cased adjective used as an experimental label (e.g.
-      // “Normal”) is ordinary prose. Treat a single-word label as a coined
-      // name only when it has identifier-like spelling or is introduced by a
-      // naming frame such as “dubbed the …”.
-      const identifierLike = /[a-z][A-Z]|\d|[-_]/.test(name);
-      const context = source.slice(Math.max(0, (match.index ?? 0) - 48), match.index ?? 0);
-      return identifierLike || /(?:dubbed|called|named|prototype|interface|system)\s+(?:the\s+)?$/i.test(context);
-    })
-    .map((match) => match[1]);
-  const normalized = output.normalize("NFKC").toLocaleLowerCase();
-  return [...new Set(names)].filter((name) => !normalized.includes(name.normalize("NFKC").toLocaleLowerCase()));
-}
-
-/**
  * Audit-only signal for numeric citations that survive as detached numbers.
  * It intentionally does not reject output: experiment counts and years can
  * look identical to citations, so this requires several citation-like source
@@ -891,56 +798,6 @@ export function hasAcronymExpansionDrift(source: string, output: string): boolea
   return false;
 }
 
-/**
- * Audit signal for an acronym that gains an unsupported Japanese expansion.
- * Only flags output that adds Japanese text in parentheses immediately after
- * an acronym whose English source has no explicit expansion. It is deliberately
- * separate from the main gate until its false-positive rate is measured.
- */
-export function hasUnsupportedJapaneseAcronymExpansion(source: string, output: string): boolean {
-  const acronyms = [...new Set(source.match(/\b[A-Z][A-Z0-9-]{2,7}\b/g) ?? [])];
-  for (const acronym of acronyms) {
-    const escaped = acronym.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const sourceHasExpansion = new RegExp(`(?:[A-Za-z][A-Za-z -]{2,80})\\(\\s*${escaped}\\s*\\)`, "i").test(source);
-    if (sourceHasExpansion) continue;
-    const outputExpansion = new RegExp(`\\b${escaped}\\s*[（(]([^）)]{2,80})[）)]`, "u");
-    const match = outputExpansion.exec(output);
-    if (match && /[ぁ-ゖァ-ヺ一-龯々]/u.test(match[1])) return true;
-  }
-  return false;
-}
-
-/**
- * Detect high-risk loss of semantic qualifiers in an explicitly expanded
- * scientific acronym. This is deliberately limited to directional/anatomical
- * qualifiers that have stable Japanese realizations; it is evidence for the
- * alternate-model selector, not a general bilingual dictionary.
- */
-export function hasScientificExpansionQualifierDrift(source: string, output: string): boolean {
-  const expansion = /\b((?:[A-Za-z][A-Za-z-]+\s+){1,8}[A-Za-z][A-Za-z-]+)\s*\(([A-Za-z][A-Za-z]{1,7})\)/g;
-  for (const match of source.matchAll(expansion)) {
-    const phrase = match[1].trim().toLowerCase();
-    const acronym = match[2];
-    if (!new RegExp(`\\b${acronym}\\b`).test(output)) continue;
-    const required: RegExp[] = [];
-    if (/\bright\b/.test(phrase)) required.push(/右/);
-    if (/\bleft\b/.test(phrase)) required.push(/左/);
-    if (/\blateral\b/.test(phrase)) required.push(/(?:外側|側)/);
-    if (/\bmedial\b/.test(phrase)) required.push(/内側/);
-    if (/\bprefrontal\b/.test(phrase)) required.push(/前頭前/);
-    if (/\bcortex\b/.test(phrase)) required.push(/皮質/);
-    if (required.length > 0) {
-      const escaped = acronym.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      for (const occurrence of output.matchAll(new RegExp(escaped, "g"))) {
-        const index = occurrence.index ?? 0;
-        const context = output.slice(Math.max(0, index - 80), Math.min(output.length, index + acronym.length + 80));
-        if (required.some((marker) => !marker.test(context))) return true;
-      }
-    }
-  }
-  return false;
-}
-
 /** Audit-only cue for long paragraphs whose accepted output is unusually compressed. */
 export function hasExtremeTranslationCompression(source: string, output: string): boolean {
   const sourceLength = source.trim().length;
@@ -948,9 +805,7 @@ export function hasExtremeTranslationCompression(source: string, output: string)
   return output.trim().length / sourceLength < 0.36;
 }
 
-export const TRANSLATION_QUALITY_VERSION = "quality-v36";
-
-export type TranslationQuality = {
+type TranslationQuality = {
   score: number;
   reasons: string[];
   languageScore: number;
@@ -1754,11 +1609,6 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   if (hasMalformedCitationStructure(source, out)) reasons.push("malformed citation structure");
   if (hasMalformedAcronymExpansion(source, out)) reasons.push("malformed acronym expansion");
   if (hasMixedScriptCorruption(source, out)) reasons.push("mixed-script decoder corruption");
-  const missingQuotedNames = missingQuotedTechnicalNames(source, out);
-  if (missingQuotedNames.length > 0) {
-    reasons.push(`quoted technical name missing: ${missingQuotedNames.slice(0, 3).join(", ")}`);
-  }
-
   if (latinRatioBeyondSource(out, source) > 0.45) reasons.push("excessive new Latin text");
   // Negation changes the direction of a claim. This deliberately excludes
   // "not only" constructions and only checks explicit source negation; a
@@ -1839,61 +1689,6 @@ export function evaluateJaTranslation(output: string, source: string): Translati
     repetitionScore,
     lengthScore,
   };
-}
-
-/**
- * Diagnose a server-provided mixed candidate while allowing only explicitly
- * reported failed source units to remain in English. This does not accept the
- * candidate; callers must apply their normal safety policy afterward.
- */
-export function evaluatePartialJaTranslation(
-  output: string,
-  source: string,
-  preservedSourceUnits: string[],
-): TranslationQuality & { preservedSourceUnitsValidated: boolean } {
-  const quality = evaluateJaTranslation(output, source);
-  const normalize = (value: string) => value.replace(/\s+/g, " ").trim();
-  const normalizedOutput = normalize(output);
-  const validated = preservedSourceUnits.length > 0
-    && preservedSourceUnits.every((unit) => normalizedOutput.includes(normalize(unit)));
-  if (!validated) return { ...quality, preservedSourceUnitsValidated: false };
-  const reasons = quality.reasons.filter((reason) =>
-    !reason.startsWith("translation contains unmodified source span")
-    && reason !== "untranslated foreign-language prose"
-  );
-  return { ...quality, reasons, preservedSourceUnitsValidated: true };
-}
-
-export type PartialUnitDiagnostic = {
-  index: number;
-  source: string;
-  output: string;
-  preserved: boolean;
-  accepted: boolean;
-  reasons: string[];
-};
-
-/** Diagnose each source/output unit independently; never changes acceptance. */
-export function diagnosePartialUnits(
-  sourceUnits: string[],
-  outputUnits: string[],
-  preservedIndexes: number[] = [],
-): PartialUnitDiagnostic[] {
-  return sourceUnits.map((source, index) => {
-    const output = outputUnits[index] ?? "";
-    const preserved = preservedIndexes.includes(index) && output.trim() === source.trim();
-    if (preserved) {
-      return { index, source, output, preserved: true, accepted: false, reasons: ["preserved source unit"] };
-    }
-    const quality = evaluateJaTranslation(output, source);
-    const lengthRatio = output.trim().length / Math.max(source.trim().length, 1);
-    const reasons = [...quality.reasons];
-    if (reasons.includes("degenerate output")) {
-      reasons.push(...explainDegenerateTranslation(output).map((reason) => `degenerate: ${reason}`));
-    }
-    if (source.trim().length >= 80 && lengthRatio < 0.25) reasons.push("unit output is too short");
-    return { index, source, output, preserved: false, accepted: reasons.length === 0, reasons };
-  });
 }
 
 export function isPlausibleJaTranslation(output: string, source: string): boolean {
@@ -1990,9 +1785,7 @@ export function getCascadeQualityReasons(output: string, source: string): string
   if (hasInconsistentRepeatedLexeme(source, output)) cascadeReasons.push("inconsistent repeated lexeme");
   else if (hasUntranslatedCascadeLexeme(source, output)) cascadeReasons.push("untranslated cascade lexeme");
   else if (hasUntranslatedCascadePhrase(source, output)) cascadeReasons.push("untranslated cascade phrase");
-  if (hasDuplicatedYearCitationSpan(source, output)) cascadeReasons.push("duplicated year citation span");
   if (hasUnsupportedStructuralLabel(source, output)) cascadeReasons.push("unsupported structural label");
-  if (hasScientificExpansionQualifierDrift(source, output)) cascadeReasons.push("scientific expansion qualifier drift");
   if (hasCascadeSentenceCompression(source, output)) cascadeReasons.push("cascade sentence compression");
   const reasons = evaluateJaTranslation(output, source).reasons;
   const invariant = invariantQuality(source, output);
