@@ -188,6 +188,7 @@
 }
 
 .dragCount {
+  composes: pill from "../../styles/squircle.module.css";
   position: absolute;
   top: -8px;
   right: -14px;
@@ -196,7 +197,7 @@
   height: 20px;
   padding: 0 6px;
   border-radius: 999px;
-  background: var(--color-danger);
+  --sq-bg: var(--color-danger);
   color: #fff;
   font-size: 0.75rem;
   font-weight: 600;

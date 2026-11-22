@@ -54,9 +54,10 @@
 }
 
 .keyword {
+  composes: pill from "../../styles/squircle.module.css";
   padding: 1px 8px;
   border-radius: 999px;
-  background: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
   font-size: 0.75rem;
   line-height: 1.6;
   color: var(--color-text-secondary);

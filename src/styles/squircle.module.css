@@ -128,3 +128,33 @@
   background: transparent;
   outline: none;
 }
+
+/* Pill: semicircular ends that ease into the straight edges (smoothstep curvature
+   ramps, scripts/generate-squircle-css.mjs pillCap) instead of a circular-arc
+   border-radius. Same host contract as .surface (paint with --sq-bg), keeps
+   border-radius: 999px for outline / box-shadow. Two height-scaled mask layers
+   intersect, so any height works; width should be at least ~1.5x the height. */
+.pill {
+  composes: surface;
+  position: relative;
+  border-radius: 999px;
+}
+
+.pill::before {
+  -webkit-mask-box-image: none;
+  -webkit-mask-image: var(--sq-pill-l), var(--sq-pill-r);
+  mask-image: var(--sq-pill-l), var(--sq-pill-r);
+  -webkit-mask-position: left center, right center;
+  mask-position: left center, right center;
+  -webkit-mask-size: auto 100%;
+  mask-size: auto 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/* no pill ring yet: pills are borderless */
+.pill::after {
+  content: none;
+}

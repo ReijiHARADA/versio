@@ -226,6 +226,7 @@ body.paper-dragging * {
 }
 
 ::-webkit-scrollbar-thumb {
+  /* squircle-exempt: scrollbar pseudo-element cannot take masks */
   border: 2px solid transparent;
   border-radius: 999px;
   background: var(--scrollbar-thumb) padding-box;
