@@ -25,6 +25,7 @@ const TERMINAL = /[.!?。！？][”"’')\]]*\s*$/;
 const ABBREVIATION_END = /\b(?:et al|e\.g|i\.e|cf|vs)\.$/i;
 // A keyword list glued to an abstract (`…, Feature fusion, Computer-aided diagnosis`) ends without a full stop but is finished.
 const KEYWORD_TAIL = /(?:,\s*\p{Lu}[\p{L}-]*(?:\s+[\p{L}-]+){0,3}){3,}$/u;
+const TERM_START = /^(?:\p{Lu}{2,}|\p{Lu}[\p{L}\d]*[\d+(\-]|\p{Lu}\p{Ll}+\p{Lu})/u;
 const isOpenEnded = (text: string) => (!TERMINAL.test(text) || ABBREVIATION_END.test(text)) && !/:\s*$/.test(text);
 const CONTINUATION_START = /^(?:[a-z]|(?:which|that|and|or|but|where|while|whereas|because|although|including|with|for|of|to|in)\b)/;
 /**
@@ -161,6 +162,12 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // Without a lower-case start, only the first paragraph after the interruption can be the continuation.
         // After a skipped fragment, text opening with `,` / `;` continues that fragment.
         if (hardOpen && !skippedParagraph && !(skippedFragment && /^[,;:.]/.test(candidateText)) && eligible(candidate) && looseContinuation(currentText, candidateText, afterReferenceCaption)) {
+          target = j;
+          break;
+        }
+        // Right after a paragraph cut at a function word (`… higher than the` + `Transformer+CAM …`), nothing in between,
+        // the next paragraph is its rest when it opens with a term (an acronym or a mixed-case name), not a sentence word.
+        if (j === i + 1 && hardOpen && !/,$/.test(currentText) && eligible(candidate) && TERM_START.test(candidateText) && looseContinuation(currentText, candidateText, true)) {
           target = j;
           break;
         }
