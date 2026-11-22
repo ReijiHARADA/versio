@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import { currentPlamoDownload, usePlamoDownloadStore } from "../settings/plamoDownload";
 import { describePlamoError } from "../../services/translation/plamoReadiness";
+import { useGenie } from "./useGenie";
 import styles from "./PlamoDownloadToast.module.css";
 
 type Progress = { downloadedBytes: number; totalBytes: number };
@@ -13,6 +14,7 @@ export function PlamoDownloadToast({ raised }: { raised: boolean }) {
   const percent = usePlamoDownloadStore((state) => state.percent);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const content = useRef<HTMLSpanElement>(null);
+  const root = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState<number | null>(null);
 
   useEffect(() => {
@@ -54,9 +56,12 @@ export function PlamoDownloadToast({ raised }: { raised: boolean }) {
     if (visible && content.current) setWidth(content.current.offsetWidth);
   }, [visible, state, percent]);
 
+  useGenie(root, visible);
+
   if (!visible) return null;
   return (
     <div
+      ref={root}
       className={styles.toast}
       data-state={state}
       data-raised={raised}

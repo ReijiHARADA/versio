@@ -17,6 +17,7 @@ import { ShortcutsSheet } from "./ShortcutsSheet";
 import { setPaperDropHandler, INBOX_DROP_ID, usePaperDragStore } from "../../stores/paperDragStore";
 import { showToast, useToastStore } from "../../stores/toastStore";
 import { PlamoDownloadToast } from "./PlamoDownloadToast";
+import { useGenie } from "./useGenie";
 import { restoreWorkspaceFolderFromTrash, purgeExpiredTrash } from "../../services/trashService";
 import { resumeSavedTranslations } from "../../services/import/startBackgroundImport";
 import { createPresentationCaptureSeed } from "../../services/presentationDemo";
@@ -33,7 +34,7 @@ export function AppShell() {
   const setPapers = useLibraryCache((state) => state.setPapers);
   const workspaceNodes = useProjectStore((state) => state.workspaceNodes); const memberships = useProjectStore((state) => state.memberships); const searchQuery = useProjectStore((state) => state.searchQuery);
   const setLoaded = useProjectStore((state) => state.setLoaded); const setSearchQuery = useProjectStore((state) => state.setSearchQuery); const mergeWorkspaceNodes = useProjectStore((state) => state.mergeWorkspaceNodes); const setMemberships = useProjectStore((state) => state.setMemberships); const upsertWorkspaceNode = useProjectStore((state) => state.upsertWorkspaceNode); const upsertMembership = useProjectStore((state) => state.upsertMembership); const removeMembershipsForPaper = useProjectStore((state) => state.removeMembershipsForPaper); const removeWorkspaceNodesLocal = useProjectStore((state) => state.removeWorkspaceNodesLocal);
-  const showDragToast = usePaperDragStore((state) => state.showToast); const toast = useToastStore((state) => state.toast); const clearToast = useToastStore((state) => state.clearToast);
+  const showDragToast = usePaperDragStore((state) => state.showToast); const toast = useToastStore((state) => state.toast); const clearToast = useToastStore((state) => state.clearToast); const toastRef = useRef<HTMLDivElement>(null); useGenie(toastRef, Boolean(toast));
   const [createParentId, setCreateParentId] = useState<string | null | undefined>(undefined); const [fileNodeId, setFileNodeId] = useState<string | null>(null); const fileInputRef = useRef<HTMLInputElement>(null);
   const [demoReady, setDemoReady] = useState(!isPresentationDemo);
 
@@ -200,7 +201,7 @@ export function AppShell() {
     <AppSidebar workspaceNodes={workspaceNodes} searchQuery={searchQuery} onSearchChange={setSearchQuery} onNewWorkspace={() => setCreateParentId(null)} onNewChild={(node) => setCreateParentId(node.id)} onDeleteNode={deleteNode} onAddPaperToWorkspace={addPaperFile} activeNodeId={routeNodeId} inboxCount={inboxCount} />
     <div className={styles.main}><div className={styles.mainBody} data-paper-marquee>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><div className={styles.mainRim} aria-hidden /></div><div id={INSPECTOR_SLOT_ID} className={styles.inspectorSlot} /><PaperDragPreview /><PaperMarquee />
     <PlamoDownloadToast raised={Boolean(toast)} />
-    {toast && <div className={`${styles.toast} ${toast.kind === "error" ? styles.toastError : toast.kind === "info" ? styles.toastInfo : styles.toastOk}`} role="status"><span className={styles.toastMessage}>{toast.message}</span>{toast.actionLabel && toast.onAction && <button type="button" className={styles.toastAction} onClick={() => { toast.onAction?.(); clearToast(); }}>{toast.actionLabel}</button>}</div>}
+    {toast && <div ref={toastRef} className={`${styles.toast} ${toast.kind === "error" ? styles.toastError : toast.kind === "info" ? styles.toastInfo : styles.toastOk}`} role="status"><span className={styles.toastMessage}>{toast.message}</span>{toast.actionLabel && toast.onAction && <button type="button" className={styles.toastAction} onClick={() => { toast.onAction?.(); clearToast(); }}>{toast.actionLabel}</button>}</div>}
     {shortcutsOpen && <ShortcutsSheet onClose={() => setShortcutsOpen(false)} />}
     {createParentId !== undefined && <NewWorkspaceNodeModal parentName={createParentId ? workspaceNodes.find((node) => node.id === createParentId)?.name : undefined} onClose={() => setCreateParentId(undefined)} onCreate={create} />}
   </div>;
