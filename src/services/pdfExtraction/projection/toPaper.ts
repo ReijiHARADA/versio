@@ -46,6 +46,7 @@ import {
   isNumberedTableCaption,
   looksLikeCaptionedTableCellFragment,
   looksLikeProseMistakenForTable,
+  looksLikeCitedProse,
   looksLikeRunningProse,
 } from "./tablePredicates";
 
@@ -4055,12 +4056,17 @@ function projectTableNode(context: BodyNodeContext, state: BodyProjectionState, 
     const proseGridClusterKeep = node.evidence.some((entry) =>
       entry.label === "repeated-prose-cell-grid" && entry.confidence >= 0.94
     ) && proseGridClusterPeerCount >= 3;
-    if (node.role === "table" && node.text && !layout?.tablePageText && (!hasStrongTableMatrixEvidence(node) || wrappedSingleSpanNarrative) &&
+    // Only a role score says "table" (no row, grid or region evidence), and
+    // the text reads as a sentence with citations: a body paragraph.
+    const scoreOnlyCitedProse = node.evidence.every((entry) => entry.label === "table" || entry.label === "role-scores") &&
+      looksLikeCitedProse(node.text ?? "");
+    if (node.role === "table" && node.text && !layout?.tablePageText &&
+        (!hasStrongTableMatrixEvidence(node) || wrappedSingleSpanNarrative || scoreOnlyCitedProse) &&
         !multiBoxNativeGrid &&
         !strongNativeRowGrid &&
         !belongsToCaptionedTableRegion(node, tableAbsorption.regions) &&
         !proseGridClusterKeep &&
-        (looksLikeProseMistakenForTable(node.text) || weakTableGeometryOnNarrative)) {
+        (looksLikeProseMistakenForTable(node.text) || weakTableGeometryOnNarrative || scoreOnlyCitedProse)) {
       const text = node.text;
       if (isChartDebrisFragment(text)) {
         return true;
