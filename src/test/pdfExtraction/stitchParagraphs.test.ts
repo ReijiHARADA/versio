@@ -225,4 +225,11 @@ describe("stitchParagraphContinuations past full-page figures", () => {
     const c = block("c", "paragraph", "based model, in addition to two variants of our method.", 2);
     expect(stitchParagraphContinuations([a, note, c], sections).map((x) => x.id)).toEqual(["a", "t"]);
   });
+  it("continues an open paragraph in a number right after it, but not in a numbered item", () => {
+    const a = block("a", "paragraph", "For the external testing dataset, all scans were conducted on the same", 14);
+    const b = block("b", "paragraph", "1.5 T Signa MRI scanner with the same acquisition protocol.", 14);
+    expect(stitchParagraphContinuations([a, b], sections).map((x) => x.id)).toEqual(["a"]);
+    const item = block("c", "paragraph", "2. The Quick Propagation algorithm enhances training speed.", 14);
+    expect(stitchParagraphContinuations([a, item], sections).map((x) => x.id)).toEqual(["a", "c"]);
+  });
 });

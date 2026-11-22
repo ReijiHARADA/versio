@@ -161,6 +161,11 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j;
           break;
         }
+        // Right after it, any open paragraph goes on in a number (`… on the same` + `1.5 T Signa MRI scanner …`).
+        if (j === i + 1 && !hardOpen && eligible(candidate) && /^\d/.test(candidateText) && looseContinuation(currentText, candidateText, true)) {
+          target = j;
+          break;
+        }
         // Any open paragraph goes on in a bracket (`… with low first authorship` + `(1.9%–2.1%) and …`, `… is limited` + `(75). Our …`).
         if (!hardOpen && !skippedParagraph && !skippedFragment && eligible(candidate) && /^[([]/.test(candidateText) && looseContinuation(currentText, candidateText, true) &&
           // A lower-case continuation a little later wins (`(Compl). Scores are …` is a table note).
