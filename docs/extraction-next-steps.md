@@ -104,6 +104,8 @@ Europe PMC の dev 全件（868 本、main 2a4649f + 共同筆頭著者の注記
 
 - 関数語（`the` / `at` / `of` など）で切れた段落を、図・表の後の大文字で始まる段落につなぐ（2026-11-22）: dev +28/−15、誤結合 +8。表の注記（`Not all questions were required, …`）を吸う。表を除いても +8/−2・誤結合 +6（`shown in` の後の `Figure 8a–d.` が図に取られ、次の段落とつながる）。
 
+- 表の点数の正規表現 `table=0\.(?:9[4-9]|[1-9]\d)`（`toPaper.ts` の `explicitHighTableScore` / `targetHasHighTableScore`、`tablePredicates.ts` の `scoredTable`）は 0.94 以上のつもりで 0.10 以上に一致する。そのため `weakTableGeometryOnNarrative` がほぼ効かず、箇条書きを含む本文段落（`PMC12971648` p6 `The data analysis was …`、`captioned-columnar-grid`）が表になる（段落正解で表に入った段落は dev 約 95）。3 か所とも 0.94 以上に直すと dev +78/−11・誤結合 89→75 だが、Europe PMC 106 本の表のセル 10,980→9,437（`explicitHighTableScore` だけでも 9,685）。本物の表もこの一致に支えられているので、直すなら `weakTableGeometryOnNarrative`（36 語以上か句点 3 つ以上）を本文らしさの判定に置き換えてから（2026-11-22）。段落ノードだけ本文らしい文を表にしない近道は +6/−5、セル −167 で見送り。3 か所を直し `weakTableGeometryOnNarrative` を `looksLikeRunningProse`（文だけ）に置き換えても dev +16/−9、表 340→337、セル −415 で見送り。表のセルが減った表を 1 本ずつ見るところから。
+
 - 脇の囲み記事の領域化: 枠をまたぐ分断は厳しい条件で 22 段落だけ（`tools/sidebar.ts`）。
 - 行の位置・段落間の縦の余白による、文末で分かれた段落の結合: 余白が狭く字下げなしでも同じ段落は約 34%（`tools/geom.ts`、`VG=1`）。精度 9 割に届かない。
 - 段組判定で「左右に段がある高さだけで gutter を判定」: 表が中心のページを 2 段組と誤判定する。ページ全体ではなく帯だけを 2 段にする #114 で代替。
