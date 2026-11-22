@@ -1,13 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import { Link2 } from "lucide-react";
+import { FileUp, Plus } from "lucide-react";
 import { InfoPopover } from "../reader/InfoPopover";
 import type { AnchorBox } from "../reader/memo/popoverPosition";
 import { importByIdentifier } from "../../services/import/importByIdentifier";
 import { isImeComposing } from "../../utils/ime";
-import styles from "./AddByIdentifierButton.module.css";
+import styles from "./AddPaperButton.module.css";
 
-/** Secondary to 「論文を追加」: paste an arXiv id / DOI to fetch its open-access PDF. */
-export function AddByIdentifierButton({ workspaceNodeId }: { workspaceNodeId?: string }) {
+/** 「論文を追加」: a popover offering a PDF file pick or an arXiv id / DOI fetch. */
+export function AddPaperButton({
+  className,
+  onPickFile,
+  workspaceNodeId,
+}: {
+  className: string;
+  onPickFile: () => void;
+  workspaceNodeId?: string;
+}) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [anchor, setAnchor] = useState<AnchorBox | null>(null);
   const [value, setValue] = useState("");
@@ -41,9 +49,9 @@ export function AddByIdentifierButton({ workspaceNodeId }: { workspaceNodeId?: s
       <button
         ref={buttonRef}
         type="button"
-        className={styles.trigger}
-        title="arXiv・DOI から追加"
-        aria-label="arXiv・DOI から追加"
+        className={className}
+        title="論文を追加"
+        aria-haspopup="dialog"
         aria-expanded={anchor != null}
         onClick={() => {
           const rect = buttonRef.current?.getBoundingClientRect();
@@ -52,10 +60,25 @@ export function AddByIdentifierButton({ workspaceNodeId }: { workspaceNodeId?: s
           setAnchor(anchor ? null : { top: rect.top, left: rect.left, width: rect.width, height: rect.height });
         }}
       >
-        <Link2 size={16} aria-hidden="true" />
+        <Plus size={18} aria-hidden="true" />
+        論文を追加
       </button>
       {anchor && (
-        <InfoPopover anchor={anchor} title="arXiv・DOI から追加" onClose={() => setAnchor(null)}>
+        <InfoPopover anchor={anchor} title="論文を追加" onClose={() => setAnchor(null)}>
+          <button
+            type="button"
+            className={styles.pickFile}
+            aria-label="PDF ファイルを選択"
+            onClick={() => {
+              setAnchor(null);
+              onPickFile();
+            }}
+          >
+            <FileUp size={16} aria-hidden="true" />
+            PDF ファイルを選択…
+            <kbd className={styles.shortcut}>⌘O</kbd>
+          </button>
+          <p className={styles.sectionLabel}>arXiv・DOI から追加</p>
           <form
             className={styles.form}
             onSubmit={(event) => {
