@@ -22,7 +22,21 @@ export function captionAnchoredGraphicsGrids(
   page: ExtractedPage,
   captionBox: Rect,
 ): Rect[] {
-  const rules = (page.graphicsPrimitives ?? []).filter(isGraphicsRule);
+  const allRules = (page.graphicsPrimitives ?? []).filter(isGraphicsRule);
+  // A page frame (two near-full-height verticals and the rules spanning
+  // between them) can touch a table's top rule and pull the whole page in.
+  // Only verticals that enclose every text item count: a long table's own
+  // side borders sit inside the page text.
+  const longX = allRules.filter((item) => item.width <= 2.5 && item.height >= page.height * 0.8).map((item) => item.x);
+  const textLeft = Math.min(...page.textItems.map((item) => item.x));
+  const textRight = Math.max(...page.textItems.map((item) => item.x + item.width));
+  const frameX = longX.some((x) => x <= textLeft + 3) && longX.some((x) => x >= textRight - 3)
+    ? longX.filter((x) => x <= textLeft + 3 || x >= textRight - 3)
+    : [];
+  const onFrame = (x: number) => frameX.some((fx) => Math.abs(fx - x) <= 3);
+  const rules = frameX.length < 2 ? allRules : allRules.filter((item) => item.width <= 2.5
+    ? !(item.height >= page.height * 0.8 && onFrame(item.x))
+    : !(onFrame(item.x) && onFrame(item.x + item.width)));
   if (rules.length < 3) return [];
   const touches = (a: Rect, b: Rect) =>
     a.x <= b.x + b.width + 3 && b.x <= a.x + a.width + 3 &&
