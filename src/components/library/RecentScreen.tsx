@@ -1,24 +1,20 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { Clock } from "lucide-react";
-import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
-import { derivePaperReadiness } from "../../domain/paperReadiness";
 import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
-import { PaperCard } from "./PaperCard";
-import { PaperMenu } from "./PaperMenu";
 import { useDeletePaper } from "../../hooks/useDeletePaper";
 import { LibraryViewToggle, useLibraryView } from "./LibraryViewToggle";
 import { LibrarySortMenu, useSortedPapers } from "./LibrarySortMenu";
+import { LibraryEmptyState, LibraryPaperList } from "./LibraryPaperList";
+import { useOpenPaper } from "./useOpenPaper";
 import styles from "./LibraryScreen.module.css";
 
 export function RecentScreen() {
-  const navigate = useNavigate();
   const papers = useLibraryCache((s) => s.papers);
-  const setCurrentPaper = useAppStore((s) => s.setCurrentPaper);
   const searchQuery = useProjectStore((s) => s.searchQuery);
   const { busyId, requestDelete } = useDeletePaper();
+  const openPaper = useOpenPaper();
 
   const recentBase = useMemo(() => {
     return [...papers]
@@ -32,19 +28,6 @@ export function RecentScreen() {
   }, [papers]);
   const recent = useSortedPapers(useLibraryPaperSearch(recentBase, searchQuery));
   const view = useLibraryView();
-
-  const handleOpen = (paperId: string) => {
-    if (busyId === paperId) return;
-    const paper = papers.find((item) => item.id === paperId);
-    if (!paper) return;
-    const view = derivePaperReadiness({
-      processingStatus: paper.processingStatus,
-      blocks: useLibraryCache.getState().blocks[paperId],
-    });
-    if (!view.canOpen) return;
-    setCurrentPaper(paperId);
-    navigate(`/reader/${paperId}`);
-  };
 
   return (
     <div className={styles.container}>
@@ -60,30 +43,19 @@ export function RecentScreen() {
       </header>
       <main className={styles.main}>
         {recent.length === 0 ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}><Clock size={64} strokeWidth={1} /></div>
-            <h2 className={styles.emptyTitle}>閲覧履歴がありません</h2>
-            <p className={styles.emptyDescription}>論文を開くと、ここに最近読んだ論文が表示されます</p>
-          </div>
+          <LibraryEmptyState
+            icon={<Clock size={64} strokeWidth={1} />}
+            title="閲覧履歴がありません"
+            description="論文を開くと、ここに最近読んだ論文が表示されます"
+          />
         ) : (
-          <div className={view === "grid" ? styles.tileGrid : styles.paperList}>
-            {recent.map((paper) => (
-              <PaperCard
-                key={paper.id}
-                paper={paper}
-                layout={view}
-                enabled={busyId !== paper.id}
-                onOpen={() => handleOpen(paper.id)}
-                actions={
-                  <PaperMenu
-                    paper={paper}
-                    variant="library"
-                    onDeleteRequest={requestDelete}
-                  />
-                }
-              />
-            ))}
-          </div>
+          <LibraryPaperList
+            view={view}
+            papers={recent}
+            busyId={busyId}
+            onOpen={(paper) => openPaper(paper)}
+            onDeleteRequest={requestDelete}
+          />
         )}
       </main>
     </div>

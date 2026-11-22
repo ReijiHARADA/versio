@@ -1,53 +1,35 @@
 import { useCallback, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { FileText, Upload } from "lucide-react";
-import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useImportJobStore, visibleImportJobs } from "../../stores/importJobStore";
 import { useProjectStore } from "../../stores/projectStore";
 import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
-import { derivePaperReadiness } from "../../domain/paperReadiness";
 import { tryStartPdfImport } from "../../services/pdfImport";
-import { PaperCard } from "./PaperCard";
-import { PaperMenu } from "./PaperMenu";
-import { ImportJobCard } from "./ImportJobCard";
 import { LibraryViewToggle, useLibraryView } from "./LibraryViewToggle";
 import { LibrarySortMenu, useSortedPapers } from "./LibrarySortMenu";
 import { useDeletePaper } from "../../hooks/useDeletePaper";
 import { useImportJobRecovery } from "./useImportJobRecovery";
 import { AddPaperButton } from "./AddPaperButton";
+import { LibraryEmptyState, LibraryPaperList } from "./LibraryPaperList";
+import { useOpenPaper } from "./useOpenPaper";
 import styles from "./LibraryScreen.module.css";
 
 export function LibraryScreen() {
-  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const papers = useLibraryCache((state) => state.papers);
-  const setCurrentPaper = useAppStore((state) => state.setCurrentPaper);
   const searchQuery = useProjectStore((state) => state.searchQuery);
   const importJobs = useImportJobStore((state) => state.jobs);
   const jobs = useMemo(() => visibleImportJobs(importJobs), [importJobs]);
   const visiblePapers = useSortedPapers(useLibraryPaperSearch(papers, searchQuery));
   const recovery = useImportJobRecovery({ fileInputRef });
   const view = useLibraryView();
+  const openPaper = useOpenPaper();
 
   const { busyId, requestDelete } = useDeletePaper();
 
   const handleFileSelect = useCallback(async (file: File) => {
     await tryStartPdfImport(file);
   }, []);
-
-  const handleOpenPaper = (paperId: string) => {
-    if (busyId === paperId) return;
-    const paper = papers.find((item) => item.id === paperId);
-    if (!paper) return;
-    const view = derivePaperReadiness({
-      processingStatus: paper.processingStatus,
-      blocks: useLibraryCache.getState().blocks[paperId],
-    });
-    if (!view.canOpen) return;
-    setCurrentPaper(paperId);
-    navigate(`/reader/${paperId}`);
-  };
 
   const isEmpty = visiblePapers.length === 0 && jobs.length === 0;
 
@@ -81,43 +63,25 @@ export function LibraryScreen() {
 
       <main className={styles.main}>
         {isEmpty ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>
-              <Upload size={64} strokeWidth={1} />
-            </div>
-            <h2 className={styles.emptyTitle}>
-              {searchQuery.trim() ? "一致する論文がありません" : "PDFをここにドロップ"}
-            </h2>
-            <p className={styles.emptyDescription}>
-              {searchQuery.trim()
+          <LibraryEmptyState
+            icon={<Upload size={64} strokeWidth={1} />}
+            title={searchQuery.trim() ? "一致する論文がありません" : "PDFをここにドロップ"}
+            description={
+              searchQuery.trim()
                 ? "ライブラリ検索を変えるか、右上から PDF を追加してください"
-                : "または右上の「論文を追加」から PDF を選んでください"}
-            </p>
-          </div>
+                : "または右上の「論文を追加」から PDF を選んでください"
+            }
+          />
         ) : (
-          <>
-            <div className={view === "grid" ? styles.tileGrid : styles.paperList}>
-              {jobs.map((job) => (
-                <ImportJobCard key={job.id} job={job} layout={view} {...recovery} />
-              ))}
-              {visiblePapers.map((paper) => (
-                <PaperCard
-                  key={paper.id}
-                  paper={paper}
-                  layout={view}
-                  enabled={busyId !== paper.id}
-                  onOpen={() => handleOpenPaper(paper.id)}
-                  actions={
-                    <PaperMenu
-                      paper={paper}
-                      variant="library"
-                      onDeleteRequest={requestDelete}
-                    />
-                  }
-                />
-              ))}
-            </div>
-          </>
+          <LibraryPaperList
+            view={view}
+            papers={visiblePapers}
+            busyId={busyId}
+            onOpen={(paper) => openPaper(paper)}
+            onDeleteRequest={requestDelete}
+            jobs={jobs}
+            recovery={recovery}
+          />
         )}
       </main>
     </div>

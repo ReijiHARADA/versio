@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FileText, FolderX, Loader2, Upload } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
 import { useImportJobStore, visibleImportJobs } from "../../stores/importJobStore";
 import { usePaperDragStore } from "../../stores/paperDragStore";
-import { derivePaperReadiness } from "../../domain/paperReadiness";
 import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
 import { useFolderExport } from "../../hooks/useFolderExport";
 import { collectDescendantIds, listChildWorkspaceNodes, workspaceAncestorPath } from "../../data/workspace/tree";
@@ -14,6 +12,7 @@ import { listPapersForWorkspace, removePaperFromWorkspace } from "../../services
 import { tryStartPdfImport } from "../../services/pdfImport";
 import { PaperCard } from "../library/PaperCard";
 import { PaperMenu } from "../library/PaperMenu";
+import { useOpenPaper } from "../library/useOpenPaper";
 import { ImportJobCard } from "../library/ImportJobCard";
 import { useImportJobRecovery } from "../library/useImportJobRecovery";
 import { useDeletePaper } from "../../hooks/useDeletePaper";
@@ -42,7 +41,7 @@ function subtreePaperIds(
 export function ProjectScreen() {
   const { projectId: nodeId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const setCurrentPaper = useAppStore((state) => state.setCurrentPaper);
+  const openPaper = useOpenPaper();
   const storePapers = useLibraryCache((state) => state.papers);
   const searchQuery = useProjectStore((state) => state.searchQuery);
   const workspaceNodes = useProjectStore((state) => state.workspaceNodes);
@@ -210,16 +209,7 @@ export function ProjectScreen() {
                 paper={paper}
                 layout={view}
                 sourceNodeId={sourceNodeByPaper.get(paper.id)}
-                onOpen={() => {
-                  const state = derivePaperReadiness({
-                    processingStatus: paper.processingStatus,
-                    blocks: useLibraryCache.getState().blocks[paper.id],
-                  });
-                  if (state.canOpen) {
-                    setCurrentPaper(paper.id);
-                    navigate(`/reader/${paper.id}?workspace=${nodeId}`);
-                  }
-                }}
+                onOpen={() => openPaper(paper, `?workspace=${nodeId}`)}
                 actions={
                   <PaperMenu
                     paper={paper}

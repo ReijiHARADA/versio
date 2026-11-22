@@ -1,29 +1,22 @@
 import { useCallback, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { Upload, Inbox } from "lucide-react";
-import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useImportJobStore, visibleImportJobs } from "../../stores/importJobStore";
 import { useProjectStore } from "../../stores/projectStore";
-import { derivePaperReadiness } from "../../domain/paperReadiness";
 import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
 import { tryStartPdfImport } from "../../services/pdfImport";
-import { PaperCard } from "./PaperCard";
-import { PaperMenu } from "./PaperMenu";
-import { ImportJobCard } from "./ImportJobCard";
 import { useDeletePaper } from "../../hooks/useDeletePaper";
 import { useImportJobRecovery } from "./useImportJobRecovery";
-import type { Paper } from "../../types/paper";
 import { LibraryViewToggle, useLibraryView } from "./LibraryViewToggle";
 import { LibrarySortMenu, useSortedPapers } from "./LibrarySortMenu";
 import { AddPaperButton } from "./AddPaperButton";
+import { LibraryEmptyState, LibraryPaperList } from "./LibraryPaperList";
+import { useOpenPaper } from "./useOpenPaper";
 import styles from "./LibraryScreen.module.css";
 
 export function InboxScreen() {
-  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const papers = useLibraryCache((s) => s.papers);
-  const setCurrentPaper = useAppStore((s) => s.setCurrentPaper);
   const memberships = useProjectStore((s) => s.memberships);
   const searchQuery = useProjectStore((s) => s.searchQuery);
   const importJobs = useImportJobStore((state) => state.jobs);
@@ -47,21 +40,11 @@ export function InboxScreen() {
   );
   const inboxPapers = useSortedPapers(useLibraryPaperSearch(inboxBase, searchQuery));
   const view = useLibraryView();
+  const openPaper = useOpenPaper();
 
   const handleFileSelect = useCallback(async (file: File) => {
     await tryStartPdfImport(file);
   }, []);
-
-  const handleOpen = (paper: Paper) => {
-    if (busyId === paper.id) return;
-    const view = derivePaperReadiness({
-      processingStatus: paper.processingStatus,
-      blocks: useLibraryCache.getState().blocks[paper.id],
-    });
-    if (!view.canOpen) return;
-    setCurrentPaper(paper.id);
-    navigate(`/reader/${paper.id}`);
-  };
 
   return (
     <div className={styles.container}>
@@ -91,37 +74,21 @@ export function InboxScreen() {
 
       <main className={styles.main}>
         {inboxPapers.length === 0 && jobs.length === 0 ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}><Upload size={64} strokeWidth={1} /></div>
-            <h2 className={styles.emptyTitle}>
-              {searchQuery.trim() ? "一致する論文がありません" : "インボックスは空です"}
-            </h2>
-            <p className={styles.emptyDescription}>
-              どのフォルダにも属さない論文がここに入ります。右上の「論文を追加」か、PDF をこの画面にドロップしてください。メニューからワークスペースのフォルダに追加できます。
-            </p>
-          </div>
+          <LibraryEmptyState
+            icon={<Upload size={64} strokeWidth={1} />}
+            title={searchQuery.trim() ? "一致する論文がありません" : "インボックスは空です"}
+            description="どのフォルダにも属さない論文がここに入ります。右上の「論文を追加」か、PDF をこの画面にドロップしてください。メニューからワークスペースのフォルダに追加できます。"
+          />
         ) : (
-          <div className={view === "grid" ? styles.tileGrid : styles.paperList}>
-            {jobs.map((job) => (
-              <ImportJobCard key={job.id} job={job} layout={view} {...recovery} />
-            ))}
-            {inboxPapers.map((paper) => (
-              <PaperCard
-                key={paper.id}
-                paper={paper}
-                layout={view}
-                enabled={busyId !== paper.id}
-                onOpen={() => handleOpen(paper)}
-                actions={
-                  <PaperMenu
-                    paper={paper}
-                    variant="library"
-                    onDeleteRequest={requestDelete}
-                  />
-                }
-              />
-            ))}
-          </div>
+          <LibraryPaperList
+            view={view}
+            papers={inboxPapers}
+            busyId={busyId}
+            onOpen={(paper) => openPaper(paper)}
+            onDeleteRequest={requestDelete}
+            jobs={jobs}
+            recovery={recovery}
+          />
         )}
       </main>
     </div>
