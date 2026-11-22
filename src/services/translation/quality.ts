@@ -2019,8 +2019,9 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   // incomplete.  Do this only without terminal punctuation: PDF text can
   // contain decorative punctuation in an otherwise complete sentence.
   if (noTerminal) {
-    const openingParens = (t.match(/\(/g) ?? []).length;
-    const closingParens = (t.match(/\)/g) ?? []).length;
+    const unmarked = t.replace(/^(?:[a-z]|[ivx]{1,4}|\d{1,2})\)\s/, "");
+    const openingParens = (unmarked.match(/\(/g) ?? []).length;
+    const closingParens = (unmarked.match(/\)/g) ?? []).length;
     const doubleQuotes = (t.match(/(?<!\\)"/g) ?? []).length;
     const curlyQuotes = (t.match(/[“”]/g) ?? []).length;
     if (openingParens !== closingParens || doubleQuotes % 2 !== 0 || curlyQuotes % 2 !== 0) {
@@ -2118,7 +2119,10 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   // almost always the continuation of a line/column. Lists retain their
   // marker and are excluded from this rule; common discourse abbreviations
   // remain valid starts.
+  // A list marker (`a) Physical state …`, `ii. Controlled …`) or a mixed-case name (`pKa`, `mBrainTrain`) is no continuation.
+  const ownStart = /^(?:[a-z]\)|[ivx]{1,4}[.)])\s/.test(t) || /^\p{Ll}+\p{Lu}/u.test(t);
   if (
+    !ownStart &&
     t.length >= 48 &&
     noTerminal &&
     /^[a-z]/.test(t) &&
@@ -2129,7 +2133,7 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   if (!isCompleteFormulaDefinition && /^[a-z][a-z-]{2,}\.\s+[A-Z]/.test(t) && t.length >= 180) {
     return "段落の先頭が前段から続いている可能性があります";
   }
-  if (!isCompleteFormulaDefinition && /^[a-z]/.test(t) && t.length >= 180 && !/^(?:e\.g\.|i\.e\.|et\s+al\.|vs\.|in\s+(?:particular|contrast|addition),)/i.test(t)) {
+  if (!isCompleteFormulaDefinition && !ownStart && /^[a-z]/.test(t) && t.length >= 180 && !/^(?:e\.g\.|i\.e\.|et\s+al\.|vs\.|in\s+(?:particular|contrast|addition),)/i.test(t)) {
     return "段落の先頭が前段から続いている可能性があります";
   }
   if (/\b(?:the|an?)\s+(?:entire|following|same|former|latter)\s*$/i.test(t) || /\b(?:albeit|although|though|because|while|whereas|with|without|including|concerning|between|than|to|of|for|at|in|on|from|by|as)\s*$/i.test(t) || /\b(?:about|above|across|after|against|among|around|at|before|behind|below|beneath|beside|between|beyond|by|during|for|from|in|inside|into|near|of|on|onto|over|through|to|toward|under|with|within|without)\s+(?:the|a|an|this|that|these|those|its|their|our|his|her)\s*$/i.test(t) || /\b(?:is|are|was|were|be|been|being|has|have|had|do|does|did|can|could|will|would|should|may|might)\s*$/i.test(t) || /\b(?:and|or)\s+(?:standard|mean|median|confidence|statistical)\s*$/i.test(t)) {
