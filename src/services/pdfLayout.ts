@@ -3775,8 +3775,10 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     const a = result[i];
     if (!isBody(a) || a.text.trim().length < 80) continue;
     let j = i + 1;
+    // Small type in between (a caption running on into the next column, a table note) is skipped like a caption.
     while (j < result.length && j <= i + 8 && (result[j].role === "figure_caption" || result[j].role === "table_caption" ||
-      result[j].role === "table" || isTransparentMetadataBlock(result[j], repeated))) j += 1;
+      result[j].role === "table" || isTransparentMetadataBlock(result[j], repeated) ||
+      (result[j].role === "paragraph" && median(result[j].lines.map(textSize)) < font * 0.92))) j += 1;
     const b = result[j];
     if (!b || !isBody(b)) continue;
     const tail = run(a, a.lines.length - 1, -1);
