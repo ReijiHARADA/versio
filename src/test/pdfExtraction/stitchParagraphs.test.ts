@@ -160,6 +160,12 @@ describe("stitchParagraphContinuations after a paragraph that cannot end", () =>
     expect(stitchParagraphContinuations([c, d], sections)).toHaveLength(1);
   });
 
+  it("takes the very next paragraph when it opens with a term", () => {
+    const a = block("a", "paragraph", "The full configuration achieves a BLEU gain of 2.54, which is 0.15 higher than the");
+    expect(stitchParagraphContinuations([a, block("b", "paragraph", "Transformer+CAM configuration (2.39) without the graph module.")], sections)).toHaveLength(1);
+    expect(stitchParagraphContinuations([a, block("f", "footnote", "1 / 20"), block("b", "paragraph", "NMT models all adopt the encoder–decoder architecture.")], sections)).toHaveLength(3);
+  });
+
   it("does not take an upper-case paragraph, a list item, a numbered heading or a footnote as the continuation", () => {
     const a = block("a", "paragraph", "We report the results of the memory cue and forgetting of gist and");
     for (const text of ["Results of the forgetting rate differed between the groups.", "(i) the noise is normally distributed", "3 Results and discussion", "7 https://example.org/library/page"]) {
