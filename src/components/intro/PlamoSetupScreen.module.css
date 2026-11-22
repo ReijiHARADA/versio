@@ -15,13 +15,16 @@
 }
 
 .tile {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: grid;
   place-items: center;
   width: 52px;
   height: 52px;
   margin-bottom: 24px;
-  border-radius: 14px;
-  background: var(--color-accent-light);
+  --sq-fill: var(--sq-fill-14);
+  border-radius: var(--sq-radius-14);
+  --sq-bg: var(--color-accent-light);
   color: var(--color-accent);
 }
 
@@ -40,13 +43,16 @@
 }
 
 .facts {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: grid;
   gap: 12px;
   margin: 0 0 32px;
   padding: 16px 18px;
   list-style: none;
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-secondary);
+  --sq-fill: var(--sq-fill-lg);
+  border-radius: var(--sq-radius-lg);
+  --sq-bg: var(--color-bg-secondary);
   font-size: 13px;
   color: var(--color-text);
 }

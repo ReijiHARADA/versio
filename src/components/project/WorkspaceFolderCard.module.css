@@ -84,31 +84,35 @@
 
 /* Grid tile: a folder with its first papers peeking out. */
 .tile {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
   min-width: 0;
   padding: 10px 10px 8px;
-  border-radius: 16px;
+  --sq-fill: var(--sq-fill-16);
+  --sq-ring: var(--sq-ring2-16);
+  border-radius: var(--sq-radius-16);
   cursor: pointer;
   user-select: none;
-  transition: background-color var(--transition-fast);
+  transition: --sq-bg var(--transition-fast);
 }
 
 .tile:hover {
-  background-color: var(--color-bg-secondary);
+  --sq-bg: var(--color-bg-secondary);
 }
 
+/* 2px clothoid ring; outline would draw circular corners */
 .tile:focus {
-  outline: 2px solid var(--color-accent);
-  outline-offset: -2px;
+  outline: none;
+  --sq-line: var(--color-accent);
 }
 
 .tile.dropTarget {
-  background-color: var(--color-accent-light);
-  outline: 2px solid var(--color-accent);
-  outline-offset: -2px;
+  --sq-bg: var(--color-accent-light);
+  --sq-line: var(--color-accent);
 }
 
 .folderArt {
@@ -169,11 +173,8 @@
 .folderFront {
   position: absolute;
   inset: 24% 0 0;
-  border-radius: 7px;
-  background: linear-gradient(180deg, var(--folder-front-top), var(--folder-front-bottom));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    0 -1px 3px rgba(0, 0, 0, 0.08);
+  /* drop-shadow follows the masked clothoid silhouette drawn by ::before */
+  filter: drop-shadow(0 -1px 1.5px rgba(0, 0, 0, 0.08));
   /* The front flap hinges on its bottom edge and tips toward the viewer. */
   transform-origin: 50% 100%;
   transition:
@@ -181,14 +182,23 @@
     filter 260ms ease;
 }
 
+.folderFront::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--folder-front-top), var(--folder-front-bottom));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  -webkit-mask-box-image: var(--sq-fill-7);
+}
+
 .tile:hover .folderFront {
   transform: rotateX(-16deg);
-  filter: brightness(1.03);
+  filter: drop-shadow(0 -1px 1.5px rgba(0, 0, 0, 0.08)) brightness(1.03);
 }
 
 .tile.opening .folderFront {
   transform: rotateX(-38deg);
-  filter: brightness(1.07);
+  filter: drop-shadow(0 -1px 1.5px rgba(0, 0, 0, 0.08)) brightness(1.07);
   transition-duration: 220ms;
 }
 

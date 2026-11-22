@@ -59,16 +59,6 @@ export function ProjectScreen() {
     [importJobs, nodeId]
   );
   const node = workspaceNodes.find((item) => item.id === nodeId);
-  // The card lists the whole subtree; a drag moves the paper out of the node that holds it.
-  const sourceNodeByPaper = useMemo(() => {
-    const map = new Map<string, string>();
-    if (!nodeId) return map;
-    const ids = new Set([nodeId, ...collectDescendantIds(workspaceNodes, nodeId)]);
-    for (const link of memberships) {
-      if (ids.has(link.nodeId) && (!map.has(link.paperId) || link.nodeId === nodeId)) map.set(link.paperId, link.nodeId);
-    }
-    return map;
-  }, [nodeId, workspaceNodes, memberships]);
   const subtreeCount = useMemo(
     () => (nodeId ? subtreePaperIds(nodeId, workspaceNodes, memberships).length : 0),
     [memberships, nodeId, workspaceNodes]
@@ -85,8 +75,14 @@ export function ProjectScreen() {
   }, [nodeId, memberships]);
 
   const projectBase = useMemo(
-    () => nodePapers.map((paper) => storePapers.find((item) => item.id === paper.id) ?? paper),
-    [nodePapers, storePapers]
+    () => {
+      // Finder-like: only papers placed directly here; child folders show theirs as folder tiles
+      const direct = new Set(memberships.filter((link) => link.nodeId === nodeId).map((link) => link.paperId));
+      return nodePapers
+        .filter((paper) => direct.has(paper.id))
+        .map((paper) => storePapers.find((item) => item.id === paper.id) ?? paper);
+    },
+    [nodePapers, storePapers, memberships, nodeId]
   );
   const merged = useSortedPapers(useLibraryPaperSearch(projectBase, searchQuery));
 
@@ -199,7 +195,7 @@ export function ProjectScreen() {
                 key={paper.id}
                 paper={paper}
                 layout={view}
-                sourceNodeId={sourceNodeByPaper.get(paper.id)}
+                sourceNodeId={nodeId}
                 onOpen={() => openPaper(paper, `?workspace=${nodeId}`)}
                 actions={
                   <PaperMenu

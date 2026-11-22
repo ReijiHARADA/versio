@@ -43,7 +43,8 @@ function play(source: HTMLElement, rect: DOMRect, dir: "in" | "out"): () => void
   stage.style.cssText = "position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:41";
   // strips clip the box-shadow, so cast the same shadow from the warped silhouette instead
   const shadow = getComputedStyle(source).boxShadow.match(/^(rgba?\([^)]*\)) (-?[\d.]+px) (-?[\d.]+px) ([\d.]+px)/);
-  if (shadow) stage.style.filter = `drop-shadow(${shadow[2]} ${shadow[3]} ${shadow[4]} ${shadow[1]})`;
+  // drop-shadow takes the standard deviation, box-shadow twice that
+  if (shadow) stage.style.filter = `drop-shadow(${shadow[2]} ${shadow[3]} ${parseFloat(shadow[4]) / 2}px ${shadow[1]})`;
   const rows = Math.max(1, Math.round(H));
   const sh = H / rows;
   const strips = Array.from({ length: rows }, (_, i) => {
