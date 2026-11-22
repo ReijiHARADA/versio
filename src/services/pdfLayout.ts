@@ -416,18 +416,23 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
       // center gutter; pairs wholly inside a centered table are not evidence
       // of a page-wide two-column layout.
       return right && pair.x <= page.width * 0.27 && right.x >= page.width * 0.38 && right.x <= page.width * 0.68
-        ? [{ leftX: pair.x, rightX: right.x }]
+        ? [{ leftX: pair.x, rightX: right.x, fontSize: pair.fontSize }]
         : [];
     });
-    const seed = pairs.find((candidate) => pairs.filter((pair) =>
-      Math.abs(pair.leftX - candidate.leftX) <= Math.max(18, page.width * 0.04) &&
-      Math.abs(pair.rightX - candidate.rightX) <= Math.max(18, page.width * 0.04)
-    ).length >= 3);
-    if (!seed) return null;
-    const matching = pairs.filter((pair) =>
-      Math.abs(pair.leftX - seed.leftX) <= Math.max(18, page.width * 0.04) &&
-      Math.abs(pair.rightX - seed.rightX) <= Math.max(18, page.width * 0.04)
-    );
+    const near = (a: { leftX: number; rightX: number }, b: { leftX: number; rightX: number }) =>
+      Math.abs(a.leftX - b.leftX) <= Math.max(18, page.width * 0.04) &&
+      Math.abs(a.rightX - b.rightX) <= Math.max(18, page.width * 0.04);
+    // The most repeated pair, not the topmost: a table above the body has a few
+    // aligned rows too. Body-size pairs first: a long small-type table can out-count the body.
+    const bodySize = median(usable.map((item) => item.fontSize));
+    const mostRepeated = (from: typeof pairs) => {
+      const counted = from.map((candidate) => ({ candidate, n: from.filter((pair) => near(pair, candidate)).length }));
+      const top = counted.reduce<(typeof counted)[number] | null>((best, entry) => entry.n > (best?.n ?? 0) ? entry : best, null);
+      return top && top.n >= 3 ? top : null;
+    };
+    const best = mostRepeated(pairs.filter((pair) => pair.fontSize >= bodySize - 0.5)) ?? mostRepeated(pairs);
+    if (!best) return null;
+    const matching = pairs.filter((pair) => near(pair, best.candidate));
     return {
       leftX: median(matching.map((pair) => pair.leftX)),
       rightX: median(matching.map((pair) => pair.rightX)),
