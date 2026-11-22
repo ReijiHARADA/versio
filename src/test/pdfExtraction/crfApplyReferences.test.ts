@@ -94,4 +94,12 @@ describe("trimZone", () => {
     const lines = [l("1. Smith J, Lee K. Title. 2020."), l("2. Doe A. Other title. 2019."), l("3. Roe B, Poe C. Third. 2018.", 9), l("4. Kim D. Fourth. 2017."), l("A Tool Module", 10), l("Body of the appendix.")];
     expect(trimZone(lines).map((x) => x.text)).toEqual(lines.slice(0, 4).filter((x) => x.fontSize === 8).map((x) => x.text));
   });
+
+  it("ends at a bare back-matter label after the list, but not when the list goes on after it", () => {
+    const refs = [l("1. Smith J, Lee K. Title. 2020."), l("2. Doe A. Other title. 2019."), l("3. Roe B, Poe C. Third. 2018.")];
+    const back = [l("Acknowledgements"), l("We thank J. W. Boldeman for answering questions."), l("Funding"), l("D.N. discloses support from the U.S. Department of Energy.")];
+    expect(trimZone([...refs, ...back]).map((x) => x.text)).toEqual(refs.map((x) => x.text));
+    const more = [l("4. Kim D. Fourth. 2017."), l("5. Lee E. Fifth. 2016."), l("6. Park F. Sixth. 2015.")];
+    expect(trimZone([...refs, ...back, ...more])).toHaveLength(refs.length + back.length + more.length);
+  });
 });

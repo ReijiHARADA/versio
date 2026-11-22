@@ -129,6 +129,8 @@ function computeZone(pages: ExtractedPage[]): Line[] | null {
 }
 
 const AFTER_REFERENCES = /^(?:[A-Z]\.?\s+)?(?:appendix|appendices|supplementary (?:material|information|materials)|supporting information|publisher.?s note|author biograph|about the authors?)\b/i;
+// Back matter printed after the list (Nature, PLOS): only a bare label line, since entries may start with `Funding`.
+const BACK_MATTER_LABEL = /^(?:acknowledg(?:e)?ments?|author contributions?|funding|competing interests?|conflicts? of interest|data availability(?: statement)?)\s*:?$/i;
 
 /**
  * The zone proper: it ends at an appendix-type or numbered section heading, and lines set in a
@@ -152,6 +154,8 @@ export function trimZone<T extends { text: string; fontSize: number }>(lines: T[
   const opening = lines.slice(0, 40);
   const style = STYLES.map((re) => ({ re, n: opening.filter((l) => re.test(l.text)).length })).sort((a, b) => b.n - a.n)[0];
   const referencesFollow = (i: number) => style.n >= 3 && lines.slice(i + 1, i + 41).filter((l) => sameFont(l) && style.re.test(l.text)).length >= 3;
+  // Frontiers sets long back matter between two parts of an author-year list: look to the end.
+  const entriesAfter = (i: number) => STYLES.some((re) => lines.slice(i + 1).filter((l) => sameFont(l) && re.test(l.text)).length >= 3);
   let end = lines.length;
   for (let i = 2; i < lines.length; i += 1) {
     const { text, fontSize } = lines[i];
@@ -162,7 +166,8 @@ export function trimZone<T extends { text: string; fontSize: number }>(lines: T[
       fontSize >= refFont * 1.1 && /^(?:[A-Z]|\d{1,2})(?:\.\d+)*\.?\s+\p{Lu}/u.test(text) && !/,/.test(text) && !hasYear(lines[i]);
     // ICLR-style appendix headings are set in capitals at the reference size ("A ETHICAL STATEMENT").
     const capsHeading = /^[A-Z](?:\.\d+)*\.?\s+[A-Z][A-Z0-9\s:&,()-]{3,}$/.test(text);
-    if (text.length <= 80 && (AFTER_REFERENCES.test(text) || numberedHeading || capsHeading) && !referencesFollow(i)) {
+    if (text.length <= 80 && (AFTER_REFERENCES.test(text) || numberedHeading || capsHeading) && !referencesFollow(i) ||
+      text.length <= 40 && BACK_MATTER_LABEL.test(text.trim()) && !entriesAfter(i)) {
       end = i;
       break;
     }
