@@ -217,6 +217,8 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     // (Items used to inherit the warning of the whole flattened list; each item is now checked on its own.)
     if (block.metadata.listRole === "item") checked = checked.replace(/(?:[;,:]|[;,]\s+(?:and|or))\s*$/, ".");
     if (afterEquation) checked = checked.charAt(0).toUpperCase() + checked.slice(1);
+    // A supporting-information entry ends with its file type after the last sentence (`… policy. (ZIP)`).
+    checked = checked.replace(/([.!?])\s*\((?:[A-Z][A-Z0-9]{1,4}(?:\s*\/\s*[A-Z][A-Z0-9]{1,4})?)\)$/, "$1");
     const warning = isExpectedNonProseParagraph(text) ? null : unsafeParagraphStructureReason(checked);
     if ((warning ?? undefined) === current) return block;
     return { ...block, metadata: { ...block.metadata, translationInputWarning: warning ?? undefined } };
