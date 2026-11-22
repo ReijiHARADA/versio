@@ -106,6 +106,15 @@ describe("reconcileTranslationWarnings", () => {
   });
 });
 
+describe("reconcileTranslationWarnings on supporting information", () => {
+  it("reads a trailing file type as the end of the entry", () => {
+    const entry = block("s", "paragraph", "S1 File. Corpus data and concordances prepared in accordance with journal policy. (ZIP)", 1, { translationInputWarning: "段落の末尾が欠けている可能性があります" });
+    expect(reconcileTranslationWarnings([entry])[0].metadata.translationInputWarning).toBeUndefined();
+    const video = block("v", "paragraph", "S2 Video. The robot walking on gravel. (MP4)", 1);
+    expect(reconcileTranslationWarnings([video])[0].metadata.translationInputWarning).toBeUndefined();
+  });
+});
+
 describe("reconcileTranslationWarnings around display equations", () => {
   it("looks past equation debris and accepts a where-clause after the equation", () => {
     const lead = block("a", "paragraph", "Under the Poisson objective, the loss function is defined in Eq. 2:", 1, { translationInputWarning: "段落の末尾が欠けている可能性があります" });
