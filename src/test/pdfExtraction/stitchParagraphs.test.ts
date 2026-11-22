@@ -106,6 +106,17 @@ describe("reconcileTranslationWarnings", () => {
   });
 });
 
+describe("stitchParagraphContinuations through a body line typed as an equation", () => {
+  it("joins the line and the lower-case rest of the sentence", () => {
+    const sections = [{ id: "s-body", normalizedKind: "body" }];
+    const a = block("a", "paragraph", "The trial was conducted in an outpatient clinic of the University hospital Magdeburg, Ger-");
+    const eq = block("eq", "equation", "many. Eligible patients were adults (≥ 18 years) with (1)");
+    const b = block("b", "paragraph", "a reported prior infection confirmed by a test.");
+    expect(stitchParagraphContinuations([a, eq, b], sections)[0].original).toBe("The trial was conducted in an outpatient clinic of the University hospital Magdeburg, Germany. Eligible patients were adults (≥ 18 years) with (1) a reported prior infection confirmed by a test.");
+    expect(stitchParagraphContinuations([a, block("eq2", "equation", "y = f(x) + g(x) (1)"), b], sections)).toHaveLength(3);
+  });
+});
+
 describe("reconcileTranslationWarnings on supporting information", () => {
   it("reads a trailing file type as the end of the entry", () => {
     const entry = block("s", "paragraph", "S1 File. Corpus data and concordances prepared in accordance with journal policy. (ZIP)", 1, { translationInputWarning: "段落の末尾が欠けている可能性があります" });

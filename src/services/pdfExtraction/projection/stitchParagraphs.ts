@@ -57,6 +57,16 @@ function isProseEquation(block: PaperBlock): boolean {
   return (text.match(/\p{L}{4,}/gu)?.length ?? 0) >= 3;
 }
 /**
+ * A body line with an inline formula typed as a display equation
+ * (`many. Eligible patients were adults (≥ 18 years) with (1)`): it carries
+ * running words, and the paragraph after it goes on in lower case.
+ */
+function isProseLineEquation(block: PaperBlock, next: PaperBlock | undefined): boolean {
+  if (block.type !== "equation" || next?.type !== "paragraph") return false;
+  const text = (block.original ?? "").trim();
+  return (text.match(/\b\p{Ll}{3,}\b/gu)?.length ?? 0) >= 5 && CONTINUATION_START.test((next.original ?? "").trim());
+}
+/**
  * A sentence that refers to a table or figure at a line start, read as its
  * caption: `… are listed in` + table block `Table 7. For instance, …`.
  */
@@ -125,7 +135,7 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j;
           break;
         }
-        if (j === i + 1 && (isProseEquation(candidate) || isInlineReferenceCaption(currentText, candidate))) {
+        if (j === i + 1 && (isProseEquation(candidate) || isInlineReferenceCaption(currentText, candidate) || isProseLineEquation(candidate, out[j + 1]))) {
           target = j;
           break;
         }
