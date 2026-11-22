@@ -119,6 +119,21 @@ export function isLikelyNarrativeText(text: string): boolean {
  * sentences, few numbers, and (when the lines are known) one left-aligned
  * text column without cell gaps. Table cells never read like this.
  */
+/**
+ * Prose whose inline citations and statistics, e.g. `China (1, 3, 17, 18)`,
+ * defeat the digit-ratio test of looksLikeRunningProse. Header rows open with
+ * capitalised labels, so a sentence must show a lower-case word early.
+ */
+export function looksLikeCitedProse(text: string): boolean {
+  const trimmed = text.trim();
+  if (/[•▪]/.test(trimmed) || /^(?:table|fig(?:ure)?\.?|表|図)\s*\d*/i.test(trimmed)) return false;
+  const words = trimmed.replace(/\([^()]*\)|\[[^\]]*\]/g, " ").split(/\s+/).filter((w) => /[A-Za-z]/.test(w));
+  if (words.length < 20 || !words.slice(0, 3).some((w) => /^[a-z]/.test(w))) return false;
+  const functionShare = words.filter((w) => /^(?:the|of|and|to|in|a|an|is|are|was|were|for|with|that|this|by|on|as|from|than)$/.test(w)).length / words.length;
+  return functionShare >= 0.25 ||
+    (functionShare >= 0.15 && words.some((w) => /^(?:was|were|is|are|has|have|had|found|showed|revealed|reported)$/.test(w)));
+}
+
 export function looksLikeRunningProse(text: string, lines?: LayoutBlock["lines"]): boolean {
   const trimmed = text.trim();
   if (/^(?:table|fig(?:ure)?\.?|表|図)\s*\d*/i.test(trimmed)) return false;

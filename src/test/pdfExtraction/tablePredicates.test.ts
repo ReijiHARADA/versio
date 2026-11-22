@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hasStrongNativeTableRows, isChartDebrisFragment } from "../../services/pdfExtraction/projection/tablePredicates";
+import { hasStrongNativeTableRows, isChartDebrisFragment, looksLikeCitedProse } from "../../services/pdfExtraction/projection/tablePredicates";
 import type { CanonicalNode } from "../../services/pdfExtraction/canonical/types";
 import type { LayoutBlock, LayoutLine } from "../../services/pdfLayout";
 
@@ -81,5 +81,14 @@ describe("isShortFinishedSentence", () => {
     expect(isShortFinishedSentence("where vmax(HR) denotes the maximum permitted translational velocity.")).toBe(true);
     expect(isShortFinishedSentence("Regression 16.2 (10.8) 34.8 (14.6) 17.4 27.2 (13.2) probability (11.2) (%)")).toBe(false);
     expect(isShortFinishedSentence("20190 2020 2021 2022 2023 2024")).toBe(false);
+  });
+});
+
+describe("looksLikeCitedProse", () => {
+  it("reads citation-heavy sentences as prose and header rows as a table", () => {
+    expect(looksLikeCitedProse("Four articles were found to have been conducted in China (1, 3, 17, 18), 2 in Taiwan (6, 19), 1 in the UK (2), 1 in the Netherlands (20), 1 in Oman (4), 1 in the United States (5), 1 in South Korea (21), 1 in Brazil (13), 2 in Canada (22, 23), 1 in Denmark (24), and 1 in Jordania (25).")).toBe(true);
+    expect(looksLikeCitedProse("significant differences (X2 (2, N = 49) = 46.082, p < 0.001, Friedman repeated-measures ANOVA on ranks), with the highest number of fixations for the war images (13.686 ± 2.397), followed by the text sections (9.746 ± 1.205), and the journalists’ images (7.509 ± 1.517) (see Figure 3).")).toBe(true);
+    expect(looksLikeCitedProse("Condition Stress Working in settings not previously experienced Population Novice nurses/nurses Research question What are the stress factors of the nurses who are working in settings that they have not previously experienced and what are the coping strategies?")).toBe(false);
+    expect(looksLikeCitedProse("• Older age (36, 41–43, 47, 59, 73) • Young age groups (20–40 years old) and the older adult (over 60 years old) of the population in the study")).toBe(false);
   });
 });
