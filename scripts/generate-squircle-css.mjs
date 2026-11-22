@@ -17,7 +17,7 @@ const K = 1.52866483;
 // SVG masks are rasterized at intrinsic size; draw them 4x so the 9-slice stays crisp on Retina.
 const SCALE = 4;
 const TRANSITION = 0.6;
-const RADII = [2, 3, 4, 6, 8, 10, 11, 12, 16];
+const RADII = [2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 16];
 const TOKENS = { sm: 4, md: 8, lg: 12, card: 10, control: 8, "control-inner": 6 };
 
 /** Unit corner from (-1,0) on the top edge to (0,1) on the right edge; corner at origin, y down. */
@@ -79,8 +79,13 @@ function masks(r) {
     size,
     `<path d='${roundedRectPath(1.5, 1.5, size - 1.5, size - 1.5, Math.max(r - 1.5, 0.5))}' fill='none' stroke='black'/>`
   );
+  // 2px ring for focus / drop outlines (outline itself only follows circular border-radius).
+  const ring2 = svgUrl(
+    size,
+    `<path d='${roundedRectPath(1, 1, size - 1, size - 1, Math.max(r - 1, 0.5))}' fill='none' stroke='black' stroke-width='2'/>`
+  );
   const cut = slice * SCALE; // WebKit reads slice in the SVG's intrinsic pixels
-  return { fill: `${fill} ${cut} / ${slice}px`, ring: `${ring} ${cut} / ${slice}px`, rim: `${rim} ${cut} / ${slice}px` };
+  return { fill: `${fill} ${cut} / ${slice}px`, ring: `${ring} ${cut} / ${slice}px`, rim: `${rim} ${cut} / ${slice}px`, ring2: `${ring2} ${cut} / ${slice}px` };
 }
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
@@ -95,9 +100,9 @@ if (isMain) {
     ":root {",
   ];
   for (const r of RADII) {
-    const { fill, ring, rim } = masks(r);
+    const { fill, ring, rim, ring2 } = masks(r);
     // Circle of radius K·r stays inside the clothoid: host border-radius for box-shadow / outline.
-    lines.push(`  --sq-fill-${r}: ${fill};`, `  --sq-ring-${r}: ${ring};`, `  --sq-rim-${r}: ${rim};`, `  --sq-radius-${r}: ${(K * r).toFixed(2)}px;`);
+    lines.push(`  --sq-fill-${r}: ${fill};`, `  --sq-ring-${r}: ${ring};`, `  --sq-rim-${r}: ${rim};`, `  --sq-ring2-${r}: ${ring2};`, `  --sq-radius-${r}: ${(K * r).toFixed(2)}px;`);
   }
   for (const [name, r] of Object.entries(TOKENS)) {
     lines.push(`  --sq-fill-${name}: var(--sq-fill-${r});`, `  --sq-ring-${name}: var(--sq-ring-${r});`, `  --sq-rim-${name}: var(--sq-rim-${r});`, `  --sq-radius-${name}: var(--sq-radius-${r});`);
