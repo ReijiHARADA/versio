@@ -1,5 +1,6 @@
 import type { Annotation } from "../../../types/annotation";
 import { AnnotationCard } from "./AnnotationCard";
+import panelStyles from "../SidePanel.module.css";
 import styles from "./NotesPanel.module.css";
 
 type NotesPanelProps = {
@@ -18,10 +19,10 @@ export function NotesPanel({
   onClose,
 }: NotesPanelProps) {
   return (
-    <aside className={styles.panel} aria-label="メモ一覧">
-      <header className={styles.header}>
-        <h2 className={styles.title}>メモ</h2>
-        <button type="button" className={styles.close} onClick={onClose}>
+    <aside className={panelStyles.panel} aria-label="メモ一覧">
+      <header className={panelStyles.header}>
+        <h2 className={panelStyles.title}>メモ</h2>
+        <button type="button" className={panelStyles.close} onClick={onClose}>
           閉じる
         </button>
       </header>
