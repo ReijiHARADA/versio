@@ -13,35 +13,21 @@ export function useDeletePaper() {
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const moveToTrash = useCallback(
-    async (event: React.MouseEvent, paperId: string) => {
+    async (event: React.MouseEvent, target: string | string[]) => {
       event.preventDefault();
       event.stopPropagation();
       if (busyId) return;
-      const paper = useLibraryCache.getState().papers.find((item) => item.id === paperId);
-      if (!paper) return;
-      setBusyId(paperId);
+      const ids = new Set(typeof target === "string" ? [target] : target);
+      const papers = useLibraryCache.getState().papers.filter((item) => ids.has(item.id));
+      if (papers.length === 0) return;
+      setBusyId(papers[0].id);
+      const moved: string[] = [];
       try {
-        await movePaperToTrash(paperId);
-        removePaper(paperId);
-        const title = displayPaperTitle(paper);
-        showToast({
-          kind: "info",
-          message: `「${title}」をゴミ箱に移動しました`,
-          actionLabel: "元に戻す",
-          onAction: () => {
-            void restorePaperFromTrash(paperId)
-              .then((restored) => {
-                addPaper(restored);
-              })
-              .catch((error: unknown) => {
-                showToast({
-                  kind: "error",
-                  message:
-                    error instanceof Error ? error.message : "復元に失敗しました",
-                });
-              });
-          },
-        });
+        for (const paper of papers) {
+          await movePaperToTrash(paper.id);
+          removePaper(paper.id);
+          moved.push(paper.id);
+        }
       } catch (err) {
         console.error("Failed to move paper to trash:", err);
         showToast({
@@ -51,6 +37,23 @@ export function useDeletePaper() {
       } finally {
         setBusyId(null);
       }
+      if (moved.length === 0) return;
+      showToast({
+        kind: "info",
+        message:
+          moved.length === 1
+            ? `「${displayPaperTitle(papers[0])}」をゴミ箱に移動しました`
+            : `${moved.length}件の論文をゴミ箱に移動しました`,
+        actionLabel: "元に戻す",
+        onAction: () => {
+          void Promise.all(moved.map((id) => restorePaperFromTrash(id).then(addPaper))).catch((error: unknown) => {
+            showToast({
+              kind: "error",
+              message: error instanceof Error ? error.message : "復元に失敗しました",
+            });
+          });
+        },
+      });
     },
     [addPaper, busyId, removePaper]
   );

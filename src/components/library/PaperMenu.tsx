@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { BookText, Check, FolderPlus, MoreHorizontal, Quote, Tag, Pause, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
 import type { Paper } from "../../types/paper";
 import { useLibraryCache } from "../../stores/libraryCache";
+import { usePaperSelectionStore } from "../../stores/paperSelectionStore";
 import { useProjectStore } from "../../stores/projectStore";
 import { showToast } from "../../stores/toastStore";
 import { applyPaperFavorite } from "../../services/paperFavorite";
@@ -43,7 +44,7 @@ async function copyBibTeX(paper: Paper): Promise<void> {
 type PaperMenuProps = {
   paper: Paper;
   variant: "library" | "workspace";
-  onDeleteRequest?: (event: React.MouseEvent, paperId: string) => void;
+  onDeleteRequest?: (event: React.MouseEvent, paperIds: string | string[]) => void;
   onRemoveFromWorkspace?: (paperId: string) => void;
 };
 
@@ -66,6 +67,10 @@ export function PaperMenu({
   const workspaceNodes = useProjectStore((state) => state.workspaceNodes);
   const memberships = useProjectStore((state) => state.memberships);
   const upsertMembership = useProjectStore((state) => state.upsertMembership);
+  // Menu opened on one of several selected cards acts on the whole selection (Finder-style).
+  const selectedIds = usePaperSelectionStore((state) => state.ids);
+  const bulkIds = selectedIds.size > 1 && selectedIds.has(paper.id) ? [...selectedIds] : null;
+  const bulkPapers = useLibraryCache((state) => state.papers).filter((item) => bulkIds?.includes(item.id));
   const readiness = derivePaperReadiness({
     processingStatus: paper.processingStatus,
     blocks,
@@ -97,7 +102,8 @@ export function PaperMenu({
     if (favoriting) return;
     setFavoriting(true);
     try {
-      await applyPaperFavorite(paper.id, !paper.favorite);
+      if (bulkIds) await applyPaperFavorite(bulkIds, !bulkPapers.every((item) => item.favorite));
+      else await applyPaperFavorite(paper.id, !paper.favorite);
     } finally {
       setFavoriting(false);
       setOpen(false);
@@ -155,19 +161,22 @@ export function PaperMenu({
   const addToWorkspace = async (event: React.MouseEvent, nodeId: string) => {
     event.stopPropagation();
     const node = workspaceNodes.find((item) => item.id === nodeId);
+    const name = node?.name ?? "ワークスペース";
+    let added = 0;
     try {
-      const link = await addPaperToWorkspace(nodeId, paper.id);
-      upsertMembership(link);
-      showToast({
-        kind: "success",
-        message: `「${node?.name ?? "ワークスペース"}」に追加しました`,
-      });
+      for (const paperId of bulkIds ?? [paper.id]) {
+        if (memberships.some((link) => link.nodeId === nodeId && link.paperId === paperId)) continue;
+        upsertMembership(await addPaperToWorkspace(nodeId, paperId));
+        added += 1;
+      }
+      showToast(
+        added > 0
+          ? { kind: "success", message: bulkIds ? `「${name}」に${added}件追加しました` : `「${name}」に追加しました` }
+          : { kind: "info", message: `「${name}」にはすでに入っています` }
+      );
     } catch (error) {
       if (error instanceof Error && error.message.includes("すでに")) {
-        showToast({
-          kind: "info",
-          message: `「${node?.name ?? "ワークスペース"}」にはすでに入っています`,
-        });
+        showToast({ kind: "info", message: `「${name}」にはすでに入っています` });
       } else {
         showToast({ kind: "error", message: "ワークスペースへの追加に失敗しました" });
       }
@@ -192,7 +201,88 @@ export function PaperMenu({
       >
         <MoreHorizontal size={16} />
       </button>
-      {open && (
+      {open && bulkIds && (
+        <div className={styles.menu} role="menu" aria-label={`${bulkIds.length}件の論文`}>
+          <p className={styles.menuEmpty}>{bulkIds.length}件を選択中</p>
+          <button type="button" className={styles.menuItem} role="menuitem" disabled={favoriting} onClick={(event) => void toggleFavorite(event)}>
+            <Star size={14} />
+            {bulkPapers.every((item) => item.favorite) ? "お気に入りを外す" : "お気に入り"}
+          </button>
+          <div className={styles.menuSep} />
+          {(["unread", "reading", "read"] as const).map((status) => {
+            const checked = bulkPapers.every((item) => (item.readStatus ?? "unread") === status);
+            return (
+              <button
+                key={status}
+                type="button"
+                className={styles.menuItem}
+                role="menuitemradio"
+                aria-checked={checked}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setOpen(false);
+                  for (const item of bulkPapers) {
+                    if ((item.readStatus ?? "unread") !== status) void applyPaperReadStatus(item.id, status);
+                  }
+                }}
+              >
+                <Check size={14} style={checked ? undefined : { visibility: "hidden" }} />
+                {READ_STATUS_LABELS[status]}
+              </button>
+            );
+          })}
+          <div className={styles.menuSep} />
+          {variant === "library" && (
+            <button
+              type="button"
+              className={styles.menuItem}
+              role="menuitem"
+              onClick={(event) => {
+                event.stopPropagation();
+                setPickingWorkspace(true);
+              }}
+            >
+              <FolderPlus size={14} />
+              ワークスペースに追加…
+            </button>
+          )}
+          {variant === "workspace" && onRemoveFromWorkspace && (
+            <button
+              type="button"
+              className={styles.menuItem}
+              role="menuitem"
+              onClick={(event) => {
+                event.stopPropagation();
+                setOpen(false);
+                bulkIds.forEach(onRemoveFromWorkspace);
+                usePaperSelectionStore.getState().clear();
+              }}
+            >
+              <UserMinus size={14} />
+              ワークスペースから外す
+            </button>
+          )}
+          {onDeleteRequest && (
+            <>
+              <div className={styles.menuSep} />
+              <button
+                type="button"
+                role="menuitem"
+                className={`${styles.menuItem} ${styles.menuDanger}`}
+                onClick={(event) => {
+                  setOpen(false);
+                  usePaperSelectionStore.getState().clear();
+                  onDeleteRequest(event, bulkIds);
+                }}
+              >
+                <Trash2 size={14} />
+                {bulkIds.length}件をゴミ箱へ移動
+              </button>
+            </>
+          )}
+        </div>
+      )}
+      {open && !bulkIds && (
         <div className={styles.menu} role="menu">
           <button
             type="button"
@@ -357,8 +447,8 @@ export function PaperMenu({
             <p className={styles.menuEmpty}>フォルダがありません</p>
           ) : (
             workspaceNodes.map((node) => {
-              const already = memberships.some(
-                (link) => link.nodeId === node.id && link.paperId === paper.id
+              const already = (bulkIds ?? [paper.id]).every((paperId) =>
+                memberships.some((link) => link.nodeId === node.id && link.paperId === paperId)
               );
               return (
                 <button
