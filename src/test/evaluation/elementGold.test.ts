@@ -28,6 +28,8 @@ describe("jatsElementGold", () => {
     expect(g.doi).toBe("10.1/x");
     expect(g.permissions).toContain("open-access");
     expect(g.headings).toEqual([{ text: "1 Introduction", level: 1 }, { text: "1.1 Background", level: 2 }]);
+    const titled = jatsElementGold(JATS.replace("<abstract><p>", "<abstract><title>Abstract</title><p>").replace("<ref-list>", "<ref-list><title>References</title>"), { id: "epmc-y", license: "cc by", sourceUrl: "" });
+    expect(titled.headings.map((h) => h.text)).toEqual(["Abstract", "1 Introduction", "1.1 Background", "References"]);
     expect(g.figures.map((f) => f.label)).toEqual(["Figure 1"]);
     expect(g.tables[0].cells).toEqual(expect.arrayContaining(["Group", "Score", "A", "0.91"]));
     expect(g.equations).toBe(1);

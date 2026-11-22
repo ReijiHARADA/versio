@@ -14,6 +14,14 @@ function headingsOf(xml: string, level = 1): ElementGold["headings"] {
   });
 }
 
+/** The printed titles of the abstract, acknowledgements and reference list (`<abstract><title>Abstract</title>`). */
+function ownTitles(nodes: Array<{ inner: string }>): ElementGold["headings"] {
+  return nodes.flatMap((node) => {
+    const title = first(node.inner.split(/<(?:sec|p|ref)[\s>]/)[0], "title");
+    return title && text(title.inner) ? [{ text: text(title.inner), level: 1 }] : [];
+  });
+}
+
 /**
  * Printed footnotes: author notes (equal contribution, present address) and notes the text
  * points to (`<xref ref-type="fn">`). Other back-matter `<fn>` (Springer "Declarations",
@@ -61,7 +69,14 @@ export function jatsElementGold(xml: string, meta: { id: string; license: string
     venue: text(first(front, "journal-title")?.inner ?? "") || null,
     doi: text(elements(articleMeta, "article-id").find((a) => a.attrs["pub-id-type"] === "doi")?.inner ?? "") || null,
     permissions: permissions ? blockText(removeElements(removeElements(permissions.inner, "copyright-year"), "ali:license_ref")) || null : null,
-    headings: [...headingsOf(abstractSecs), ...headingsOf(textual(body)), ...headingsOf(textual(backNoRefs))],
+    headings: [
+      ...ownTitles(elements(articleMeta, "abstract").filter((a) => !a.attrs["abstract-type"])),
+      ...headingsOf(abstractSecs),
+      ...headingsOf(textual(body)),
+      ...ownTitles(elements(back, "ack")),
+      ...headingsOf(textual(backNoRefs)),
+      ...ownTitles(elements(back, "ref-list").slice(0, 1)),
+    ],
     paragraphs: jatsParagraphs(xml).map((p) => p.text),
     footnotes: footnotesOf(articleMeta, body + backNoRefs),
     figures: fields.captions.filter((c) => c.kind === "figure").map((c) => ({ label: c.label, caption: c.text })),
