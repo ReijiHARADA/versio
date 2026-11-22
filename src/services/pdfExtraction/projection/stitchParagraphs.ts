@@ -85,6 +85,19 @@ function joinTexts(a: string, b: string): string {
   return `${a} ${b}`;
 }
 
+/** `current` with `next` (the rest of its interrupted sentence) appended. */
+export function appendContinuation(current: PaperBlock, next: PaperBlock): PaperBlock {
+  const joined = joinTexts(current.original?.trim() ?? "", next.original?.trim() ?? "");
+  const warning = isExpectedNonProseParagraph(joined) ? null : unsafeParagraphStructureReason(joined);
+  return {
+    ...current,
+    original: joined,
+    pageEnd: Math.max(current.pageEnd, next.pageEnd),
+    boundingBoxes: [...current.boundingBoxes, ...next.boundingBoxes],
+    metadata: { ...current.metadata, translationInputWarning: warning ?? undefined, stitchedFrom: [...((current.metadata.stitchedFrom as string[] | undefined) ?? []), next.id] },
+  };
+}
+
 export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Array<Pick<Section, "id" | "normalizedKind">>): PaperBlock[] {
   const referenceSections = new Set(sections.filter((s) => s.normalizedKind === "references").map((s) => s.id));
   const eligible = (b: PaperBlock) =>
@@ -129,15 +142,7 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
       if (target < 0) break;
       const next = out[target];
       afterReferenceCaption = isInlineReferenceCaption(currentText, next);
-      const joined = joinTexts(currentText, next.original?.trim() ?? "");
-      const warning = isExpectedNonProseParagraph(joined) ? null : unsafeParagraphStructureReason(joined);
-      out[i] = {
-        ...current,
-        original: joined,
-        pageEnd: Math.max(current.pageEnd, next.pageEnd),
-        boundingBoxes: [...current.boundingBoxes, ...next.boundingBoxes],
-        metadata: { ...current.metadata, translationInputWarning: warning ?? undefined, stitchedFrom: [...((current.metadata.stitchedFrom as string[] | undefined) ?? []), next.id] },
-      };
+      out[i] = appendContinuation(current, next);
       out.splice(target, 1);
     }
   }

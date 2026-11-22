@@ -10,6 +10,7 @@
 import { stableBlockId, uniqueId } from "../../../data/package/ids";
 import type { BoundingBox, PaperBlock, Section } from "../../../types/paper";
 import type { ExtractedPage } from "../../pdfService";
+import { appendContinuation } from "../projection/stitchParagraphs";
 import { parseCitation } from "./citation";
 import { referenceLinesFromPages, selectReferenceBlocks } from "./referenceLines";
 import { referenceZoneLines } from "./referenceZone";
@@ -171,19 +172,38 @@ export function applyCrfReferences(input: {
   if (rebuiltChars < 0.85 * removedChars) return unchanged("text coverage below 85%");
 
   const out: PaperBlock[] = [];
+  const lastRemoved = input.blocks.reduce((last, b, i) => (removed.has(b) ? i : last), -1);
+  let listStart = -1;
   input.blocks.forEach((block, i) => {
     if (anchor < 0 && i === before) out.push(...rebuilt);
     if (removed.has(block)) {
-      if (i === anchor) out.push(...rebuilt);
+      if (i === anchor) {
+        listStart = out.length;
+        out.push(...rebuilt);
+      }
       return;
     }
-    out.push(demoted.has(block) ? { ...block, type: "paragraph", translationStatus: "pending" } : block);
+    const kept: PaperBlock = demoted.has(block) ? { ...block, type: "paragraph", translationStatus: "pending" } : block;
+    // Back matter that stops mid-sentence above the list and goes on at the top of the next
+    // column, between references: the rest joins its sentence instead of following the list.
+    const open = listStart >= 0 && i < lastRemoved && /^\p{Ll}/u.test(kept.original?.trim() ?? "") ? openParagraphBefore(out, listStart) : -1;
+    if (kept.type === "paragraph" && open >= 0) out[open] = appendContinuation(out[open], kept);
+    else out.push(kept);
   });
   if (anchor < 0 && before >= input.blocks.length) out.push(...rebuilt);
   out.forEach((block, i) => {
     block.order = i;
   });
   return { blocks: out, outcome: { applied: true, reason: "crf", references } };
+}
+
+/** The paragraph just above the list (past its heading) when it ends mid-sentence. */
+function openParagraphBefore(blocks: PaperBlock[], listStart: number): number {
+  let i = listStart - 1;
+  while (i >= 0 && blocks[i].type === "heading" && (blocks[i].original ?? "").trim().split(/\s+/).length <= 8) i -= 1;
+  const text = (blocks[i]?.original ?? "").trim();
+  const open = blocks[i]?.type === "paragraph" && blocks[i].metadata.role !== "reference" && text.split(/\s+/).length >= 6 && !/[.!?:。！？][”"’')\]]*$/.test(text);
+  return open ? i : -1;
 }
 
 /**

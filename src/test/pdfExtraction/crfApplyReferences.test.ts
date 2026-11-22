@@ -31,6 +31,19 @@ describe("applyCrfReferences", () => {
     expect(out.map((b) => b.order)).toEqual(out.map((_, i) => i));
   });
 
+  it("joins back matter that goes on between references to its sentence above the list", () => {
+    const blocks = [
+      block("b-open", "paragraph", "Any alternative text provided alongside figures has been generated with the support of", 40, "s-body"),
+      block("b-head", "heading", "References", 80),
+      block("b-ref1", "reference", REFS[0], 100),
+      block("b-rest", "paragraph", "artificial intelligence and reviewed by the authors.", 300),
+      block("b-ref2", "reference", REFS[1], 112),
+    ];
+    const { blocks: out } = applyCrfReferences({ paperId: "p", pages: [page], blocks, sections: [section] });
+    expect(out[0].original).toBe("Any alternative text provided alongside figures has been generated with the support of artificial intelligence and reviewed by the authors.");
+    expect(out.map((b) => b.type)).toEqual(["paragraph", "heading", "reference", "reference"]);
+  });
+
   it("skips Japanese reference lists", () => {
     const ja = "山田太郎. 2020. 日本語の参考文献. 情報処理学会論文誌.";
     const jaPage = { pageNumber: 1, width: 600, height: 800, textItems: [item("参考文献", 40, 80), item(ja, 40, 100)] } as never;
