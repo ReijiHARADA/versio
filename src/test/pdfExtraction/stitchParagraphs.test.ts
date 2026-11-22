@@ -40,9 +40,14 @@ describe("stitchParagraphContinuations", () => {
     expect(out.map((b) => b.order)).toEqual([0, 1, 2]);
   });
 
-  it("does not jump over a complete prose paragraph or an equation", () => {
+  it("jumps over finished prose only from a real open paragraph, and never over an equation", () => {
     const complete = "Data extraction was handled independently by two researchers, who compared their tables and settled every difference before the synthesis began.";
-    expect(stitchParagraphContinuations([block("a", "paragraph", OPEN), block("c", "paragraph", complete), block("b", "paragraph", CONTINUATION)], sections)).toHaveLength(3);
+    // A short or keyword-list paragraph does not look past finished prose; a real open paragraph does.
+    expect(stitchParagraphContinuations([block("a", "paragraph", "Kim et al. BMC Medical Informatics and Decision Making (2026) 26:343"), block("c", "paragraph", complete), block("b", "paragraph", CONTINUATION)], sections)).toHaveLength(3);
+    const keywords = `${OPEN.replace(/ in$/, ".")} Keywords Deep learning, Transfer learning, Hybrid model, Feature fusion, Computer-aided diagnosis`;
+    expect(stitchParagraphContinuations([block("a", "paragraph", keywords), block("c", "paragraph", complete), block("b", "paragraph", CONTINUATION)], sections)).toHaveLength(3);
+    const longOpen = `Two independent reviewers screened every record against the inclusion criteria. ${OPEN}`;
+    expect(stitchParagraphContinuations([block("a", "paragraph", longOpen), block("c", "paragraph", complete), block("b", "paragraph", CONTINUATION)], sections).map((x) => x.id)).toEqual(["a", "c"]);
     expect(stitchParagraphContinuations([block("a", "paragraph", OPEN), block("eq", "equation", "x = y + z"), block("b", "paragraph", CONTINUATION)], sections)).toHaveLength(3);
   });
 
