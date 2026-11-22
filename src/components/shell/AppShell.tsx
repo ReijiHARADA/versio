@@ -24,6 +24,7 @@ import { useImportJobStore } from "../../stores/importJobStore";
 import { setTranslationUiDeferReason } from "../../utils/batchBlockUpdates";
 import { isTauriApp } from "../../utils/serverReady";
 import { checkForAppUpdate } from "../../services/appUpdate";
+import { PdfFileInput } from "../ui/PdfFileInput";
 import styles from "./AppShell.module.css";
 
 export function AppShell() {
@@ -195,7 +196,7 @@ export function AppShell() {
 
   return <div className={styles.shell}>
     <div className={styles.titlebarDrag} data-tauri-drag-region />
-    <input ref={fileInputRef} type="file" accept=".pdf,application/pdf" className={styles.hiddenInput} onChange={(event) => { const file = event.target.files?.[0]; if (file) void tryStartPdfImport(file, fileNodeId ? { workspaceNodeId: fileNodeId } : undefined); event.target.value = ""; setFileNodeId(null); }} />
+    <PdfFileInput inputRef={fileInputRef} onFile={(file) => { void tryStartPdfImport(file, fileNodeId ? { workspaceNodeId: fileNodeId } : undefined); setFileNodeId(null); }} />
     <AppSidebar workspaceNodes={workspaceNodes} searchQuery={searchQuery} onSearchChange={setSearchQuery} onNewWorkspace={() => setCreateParentId(null)} onNewChild={(node) => setCreateParentId(node.id)} onDeleteNode={deleteNode} onAddPaperToWorkspace={addPaperFile} activeNodeId={routeNodeId} inboxCount={inboxCount} />
     <div className={styles.main}><div className={styles.mainBody} data-paper-marquee>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><div className={styles.mainRim} aria-hidden /></div><div id={INSPECTOR_SLOT_ID} className={styles.inspectorSlot} /><PaperDragPreview /><PaperMarquee />
     <PlamoDownloadToast raised={Boolean(toast)} />

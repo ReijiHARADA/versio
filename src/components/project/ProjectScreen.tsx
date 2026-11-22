@@ -24,6 +24,7 @@ import { WorkspacePathTrail } from "../workspace/WorkspacePathTrail";
 import type { Paper } from "../../types/paper";
 import type { WorkspaceNode, WorkspacePaper } from "../../types/project";
 import { AddPaperButton } from "../library/AddPaperButton";
+import { PdfFileInput } from "../ui/PdfFileInput";
 import styles from "./ProjectScreen.module.css";
 
 function subtreePaperIds(
@@ -122,17 +123,7 @@ export function ProjectScreen() {
 
   return (
     <div className={styles.container}>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".pdf,application/pdf"
-        className={styles.hiddenInput}
-        onChange={(event) => {
-          const selected = event.target.files?.[0];
-          if (selected) void file(selected);
-          event.target.value = "";
-        }}
-      />
+      <PdfFileInput inputRef={fileInputRef} onFile={(selected) => void file(selected)} />
       <header className={styles.header} data-tauri-drag-region>
         <div className={styles.headerText}>
           {folderPath.length > 0 ? (

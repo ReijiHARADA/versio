@@ -7,10 +7,6 @@
   position: relative;
 }
 
-.hiddenInput {
-  display: none;
-}
-
 .loading {
   flex: 1;
   display: flex;
