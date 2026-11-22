@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type { Paper } from "../../types/paper";
 import { useLibraryCache } from "../../stores/libraryCache";
+import { useAppStore } from "../../stores/appStore";
 import { shouldTranslateBlock } from "../../services/importServiceV2";
 import { applyPaperFavorite } from "../../services/paperFavorite";
 import {
@@ -131,6 +132,8 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
   ) : null;
   const label = displayPaperTitle(paper);
   const tags = paper.tags ?? [];
+  const tagFilter = useAppStore((state) => state.libraryFilter.tag);
+  const setLibraryFilter = useAppStore((state) => state.setLibraryFilter);
   // Unread is the default and stays unmarked; only reading / read get a badge.
   const libraryMeta =
     paper.readStatus === "reading" || paper.readStatus === "read" || tags.length > 0 ? (
@@ -141,9 +144,19 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
           </span>
         ) : null}
         {tags.slice(0, 3).map((tag) => (
-          <span key={tag} className={styles.tagChip}>
+          <button
+            key={tag}
+            type="button"
+            className={styles.tagChip}
+            data-active={tagFilter === tag || undefined}
+            title={tagFilter === tag ? `#${tag} の絞り込みを解除` : `#${tag} で絞り込む`}
+            onClick={(event) => {
+              event.stopPropagation();
+              setLibraryFilter({ tag: tagFilter === tag ? null : tag });
+            }}
+          >
             {tag}
-          </span>
+          </button>
         ))}
         {tags.length > 3 ? <span className={styles.tagMore}>+{tags.length - 3}</span> : null}
       </span>
