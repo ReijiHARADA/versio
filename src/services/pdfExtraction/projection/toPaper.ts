@@ -4652,7 +4652,11 @@ function projectProseNode(context: BodyNodeContext, state: BodyProjectionState, 
       // numbered principles/checklist list immediately before the actual
       // REFERENCES heading. Let bibliographic evidence win while preserving
       // numeric entries that contain author/year or publisher signals.
-      const refEvidence = node.role === "reference" || isReferenceText(text, state.currentKind);
+      // A short piece of an entry split across lines or columns in the reference list (`distress: systematic review
+      // protocol. BMJ Open. (2015)`) belongs to the list, not to prose.
+      const referenceFragment = state.currentKind === "references" && (text.match(/[\p{L}\p{N}]+/gu)?.length ?? 0) < 25 &&
+        (/\b(?:19|20)\d{2}\b|\bet al\.|\b\p{Lu}\.\s?\p{Lu}?\.?\s?\p{Lu}\p{Ll}+|\b(?:doi|vol|pp|J|Proc|Front|Open)\b\.?/u.test(text) || /^[\p{Ll},;:.)\]]/u.test(text));
+      const refEvidence = node.role === "reference" || isReferenceText(text, state.currentKind) || referenceFragment;
       const isRef = refEvidence &&
         (!isNumberedProseListItem(text) ||
           /\b(?:19|20)\d{2}\b/.test(text.slice(0, 180)) ||
