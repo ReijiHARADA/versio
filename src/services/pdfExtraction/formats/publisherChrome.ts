@@ -55,6 +55,12 @@ export const isAcmClassificationKeywords = (text: string) => /^acm classificatio
 export const isPublisherCitationByline = (text: string) =>
   /\b(?:bmc|ieee|acm|plos|frontiers|nature|science|lancet|jama|bmj|nucleic|med\s+inform|decis\s+mak)\b/i.test(text);
 
+/** A fragment of the bioRxiv / medRxiv license band printed in the top margin
+ * of every page (the band is often split into overlapping runs). */
+export const isPreprintBandFragment = (text: string) =>
+  /\b(?:was not certified by peer review|copyright holder for this preprint|this version posted [A-Z][a-z]+ \d{1,2}, \d{4}|granted (?:biorxiv|medrxiv) a license|(?:bio|med)rxiv preprint)/i.test(text) ||
+  /^doi:\s*https?:\/\/doi\.org\/\S+;?$/i.test(text.trim());
+
 export const isPreprintLicenseGrant = (text: string) =>
   /\bgranted (?:biorxiv|medrxiv) a license to display the preprint\b/i.test(text);
 
