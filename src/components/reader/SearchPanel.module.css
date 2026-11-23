@@ -4,7 +4,7 @@
   position: absolute;
   top: var(--spacing-sm);
   right: var(--spacing-lg);
-  z-index: 30;
+  z-index: var(--z-select);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -122,15 +122,15 @@
 .highlight {
   composes: surface from "../../styles/squircle.module.css";
   position: relative;
-  --sq-bg: #fff59d;
+  --sq-bg: var(--color-selection-fg)59d;
   padding: 0 1px;
   --sq-fill: var(--sq-fill-2);
   border-radius: var(--sq-radius-2);
 }
 
 [data-theme="dark"] .highlight {
-  --sq-bg: #5d4037;
-  color: #fff59d;
+  --sq-bg: var(--color-highlight-dark);
+  color: var(--color-selection-fg)59d;
 }
 
 .stepButton {

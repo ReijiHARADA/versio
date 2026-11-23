@@ -64,11 +64,11 @@
 }
 
 .successIcon {
-  color: #34a853;
+  color: var(--color-import-success);
 }
 
 .errorIcon {
-  color: #ea4335;
+  color: var(--color-import-error);
 }
 
 .title {
@@ -137,7 +137,7 @@
 }
 
 .iconComplete {
-  color: #34a853;
+  color: var(--color-import-success);
 }
 
 .iconProcessing {
@@ -146,7 +146,7 @@
 }
 
 .iconError {
-  color: #ea4335;
+  color: var(--color-import-error);
 }
 
 .iconPending {

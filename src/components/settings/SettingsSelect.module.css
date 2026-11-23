@@ -5,17 +5,17 @@
   --select-selected-index: 0;
   position: relative;
   width: min(280px, 100%);
-  z-index: 0;
+  z-index: var(--z-base);
 }
 
 .open {
-  z-index: 30;
+  z-index: var(--z-select);
 }
 
 .trigger {
   appearance: none;
   position: relative;
-  z-index: 2;
+  z-index: var(--z-sidebar);
   isolation: isolate;
   display: flex;
   align-items: center;
@@ -111,7 +111,7 @@
   );
   right: 0;
   left: 0;
-  z-index: 1;
+  z-index: var(--z-raised);
   display: flex;
   flex-direction: column;
   gap: var(--select-option-gap);

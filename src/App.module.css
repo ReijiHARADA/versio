@@ -36,16 +36,16 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 9999;
+  z-index: var(--z-error-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
   padding: 10px 16px;
-  background: #1a365d;
-  color: #ffffff;
+  background: #1a365d; /* color-literal-ok: error-boundary background */
+  color: var(--color-selection-fg);
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
-  font-size: 13px;
+  font-size: var(--font-size-small);
   /* Banner must not steal clicks from the app chrome below its visual bounds. */
   pointer-events: none;
 }
@@ -59,9 +59,9 @@
   --sq-ring: var(--sq-ring-6);
   border-radius: var(--sq-radius-6);
   border: 1px solid transparent;
-  --sq-line: #ffffff;
+  --sq-line: var(--color-selection-fg);
   --sq-bw: 1px;
   --sq-bg: transparent;
-  color: #ffffff;
+  color: var(--color-selection-fg);
   cursor: pointer;
 }

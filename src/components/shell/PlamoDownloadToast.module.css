@@ -5,7 +5,7 @@
   left: 50%;
   bottom: 28px;
   transform: translateX(-50%);
-  z-index: 39;
+  z-index: var(--z-toast);
   box-sizing: border-box;
   display: flex;
   justify-content: center;
@@ -15,7 +15,7 @@
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-selection-fg);
   font-size: 0.875rem;
   font-weight: 500;
   white-space: nowrap;
@@ -31,7 +31,7 @@
 }
 
 .toast[data-state="failed"] {
-  background: #c5221f;
+  background: var(--color-danger-static);
 }
 
 .content {
@@ -67,7 +67,7 @@
   width: 72px;
   height: 4px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--color-white-alpha-30);
   overflow: hidden;
 }
 
@@ -81,7 +81,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: #fff;
+  background: var(--color-selection-fg);
   transition: width 0.3s ease;
 }
 

@@ -11,14 +11,14 @@
 .titlebarDrag {
   position: fixed;
   inset: 0 0 auto;
-  z-index: 1000;
+  z-index: var(--z-overlay);
   height: var(--titlebar-h);
 }
 
 .main {
   composes: surface edged from "../../styles/squircle.module.css";
   position: relative;
-  z-index: 3;
+  z-index: var(--z-main);
   flex: 1;
   min-width: 0;
   min-height: 0;
@@ -72,7 +72,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   border-left: 3px solid var(--color-accent);
-  z-index: 100; /* above sticky page headers */
+  z-index: var(--z-page-header); /* above sticky page headers */
   pointer-events: none;
   opacity: 0;
   transition: opacity 120ms ease;
@@ -96,7 +96,7 @@
   left: 50%;
   bottom: 28px;
   transform: translateX(-50%);
-  z-index: 40;
+  z-index: var(--z-side-panel);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -118,17 +118,17 @@
 
 .toastOk {
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-selection-fg);
 }
 
 .toastInfo {
   background: var(--gray-800);
-  color: #fff;
+  color: var(--color-selection-fg);
 }
 
 .toastError {
-  background: #c5221f;
-  color: #fff;
+  background: var(--color-danger-static);
+  color: var(--color-selection-fg);
 }
 
 .toastAction {
@@ -148,7 +148,7 @@
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 80;
+  z-index: var(--z-cursor);
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -173,7 +173,7 @@
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 80;
+  z-index: var(--z-cursor);
   width: 72px;
   pointer-events: none;
   opacity: 0.85;
@@ -186,8 +186,8 @@
   left: 0;
   width: 72px;
   border-radius: 3px;
-  background: #fff;
-  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.18), 0 8px 18px var(--color-shadow);
+  background: var(--color-selection-fg);
+  box-shadow: 0 0 0 0.5px var(--color-black-alpha-18), 0 8px 18px var(--color-shadow);
 }
 
 .dragCount {
@@ -195,13 +195,13 @@
   position: absolute;
   top: -8px;
   right: -14px;
-  z-index: 10;
+  z-index: var(--z-menu-open);
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
   border-radius: 999px;
   --sq-bg: var(--color-danger);
-  color: #fff;
+  color: var(--color-selection-fg);
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 20px;
@@ -210,7 +210,7 @@
 
 .marquee {
   position: fixed;
-  z-index: 70;
+  z-index: var(--z-marquee);
   pointer-events: none;
   border: 1px solid color-mix(in srgb, var(--color-accent) 70%, transparent);
   background: color-mix(in srgb, var(--color-accent) 14%, transparent);
@@ -233,13 +233,13 @@
 .mainRim {
   position: absolute;
   inset: -1px;
-  z-index: 101;
+  z-index: var(--z-main-rim);
   pointer-events: none;
   background: linear-gradient(
     to bottom right,
-    rgb(255 255 255 / var(--edge-highlight)),
+    rgb(255 255 255 / var(--edge-highlight)), /* color-literal-ok: dynamic edge highlight */
     transparent 50%,
-    rgb(0 0 0 / var(--edge-shade))
+    rgb(0 0 0 / var(--edge-shade)) /* color-literal-ok: dynamic edge shade */
   );
   -webkit-mask-box-image: var(--sq-rim-card);
 }

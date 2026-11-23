@@ -13,12 +13,12 @@
 
 .from {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-raised);
 }
 
 .to {
   position: relative;
-  z-index: 2;
+  z-index: var(--z-sidebar);
 }
 
 /* Waiting: barely-soft English — “not resolved yet”, no loud aura. */
@@ -29,13 +29,13 @@
 .waiting::before {
   content: "";
   position: absolute;
-  z-index: 0;
+  z-index: var(--z-base);
   inset: -2px 0;
   pointer-events: none;
   opacity: 0.25;
   background: radial-gradient(
     80% 60% at 50% 50%,
-    rgba(0, 0, 0, 0.04),
+    rgba(0, 0, 0, 0.04), /* color-literal-ok: translation morph shadow */
     transparent 70%
   );
 }
@@ -43,7 +43,7 @@
 .canvas {
   position: absolute;
   inset: 0;
-  z-index: 3;
+  z-index: var(--z-main);
   width: 100%;
   height: 100%;
   pointer-events: none;

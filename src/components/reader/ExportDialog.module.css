@@ -113,7 +113,7 @@
 .error {
   margin: 0;
   font-size: 0.8125rem;
-  color: #c5221f;
+  color: var(--color-danger-static);
 }
 
 .actions {

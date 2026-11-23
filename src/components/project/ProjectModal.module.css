@@ -1,11 +1,11 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--color-black-alpha-50);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 400;
+  z-index: var(--z-project-modal);
   padding: var(--spacing-xl);
 }
 
@@ -90,7 +90,7 @@
 }
 
 .error {
-  color: #c5221f;
+  color: var(--color-danger-static);
   font-size: 0.8125rem;
 }
 

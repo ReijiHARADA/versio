@@ -25,7 +25,7 @@
   position: relative;
   flex-shrink: 0;
   height: 100%;
-  z-index: 2;
+  z-index: var(--z-sidebar);
 }
 
 /* Width owner for collapsed / expanded. */
@@ -43,7 +43,7 @@
 
 .sidebar {
   position: relative;
-  z-index: 2;
+  z-index: var(--z-sidebar);
   width: 100%;
   height: 100%;
   display: flex;
@@ -79,7 +79,7 @@
   position: absolute;
   top: 0;
   right: 0;
-  z-index: 6;
+  z-index: var(--z-sidebar-resize);
   /* Fully inside the sidebar: the raised main surface would cover any overhang.
      Kept narrow so it does not cover the nav scrollbar just left of it. */
   width: var(--sidebar-resize-handle-w);
@@ -230,7 +230,7 @@
   position: fixed;
   top: calc((var(--titlebar-h) - var(--control-height)) / 2);
   right: var(--card-gap);
-  z-index: 1001;
+  z-index: var(--z-titlebar-controls);
   width: 220px;
   gap: var(--spacing-sm);
 }
@@ -247,7 +247,7 @@
   position: fixed;
   top: 5px;
   left: 80px;
-  z-index: 1001;
+  z-index: var(--z-titlebar-controls);
   display: flex;
   gap: 2px;
 }
@@ -484,7 +484,7 @@
   /* Rows, tree rows and the sliding selection ghost (also an .item) share one
      layer above the tree guide (z auto). The ghost is the sidebar's first child,
      so DOM order keeps it under every label while the guide stays under it. */
-  z-index: 1;
+  z-index: var(--z-raised);
 }
 
 .item:hover {
@@ -523,7 +523,7 @@
 
 .projectLink {
   position: relative;
-  z-index: 0;
+  z-index: var(--z-base);
   padding-right: 34px !important;
 }
 
@@ -531,7 +531,7 @@
   composes: surface from "../../styles/squircle.module.css";
   /* Portaled to document.body so nested tree overflow:hidden cannot clip it. */
   position: fixed;
-  z-index: 1200;
+  z-index: var(--z-sidebar-menu);
   width: 190px;
   padding: 5px;
   border: 1px solid transparent;
@@ -574,7 +574,7 @@
 }
 
 .projectMenu .projectMenuDanger {
-  color: #c5221f;
+  color: var(--color-danger-static);
 }
 
 .badge {
@@ -584,7 +584,7 @@
   font-variant-numeric: tabular-nums;
   line-height: 1;
   background: var(--color-text-secondary);
-  color: #fff;
+  color: var(--color-selection-fg);
   border-radius: 50%;
   text-align: center;
 }
@@ -653,7 +653,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  z-index: 1; /* same layer as .item, see there */
+  z-index: var(--z-raised); /* same layer as .item, see there */
   user-select: none;
   touch-action: none;
   /* Nesting indent only — chevron is out of flow so icons share the library left edge. */
@@ -662,7 +662,7 @@
 }
 
 .treeRowMenuOpen {
-  z-index: 10;
+  z-index: var(--z-menu-open);
 }
 
 .sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .treeRow,
@@ -801,16 +801,16 @@
 .invalidDrop {
   composes: surface from "../../styles/squircle.module.css";
   position: relative;
-  --sq-bg: #c5221f18;
+  --sq-bg: var(--color-danger-static)18;
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
-  box-shadow: inset 0 0 0 1px #c5221f;
+  box-shadow: inset 0 0 0 1px var(--color-danger-static);
   cursor: not-allowed;
 }
 .invalidDrop * { cursor: not-allowed !important; }
-.paperInvalid:hover { outline: 1px dashed #c5221f; cursor: not-allowed; }
+.paperInvalid:hover { outline: 1px dashed var(--color-danger-static); cursor: not-allowed; }
 .rootDrop { display: none; }
-.rootDropVisible { display: block; padding: 8px; font-size: 12px; color: var(--color-text-secondary); }
+.rootDropVisible { display: block; padding: 8px; font-size: var(--font-size-caption); color: var(--color-text-secondary); }
 
 .inlineName { flex: 1; min-width: 0; }
 .inlineName input {
@@ -825,8 +825,8 @@
   --sq-ring: var(--sq-ring-sm);
   border-radius: var(--sq-radius-sm);
 }
-.inlineName span { font-size: 11px; color: #c5221f; }
-.menuNotice { margin: 5px 8px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+.inlineName span { font-size: 11px; color: var(--color-danger-static); }
+.menuNotice { margin: 5px 8px; font-size: var(--font-size-caption); color: var(--color-text-secondary); line-height: 1.5; }
 .projectMenu button:disabled { opacity: .5; cursor: not-allowed; }
 
 /* Sliding selection pill (useSelectionSlide): the ghost travels, the arriving item hides its fill. */

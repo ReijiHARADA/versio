@@ -109,11 +109,11 @@
 /* Failed state */
 .failedContent {
   padding: var(--spacing-md);
-  background-color: #fce8e6;
+  background-color: var(--color-danger-surface);
 }
 
 [data-theme="dark"] .failedContent {
-  background-color: #3c1f1e;
+  background-color: var(--color-danger-surface-dark);
 }
 
 .failedHeader {
@@ -125,12 +125,12 @@
 
 .failedText {
   font-size: 0.875rem;
-  color: #c5221f;
+  color: var(--color-danger-static);
   margin: 0;
 }
 
 [data-theme="dark"] .failedText {
-  color: #f28b82;
+  color: var(--color-danger-text-dark);
 }
 
 .retryButton {
@@ -141,10 +141,10 @@
   gap: var(--spacing-xs);
   padding: var(--spacing-xs) var(--spacing-sm);
   border: 1px solid transparent;
-  --sq-line: #c5221f;
+  --sq-line: var(--color-danger-static);
   --sq-bw: 1px;
   --sq-bg: transparent;
-  color: #c5221f;
+  color: var(--color-danger-static);
   font-size: 0.75rem;
   --sq-fill: var(--sq-fill-sm);
   --sq-ring: var(--sq-ring-sm);
@@ -154,7 +154,7 @@
 }
 
 .retryButton:hover:not(:disabled) {
-  --sq-bg: rgba(197, 34, 31, 0.1);
+  --sq-bg: rgba(197, 34, 31, 0.1); /* color-literal-ok: fixed annotation tint */
 }
 
 .retryButton:disabled {
@@ -163,12 +163,12 @@
 }
 
 [data-theme="dark"] .retryButton {
-  --sq-line: #f28b82;
-  color: #f28b82;
+  --sq-line: var(--color-danger-text-dark);
+  color: var(--color-danger-text-dark);
 }
 
 [data-theme="dark"] .retryButton:hover:not(:disabled) {
-  --sq-bg: rgba(242, 139, 130, 0.1);
+  --sq-bg: rgba(242, 139, 130, 0.1); /* color-literal-ok: fixed annotation tint */
 }
 
 .spinning {
@@ -187,7 +187,7 @@
   align-items: flex-start;
   gap: var(--spacing-xs);
   margin: 0 0 var(--spacing-xs);
-  color: #92400e;
+  color: var(--color-annotation-amber-text);
   font-size: 0.8125rem;
   line-height: 1.45;
 }
@@ -198,13 +198,13 @@
 }
 
 [data-theme="dark"] .sourceStructureWarning {
-  color: #fbbf24;
+  color: var(--color-annotation-amber);
 }
 
 /* Highlight */
 .highlight {
   /* squircle-exempt: inline mark wraps across lines; a squircle pseudo-element would paint the whole bounding box */
-  background-color: #fff59d;
+  background-color: var(--color-selection-fg)59d;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   border-radius: 3px;
@@ -214,24 +214,24 @@
 }
 
 .highlight[data-search-current] {
-  background-color: #ffb74d;
-  box-shadow: 0 0 0 2px #f57c00;
+  background-color: var(--color-highlight-border);
+  box-shadow: 0 0 0 2px #f57c00; /* color-literal-ok: annotation marker edge */
 }
 
 [data-theme="dark"] .highlight {
-  background-color: #5d4037;
-  color: #fff59d;
+  background-color: var(--color-highlight-dark);
+  color: var(--color-selection-fg)59d;
 }
 
 [data-theme="dark"] .highlight[data-search-current] {
-  background-color: #e65100;
-  color: #fff8e1;
-  box-shadow: 0 0 0 2px #ffb74d;
+  background-color: #e65100; /* color-literal-ok: annotation marker fill */
+  color: var(--color-selection-fg)8e1;
+  box-shadow: 0 0 0 2px var(--color-highlight-border);
 }
 
 .annotationMark {
   /* squircle-exempt: inline mark wraps across lines; a squircle pseudo-element would paint the whole bounding box */
-  background-color: #fff59d;
+  background-color: var(--color-selection-fg)59d;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   border-radius: 3px;
@@ -241,12 +241,12 @@
 
 .annotationMark:hover,
 .annotationFlash {
-  background-color: #ffe066;
+  background-color: #ffe066; /* color-literal-ok: annotation highlight */
 }
 
 .draftMark {
   /* squircle-exempt: inline mark wraps across lines; a squircle pseudo-element would paint the whole bounding box */
-  background-color: #fff59d;
+  background-color: var(--color-selection-fg)59d;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   border-radius: 3px;
@@ -254,18 +254,18 @@
 }
 
 [data-theme="dark"] .annotationMark {
-  background-color: #5d4037;
-  color: #fff59d;
+  background-color: var(--color-highlight-dark);
+  color: var(--color-selection-fg)59d;
 }
 
 [data-theme="dark"] .annotationMark:hover,
 [data-theme="dark"] .annotationFlash {
-  background-color: #7a5a2b;
+  background-color: #7a5a2b; /* color-literal-ok: annotation highlight dark fill */
 }
 
 [data-theme="dark"] .draftMark {
-  background-color: #5d4037;
-  color: #fff59d;
+  background-color: var(--color-highlight-dark);
+  color: var(--color-selection-fg)59d;
 }
 
 .citation {
@@ -320,16 +320,15 @@
   --sq-fill: var(--sq-fill-4);
   border-radius: var(--sq-radius-4);
   --sq-bg: transparent;
-  color: #b45309;
+  color: #b45309; /* color-literal-ok: annotation status text */
   cursor: pointer;
 }
 
 .confidenceButton:hover,
 .confidenceButton:focus-visible {
-  --sq-bg: rgba(180, 83, 9, 0.12);
+  --sq-bg: rgba(180, 83, 9, 0.12); /* color-literal-ok: annotation status tint */
 }
 
 [data-theme="dark"] .confidenceButton {
-  color: #fbbf24;
+  color: var(--color-annotation-amber);
 }
-

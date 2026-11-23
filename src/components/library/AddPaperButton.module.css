@@ -61,7 +61,7 @@
   border: none;
   border-radius: var(--sq-radius-control);
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-selection-fg);
   font: inherit;
   font-size: var(--font-size-body);
   cursor: pointer;

@@ -61,6 +61,26 @@
   --color-selection-danger-fg: #ffffff;
   --color-original-bg: #fef7e0;
   --color-original-border: #fbbc04;
+  /* Fixed content colors intentionally do not adapt to the app theme. */
+  --color-intro-blue: #1a73e8;
+  --color-import-success: #34a853;
+  --color-import-error: #ea4335;
+  --color-danger-static: #c5221f;
+  --color-danger-surface: #fce8e6;
+  --color-danger-surface-dark: #3c1f1e;
+  --color-danger-text-dark: #f28b82;
+  --color-danger-fallback: #b42318;
+  --color-annotation-amber-text: #92400e;
+  --color-annotation-amber: #fbbf24;
+  --color-highlight: #fff59d;
+  --color-highlight-dark: #5d4037;
+  --color-highlight-border: #ffb74d;
+  --color-folder-dark: #1e1e1e;
+  --color-black-alpha-08: rgba(0, 0, 0, 0.08);
+  --color-black-alpha-10: rgba(0, 0, 0, 0.1);
+  --color-black-alpha-18: rgba(0, 0, 0, 0.18);
+  --color-black-alpha-50: rgba(0, 0, 0, 0.5);
+  --color-white-alpha-30: rgba(255, 255, 255, 0.3);
 
   /* Surface edges, opted in via squircle.module.css .edged / .cta: OKLCH
      lightness shift of the ring at top / bottom, and alpha of the CTA's inner
@@ -126,6 +146,31 @@
   /* Pane open/close/resize: long, soft deceleration (ease-out quint) so panes glide to rest. */
   --pane-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --pane-motion: 420ms var(--pane-ease);
+
+  /* Layering */
+  --z-base: 0;
+  --z-raised: 1;
+  --z-sidebar: 2;
+  --z-main: 3;
+  --z-sidebar-resize: 6;
+  --z-menu-open: 10;
+  --z-card-menu: 20;
+  --z-select: 30;
+  --z-toast: 39;
+  --z-side-panel: 40;
+  --z-memo-popover: 50;
+  --z-info-popover: 55;
+  --z-marquee: 70;
+  --z-cursor: 80;
+  --z-page-header: 100;
+  --z-main-rim: 101;
+  --z-reader-popover: 200;
+  --z-project-modal: 400;
+  --z-overlay: 1000;
+  --z-titlebar-controls: 1001;
+  --z-sidebar-menu: 1200;
+  --z-error-overlay: 9999;
+  --z-intro-overlay: 10000;
 
   /* Border Radius */
   --radius-sm: 4px;

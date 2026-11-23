@@ -64,7 +64,7 @@
   --sq-line: var(--color-accent);
   --sq-bw: 1px;
   --sq-bg: var(--color-accent);
-  color: #fff;
+  color: var(--color-selection-fg);
   --sq-fill: var(--sq-fill-md);
   --sq-ring: var(--sq-ring-md);
   border-radius: var(--sq-radius-md);

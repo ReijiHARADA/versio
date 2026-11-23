@@ -117,7 +117,7 @@
   right: var(--spacing-sm);
   padding: var(--spacing-sm);
   border: none;
-  --sq-bg: rgba(0, 0, 0, 0.6);
+  --sq-bg: rgba(0, 0, 0, 0.6); /* color-literal-ok: figure overlay */
   color: white;
   --sq-fill: var(--sq-fill-sm);
   border-radius: var(--sq-radius-sm);
@@ -131,7 +131,7 @@
 }
 
 .zoomButton:hover {
-  --sq-bg: rgba(0, 0, 0, 0.8);
+  --sq-bg: rgba(0, 0, 0, 0.8); /* color-literal-ok: figure overlay hover */
 }
 
 .caption {
