@@ -118,6 +118,22 @@ describe("reconcileTranslationWarnings", () => {
   });
 });
 
+describe("stitchParagraphContinuations past a table note", () => {
+  it("joins the rest of the sentence across a table and its unfinished note", () => {
+    const blocks = [
+      block("a", "paragraph", "Patients with anxiety were older, had chronic conditions and lower levels of education. They", 4),
+      block("t1", "table", "Table 1 Baseline characteristics", 5),
+      block("f", "footnote", "*SD Standard deviation **IQR Interquartile range", 5),
+      block("t", "table", "Table 2 Results of the regression models", 6),
+      block("n", "paragraph", "Model adjusted for age, gender, prior depression and education CI 95% confidence interval", 6),
+      block("b", "paragraph", "also exhibited significantly lower EQ VAS scores than those without anxiety.", 6),
+    ];
+    const out = stitchParagraphContinuations(blocks, []);
+    expect(out[0].original).toMatch(/They also exhibited/);
+    expect(out.find((b) => b.id === "n")?.original).toMatch(/interval$/);
+  });
+});
+
 describe("stitchParagraphContinuations through a body line typed as an equation", () => {
   it("joins the line and the lower-case rest of the sentence", () => {
     const sections = [{ id: "s-body", normalizedKind: "body" }];
