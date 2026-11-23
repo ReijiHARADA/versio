@@ -164,6 +164,18 @@ describe("stitchParagraphContinuations into a term after an unpunctuated word", 
   });
 });
 
+describe("stitchParagraphContinuations into a list lead-in", () => {
+  it("joins the lower-case rest of the sentence that introduces a list, and keeps the lead-in role", () => {
+    const out = stitchParagraphContinuations([
+      block("a", "paragraph", "The model was selected for its use in prior literature and for its diversity in", 8),
+      block("b", "paragraph", "task (diseased vs. no disease). These modifications are:", 8, { listRole: "intro" }),
+      block("c", "paragraph", "• the final layer is replaced", 8, { listRole: "item" }),
+    ], []);
+    expect(out.map((b) => b.id)).toEqual(["a", "c"]);
+    expect(out[0].metadata.listRole).toBe("intro");
+  });
+});
+
 describe("stitchParagraphContinuations past a table note", () => {
   it("joins the rest of the sentence across a table and its unfinished note", () => {
     const blocks = [
