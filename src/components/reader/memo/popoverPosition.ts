@@ -25,11 +25,19 @@ export function rectToAnchor(rect: DOMRect | AnchorBox): AnchorBox {
   };
 }
 
-/** Keep a fixed popover near its anchor without leaving the viewport. */
+/** Area a popover must stay inside; top/left default to the viewport origin. */
+export type PopoverBounds = {
+  width: number;
+  height: number;
+  top?: number;
+  left?: number;
+};
+
+/** Keep a fixed popover near its anchor without leaving `bounds` (the viewport by default). */
 export function clampPopoverPosition(
   anchor: AnchorBox,
   size: { width: number; height: number },
-  viewport: { width: number; height: number } = {
+  bounds: PopoverBounds = {
     width: typeof window !== "undefined" ? window.innerWidth : 1280,
     height: typeof window !== "undefined" ? window.innerHeight : 800,
   },
@@ -37,23 +45,27 @@ export function clampPopoverPosition(
 ): PopoverPlacement {
   const width = size.width || DEFAULT_WIDTH;
   const height = size.height || DEFAULT_HEIGHT;
-  const spaceBelow = viewport.height - (anchor.top + anchor.height) - padding;
-  const placeBelow = spaceBelow >= height + GAP || anchor.top < height + GAP + padding;
+  const minTop = (bounds.top ?? 0) + padding;
+  const minLeft = (bounds.left ?? 0) + padding;
+  const maxBottom = (bounds.top ?? 0) + bounds.height - padding;
+  const maxRight = (bounds.left ?? 0) + bounds.width - padding;
+  const spaceBelow = maxBottom - (anchor.top + anchor.height);
+  const placeBelow = spaceBelow >= height + GAP || anchor.top - minTop < height + GAP;
   const top = placeBelow
     ? anchor.top + anchor.height + GAP
     : anchor.top - height - GAP;
   const center = anchor.left + anchor.width / 2;
   const left = center - width / 2;
   return {
-    top: Math.min(
-      Math.max(padding, top),
-      Math.max(padding, viewport.height - height - padding)
-    ),
-    left: Math.min(
-      Math.max(padding, left),
-      Math.max(padding, viewport.width - width - padding)
-    ),
+    top: Math.min(Math.max(minTop, top), Math.max(minTop, maxBottom - height)),
+    left: Math.min(Math.max(minLeft, left), Math.max(minLeft, maxRight - width)),
   };
+}
+
+/** False once the anchor has scrolled out of `bounds` vertically. */
+export function isAnchorInBounds(anchor: AnchorBox, bounds: PopoverBounds): boolean {
+  const top = bounds.top ?? 0;
+  return anchor.top + anchor.height > top && anchor.top < top + bounds.height;
 }
 
 function findTranslationRoot(blockId: string): HTMLElement | null {
