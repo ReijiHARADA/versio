@@ -496,6 +496,11 @@
   transition: --sq-bg var(--transition-fast);
 }
 
+/* The squircle surface isolates the tile, so an open menu must lift the whole tile above its neighbours. */
+.tile:has(.menu) {
+  z-index: 20;
+}
+
 .tile:hover {
   --sq-bg: var(--color-bg-secondary);
 }
