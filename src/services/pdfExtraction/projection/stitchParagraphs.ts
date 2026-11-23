@@ -187,14 +187,20 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // a lower-case start still continues the nearest open paragraph. Past them, only that start is accepted.
         // (Only from a real paragraph, not a running head or table text, and past two at most.)
         const finished = candidate.type === "paragraph" && TERMINAL.test(candidateText);
-        if (!interruptionAllowed(candidate) && !(finished && (sawFloat || (words(currentText) >= 20 && !KEYWORD_TAIL.test(currentText) && passedFinished < 2)))) break;
+        // An unfinished paragraph right under a table that is not cut mid-phrase is its note
+        // (`Model adjusted for age, … CI 95% confidence interval`); `… across all of the wards in` is open prose.
+        const tableNote = candidate.type === "paragraph" && out[j - 1]?.type === "table" && !CONTINUATION_START.test(candidateText) &&
+          !isHardOpen(candidateText);
+        if (!interruptionAllowed(candidate) && !tableNote && !(finished && (sawFloat || (words(currentText) >= 20 && !KEYWORD_TAIL.test(currentText) && passedFinished < 2)))) break;
         if (finished && !interruptionAllowed(candidate)) passedFinished += 1;
         if (candidate.type === "figure" || candidate.type === "table") sawFloat = true;
         // A running head or a table cell (short, no sentence end) does not count as a skipped paragraph.
         if (candidate.type === "paragraph" && (TERMINAL.test(candidateText) || words(candidateText) > 12)) skippedParagraph = true;
         else if (candidate.type === "paragraph") skippedFragment = true;
         // A page number (`10 / 23`) between the pages does not stop the look past full-page floats.
-        if (candidate.type !== "figure" && candidate.type !== "table" && !PAGE_NUMBER.test(candidateText)) onlyFloats = false;
+        // (Nor does a table's own footnote or note.)
+        if (candidate.type !== "figure" && candidate.type !== "table" && !PAGE_NUMBER.test(candidateText) &&
+          !(candidate.type === "footnote" && out[j - 1]?.type === "table") && !tableNote) onlyFloats = false;
       }
       if (target < 0) break;
       const next = out[target];
