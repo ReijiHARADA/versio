@@ -148,6 +148,15 @@ describe("stitchParagraphContinuations through a short inline formula", () => {
     expect(out[0].original).toBe("To focus on salient attributes of each type, the concatenated features Fmulti ∈ RH×W×C are passed through attribute-specific attention modules.");
   });
 
+  it("also continues a list item cut at the formula", () => {
+    const out = stitchParagraphContinuations([
+      block("a", "paragraph", "3. Type-Specific Feature Aggregation To focus on salient attributes of each type, the concatenated features", 12, { listRole: "item" }),
+      block("e", "equation", "Fmulti ∈ RH×W×C", 12),
+      block("b", "paragraph", "are passed through attribute-specific attention modules.", 12),
+    ], []);
+    expect(out).toHaveLength(1);
+  });
+
   it("keeps a numbered display or one after a lead-in apart", () => {
     const lead = (text: string) => block("a", "paragraph", text, 1);
     const rest = block("b", "paragraph", "where x is the input of the layer.", 1);

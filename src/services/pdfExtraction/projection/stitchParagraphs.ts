@@ -140,7 +140,11 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
     b.type === "paragraph" && !referenceSections.has(b.sectionId ?? "") && !b.metadata.listRole && b.metadata.role !== "reference";
   const out = [...blocks];
   for (let i = 0; i < out.length; i += 1) {
-    if (!eligible(out[i])) continue;
+    // A list item cut at an inline formula (`3. Type-Specific Feature Aggregation … the concatenated features` | `Fmulti ∈ …`
+    // | `are passed through …`) goes on past it; otherwise items stay apart.
+    const listItem = out[i].type === "paragraph" && out[i].metadata.listRole === "item" && out[i].metadata.role !== "reference" &&
+      !referenceSections.has(out[i].sectionId ?? "");
+    if (!eligible(out[i]) && !listItem) continue;
     // A caption-like line taken back mid-sentence ("Table 7. For instance, … of Post") ends anywhere.
     let afterReferenceCaption = false;
     for (;;) {
@@ -162,7 +166,7 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // A list's lead-in (`task (“diseased” vs. “no disease”). These modifications are:`) can be the rest of the sentence too.
         const listIntro = candidate.type === "paragraph" && candidate.metadata.listRole === "intro" && candidate.metadata.role !== "reference" &&
           !referenceSections.has(candidate.sectionId ?? "");
-        if ((eligible(candidate) || listIntro) && words(candidateText) >= 2 && CONTINUATION_START.test(candidateText)) {
+        if (!listItem && (eligible(candidate) || listIntro) && words(candidateText) >= 2 && CONTINUATION_START.test(candidateText)) {
           target = j;
           break;
         }
@@ -176,31 +180,31 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j + 1;
           break;
         }
-        if (j === i + 1 && (isProseEquation(candidate) || isFullWidthProseEquation(current, candidate) || isInlineReferenceCaption(currentText, candidate) || isProseLineEquation(candidate, out[j + 1]))) {
+        if (!listItem && j === i + 1 && (isProseEquation(candidate) || isFullWidthProseEquation(current, candidate) || isInlineReferenceCaption(currentText, candidate) || isProseLineEquation(candidate, out[j + 1]))) {
           target = j;
           break;
         }
         // Without a lower-case start, only the first paragraph after the interruption can be the continuation.
         // After a skipped fragment, text opening with `,` / `;` continues that fragment.
-        if (hardOpen && !skippedParagraph && !(skippedFragment && /^[,;:.]/.test(candidateText)) && eligible(candidate) && looseContinuation(currentText, candidateText, afterReferenceCaption)) {
+        if (!listItem && hardOpen && !skippedParagraph && !(skippedFragment && /^[,;:.]/.test(candidateText)) && eligible(candidate) && looseContinuation(currentText, candidateText, afterReferenceCaption)) {
           target = j;
           break;
         }
         // Right after a paragraph cut at a function word (`… higher than the` + `Transformer+CAM …`), nothing in between,
         // the next paragraph is its rest when it opens with a term (an acronym or a mixed-case name), not a sentence word.
         // (Also after any unpunctuated lower-case word of a long paragraph: `… Given its proven stability, we selected` + `MAPPO under …`.)
-        if (j === i + 1 && (hardOpen || (/\s\p{Ll}{3,}$/u.test(currentText) && words(currentText) >= 20)) && !/,$/.test(currentText) && eligible(candidate) &&
+        if (!listItem && j === i + 1 && (hardOpen || (/\s\p{Ll}{3,}$/u.test(currentText) && words(currentText) >= 20)) && !/,$/.test(currentText) && eligible(candidate) &&
           TERM_START.test(candidateText) && looseContinuation(currentText, candidateText, true)) {
           target = j;
           break;
         }
         // Right after it, any open paragraph goes on in a number (`… on the same` + `1.5 T Signa MRI scanner …`).
-        if (j === i + 1 && !hardOpen && eligible(candidate) && /^\d/.test(candidateText) && looseContinuation(currentText, candidateText, true)) {
+        if (!listItem && j === i + 1 && !hardOpen && eligible(candidate) && /^\d/.test(candidateText) && looseContinuation(currentText, candidateText, true)) {
           target = j;
           break;
         }
         // Any open paragraph goes on in a bracket (`… with low first authorship` + `(1.9%–2.1%) and …`, `… is limited` + `(75). Our …`).
-        if (!hardOpen && !skippedParagraph && !skippedFragment && eligible(candidate) && /^[([]/.test(candidateText) && looseContinuation(currentText, candidateText, true) &&
+        if (!listItem && !hardOpen && !skippedParagraph && !skippedFragment && eligible(candidate) && /^[([]/.test(candidateText) && looseContinuation(currentText, candidateText, true) &&
           // A lower-case continuation a little later wins (`(Compl). Scores are …` is a table note).
           !out.slice(j + 1, j + 5).some((b) => eligible(b) && CONTINUATION_START.test(b.original?.trim() ?? ""))) {
           target = j;
