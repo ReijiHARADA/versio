@@ -323,7 +323,9 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     }
     // A supporting-information entry ends with its file type after the last sentence (`… policy. (ZIP)`).
     checked = checked.replace(/([.!?])\s*\((?:[A-Z][A-Z0-9]{1,4}(?:\s*\/\s*[A-Z][A-Z0-9]{1,4})?)\)$/, "$1");
-    const warning = isExpectedNonProseParagraph(text) ? null : unsafeParagraphStructureReason(checked);
+    // A short piece between two parts of one table on its page is a table cell read as a paragraph.
+    const betweenTables = words(text) < 40 && [blocks[index - 1], blocks[index + 1]].every((b) => b?.type === "table" && b.pageStart <= block.pageStart && b.pageEnd >= block.pageStart);
+    const warning = isExpectedNonProseParagraph(text) || betweenTables ? null : unsafeParagraphStructureReason(checked);
     if ((warning ?? undefined) === current) return block;
     return { ...block, metadata: { ...block.metadata, translationInputWarning: warning ?? undefined } };
   });

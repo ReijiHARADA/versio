@@ -106,6 +106,8 @@ describe("reconcileTranslationWarnings", () => {
     expect(reconcileTranslationWarnings([item])[0].metadata.translationInputWarning).toBeUndefined();
     const ofLead = block("a", "paragraph", "In physical units, the parameter grid of the simulation consisted of", 1, { translationInputWarning: TAIL });
     expect(reconcileTranslationWarnings([ofLead, block("eq", "equation", "λ ∈ {0, 2, 4} m/s")])[0].metadata.translationInputWarning).toBeUndefined();
+    const cell = block("c", "paragraph", "Australia efficient operating theatre", 5, { translationInputWarning: TAIL });
+    expect(reconcileTranslationWarnings([block("t1", "table", "Study Country Aim", 5), cell, block("t2", "table", "Observational 2022", 5)])[1].metadata.translationInputWarning).toBeUndefined();
     const asLead = () => block("a", "paragraph", "The importance of feature j over the data subset is defined as", 1, { translationInputWarning: TAIL });
     expect(reconcileTranslationWarnings([asLead(), block("eq", "equation", "I = sum")])[0].metadata.translationInputWarning).toBeUndefined();
     const commaLead = () => block("a", "paragraph", "Given the transition from bin i to bin j, the joint distribution factorizes over time,", 1, { translationInputWarning: TAIL });
