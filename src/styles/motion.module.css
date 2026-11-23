@@ -32,11 +32,6 @@
   animation: motionRevealIn var(--motion-enter) both;
 }
 
-/* Route content: opacity only, so fixed-position descendants keep the viewport as containing block. */
-.route {
-  animation: motionFadeIn var(--motion-enter) both;
-}
-
 [data-motion="closed"].overlay,
 [data-motion="closed"] .overlay {
   animation: motionFadeOut var(--motion-exit) both;
@@ -182,7 +177,6 @@
   .drop,
   .slideLeft,
   .reveal,
-  .route,
   [data-motion="closed"].overlay,
   [data-motion="closed"] .overlay,
   [data-motion="closed"].sheet,

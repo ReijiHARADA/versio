@@ -86,10 +86,6 @@
   pointer-events: none;
 }
 
-.blockPlaceholder {
-  margin-bottom: var(--spacing-md);
-}
-
 .heading1 {
   font-size: var(--font-size-display);
   font-weight: 700;

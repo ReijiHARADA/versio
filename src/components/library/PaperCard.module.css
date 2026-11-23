@@ -191,14 +191,6 @@
   text-overflow: ellipsis;
 }
 
-.meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-  font-size: var(--font-size-caption);
-}
-
 .status {
   display: flex;
   align-items: center;
@@ -391,60 +383,6 @@
 [data-theme="dark"] .actionButton:hover {
   --sq-bg: var(--color-danger-surface-dark);
   color: var(--color-danger-text-dark);
-}
-
-.deleteConfirm {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  min-width: 120px;
-}
-
-.deleteConfirmText {
-  margin: 0;
-  font-size: var(--font-size-caption);
-  color: var(--color-text-secondary);
-  text-align: right;
-}
-
-.deleteConfirmYes {
-  composes: surface from "../../styles/squircle.module.css";
-  position: relative;
-  --sq-fill: var(--sq-fill-sm);
-}
-
-.deleteConfirmNo {
-  composes: surface from "../../styles/squircle.module.css";
-  position: relative;
-  --sq-fill: var(--sq-fill-sm);
-}
-
-.deleteConfirmYes,
-.deleteConfirmNo {
-  appearance: none;
-  border: none;
-  font-size: var(--font-size-caption);
-  padding: 4px 8px;
-  border-radius: var(--sq-radius-sm);
-  cursor: pointer;
-}
-
-.deleteConfirmYes {
-  background: var(--color-danger-static);
-  color: var(--color-selection-fg);
-}
-
-.deleteConfirmYes:disabled,
-.deleteConfirmNo:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.deleteConfirmNo {
-  background: transparent;
-  color: var(--color-text-secondary);
 }
 
 .importActions {

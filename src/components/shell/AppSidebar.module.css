@@ -509,12 +509,6 @@
   width: 100%;
 }
 
-.projectLink {
-  position: relative;
-  z-index: var(--z-base);
-  padding-right: 34px !important;
-}
-
 .projectMenu {
   composes: surface from "../../styles/squircle.module.css";
   /* Portaled to document.body so nested tree overflow:hidden cannot clip it. */
@@ -835,7 +829,6 @@
   cursor: not-allowed;
 }
 .invalidDrop * { cursor: not-allowed !important; }
-.paperInvalid:hover { outline: 1px dashed var(--color-danger-static); cursor: not-allowed; }
 .rootDrop { display: none; }
 .rootDropVisible { display: block; padding: 8px; font-size: var(--font-size-caption); color: var(--color-text-secondary); }
 
@@ -853,7 +846,6 @@
   border-radius: var(--sq-radius-sm);
 }
 .inlineName span { font-size: var(--font-size-micro); color: var(--color-danger-static); }
-.menuNotice { margin: 5px 8px; font-size: var(--font-size-caption); color: var(--color-text-secondary); line-height: 1.5; }
 .projectMenu button:disabled { opacity: .5; cursor: not-allowed; }
 
 /* Sliding selection pill (useSelectionSlide): the ghost travels, the arriving item hides its fill. */
