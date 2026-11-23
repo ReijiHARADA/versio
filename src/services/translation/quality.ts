@@ -1908,6 +1908,8 @@ export function isExpectedNonProseParagraph(text: string): boolean {
   // marker such as `• 195:3`. They carry no sentence boundary and native PDF
   // order can otherwise present them as a paragraph on a later page.
   if (/(?:[•·]|\|)\s*\d{1,4}:\d{1,3}\s*$/.test(t)) return true;
+  // Pieces of an open-access license footer split across columns (`… No use, distribution or reproduction is permitted`).
+  if (/\b(?:no use, distribution or reproduction is permitted|the original publication in this journal is cited|copyright owner\(s\) are credited|in accordance with accepted academic practice)\b/i.test(t)) return true;
   // Consortium member and affiliation lists in the back matter (`… Thomas Tegos , 42,43,44 , Jordi Pérez-Tur ,`,
   // `… University of Eastern Finland, Kuopio, Finland. Institute of …`): institutions or affiliation numbers packed
   // densely, which a sentence about an institution never does.
