@@ -365,15 +365,11 @@ export function ReaderScreen() {
             <ArrowLeft size={iconSize.md} />
           </button>
           <div className={styles.titleArea}>
-            <h1 className={styles.title}>
-              {workspacePath.length > 0 ? (
-                <WorkspacePathTrail
-                  folders={workspacePath}
-                  leaf={{ label: displayPaperTitle(paper) }}
-                />
-              ) : (
-                displayPaperTitle(paper)
-              )}
+            {workspacePath.length > 0 && (
+              <WorkspacePathTrail folders={workspacePath} prefix />
+            )}
+            <h1 className={styles.title} title={displayPaperTitle(paper)}>
+              {displayPaperTitle(paper)}
             </h1>
           </div>
         </div>

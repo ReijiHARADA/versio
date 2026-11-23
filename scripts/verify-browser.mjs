@@ -109,7 +109,7 @@ async function hoverSidebar() {
   await page.locator("aside").first().hover();
 }
 
-/** PathTrail puts folder text in h1>nav[aria-label=場所], so heading accessible name is "場所". */
+/** PathTrail renders folders in nav[aria-label=場所] (Reader: a small line above the h1 title). */
 function locationTrail() {
   return page.getByRole("navigation", { name: "場所" });
 }
