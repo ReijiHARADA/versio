@@ -196,6 +196,17 @@ describe("stitchParagraphContinuations into a list lead-in", () => {
   });
 });
 
+describe("stitchParagraphContinuations into a term past a float", () => {
+  it("joins a paragraph cut at a function word to the first paragraph past a table that opens with a term", () => {
+    const out = stitchParagraphContinuations([
+      block("a", "paragraph", "The model generalised across all cell types in the Bioplex3 dataset, HCT116 cells and", 8),
+      block("t", "table", "Method Precision Recall F1 DirectContacts2 0.91 0.88 0.89 X-Link 0.72 0.65 0.68 Baseline 0.51 0.49 0.50 Ensemble 0.83 0.80 0.81 Pairwise 0.66 0.61 0.63 Random 0.33 0.31 0.32 Oracle 0.99 0.97 0.98", 9),
+      block("b", "paragraph", "HEK293T, and performed very well as a discriminator of direct interactions.", 9),
+    ], []);
+    expect(out.map((b) => b.id)).toEqual(["a", "t"]);
+  });
+});
+
 describe("stitchParagraphContinuations past a table note", () => {
   it("joins the rest of the sentence across a table and its unfinished note", () => {
     const blocks = [
