@@ -11,6 +11,7 @@ import {
   StickyNote,
   BookMarked,
   PanelLeft,
+  PanelRight,
 } from "lucide-react";
 import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
@@ -30,14 +31,18 @@ import { ExportDialog } from "./ExportDialog";
 import { iconSize } from "../../styles/iconTokens";
 import { Outline } from "./Outline";
 import { DisplaySettingsPanel } from "./DisplaySettingsPanel";
-import { SearchPanel } from "./SearchPanel";
+import { SearchBar, SearchResults, findSearchResults } from "./SearchPanel";
+import { ReaderInspector } from "./ReaderInspector";
+import { PaperInfoPanel } from "./info/PaperInfoPanel";
 import { NotesPanel } from "./notes/NotesPanel";
 import { GlossaryPanel } from "./GlossaryPanel";
 import { MemoPopover } from "./memo/MemoPopover";
 import { useTextSelection } from "./selection/useTextSelection";
 import {
-  toggleReaderRightPanel,
-  type ReaderRightPanel,
+  resolveReaderInspector,
+  toggleReaderInspectorTab,
+  type ReaderInspectorState,
+  type ReaderInspectorTab,
 } from "../../utils/readerRightPanel";
 import { useReaderDocument } from "./hooks/useReaderDocument";
 import { useReaderGlossary } from "./hooks/useReaderGlossary";
@@ -78,10 +83,21 @@ export function ReaderScreen() {
   const [showSettings, setShowSettings] = useState(false);
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  const [rightPanel, setRightPanel] = useState<ReaderRightPanel>("none");
   // Wide windows draw the inspector on the ground beside the card (AppShell slot, present only after the
   // first commit); narrow ones keep it inside the card as an overlay so it never covers the toolbar.
-  const [inspectorSlot, setInspectorSlot] = useState<HTMLElement | null>(null);
+  const [inspectorSlot, setInspectorSlot] = useState<HTMLElement | null>(() =>
+    window.matchMedia(INSPECTOR_ON_GROUND_QUERY).matches ? document.getElementById(INSPECTOR_SLOT_ID) : null
+  );
+  const [wideAtMount] = useState(() => window.matchMedia(INSPECTOR_ON_GROUND_QUERY).matches);
+  const setDisplaySettings = useAppStore((s) => s.setDisplaySettings);
+  const inspector = resolveReaderInspector(displaySettings.readerInspector, wideAtMount);
+  const inspectorRef = useRef(inspector);
+  inspectorRef.current = inspector;
+  const setInspector = useCallback(
+    (update: (current: ReaderInspectorState) => ReaderInspectorState) =>
+      setDisplaySettings({ readerInspector: update(inspectorRef.current) }),
+    [setDisplaySettings]
+  );
   useEffect(() => {
     const wide = window.matchMedia(INSPECTOR_ON_GROUND_QUERY);
     const sync = () => setInspectorSlot(wide.matches ? document.getElementById(INSPECTOR_SLOT_ID) : null);
@@ -266,12 +282,25 @@ export function ReaderScreen() {
     [handleOpenSourcePdf]
   );
   const openGlossaryInspector = useCallback(() => {
-    setRightPanel("glossary");
-  }, []);
-
-  const showNotesList = useCallback(() => {
-    setRightPanel((current) => toggleReaderRightPanel(current, "notes"));
-  }, []);
+    setInspector(() => ({ open: true, tab: "glossary" }));
+  }, [setInspector]);
+  const toggleInspectorTab = useCallback(
+    (tab: ReaderInspectorTab) => setInspector((current) => toggleReaderInspectorTab(current, tab)),
+    [setInspector]
+  );
+  const showInspectorTab = useCallback(
+    (tab: ReaderInspectorTab) => setInspector(() => ({ open: true, tab })),
+    [setInspector]
+  );
+  // Hits in hidden original text are not in the DOM count; the bar still needs to say they exist.
+  const searchResultCount = useMemo(
+    () => (showSearch ? findSearchResults(storeBlocks, storeSections, searchQuery).length : 0),
+    [showSearch, storeBlocks, storeSections, searchQuery]
+  );
+  const workspaceNames = useMemo(() => {
+    const ids = new Set(memberships.filter((m) => m.paperId === paperId).map((m) => m.nodeId));
+    return workspaceNodes.filter((node) => ids.has(node.id)).map((node) => node.name);
+  }, [memberships, workspaceNodes, paperId]);
 
   if (isLoading) {
     return (
@@ -347,18 +376,16 @@ export function ReaderScreen() {
             <PanelLeft size={iconSize.md} />
           </button>
           <button
-            className={`${styles.iconButton} ${rightPanel === "glossary" ? styles.active : ""}`}
-            onClick={() =>
-              setRightPanel((current) => toggleReaderRightPanel(current, "glossary"))
-            }
+            className={`${styles.iconButton} ${inspector.open && inspector.tab === "glossary" ? styles.active : ""}`}
+            onClick={() => toggleInspectorTab("glossary")}
             aria-label="用語集"
             data-tooltip="用語集"
           >
             <BookMarked size={iconSize.md} />
           </button>
           <button
-            className={`${styles.iconButton} ${rightPanel === "notes" ? styles.active : ""}`}
-            onClick={showNotesList}
+            className={`${styles.iconButton} ${inspector.open && inspector.tab === "notes" ? styles.active : ""}`}
+            onClick={() => toggleInspectorTab("notes")}
             aria-label="メモ一覧"
             data-tooltip="メモ一覧"
           >
@@ -394,6 +421,15 @@ export function ReaderScreen() {
             onClick={() => void handleOpenSourcePdf()}
           >
             <ExternalLink size={iconSize.md} />
+          </button>
+          <button
+            className={`${styles.iconButton} ${inspector.open ? styles.active : ""}`}
+            onClick={() => setInspector((current) => ({ ...current, open: !current.open }))}
+            aria-label={inspector.open ? "インスペクタを隠す" : "インスペクタを表示"}
+            aria-pressed={inspector.open}
+            data-tooltip={inspector.open ? "インスペクタを隠す" : "インスペクタを表示"}
+          >
+            <PanelRight size={iconSize.md} />
           </button>
         </div>
       </header>
@@ -435,24 +471,45 @@ export function ReaderScreen() {
           />
         </main>
 
-        {rightPanel !== "none" && placeInspector(
+        {showSearch && (
+          <SearchBar
+            hitIndex={searchHitIndex}
+            hitCount={searchHitCount}
+            query={searchQuery}
+            resultCount={searchResultCount}
+            resultsOpen={inspector.open && inspector.tab === "search"}
+            onClose={handleSearchClose}
+            onStep={(delta) => applySearchHits({ delta, scroll: true })}
+            onShowResults={() => toggleInspectorTab("search")}
+          />
+        )}
+
+        {inspector.open && placeInspector(
           <aside className={styles.rightPane}>
-            {rightPanel === "glossary" && (
-              <GlossaryPanel
-                entries={glossary}
-                onChange={setGlossary}
-                onClose={() => setRightPanel("none")}
-              />
-            )}
-            {rightPanel === "notes" && (
-              <NotesPanel
-                annotations={annotations}
-                activeIds={activeAnnotationIds}
-                onSelect={handleSelectAnnotation}
-                onDelete={(annotation) => void handleDeleteAnnotation(annotation)}
-                onClose={() => setRightPanel("none")}
-              />
-            )}
+            <ReaderInspector
+              tab={inspector.tab}
+              onTabChange={showInspectorTab}
+              onClose={() => setInspector((current) => ({ ...current, open: false }))}
+            >
+              {inspector.tab === "info" && <PaperInfoPanel paper={paper} workspaceNames={workspaceNames} />}
+              {inspector.tab === "glossary" && <GlossaryPanel entries={glossary} onChange={setGlossary} />}
+              {inspector.tab === "notes" && (
+                <NotesPanel
+                  annotations={annotations}
+                  activeIds={activeAnnotationIds}
+                  onSelect={handleSelectAnnotation}
+                  onDelete={(annotation) => void handleDeleteAnnotation(annotation)}
+                />
+              )}
+              {inspector.tab === "search" && (
+                <SearchResults
+                  blocks={storeBlocks}
+                  sections={storeSections}
+                  query={searchQuery}
+                  onResultClick={handleSearchResultClick}
+                />
+              )}
+            </ReaderInspector>
           </aside>,
           inspectorSlot
         )}
@@ -520,18 +577,6 @@ export function ReaderScreen() {
         />
       )}
 
-      {showSearch && (
-        <SearchPanel
-          blocks={storeBlocks}
-          sections={storeSections}
-          hitIndex={searchHitIndex}
-          hitCount={searchHitCount}
-          query={searchQuery}
-          onClose={handleSearchClose}
-          onResultClick={handleSearchResultClick}
-          onStep={(delta) => applySearchHits({ delta, scroll: true })}
-        />
-      )}
 
       <ExportDialog
         open={showExport}

@@ -3,7 +3,7 @@ type: Handoff
 title: 引き継ぎ：Reader の右 Inspector を「論文に付随する情報」の場所にまとめる（2026-11-23〜）
 description: 情報 / メモ / 用語 / 検索の 4 タブ化。定義は UI_INTERACTION_PRINCIPLES.md、ここは調査結果と実装の段取り
 tags: [reader, ui, inspector, handoff]
-status: draft
+status: deprecated
 ---
 
 # 引き継ぎ：Reader の右 Inspector を 4 タブにまとめる
@@ -12,7 +12,8 @@ status: draft
 
 ## 今の状態
 
-- 定義だけ済み。コードは未着手。main 基準、作業ブランチなし。
+- 完了（2026-11-23）。段取り 1〜4 を 1 本の PR `feat/reader-inspector-tabs` で実装。判断待ちは既定で決めた: 情報タブは表示のみ（読書状態・タグの変更は Library 側）、検索バーを Esc で閉じても検索タブは残り「入力すると結果が並ぶ」案内を出す。
+- 既知の制限: 狭い窓（オーバーレイ）では検索バーがインスペクタの下に隠れる。一覧から移動はできる。
 
 ## 調査で分かったこと（現行コード）
 
