@@ -1,0 +1,29 @@
+{
+  "sudachi": {
+    "name": "Sudachi 同義語辞書",
+    "version": "SudachiDict@830bf9e1313f6f75235ba87ee041e144dbcad8c1",
+    "license": "Apache-2.0",
+    "url": "https://raw.githubusercontent.com/WorksApplications/SudachiDict/830bf9e1313f6f75235ba87ee041e144dbcad8c1/src/main/text/synonyms.txt",
+    "file": "sudachi-synonyms.txt",
+    "sha256": "0b0c80c0505015fa6bd625b5f3b1ad4f5dcd15d4cf3e5215790ff86efe98a716",
+    "homepage": "https://github.com/WorksApplications/SudachiDict"
+  },
+  "oewn": {
+    "name": "Open English WordNet",
+    "version": "2025",
+    "license": "CC-BY-4.0",
+    "url": "https://en-word.net/downloads/english-wordnet-2025-json.zip",
+    "file": "oewn-2025-json.zip",
+    "sha256": "7d749f6e2c39e6970e4997839dcf6e42fd281f3c2fae0171d2192bae8cfa4b51",
+    "homepage": "https://en-word.net/"
+  },
+  "wnja": {
+    "name": "Japanese Wordnet",
+    "version": "2.0",
+    "license": "WordNet License (Japanese Wordnet)",
+    "url": "https://github.com/bond-lab/wnja/releases/download/v2.0/wnja-2.0.tar.xz",
+    "file": "wnja-2.0.tar.xz",
+    "sha256": "7d1c46900d9179186cda8cb9baeb2baeaf81c56989109c8fa9ce07fbc06a225f",
+    "homepage": "https://bond-lab.github.io/wnja/"
+  }
+}

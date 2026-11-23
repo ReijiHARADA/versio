@@ -101,10 +101,9 @@ concept_term(concept_id, term_id, relation, weight, source_id, confidence, revie
 
 - P0（2026-11-24）: `src/domain/search/`（`normalizeSearchText` と `buildSearchQuery`。展開器 `SearchExpander` はまだ空）、`papers_fts` を正規化した文字列で保存（schema v10）、順位付けと短い英字の単語境界。
 - 速度（P0、node）: 300 本・本文約 40 MB で 1 語 35〜50 ms、短い英字 1 語 150 ms、2 語 190 ms。LIKE の回数は展開した語の数に比例するので、P1 で 1 語あたり 12 個まで展開すると重くなる。本文で照合する語を重みの高いものに限るか、語ごとの索引を作るかを P1 で決める。
-
-## 8. 未確認・判断待ち
-
-- 日本語 WordNet 2.1 が存在するか（見つかったのは 2.0 の論文と、ダウンロードページにある 1.1 だけ）。
-- 日本語 WordNet 1.1 の語の出典区分（人手 / 自動）で信頼度を分けられるか。
-- Sudachi の展開制御フラグの値の意味は、公式の `docs/synonyms.md` で確認してから実装する。
-- 辞書 DB をリポジトリにコミットするか、ビルド時に作るか（サイズとビルド時間で決める）。
+- P1（2026-11-24）: 同梱辞書 `src/generated/synonyms.json`（4.55 MB、gzip 1.27 MB、遅延読み込みの別チャンク。56,348 概念 = Sudachi 18,278 / WordNet 37,851 / 独自 219）。`npm run build:synonyms` で再生成。
+  - Sudachi は語彙素番号・語形種別・略語・表記揺れのフラグを関係に写す。企業名・人名・料理など論文と無関係な分野は除外。別語彙素どうし（学習 / 研究、学習 / study）は 0.6 で既定オフ。
+  - WordNet は語義が 1 つの語だけ（`load` は 14 語義、認知は 13 語義なので使わない）。日本語 WordNet 2.0（2026-10 公開、WN-LMF）と OEWN 2025 を ILI でつなぐ。訳語 0.7（オン）、英語どうし 0.5（オフ）。
+  - 専門語は一般辞書にほぼ無い（認知負荷・HCI・視線追跡・cognitive load はどちらの WordNet にも無い）ので `scripts/synonyms/curated.txt`（LLM 下書き）で補う。
+  - 重み 0.65 以上を既定オン、それ未満は検索欄の「+N」Popover で候補として出す。2 文字の略語（AR・MR・SD）は長い形からの展開先にしない（`Mr.` などに当たるため）。展開で足した英単語は語頭一致（`load` が download に当たらない）。
+  - 速度: 1 語ごとに SQL の `LIKE` / `instr` を並べると本文を語の数だけ読み直し、13 語で 0.6〜0.9 s。採点を SQL 関数 `versio_search_score`（JS）にまとめて本文を 1 行 1 回だけ読むようにし、語数に関係なく 150〜200 ms（300 本・約 40 MB、node）。

@@ -1,0 +1,235 @@
+# Versio curated academic terms (HCI / CS / research methods).
+# One concept per line. Lexemes are separated by " ~ " (synonyms, weight lower),
+# forms of one lexeme by " / " (spellings, translations, abbreviations).
+# Drafted with an LLM (2026-11); checked by scripts/synonyms/validate-curated.ts.
+
+# --- HCI core ---
+HCI / human-computer interaction / human–computer interaction / ヒューマンコンピュータインタラクション / ヒューマンコンピューターインタラクション / ヒューマン・コンピュータ・インタラクション / 人間とコンピュータの相互作用 / 人とコンピュータの相互作用
+CHI / Conference on Human Factors in Computing Systems
+CSCW / computer-supported cooperative work / コンピュータ支援協調作業
+UI / user interface / ユーザインタフェース / ユーザーインターフェース / ユーザインターフェイス
+GUI / graphical user interface / グラフィカルユーザインタフェース / グラフィカルユーザーインターフェース
+TUI / tangible user interface / タンジブルユーザインタフェース / タンジブルユーザーインターフェース
+NUI / natural user interface / ナチュラルユーザインタフェース
+UX / user experience / ユーザエクスペリエンス / ユーザーエクスペリエンス / ユーザー体験 / ユーザ体験
+usability / ユーザビリティ ~ 使いやすさ / 使い勝手 ~ 操作性
+SUS / System Usability Scale / システムユーザビリティスケール
+NASA-TLX / NASA Task Load Index / NASA TLX
+cognitive load / 認知負荷 / 認知的負荷 ~ mental workload / メンタルワークロード / 精神的負荷 ~ mental effort / 心的努力
+workload / ワークロード / 作業負荷
+user-centered design / user-centred design / UCD / ユーザ中心設計 / ユーザー中心設計 / 人間中心設計 ~ human-centered design / HCD / 人間中心デザイン
+participatory design / 参加型デザイン / 参加型設計 ~ co-design / 共創デザイン / コ・デザイン
+interaction design / インタラクションデザイン / 対話設計
+design fiction / デザインフィクション ~ speculative design / スペキュラティブデザイン
+research through design / RtD / デザインを通じた研究
+affordance / アフォーダンス
+mental model / メンタルモデル
+accessibility / アクセシビリティ / a11y ~ inclusive design / インクルーシブデザイン
+assistive technology / 支援技術 / アシスティブテクノロジー
+universal design / ユニバーサルデザイン
+user study / ユーザスタディ / ユーザースタディ / ユーザ調査 / ユーザー調査
+usability testing / ユーザビリティテスト / ユーザビリティ評価
+think-aloud / think aloud / 発話思考法 / 思考発話法 / シンクアラウド
+heuristic evaluation / ヒューリスティック評価
+Wizard of Oz / オズの魔法使い法 / ウィザードオブオズ
+prototype / プロトタイプ / 試作 / 試作品 ~ mock-up / mockup / モックアップ
+low-fidelity prototype / ローファイプロトタイプ / 低忠実度プロトタイプ
+persona / ペルソナ
+user journey / ユーザージャーニー / カスタマージャーニー
+information visualization / InfoVis / 情報可視化 ~ data visualization / データ可視化
+visual analytics / ビジュアルアナリティクス / 視覚的分析
+haptics / haptic feedback / ハプティクス / 触覚フィードバック ~ tactile feedback / 触覚提示
+vibrotactile / 振動触覚
+eye tracking / eye-tracking / アイトラッキング / 視線追跡 / 視線計測
+gaze / 視線 ~ gaze interaction / 視線入力 / 視線インタラクション
+gesture / ジェスチャ / ジェスチャー ~ gesture recognition / ジェスチャ認識 / ジェスチャー認識
+touchscreen / touch screen / タッチスクリーン / タッチパネル
+multimodal interaction / マルチモーダルインタラクション
+voice user interface / VUI / 音声ユーザインタフェース / 音声インタフェース
+conversational agent / 会話エージェント / 対話エージェント ~ chatbot / チャットボット
+embodied interaction / 身体性インタラクション
+ubiquitous computing / ubicomp / ユビキタスコンピューティング ~ pervasive computing / パーベイシブコンピューティング
+wearable computing / ウェアラブルコンピューティング ~ wearable device / wearables / ウェアラブルデバイス / ウェアラブル端末
+smart jewelry / smart jewellery / スマートジュエリー ~ interactive jewelry / interactive jewellery / インタラクティブジュエリー
+e-textiles / electronic textiles / 電子テキスタイル ~ smart textiles / スマートテキスタイル
+smartwatch / smart watch / スマートウォッチ
+IoT / Internet of Things / モノのインターネット
+digital fabrication / デジタルファブリケーション
+personal fabrication / パーソナルファブリケーション
+3D printing / 3Dプリンティング / 3D印刷 / 三次元印刷 ~ additive manufacturing / 積層造形 / 付加製造
+shape-changing interface / 形状変化インタフェース
+physical computing / フィジカルコンピューティング
+calm technology / カームテクノロジー / 穏やかな技術
+persuasive technology / パーシュエイシブテクノロジー / 説得技術
+behavior change / behaviour change / 行動変容
+self-tracking / セルフトラッキング ~ quantified self / 定量化された自己 / クオンティファイドセルフ
+personal informatics / パーソナルインフォマティクス
+digital wellbeing / digital well-being / デジタルウェルビーイング
+wellbeing / well-being / ウェルビーイング / 幸福
+older adults / 高齢者 ~ elderly / 老人
+children / 子ども / 子供 / 児童
+notification / 通知
+interruption / 割り込み / 中断
+attention / 注意 / 注意力
+situational awareness / situation awareness / 状況認識
+sense of agency / 主体感 / 行為主体感
+presence / 臨場感 / プレゼンス ~ immersion / 没入感 / 没入
+embodiment / 身体化 / 身体性
+avatar / アバター / アバタ
+telepresence / テレプレゼンス / 遠隔臨場感
+remote collaboration / 遠隔協調 / 遠隔共同作業 / リモートコラボレーション
+
+# --- XR ---
+VR / virtual reality / バーチャルリアリティ / 仮想現実
+AR / augmented reality / 拡張現実 / オーグメンテッドリアリティ
+MR / mixed reality / 複合現実 / ミクストリアリティ
+XR / extended reality / クロスリアリティ / エクステンデッドリアリティ
+HMD / head-mounted display / ヘッドマウントディスプレイ / 頭部搭載型ディスプレイ
+CAVE / cave automatic virtual environment
+cybersickness / サイバー酔い ~ simulator sickness / シミュレータ酔い / VR酔い
+redirected walking / リダイレクテッドウォーキング
+
+# --- AI / ML / CS ---
+AI / artificial intelligence / 人工知能
+ML / machine learning / 機械学習
+DL / deep learning / 深層学習 / ディープラーニング
+NN / neural network / ニューラルネットワーク / ニューラルネット
+CNN / convolutional neural network / 畳み込みニューラルネットワーク
+RNN / recurrent neural network / 再帰型ニューラルネットワーク / リカレントニューラルネットワーク
+LSTM / long short-term memory / 長短期記憶
+GAN / generative adversarial network / 敵対的生成ネットワーク
+transformer / トランスフォーマー / Transformer
+LLM / large language model / 大規模言語モデル
+NLP / natural language processing / 自然言語処理
+LM / language model / 言語モデル
+generative AI / 生成AI / 生成的AI / 生成系AI
+RL / reinforcement learning / 強化学習
+supervised learning / 教師あり学習
+unsupervised learning / 教師なし学習
+transfer learning / 転移学習
+fine-tuning / fine tuning / ファインチューニング / 微調整
+prompt engineering / プロンプトエンジニアリング
+embedding / 埋め込み / エンベディング
+classification / 分類
+regression / 回帰
+clustering / クラスタリング
+CV / computer vision / コンピュータビジョン
+ASR / automatic speech recognition / 自動音声認識 ~ speech recognition / 音声認識
+TTS / text-to-speech / 音声合成
+MT / machine translation / 機械翻訳 ~ NMT / neural machine translation / ニューラル機械翻訳
+OCR / optical character recognition / 光学文字認識
+explainable AI / XAI / 説明可能なAI / 説明可能AI
+human-AI interaction / 人間とAIのインタラクション / 人とAIのインタラクション
+human-in-the-loop / ヒューマンインザループ
+crowdsourcing / クラウドソーシング
+recommender system / recommendation system / 推薦システム / レコメンドシステム / レコメンダシステム
+information retrieval / IR / 情報検索
+search engine / 検索エンジン
+knowledge graph / 知識グラフ / ナレッジグラフ
+ontology / オントロジー
+algorithm / アルゴリズム
+dataset / data set / データセット
+benchmark / ベンチマーク
+API / application programming interface
+GPU / graphics processing unit
+sensor / センサ / センサー
+accelerometer / 加速度センサ / 加速度センサー / 加速度計
+IMU / inertial measurement unit / 慣性計測装置 / 慣性センサ
+BCI / brain-computer interface / ブレインコンピュータインタフェース / ブレイン・コンピュータ・インタフェース
+EEG / electroencephalography / electroencephalogram / 脳波 / 脳波計
+fNIRS / functional near-infrared spectroscopy / 機能的近赤外分光法
+fMRI / functional magnetic resonance imaging / 機能的磁気共鳴画像法
+EMG / electromyography / 筋電 / 筋電図
+ECG / EKG / electrocardiogram / 心電図
+GSR / galvanic skin response / EDA / electrodermal activity / 皮膚電気活動 / 皮膚電気反応
+HRV / heart rate variability / 心拍変動
+privacy / プライバシー
+security / セキュリティ
+trust / 信頼
+ethics / 倫理
+bias / バイアス / 偏り
+fairness / 公平性
+transparency / 透明性
+sustainability / 持続可能性 / サステナビリティ
+energy harvesting / エネルギーハーベスティング / 環境発電
+
+# --- Research methods ---
+literature review / 文献レビュー ~ systematic review / システマティックレビュー / 系統的レビュー ~ survey / サーベイ
+scoping review / スコーピングレビュー
+meta-analysis / メタ分析 / メタアナリシス
+qualitative research / 質的研究 / 定性的研究
+quantitative research / 量的研究 / 定量的研究
+mixed methods / 混合研究法 / ミックスドメソッド
+interview / インタビュー / 面接 ~ semi-structured interview / 半構造化インタビュー / 半構造化面接
+focus group / フォーカスグループ
+questionnaire / 質問紙 / アンケート ~ survey questionnaire / 調査票
+Likert scale / リッカート尺度 / リッカートスケール
+thematic analysis / テーマ分析 / 主題分析
+grounded theory / グラウンデッド・セオリー / グラウンデッドセオリー
+affinity diagram / 親和図 / 親和図法 ~ KJ method / KJ法
+coding / コーディング
+inter-rater reliability / 評定者間信頼性 / 評価者間信頼性
+Cohen's kappa / コーエンのカッパ / カッパ係数
+ethnography / エスノグラフィ / エスノグラフィー / 民族誌
+field study / フィールドスタディ / フィールド調査 / 現地調査
+in-the-wild study / in the wild / 実環境研究
+case study / ケーススタディ / 事例研究
+diary study / ダイアリースタディ / 日記調査
+longitudinal study / 縦断研究 / 縦断的研究 / 長期研究
+cross-sectional study / 横断研究
+controlled experiment / 統制実験 / 対照実験 ~ lab study / 実験室実験
+user evaluation / ユーザ評価 / ユーザー評価
+within-subjects design / within-subject design / 被験者内計画 / 参加者内計画
+between-subjects design / between-subject design / 被験者間計画 / 参加者間計画
+participant / 参加者 / 実験参加者 ~ subject / 被験者
+RCT / randomized controlled trial / ランダム化比較試験 / 無作為化比較試験
+pilot study / パイロットスタディ / 予備実験 / 予備調査
+design space / デザイン空間
+design guideline / design guidelines / デザインガイドライン / 設計指針
+framework / フレームワーク / 枠組み
+taxonomy / タクソノミー / 分類体系 / 分類法
+contribution / 貢献
+limitation / limitations / 限界 / 制約
+future work / 今後の課題 / 今後の研究
+related work / 関連研究
+methodology / 方法論 ~ method / 手法 / 方法
+
+# --- Statistics ---
+ANOVA / analysis of variance / 分散分析
+t-test / t test / t検定
+Wilcoxon signed-rank test / ウィルコクソンの符号順位検定
+Mann-Whitney U test / マン・ホイットニーのU検定
+chi-square test / chi-squared test / カイ二乗検定 / χ二乗検定
+Friedman test / フリードマン検定
+Kruskal-Wallis test / クラスカル・ウォリス検定
+post hoc test / 事後検定 / 多重比較
+statistical significance / 統計的有意性 / 有意差
+p-value / p value / p値
+effect size / 効果量
+confidence interval / CI / 信頼区間
+standard deviation / SD / 標準偏差
+mean / 平均 / 平均値
+median / 中央値
+correlation / 相関 ~ Pearson correlation / ピアソンの相関係数
+regression analysis / 回帰分析
+linear mixed model / linear mixed-effects model / LMM / 線形混合モデル / 線形混合効果モデル
+GLMM / generalized linear mixed model / 一般化線形混合モデル
+factor analysis / 因子分析
+reliability / 信頼性 ~ Cronbach's alpha / クロンバックのα / クロンバックのアルファ
+validity / 妥当性
+sample size / サンプルサイズ / 標本サイズ
+statistical power / power analysis / 検出力 / 検出力分析
+
+# --- General academic ---
+paper / 論文
+abstract / 要旨 / 概要 / アブストラクト
+introduction / はじめに / 序論 / 緒言
+conclusion / 結論 / おわりに / まとめ
+discussion / 考察 / 議論
+results / 結果
+evaluation / 評価
+experiment / 実験
+hypothesis / 仮説
+reproducibility / 再現性 ~ replicability / 追試可能性
+open science / オープンサイエンス
+peer review / 査読

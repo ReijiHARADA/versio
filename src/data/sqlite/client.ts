@@ -3,6 +3,7 @@ import initSqlJs, { type Database, type SqlJsStatic } from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm-browser.wasm?url";
 import type { FileSystem } from "../fs/types";
 import { persistMetrics } from "../package/persist";
+import { registerSearchFunctions } from "./fts";
 import { applySqliteSchemaMigrations } from "./migrateSchema";
 import { SQLITE_FTS5_SQL, SQLITE_FTS_FALLBACK_SQL, SQLITE_SCHEMA_SQL } from "./schema";
 
@@ -122,6 +123,14 @@ export async function openSqlite(fs: FileSystem): Promise<SqliteClient> {
     db.run(SQLITE_FTS_FALLBACK_SQL);
   }
   applySqliteSchemaMigrations(db);
+  registerSearchFunctions(db);
+
+  // sql.js `export()` closes and reopens the database, which drops custom SQL functions.
+  const exportBytes = (): Uint8Array => {
+    const bytes = db.export();
+    registerSearchFunctions(db);
+    return bytes;
+  };
 
   let persistTimer: ReturnType<typeof setTimeout> | null = null;
   let closed = false;
@@ -130,7 +139,7 @@ export async function openSqlite(fs: FileSystem): Promise<SqliteClient> {
   const persistNow = async () => {
     if (closed) return;
     persistMetrics.sqliteExports += 1;
-    const bytes = db.export();
+    const bytes = exportBytes();
     await writeSqliteAtomic(fs, bytes);
   };
 
@@ -192,7 +201,7 @@ export async function openSqlite(fs: FileSystem): Promise<SqliteClient> {
       await enqueuePersist();
     },
     exportBytes() {
-      return db.export();
+      return exportBytes();
     },
     async close() {
       if (persistTimer) {
