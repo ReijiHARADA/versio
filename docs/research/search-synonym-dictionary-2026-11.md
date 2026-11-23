@@ -1,0 +1,105 @@
+---
+type: Report
+title: 検索の類義語辞書（調査と実装方針, 2026-11）
+description: 類義語・日英横断・略語展開・表記ゆれ吸収をライブラリ検索に入れるための辞書ソース調査と、段階的な実装方針。
+tags: [search, synonyms, wordnet, sudachi, dictionary]
+status: draft
+generated: 2026-11-24
+sources:
+  - https://github.com/WorksApplications/SudachiDict/blob/develop/docs/synonyms.md
+  - https://en-word.net/downloads
+  - https://bond-lab.github.io/wnja/eng/index.html
+  - https://aclanthology.org/2023.gwc-1.22
+  - https://conceptnet.io
+---
+
+# 検索の類義語辞書（調査と実装方針）
+
+## 1. 今の検索
+
+- ライブラリ検索（⌘K）は `src/domain/libraryFtsSearch.ts` → `src/data/sqlite/fts.ts`。
+- **本番の sql.js 1.14（SQLite 3.49.1）には FTS5 が入っていない**（node で `CREATE VIRTUAL TABLE … USING fts5` が `no such module` になるのを確認）。そのため実際は `papers_fts` の通常テーブルに対する `LIKE '%q%'`（title / authors / original / translation / annotation）だけで動いている。
+- 正規化は `trim().toLowerCase()` だけ。NFKC・長音・中黒・全角半角は揃えていない。
+- 英語論文でも訳文 `ja.md` が `translation` 列に入るので、「日本語で英語論文を探す」は訳語が一致すればもう当たる。外れるのは、訳語のゆれ（認知負荷／認知的負荷）、英語で検索して日本語論文を探す場合、略語の場合。
+
+→ 部分一致 LIKE が前提なので、類義語は **「クエリを展開して OR でつなぐ」** だけで入る。分かち書きや FTS5 は要らない。
+
+## 2. 辞書ソース
+
+| ソース | 版 / サイズ | ライセンス | 使い道 | 判断 |
+| --- | --- | --- | --- | --- |
+| Sudachi 同義語辞書 | `synonyms.txt` 約 3 MB | Apache-2.0 | 日本語の表記ゆれ・略語・言い換え。グループには英字表記もある（例: インターフェース / インタフェース / interface）。展開制御フラグ付き | **採用（日本語の中心）** |
+| Open English WordNet 2025 | JSON 約 9.5 MB（2025-12-31） | CC BY 4.0 | 英語の synset、語形変化、ILI（言語をまたぐ synset ID） | **採用（英語の中心）**。高信頼の synset だけに絞る |
+| Princeton WordNet 3.1 | 約 10 MB | WordNet License | OEWN と重なる。保守終了 | 不採用（OEWN で置き換える） |
+| 日本語 WordNet 1.1 / 2.0 | 1.1 は SQLite 約 58 MB | 独自の寛容ライセンス（同じライセンスでの再配布とライセンス同梱が条件） | 日本語の語と PWN synset の対応 → OEWN の ILI を通して日英の橋渡し | **採用（日英の橋）**。使うのは語と synset の対応表だけ（数 MB）。2.0 は GWC 2023 で発表済み。**2.1 は存在を確認できず** |
+| ConceptNet 5.7 | 約 500 MB | CC BY-SA 4.0（主張ごとに異なる） | 多言語の関係。ノイズが多い | **同梱しない**。ShareAlike なので、使うならビルド時の候補出しだけ |
+| （追加）Wikidata のラベル / 別名 | 必要な項目だけ抜く | CC0 | 略語 ↔ 正式名称、専門用語の日英ラベル（HCI ↔ Human–computer interaction ↔ ヒューマンコンピュータインタラクション） | **採用候補（略語・専門用語）** |
+| （追加）JMdict | 約 10 MB | CC BY-SA 4.0 | 一般語の日英 | 保留（SA なので派生 DB 全体が SA になる） |
+| （追加）自分のライブラリ | — | 制約なし | 原文と `ja.md` の対訳ブロック、PLaMo の訳語から「このライブラリでの訳語」を取る | **採用（P2 以降）** |
+
+ライセンスの注意:
+- 同梱するソースはすべて Settings → ライセンスに表示が要る（Sudachi: Apache NOTICE、OEWN: CC BY の帰属表示、日本語 WordNet: ライセンス全文）。`npm run generate:licenses` の対象に「データ」の区分を足す。
+- ShareAlike のソース（ConceptNet・JMdict）は、混ぜると辞書 DB 全体が SA になる。混ぜない。
+
+## 3. 一般辞書だけでは足りないところ
+
+- WordNet の synset は語義が広い（`load` には「荷」「仕事量」など多くの語義がある）。そのまま展開すると検索結果がノイズだらけになる。
+- 論文検索で効くのは **専門用語・略語・訳語のゆれ**。一般辞書にはあまり載っていない（認知負荷、ユーザビリティ評価、SUS など）。
+- だから、一般辞書を **骨組み** にし、専門語は **自分のライブラリの語彙と LLM による拡張** で埋めて、独自の DB に統合する、というユーザーの構想は筋が良い。
+
+## 4. 独自の類義語 DB
+
+ライブラリとは別の、読み取り専用のバンドル資産 `synonyms.sqlite` にする（バージョン付き）。`library.sqlite` には入れない。
+
+```text
+source(id, name, version, license, url, attribution)
+concept(id, ili, pos, domain, gloss)
+term(id, surface, norm, lang, pos)
+concept_term(concept_id, term_id, relation, weight, source_id, confidence, reviewed)
+  relation: variant(表記ゆれ) | abbr(略語) | expansion(正式名称) | translation(日英) | synonym(類義) | broader | narrower
+```
+
+- `norm` は検索時と同じ正規化をかけた形（下の P0）。引くときは `norm` で引く。
+- `weight` は展開の強さ。目安: variant 1.0 / abbr・expansion 0.9 / translation 0.85 / synonym 0.6。
+- 出典ごとの `confidence` と、人が確認したかを示す `reviewed` を持つ。LLM 由来の候補は `reviewed=1` になるまで既定では展開しない。
+- ユーザーごとの追加（自分のライブラリの訳語、手で足した語）は `library.sqlite` 側の別テーブル（番号付きマイグレーション）に置き、検索時にバンドル辞書と合わせる。
+
+### 構築パイプライン（`scripts/synonyms/`、ビルド時だけ動く）
+
+1. **取得**: Sudachi `synonyms.txt`、OEWN 2025 JSON、日本語 WordNet、Wikidata の抜粋をハッシュ付きで固定する。生データは gitignore し、生成した DB だけをコミットするか、ビルド時に作る。
+2. **統合・正規化**: Sudachi のグループと OEWN / 日本語 WordNet の synset を、ILI と英字表記の一致でつなぐ。品詞をそろえ、正規化した形で重複を落とす。展開制御フラグ「展開しない」は守る。
+3. **専門語を絞る**: 自分のライブラリ（と OA コーパス）の原文・訳文から語を抜き、出てくる語の concept だけを残す。辞書のサイズとノイズの両方を抑えられる。
+4. **LLM で拡張**: 足りない語・新語・言い換え・訳語の候補を出す（オフライン、教師モデル）。実行時にクラウド LLM は使わない。
+5. **文脈での置換テスト**: コーパスの文 N 個で語を候補に置き換え、意味が保たれるかを LLM で判定する。一致率がしきい値未満なら落とす。
+6. **評価と人手確認**: 頻度が高い語・略語は人が確認して `reviewed=1` にする。
+7. **出力**: `synonyms.sqlite` と出典・ライセンス一覧（ライセンス画面用）。
+
+## 5. 検索時の流れ
+
+1. **正規化**（クエリと索引の両方）: NFKC、小文字化、全角半角、中黒・ハイフン・空白の統一、カタカナ語末の長音のゆれ（インターフェース／インタフェース）、ヴ／バ行などの軽い規則。索引側は `papers_fts` に正規化した影の列を足す（作り直せるキャッシュなので、マイグレーションで列を足して再構築する）。
+2. **分割**: 空白で AND のトークンに分ける。日本語の連続した文字列は、まず辞書で最長一致する語を探し、見つからなければそのまま 1 語として扱う。
+3. **展開**: トークンごとに concept を引き、同じ concept の語を `weight` 順に最大 8〜12 個まで取る。トークンの中は OR、トークン同士は AND。
+4. **照合**: 今の LIKE で照合する。英字の短い略語（AR、UI など）は語の境界をチェックして、部分一致の誤ヒット（BUILD に UI が当たる、など）を防ぐ。
+5. **並べ方**: 原語の一致 > 表記ゆれ > 略語・正式名称 > 日英 > 類義。どのフィールドで当たったか（タイトル > 本文）も重みに入れる。
+6. **UI**: 検索欄の下に「『操作性』『usability』も含めて検索」のチップを出し、Popover で語ごとにオン／オフできる（UI_INTERACTION_PRINCIPLES に沿う）。結果には「類義語で一致」の印をつける。
+7. **日英のフォールバック**: 辞書で見つからないクエリ語は、PLaMo で訳して展開に足す（`translation_cache` に入れる。サイドカーが起動していなければ使わない）。
+
+⌘F（論文の中の検索）にも同じ展開器をあとで使える。最初はライブラリ検索だけにする。
+
+## 6. 段階計画
+
+| 段階 | 内容 | データ | 確かめること |
+| --- | --- | --- | --- |
+| **P0 土台** | 正規化（表記ゆれの規則）、展開できるクエリ構造（AND/OR）、順位付け、英字の境界チェック。辞書はまだ空 | なし | 単体テスト、今の検索結果が後退しないこと |
+| **P1 日本語** | Sudachi を取り込む → 表記ゆれ・略語・類義。手で選んだ HCI / 学術略語のシード（約 200 語）。UI チップ | Sudachi + シード | 評価クエリ集で recall@10 と誤ヒット率 |
+| **P2 日英** | 日本語 WordNet × OEWN（ILI）、Wikidata の専門用語ラベル、PLaMo の訳語フォールバック、ライブラリの対訳から取る訳語 | + OEWN、日本語 WordNet、Wikidata | 日本語で英語論文を、英語で日本語論文を引けるか |
+| **P3 独自 DB** | LLM 拡張、置換テスト、人手確認、ユーザー辞書 | + LLM 候補 | 確認済みの語の精度、サイズ（目標は gzip 後 5 MB 以下） |
+
+評価: 自分のライブラリから 80〜100 個のクエリと正解論文の組を作る（類義・日英・略語・表記ゆれを各 20 個ほど）。展開なしと展開ありで recall@10 と precision@10 を比べる。誤ヒットが増えた語は weight を下げるか、展開から外す。
+
+## 7. 未確認・判断待ち
+
+- 日本語 WordNet 2.1 が存在するか（見つかったのは 2.0 の論文と、ダウンロードページにある 1.1 だけ）。
+- 日本語 WordNet 1.1 の語の出典区分（人手 / 自動）で信頼度を分けられるか。
+- Sudachi の展開制御フラグの値の意味は、公式の `docs/synonyms.md` で確認してから実装する。
+- 辞書 DB をリポジトリにコミットするか、ビルド時に作るか（サイズとビルド時間で決める）。
