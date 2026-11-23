@@ -2919,6 +2919,7 @@ function roleForLine(
   // top margin and interleave it with the first body column. It is publication
   // metadata, not translatable prose.
   if (/^(?:[*∗†‡§]\s*)?this is the unedited author(?:'|’)?s copy\b/i.test(text)) return "chrome";
+  if (line.y < (line.pageHeight ?? 792) * 0.08 && publisherPredicates.isPreprintBandFragment(text)) return "chrome";
   if (EQUAL_CONTRIBUTION_NOTE.test(text)) return "footnote";
   // Repeated proceedings URLs in the top margin are publisher chrome. Keep
   // URL-only lines out of page-boundary paragraph stitching; inline URLs in
