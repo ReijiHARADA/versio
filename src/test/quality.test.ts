@@ -1452,6 +1452,11 @@ describe("unsafe extracted translation input", () => {
     expect(unsafeParagraphStructureReason(email)).not.toBeNull();
   });
 
+  it("ends a quotation at its speaker attribution", () => {
+    const quote = "One leader explained that the older programme “gave the therapists who don’t have the expertise for it a scaffold that the newer tools never offered to anyone.” (Leader 11, Clinic 2)";
+    expect(unsafeParagraphStructureReason(quote)).toBeNull();
+  });
+
   it("treats dense consortium member and affiliation lists as metadata, not a sentence about an institution", () => {
     expect(isExpectedNonProseParagraph("Institute of Biomedicine, University of Eastern Finland, Kuopio, Finland. Department of Neurology, Hospital Universitario Donostia, San Sebastian, Spain. Institute of Cognitive Neurology and Dementia Research, Magdeburg,")).toBe(true);
     expect(isExpectedNonProseParagraph("Susanne Moebus , 42,43,44 Thomas Tegos , 42,45 Jordi Pérez-Tur , 123,124 Martin Ingelsson , 42,125 Mikko Hiltunen ,")).toBe(true);

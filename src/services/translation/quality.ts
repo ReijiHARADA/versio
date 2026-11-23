@@ -1994,7 +1994,9 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   // Several superscript citations (`... cutoffs.13,14`, `... studies.10–15`) count the same way,
   // and so does a closing quotation mark or bracket after the full stop (`... resources [25].”`).
   const terminalCitationSuffix = /[.!?。！？]\s*(?:\[\s*\d+(?:\s*[-–—,]\s*\d+)*\s*\]|\d{1,3}(?:\s*[-–—,]\s*\d{1,3})*)$/.test(t);
-  const noTerminal = !/[.!?。！？][”"’')\]]*$/.test(t) && !terminalCitationSuffix;
+  // A quotation followed by its speaker (`… expertise for it.” (Leader 11, Clinic 2)`) ends with the quote.
+  const quoteAttribution = /[.!?。！？]?["”’]\s*\([^()]{2,80}\)$/.test(t);
+  const noTerminal = !/[.!?。！？][”"’')\]]*$/.test(t) && !terminalCitationSuffix && !quoteAttribution;
   // A paragraph followed by a bare figure/table label is commonly a native
   // block-boundary or caption merge. Keep the structural marker with the
   // layout review instead of sending the mixed unit to a translation model.
