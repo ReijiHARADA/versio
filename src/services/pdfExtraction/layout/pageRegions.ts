@@ -133,8 +133,11 @@ export function lineInRegion(line: LayoutLine, region: PageRegion): boolean {
   const box = line.bbox;
   const x = box.x + box.width / 2;
   const y = box.y + box.height / 2;
+  const bottom = region.rect.y + region.rect.height;
+  // A last row can hang below the grid's bottom rule (OzCHI Table 3 `Finger4`): a line whose top starts
+  // inside the region belongs to it too.
   return x >= region.rect.x && x <= region.rect.x + region.rect.width &&
-    y >= region.rect.y && y <= region.rect.y + region.rect.height;
+    ((y >= region.rect.y && y <= bottom) || (box.y >= region.rect.y && box.y <= bottom - 2));
 }
 
 export function detectPageRegions(page: ExtractedPage, lines: LayoutLine[], bodyFontSize: number): PageRegion[] {

@@ -221,8 +221,10 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j;
           break;
         }
-        // Right after it, any open paragraph goes on in a number (`… on the same` + `1.5 T Signa MRI scanner …`).
-        if (!listItem && j === i + 1 && !hardOpen && eligible(candidate) && /^\d/.test(candidateText) && looseContinuation(currentText, candidateText, true)) {
+        // Right after it, any open paragraph goes on in a number (`… on the same` + `1.5 T Signa MRI scanner …`);
+        // a contents entry with dot leaders (`2.1 The sector ....3` + `2.1.1 Definition ....3`) does not.
+        if (!listItem && j === i + 1 && !hardOpen && eligible(candidate) && /^\d/.test(candidateText) && !/\.{4,}|…{2,}/.test(currentText + candidateText) &&
+          looseContinuation(currentText, candidateText, true)) {
           target = j;
           break;
         }

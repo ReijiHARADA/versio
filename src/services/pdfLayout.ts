@@ -3860,6 +3860,8 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
   for (let i = 0; i < result.length; i += 1) {
     const a = result[i];
     if (!isBody(a) || a.text.trim().length < 80) continue;
+    // A display equation ending in its number (`RMSE = …, (5)`, `ð5Þ` in some fonts) runs on into no paragraph.
+    if (/=/.test(a.text) && /(?:\(\d{1,3}[a-z]?\)|ð\d{1,3}[a-z]?Þ)\s*$/.test(a.text.trim())) continue;
     let j = i + 1;
     // Small type in between (a caption running on into the next column, a table note) is skipped like a caption.
     while (j < result.length && j <= i + 8 && (result[j].role === "figure_caption" || result[j].role === "table_caption" ||
@@ -3869,6 +3871,10 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
       (result[j].role === "paragraph" && result[j].lines.length <= 2 && (result[j].text.match(/\p{L}{3,}/gu) ?? []).length < 2 && !/[.!?:]$/.test(result[j].text.trim())))) j += 1;
     const b = result[j];
     if (!b || !isBody(b)) continue;
+    // One line of small type skipped right beside B on its page is a figure label (`Decision-making
+    // Information search` beside `Linda is 31 years old, …`), not a caption running on: B is inside the figure.
+    if (result.slice(i + 1, j).some((t) => t.role === "paragraph" && t.lines.length === 1 && t.lines[0]?.page === b.lines[0]?.page &&
+      (t.bbox.x >= b.bbox.x + b.bbox.width || t.bbox.x + t.bbox.width <= b.bbox.x) && Math.abs(t.bbox.y - b.bbox.y) <= font * 2)) continue;
     const tail = run(a, a.lines.length - 1, -1);
     const head = run(b, 0, 1);
     const last = tail[0];

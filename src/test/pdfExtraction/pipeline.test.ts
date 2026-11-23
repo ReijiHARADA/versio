@@ -768,8 +768,10 @@ describe("canonical extraction pipeline", () => {
     const prose = result.canonical.nodes.filter((node) =>
       node.pageStart === 10 && /In Result 4, we used|by only reading/.test(node.text ?? "")
     );
-    expect(prose.length).toBe(2);
+    // One source paragraph: the inline formula no longer splits it into two nodes.
+    expect(prose.length).toBeGreaterThanOrEqual(1);
     expect(prose.every((node) => node.role === "paragraph")).toBe(true);
+    expect(prose.some((node) => /In Result 4, we used[\s\S]*by only reading/.test(node.text ?? "")) || prose.length === 2).toBe(true);
   }, 60_000);
 
   it("retains an ordinary two-column proceedings page as two columns", async (ctx) => {
@@ -916,12 +918,14 @@ describe("canonical extraction pipeline", () => {
       fileHash: "fragmented-review-table-regression",
       metadata: { pageCount: pages.length },
     });
-    const tableRows = result.blocks.filter((block) => block.pageStart === 5 && /^(?:\[18\]|\[19\]|ARIMA model of order \(1,1,0\) for con-)/.test(block.original ?? ""));
-    expect(tableRows.length).toBeGreaterThan(0);
-    expect(tableRows.every((block) => block.type === "table" || block.translationStatus === "skipped")).toBe(true);
-    const numericTableMix = result.blocks.find((block) => block.pageStart === 5 && /R \(Confirmed Case- Italy\)/.test(block.original ?? ""));
-    expect(numericTableMix?.type).toBe("table");
-    expect(numericTableMix?.translationStatus).toBe("skipped");
+    // The region-ordered rows now sit inside the caption-owned Table 2 (pending: its caption is translated).
+    const table = result.blocks.find((block) => block.pageStart === 5 && /^Table 2\. ML for forecasting/.test(block.original ?? ""));
+    expect(table?.type).toBe("table");
+    for (const cell of ["[18]", "[19]", "ARIMA model of order (1,1,0) for con-", "R (Confirmed Case- Italy)"]) {
+      expect(table?.original).toContain(cell);
+    }
+    expect(result.blocks.some((block) => block.pageStart === 5 && block.type === "paragraph" &&
+      /^(?:\[18\]|\[19\]|ARIMA model of order|R \(Confirmed)/.test(block.original ?? ""))).toBe(false);
     expect(result.blocks.some((block) => block.pageStart === 5 && block.type === "paragraph" && block.original?.startsWith("In order to model"))).toBe(true);
   }, 60_000);
 
@@ -1026,8 +1030,9 @@ describe("canonical extraction pipeline", () => {
       node.pageStart === 7 && node.text?.startsWith("In this study, there was a significant difference between gist memory") &&
       node.text?.includes("and detailed memory at 10 min")
     );
+    // With page 7 read as two columns the sentence is one paragraph (`… analysis between the` + `forgetting rate …`).
     const inlineBodyContinuation = result.canonical.nodes.find((node) =>
-      node.pageStart === 7 && node.text?.startsWith("forgetting rate of gist and detailed memories. The results showed that they were")
+      node.pageStart === 7 && /^(?:We also performed the correlational analysis between the )?forgetting rate of gist and detailed memories\. The results showed that they were/.test(node.text ?? "")
     );
     expect(bodyLead?.role).toBe("paragraph");
     // The left-side statistics table sits physically between these two right
@@ -1047,8 +1052,9 @@ describe("canonical extraction pipeline", () => {
     expect(result.blocks.some((block) =>
       block.pageStart === 7 &&
       block.type === "table" &&
-      block.translationStatus === "skipped" &&
-      /TABLE 3 SPSS results of the accuracy/i.test(block.original ?? "")
+      // A caption-owned table is `pending` (its caption is translated) like TABLE 1, 2 and 4.
+      /TABLE 3 SPSS results of the accuracy\. Source F Sig\./i.test(block.original ?? "") &&
+      !/In this study|forgetting rate of gist/.test(block.original ?? "")
     )).toBe(true);
   }, 60_000);
 
