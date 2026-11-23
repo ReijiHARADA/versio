@@ -136,8 +136,12 @@ export function appendContinuation(current: PaperBlock, next: PaperBlock): Paper
 
 export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Array<Pick<Section, "id" | "normalizedKind">>): PaperBlock[] {
   const referenceSections = new Set(sections.filter((s) => s.normalizedKind === "references").map((s) => s.id));
+  // Body prose filed under a references heading (a PDF that repeats the article after its reference list) still
+  // joins; bibliography entries never do.
+  const proseInReferences = (b: PaperBlock) => words(b.original ?? "") >= 20 && !isExpectedNonProseParagraph(b.original ?? "") &&
+    !/\b(?:19|20)\d{2}[a-z]?\b.*\b(?:doi|https?:|vol|pp)\b/i.test(b.original ?? "");
   const eligible = (b: PaperBlock) =>
-    b.type === "paragraph" && !referenceSections.has(b.sectionId ?? "") && !b.metadata.listRole && b.metadata.role !== "reference";
+    b.type === "paragraph" && (!referenceSections.has(b.sectionId ?? "") || proseInReferences(b)) && !b.metadata.listRole && b.metadata.role !== "reference";
   const out = [...blocks];
   for (let i = 0; i < out.length; i += 1) {
     // A list item cut at an inline formula (`3. Type-Specific Feature Aggregation … the concatenated features` | `Fmulti ∈ …`
