@@ -26,7 +26,7 @@
 }
 
 .title {
-  font-size: 1.0625rem;
+  font-size: var(--font-size-dialog-title);
   font-weight: 600;
   min-width: 0;
 }
@@ -76,7 +76,7 @@
 
 .fieldset legend {
   padding: 0 var(--spacing-xs);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   font-weight: 500;
   color: var(--color-text-secondary);
 }
@@ -85,7 +85,7 @@
   display: flex;
   align-items: flex-start;
   gap: var(--spacing-sm);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   line-height: 1.4;
   overflow-wrap: anywhere;
   cursor: pointer;
@@ -99,20 +99,20 @@
 
 .hint {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   color: var(--color-text-tertiary);
   line-height: 1.5;
 }
 
 .status {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   color: var(--color-accent);
 }
 
 .error {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   color: var(--color-danger-static);
 }
 
@@ -134,7 +134,7 @@
   border: none;
   border-radius: var(--sq-radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   font-weight: 500;
   white-space: nowrap;
 }

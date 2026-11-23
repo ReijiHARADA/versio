@@ -3,7 +3,7 @@ type: Spec
 title: ページ領域分割 第 2 段（段組の行割り当て・脇欄）
 description: lost-text / split-column / interleaved を減らすため、1 行だけ飛ぶ読み順の誤りを直し、脇欄を領域として切り出す設計
 tags: [extraction, layout, reading-order]
-status: draft
+status: stable
 ---
 
 # ページ領域分割 第 2 段: 段組の行割り当てと脇欄

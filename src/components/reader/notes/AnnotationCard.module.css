@@ -45,27 +45,27 @@
   flex: 1;
   min-width: 0;
   margin: 0 0 8px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   color: var(--color-text-secondary);
   line-height: 1.5;
 }
 
 .note {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   color: var(--color-text);
   white-space: pre-wrap;
 }
 
 .emptyNote {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   color: var(--color-text-tertiary);
 }
 
 .orphaned {
   margin: 0 0 8px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   color: var(--color-danger-static);
   line-height: 1.4;
 }
@@ -76,7 +76,7 @@
   border: none;
   background: transparent;
   color: var(--color-text-tertiary);
-  font-size: 0.6875rem;
+  font-size: var(--font-size-micro);
   line-height: 1.4;
   padding: 0 0 0 4px;
   cursor: pointer;

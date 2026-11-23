@@ -3,7 +3,7 @@ type: Playbook
 title: ページ領域分割 第 1 段（表/図領域）実装計画
 description: pageRegions.ts の追加、buildPageLines への組み込み、回帰計測までのタスク
 tags: [extraction, layout, plan]
-status: draft
+status: stable
 ---
 
 # ページ領域分割 第 1 段 Implementation Plan

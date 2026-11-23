@@ -3,7 +3,7 @@
 }
 
 .heading {
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -35,7 +35,7 @@
   background: transparent;
   text-align: left;
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   line-height: 1.35;
   cursor: pointer;
   /* No bg/color transition: interpolating selection blue ↔ gray briefly

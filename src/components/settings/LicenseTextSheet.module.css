@@ -44,7 +44,7 @@
 
 .title {
   margin: 0;
-  font-size: 1.0625rem;
+  font-size: var(--font-size-dialog-title);
   font-weight: 600;
   color: var(--color-text);
   word-break: break-word;

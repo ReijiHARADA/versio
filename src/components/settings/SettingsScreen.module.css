@@ -78,16 +78,6 @@
   will-change: transform;
 }
 
-/* Legacy class name kept for any leftover references during transition. */
-.content {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: var(--spacing-xl) var(--window-margin) var(--spacing-2xl);
-}
-
 .elasticHint {
   position: absolute;
   left: 0;
@@ -417,10 +407,6 @@
   width: 100%;
 }
 
-.fieldStack {
-  composes: cardStack;
-}
-
 .fieldLabel {
   display: flex;
   flex-direction: column;
@@ -447,9 +433,5 @@
 @media (max-width: 768px) {
   .sidebar {
     width: 148px;
-  }
-
-  .content {
-    padding: var(--spacing-lg);
   }
 }

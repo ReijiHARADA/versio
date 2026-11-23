@@ -21,7 +21,7 @@
   border: none;
   --sq-bg: transparent;
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   cursor: pointer;
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
@@ -72,14 +72,14 @@
 }
 
 .title {
-  font-size: 1.25rem;
+  font-size: var(--font-size-title);
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: var(--spacing-sm);
 }
 
 .paperTitle {
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-md);
   overflow: hidden;
@@ -88,7 +88,7 @@
 }
 
 .message {
-  font-size: 0.9375rem;
+  font-size: var(--font-size-heading);
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-lg);
 }
@@ -124,7 +124,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   color: var(--color-text-tertiary);
   padding: var(--spacing-xs) var(--spacing-sm);
   --sq-fill: var(--sq-fill-sm);
@@ -185,7 +185,7 @@
   border: none;
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
-  font-size: 1rem;
+  font-size: var(--font-size-lead);
   font-weight: 500;
   cursor: pointer;
   transition: --sq-bg var(--transition-fast);
@@ -207,7 +207,7 @@
   --sq-fill: var(--sq-fill-md);
   --sq-ring: var(--sq-ring-md);
   border-radius: var(--sq-radius-md);
-  font-size: 1rem;
+  font-size: var(--font-size-lead);
   cursor: pointer;
   transition: --sq-bg var(--transition-fast);
 }

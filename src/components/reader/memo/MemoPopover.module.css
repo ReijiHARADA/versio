@@ -27,7 +27,7 @@
 .body {
   margin: 0;
   padding: 14px 14px 4px;
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   line-height: 1.5;
   color: var(--color-text);
   white-space: pre-wrap;
@@ -38,7 +38,7 @@
 .error {
   margin: 0;
   padding: 12px 14px 0;
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   line-height: 1.4;
 }
 
@@ -64,7 +64,7 @@
   outline: none;
   background: transparent;
   font: inherit;
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   line-height: 1.6;
   color: var(--color-text);
 }
@@ -83,7 +83,7 @@
 .meta {
   flex: 1;
   min-width: 0;
-  font-size: 0.71875rem;
+  font-size: 0.71875rem; /* font-size-literal-ok: memo popover fine type */
   color: var(--color-text-tertiary);
 }
 
@@ -92,7 +92,7 @@
   composes: pill from "../../../styles/squircle.module.css";
   appearance: none;
   border: none;
-  font-size: 0.78125rem;
+  font-size: 0.78125rem; /* font-size-literal-ok: memo popover fine type */
   padding: 5px 12px;
   cursor: pointer;
 }

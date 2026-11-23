@@ -18,10 +18,6 @@
   gap: var(--spacing-md);
 }
 
-.loadingIcon {
-  animation: spin 1s linear infinite;
-}
-
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -54,7 +50,7 @@
 }
 
 .title {
-  font-size: 1.125rem;
+  font-size: var(--font-size-subtitle);
   font-weight: 600;
   color: var(--color-text);
 }
@@ -63,24 +59,6 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-}
-
-.settingsButton {
-  composes: surface from "../../styles/squircle.module.css";
-  position: relative;
-  padding: var(--spacing-sm);
-  border: none;
-  --sq-bg: transparent;
-  color: var(--color-text-secondary);
-  --sq-fill: var(--sq-fill-md);
-  border-radius: var(--sq-radius-md);
-  transition: --sq-bg var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.settingsButton:hover {
-  --sq-bg: var(--color-bg-secondary);
-  color: var(--color-text);
 }
 
 .main {
@@ -111,7 +89,7 @@
 }
 
 .emptyTitle {
-  font-size: 1.5rem;
+  font-size: var(--font-size-display);
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: var(--spacing-sm);
@@ -120,32 +98,6 @@
 .emptyDescription {
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-xl);
-}
-
-.emptyActions {
-  display: flex;
-  gap: var(--spacing-md);
-}
-
-.primaryButton {
-  composes: surface cta from "../../styles/squircle.module.css";
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-lg);
-  --sq-bg: var(--color-accent);
-  color: white;
-  border: none;
-  --sq-fill: var(--sq-fill-md);
-  border-radius: var(--sq-radius-md);
-  font-size: 1rem;
-  font-weight: 500;
-  transition: --sq-bg var(--transition-fast);
-}
-
-.primaryButton:hover {
-  --sq-bg: var(--color-accent-hover);
 }
 
 .addButton {
@@ -161,7 +113,7 @@
   border-radius: var(--sq-radius-md);
   height: var(--control-height);
   padding: 0 var(--spacing-md);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;

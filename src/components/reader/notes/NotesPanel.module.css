@@ -6,31 +6,6 @@
 
 .empty {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   color: var(--color-text-tertiary);
-}
-
-.undoBar { composes: surface from "../../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); }
-.confirm { composes: surface from "../../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); }
-
-.undoBar,
-.confirm {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px;
-  --sq-bg: var(--color-bg-secondary);
-  border-radius: var(--sq-radius-sm);
-  font-size: 0.75rem;
-}
-
-.undoBar button,
-.confirm button {
-  appearance: none;
-  border: none;
-  background: transparent;
-  color: var(--color-accent);
-  cursor: pointer;
-  font-size: 0.75rem;
 }

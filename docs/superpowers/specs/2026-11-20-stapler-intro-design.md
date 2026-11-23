@@ -3,7 +3,7 @@ type: Spec
 title: 初回起動イントロ（ホチキス）設計
 description: 白い紙を裏から見た画面に巨大なホチキスの受け皿が迫り、パチンと綴じてアイコンの綴じ跡を残す初回起動アニメーション
 tags: [onboarding, animation, blender, ui]
-status: draft
+status: stable
 ---
 
 # 初回起動イントロ（ホチキス）設計

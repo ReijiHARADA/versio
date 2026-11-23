@@ -12,7 +12,7 @@
 }
 
 .title {
-  font-size: 1.75rem;
+  font-size: 1.75rem; /* font-size-literal-ok: reader paper title */
   font-weight: 700;
   color: var(--color-text);
   line-height: 1.3;
@@ -20,13 +20,13 @@
 }
 
 .originalTitle {
-  font-size: 1rem;
+  font-size: var(--font-size-lead);
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-md);
 }
 
 .authors {
-  font-size: 0.9375rem;
+  font-size: var(--font-size-heading);
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-xs);
 }
@@ -39,7 +39,7 @@
 
 .affiliation {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   line-height: 1.45;
   color: var(--color-text-tertiary);
 }
@@ -58,13 +58,13 @@
   padding: 1px 8px;
   border-radius: 999px;
   --sq-bg: var(--color-bg-secondary);
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   line-height: 1.6;
   color: var(--color-text-secondary);
 }
 
 .publication {
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   color: var(--color-text-tertiary);
   font-style: italic;
 }
@@ -86,12 +86,8 @@
   pointer-events: none;
 }
 
-.blockPlaceholder {
-  margin-bottom: var(--spacing-md);
-}
-
 .heading1 {
-  font-size: 1.5rem;
+  font-size: var(--font-size-display);
   font-weight: 700;
   color: var(--color-text);
   margin-bottom: var(--spacing-md);
@@ -99,7 +95,7 @@
 }
 
 .heading2 {
-  font-size: 1.25rem;
+  font-size: var(--font-size-title);
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: var(--spacing-md);
@@ -107,7 +103,7 @@
 }
 
 .heading3 {
-  font-size: 1.125rem;
+  font-size: var(--font-size-subtitle);
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: var(--spacing-sm);
@@ -117,7 +113,7 @@
 .heading4,
 .heading5,
 .heading6 {
-  font-size: 1rem;
+  font-size: var(--font-size-lead);
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: var(--spacing-sm);
@@ -125,7 +121,7 @@
 
 .reference {
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   font-style: normal;
   font-weight: 400;
   color: var(--color-text-secondary);
@@ -159,7 +155,7 @@
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
   margin-bottom: var(--spacing-xl);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
 }
 
 [data-theme="dark"] .processingBanner {
@@ -179,7 +175,7 @@
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
   margin-bottom: var(--spacing-xl);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
 }
 
 [data-theme="dark"] .partialBanner {
@@ -200,7 +196,7 @@
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
   margin-bottom: var(--spacing-xl);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   cursor: pointer;
 }
 
@@ -234,5 +230,5 @@
   justify-content: center;
   min-height: 200px;
   color: var(--color-text-secondary);
-  font-size: 1rem;
+  font-size: var(--font-size-lead);
 }

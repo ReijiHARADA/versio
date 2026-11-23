@@ -3,7 +3,7 @@ type: Playbook
 title: ページ領域分割 第 2 段 実装計画
 description: 1 行飛びの読み順修正（B）と脇欄領域（A）の実装手順
 tags: [extraction, layout, plan]
-status: draft
+status: stable
 ---
 
 # ページ領域分割 第 2 段 Implementation Plan

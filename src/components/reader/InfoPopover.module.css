@@ -27,7 +27,7 @@
 
 .title {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   font-weight: 600;
   color: var(--color-text-secondary);
 }
@@ -39,7 +39,7 @@
   --sq-bg: transparent;
   color: var(--color-text-tertiary);
   cursor: pointer;
-  font-size: 1rem;
+  font-size: var(--font-size-lead);
   line-height: 1;
   padding: 0 2px;
   --sq-fill: var(--sq-fill-sm);
@@ -56,20 +56,20 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   line-height: 1.45;
   color: var(--color-text);
 }
 
 .meta {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   color: var(--color-text-secondary);
 }
 
 .raw {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   line-height: 1.4;
   color: var(--color-text-secondary);
   max-height: 6.5em;
@@ -88,7 +88,7 @@
   border: none;
   background: transparent;
   color: var(--color-accent);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   cursor: pointer;
   padding: 2px 0;
   text-decoration: underline;
@@ -111,6 +111,6 @@
 
 .definition {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   color: var(--color-text-secondary);
 }

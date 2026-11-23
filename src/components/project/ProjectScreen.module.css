@@ -16,7 +16,7 @@
 }
 
 .title {
-  font-size: 1.125rem;
+  font-size: var(--font-size-subtitle);
   font-weight: 600;
   color: var(--color-text);
   margin: 0;
@@ -32,7 +32,7 @@
 }
 
 .description {
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   color: var(--color-text-secondary);
   margin-top: var(--spacing-xs);
 }
@@ -50,7 +50,7 @@
   border-radius: var(--sq-radius-md);
   height: var(--control-height);
   padding: 0 var(--spacing-md);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
@@ -74,7 +74,7 @@
   --sq-ring: var(--sq-ring-md);
   border-radius: var(--sq-radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
@@ -146,7 +146,7 @@
 }
 
 .hint {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   color: var(--color-text-secondary);
   max-width: 320px;
 }

@@ -3,7 +3,7 @@ type: Playbook
 title: PLaMo 3 Translate 翻訳エンジン実装計画
 description: 設計書（2026-11-16-plamo-translation-engine-design）を実装するためのタスク分解。
 tags: [translation, plamo, llama-cpp, tauri, plan]
-status: draft
+status: stable
 sources: [/docs/superpowers/specs/2026-11-16-plamo-translation-engine-design.md]
 ---
 
