@@ -159,7 +159,7 @@ export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[],
       if (!gp) return false;
       const goldSh = shingles(tokens(gp.text));
       const own = new Set(sh);
-      const ends = /末尾/.test(block.warning) ? goldSh.slice(-3) : /先頭/.test(block.warning) ? goldSh.slice(0, 3) : [];
+      const ends = /末尾/.test(block.warning) ? goldSh.slice(-1) : /先頭/.test(block.warning) ? goldSh.slice(0, 1) : [];
       return ends.length > 0 && ends.every((x) => !own.has(x));
     })();
     const verdict: BlockOutcome["verdict"] = goldShare < 0.5 ? "outside" : complete >= 2 ? "merged" : complete === 1 && !lacks ? "complete" : "fragment";
