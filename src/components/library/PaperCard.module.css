@@ -319,12 +319,14 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 8px 10px;
+  /* ~26px rows, close to a native macOS menu. */
+  padding: 5px 10px;
   border: none;
   --sq-bg: transparent;
   color: var(--color-text);
   border-radius: var(--sq-radius-sm);
   font-size: 0.8125rem;
+  line-height: 1.25;
   text-align: left;
   cursor: pointer;
 }
@@ -340,7 +342,7 @@
 
 .menuSep {
   height: 1px;
-  margin: 4px 6px;
+  margin: 3px 6px;
   background: var(--color-border-light);
 }
 
