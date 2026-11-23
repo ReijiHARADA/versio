@@ -857,7 +857,8 @@ function foldCaptionOwnedTableFallbacks(blocks: PaperBlock[], layoutBlocks: Layo
     rowsByCaption.set(caption.id, normalizeTableRows(inferred.rows));
     for (const id of inferred.ids) inferredOwnerIds.add(id);
   }
-  if (ownerByFragmentId.size === 0 && inferredOwnerIds.size === 0) return blocks;
+  // A caption whose grid was inferred from its own lines (no fragment ids to fold) still takes its rows.
+  if (ownerByFragmentId.size === 0 && inferredOwnerIds.size === 0 && rowsByCaption.size === 0) return blocks;
   return blocks.flatMap((block) => {
     if (ownerByFragmentId.has(block.id) || inferredOwnerIds.has(block.id) || absorbedParagraphIds.has(block.id)) return [];
     const rows = rowsByCaption.get(block.id);
