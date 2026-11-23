@@ -532,8 +532,13 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     usable.filter((item) => item.x + item.width <= page.width * 0.49).length >= 250 &&
     usable.filter((item) => item.x >= page.width * 0.51).length >= 250 &&
     rightX - leftX >= page.width * 0.35;
+  // Aligned column pairs and the row starts agreeing on both columns is strong enough for a column that a table
+  // or figure has shortened.
+  const agreedStarts = alignedColumnPairs && rowStartPeaks &&
+    Math.abs(rowStartPeaks[0] - alignedColumnPairs.leftX) <= 8 && Math.abs(rowStartPeaks[1] - alignedColumnPairs.rightX) <= 8;
+  const minShare = agreedStarts ? 0.15 : 0.22;
   const isMultiColumn = alignedColumnPairs
-    ? rightX - leftX >= page.width * 0.22 && leftShare >= 0.22 && rightShare >= 0.22
+    ? rightX - leftX >= page.width * 0.22 && leftShare >= minShare && rightShare >= minShare
     : asymmetricWordColumns
       ? rightX - leftX >= page.width * 0.35 && (() => {
         const narrowRight = usable.filter((item) => item.x >= page.width * 0.5 && item.width <= page.width * 0.24).length;
