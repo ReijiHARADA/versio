@@ -134,6 +134,8 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
   const tags = paper.tags ?? [];
   const tagFilter = useAppStore((state) => state.libraryFilter.tag);
   const setLibraryFilter = useAppStore((state) => state.setLibraryFilter);
+  // Narrow grid tiles fit one tag beside the badge; the rest collapse into "+N".
+  const tagLimit = layout === "grid" ? 1 : 3;
   // Unread is the default and stays unmarked; only reading / read get a badge.
   const libraryMeta =
     paper.readStatus === "reading" || paper.readStatus === "read" || tags.length > 0 ? (
@@ -143,11 +145,13 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
             {READ_STATUS_LABELS[paper.readStatus]}
           </span>
         ) : null}
-        {tags.slice(0, 3).map((tag) => (
+        {tags.slice(0, tagLimit).map((tag) => (
           <button
             key={tag}
             type="button"
             className={styles.tagChip}
+            // Long tags give up width first so short ones stay readable.
+            style={{ flexShrink: tag.length }}
             data-active={tagFilter === tag || undefined}
             title={tagFilter === tag ? `#${tag} の絞り込みを解除` : `#${tag} で絞り込む`}
             onClick={(event) => {
@@ -158,7 +162,9 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
             {tag}
           </button>
         ))}
-        {tags.length > 3 ? <span className={styles.tagMore}>+{tags.length - 3}</span> : null}
+        {tags.length > tagLimit ? (
+          <span className={styles.tagMore}>+{tags.length - tagLimit}</span>
+        ) : null}
       </span>
     ) : null;
 

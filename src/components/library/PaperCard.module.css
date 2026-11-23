@@ -599,7 +599,8 @@
 }
 
 .tile .libraryMeta {
-  justify-content: center;
+  /* "safe": if chips still overflow, clip only the end, never both edges. */
+  justify-content: safe center;
   max-width: 100%;
 }
 
@@ -633,7 +634,10 @@
 .tagChip {
   composes: pill from "../../styles/squircle.module.css";
   border-radius: 999px;
-  max-width: 9rem;
+  /* Shrink (with ellipsis) before the row clips; keep a few characters visible. */
+  flex: 0 1 auto;
+  min-width: 2.75em;
+  max-width: min(9rem, 100%);
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--color-accent);
