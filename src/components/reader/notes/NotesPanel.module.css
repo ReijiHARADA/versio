@@ -4,15 +4,10 @@
   gap: 10px;
 }
 
-.empty,
-.hint {
+.empty {
   margin: 0;
   font-size: 0.8125rem;
   color: var(--color-text-tertiary);
-}
-
-.hint {
-  line-height: 1.45;
 }
 
 .undoBar { composes: surface from "../../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); }
