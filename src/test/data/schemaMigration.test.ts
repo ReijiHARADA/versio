@@ -163,7 +163,7 @@ describe("SQLite schema migration", () => {
     await fs.writeBytes("library.sqlite", await v1LibraryBytes());
     const db = await openSqlite(fs);
     expect(db.get<{ value: string }>("SELECT value FROM meta WHERE key = ?", ["schema_version"])?.value).toBe(
-      "10"
+      "11"
     );
     expect(db.get("SELECT node_id, sort_order, note, status, tags_json FROM workspace_papers")).toEqual({
       node_id: "project", sort_order: 0, note: "keep note", status: "reading", tags_json: '["tag"]',

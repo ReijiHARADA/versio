@@ -356,6 +356,20 @@ function migrateV9ToV10(db: Database): void {
   }
 }
 
+export const LIBRARY_TERMS_BACKFILL_KEY = "library_terms_backfill";
+
+/** Paper-defined terms for search; the startup package sync fills them for existing papers. */
+function migrateV10ToV11(db: Database): void {
+  db.run(`CREATE TABLE IF NOT EXISTS library_terms (
+    paper_id TEXT NOT NULL,
+    term TEXT NOT NULL,
+    long_form TEXT NOT NULL,
+    PRIMARY KEY (paper_id, term, long_form),
+    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE
+  )`);
+  db.run("INSERT OR REPLACE INTO meta (key, value) VALUES (?, 'pending')", [LIBRARY_TERMS_BACKFILL_KEY]);
+}
+
 const MIGRATIONS: SchemaMigration[] = [
   { from: 1, to: 2, run: migrateV1ToV2 },
   { from: 2, to: 3, run: migrateV2ToV3 },
@@ -366,6 +380,7 @@ const MIGRATIONS: SchemaMigration[] = [
   { from: 7, to: 8, run: migrateV7ToV8 },
   { from: 8, to: 9, run: migrateV8ToV9 },
   { from: 9, to: 10, run: migrateV9ToV10 },
+  { from: 10, to: 11, run: migrateV10ToV11 },
 ];
 
 export function applySqliteSchemaMigrations(db: Database): number {

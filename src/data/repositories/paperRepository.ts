@@ -3,6 +3,7 @@ import type { Paper, PaperReadStatus } from "../../types/paper";
 const READ_STATUSES = new Set<string>(["unread", "reading", "read"]);
 import { listAnnotationsByPaper } from "./annotationRepository";
 import { rebuildPaperFts } from "../sqlite/fts";
+import { extractAbbreviations } from "../../domain/search/abbreviations";
 import type { SqliteClient } from "../sqlite/client";
 import { computeNeedsTranslationResume } from "../../services/import/resumeFlag";
 
@@ -187,6 +188,7 @@ export function listResumeCandidatePaperIds(db: SqliteClient): string[] {
 
 export function deletePaperIndex(db: SqliteClient, id: string): void {
   db.exec("DELETE FROM papers_fts WHERE paper_id = ?", [id]);
+  db.exec("DELETE FROM library_terms WHERE paper_id = ?", [id]);
   db.exec("DELETE FROM papers WHERE id = ?", [id]);
   db.exec("DELETE FROM workspace_papers WHERE paper_id = ?", [id]);
   db.exec("DELETE FROM annotations WHERE paper_id = ?", [id]);
@@ -243,6 +245,39 @@ export function refreshPaperAnnotationFts(db: SqliteClient, paperId: string): vo
   rebuildPaperSearchIndex(db, paper, original, translation);
 }
 
+/** Most definitions a paper contributes; a glossary-heavy paper should not flood search. */
+const MAX_TERMS_PER_PAPER = 200;
+
+/** Replace the abbreviation / term pairs a paper defines (raw text, not index text). */
+export function indexPaperTerms(db: SqliteClient, paperId: string, original: string, translation: string): void {
+  db.exec("DELETE FROM library_terms WHERE paper_id = ?", [paperId]);
+  const definitions = [...extractAbbreviations(original), ...extractAbbreviations(translation)].slice(
+    0,
+    MAX_TERMS_PER_PAPER
+  );
+  for (const { abbr, longForm } of definitions) {
+    db.exec("INSERT OR IGNORE INTO library_terms (paper_id, term, long_form) VALUES (?, ?, ?)", [
+      paperId,
+      abbr,
+      longForm,
+    ]);
+  }
+}
+
+export type LibraryTermRow = { term: string; longForm: string; papers: number };
+
+/** Every term pair defined in a paper that is not in the trash, with how many papers define it. */
+export function listLibraryTerms(db: SqliteClient): LibraryTermRow[] {
+  return db
+    .query<{ term: string; long_form: string; papers: number }>(
+      `SELECT t.term AS term, t.long_form AS long_form, COUNT(DISTINCT t.paper_id) AS papers
+       FROM library_terms t JOIN papers p ON p.id = t.paper_id
+       WHERE p.trashed_at IS NULL
+       GROUP BY t.term, t.long_form`
+    )
+    .map((row) => ({ term: String(row.term), longForm: String(row.long_form), papers: Number(row.papers) }));
+}
+
 export function indexPaperText(
   db: SqliteClient,
   paper: Paper,
@@ -250,4 +285,5 @@ export function indexPaperText(
   translation: string
 ): void {
   rebuildPaperSearchIndex(db, paper, original, translation);
+  indexPaperTerms(db, paper.id, original, translation);
 }

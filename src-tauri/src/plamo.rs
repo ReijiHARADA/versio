@@ -407,6 +407,22 @@ fn ensure_blocking(app: &AppHandle) -> Result<PlamoServerInfo, String> {
     })
 }
 
+/// Server info only when the sidecar is already running; never starts it. Search uses this to
+/// translate query terms without paying the model load for a search.
+#[tauri::command]
+pub fn plamo_server_if_running(app: AppHandle) -> Option<PlamoServerInfo> {
+    let state = app.state::<PlamoState>();
+    let mut slot = state.server.lock().unwrap();
+    let (child, port, token) = slot.as_mut()?;
+    if !child_alive(child) {
+        return None;
+    }
+    Some(PlamoServerInfo {
+        base_url: format!("http://127.0.0.1:{port}"),
+        token: token.clone(),
+    })
+}
+
 #[tauri::command]
 pub async fn ensure_plamo_server(app: AppHandle) -> Result<PlamoServerInfo, String> {
     tauri::async_runtime::spawn_blocking(move || ensure_blocking(&app))

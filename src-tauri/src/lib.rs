@@ -98,6 +98,7 @@ pub fn run() {
             plamo::plamo_model_status,
             plamo::download_plamo_model,
             plamo::ensure_plamo_server,
+            plamo::plamo_server_if_running,
             sync_window_chrome_theme,
             ocr::ocr_image,
             bibliography::fetch_bibliographic_record,

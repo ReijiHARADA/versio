@@ -152,3 +152,23 @@ describe("search scoring function", () => {
     expect(searchPapersFts(db, "UniqueTitleAlpha")).toEqual(["fts-1"]);
   });
 });
+
+describe("library terms", () => {
+  it("stores pairs a paper defines and drops them with the paper", async () => {
+    const { listLibraryTerms, deletePaperIndex } = await import("../../data/repositories/paperRepository");
+    const db = await openSqlite(createMemoryFileSystem());
+    const p = paper();
+    upsertPaperIndex(db, p);
+    indexPaperText(db, p, "We use the System Usability Scale (SUS).", "認知負荷（cognitive load）を測る。");
+    expect(listLibraryTerms(db)).toEqual(
+      expect.arrayContaining([
+        { term: "SUS", longForm: "System Usability Scale", papers: 1 },
+        { term: "cognitive load", longForm: "認知負荷", papers: 1 },
+      ])
+    );
+    refreshPaperAnnotationFts(db, p.id);
+    expect(listLibraryTerms(db)).toHaveLength(2);
+    deletePaperIndex(db, p.id);
+    expect(listLibraryTerms(db)).toEqual([]);
+  });
+});

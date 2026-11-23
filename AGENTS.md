@@ -66,6 +66,7 @@
 
 - Library search expands queries with the bundled dictionary `src/generated/synonyms.json` (lazy chunk). Rebuild it with `npm run build:synonyms` (sources pinned with SHA-256 in `scripts/synonyms/sources.json`, cached in gitignored `.cache/synonyms-src/`); curated academic terms live in `scripts/synonyms/curated.txt`. Check expansions with `npx tsx scripts/synonyms/probe.ts <query>`.
 - Do not add ShareAlike sources (ConceptNet, JMdict) to the bundled dictionary. New sources need a Settings → ライセンス entry in `scripts/generate-licenses.mjs`.
+- Papers' own definitions (`Long Form (ABBR)`, `日本語（English）`) go to SQLite `library_terms` via `indexPaperText` (raw Markdown; never from normalized `papers_fts` text). Query terms no dictionary knows are translated by PLaMo only through `plamo_server_if_running`: search must never start the sidecar.
 - Index and query go through the same `normalizeSearchText`; `papers_fts` stores normalized text only. Scoring runs in the `versio_search_score` SQL function (re-registered after every sql.js `export()`). Background: `docs/research/search-synonym-dictionary-2026-11.md`.
 
 ## Licenses (Settings)
