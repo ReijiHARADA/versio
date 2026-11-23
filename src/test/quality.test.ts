@@ -1462,6 +1462,9 @@ describe("unsafe extracted translation input", () => {
     expect(isExpectedNonProseParagraph("Chen, L. et al. (2018). Machine Learning in Cardiology: A Systematic Review. HeartTech,")).toBe(true);
     expect(isExpectedNonProseParagraph("Gupta, M., & Ito, K. (2017). Predictive Analytics in Hospital Management. Health Systems Review,")).toBe(true);
     expect(isExpectedNonProseParagraph("Chen, the first author, reported in 2018 that machine learning in cardiology was still rare in practice and")).toBe(false);
+    expect(isExpectedNonProseParagraph("(a) Folder management options dropdown menu (b) File operation options dropdown menu")).toBe(true);
+    expect(isExpectedNonProseParagraph("c) Family tree training d) Family tree inference")).toBe(true);
+    expect(isExpectedNonProseParagraph("(a) The model was trained on the full set. We then removed (b) every label and retrained it from scratch.")).toBe(false);
     expect(isExpectedNonProseParagraph("Participants were recruited at the University Hospital and the Department of Neurology, and all of them gave written consent before the study began in")).toBe(false);
   });
 

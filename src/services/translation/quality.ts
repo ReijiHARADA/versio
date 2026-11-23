@@ -1908,6 +1908,8 @@ export function isExpectedNonProseParagraph(text: string): boolean {
   // marker such as `• 195:3`. They carry no sentence boundary and native PDF
   // order can otherwise present them as a paragraph on a later page.
   if (/(?:[•·]|\|)\s*\d{1,4}:\d{1,3}\s*$/.test(t)) return true;
+  // A row of panel labels under a figure (`(a) Folder management options (b) File operation options`).
+  if (t.length <= 200 && /^\(?[a-h]\)\s/i.test(t) && (t.match(/(?:^|\s)\(?[a-h]\)\s/gi)?.length ?? 0) >= 2 && !/[.!?]\s+\p{Lu}\p{Ll}+\s+\p{Ll}/u.test(t)) return true;
   // Pieces of an open-access license footer split across columns (`… No use, distribution or reproduction is permitted`).
   if (/\b(?:no use, distribution or reproduction is permitted|the original publication in this journal is cited|copyright owner\(s\) are credited|in accordance with accepted academic practice)\b/i.test(t)) return true;
   // Consortium member and affiliation lists in the back matter (`… Thomas Tegos , 42,43,44 , Jordi Pérez-Tur ,`,
