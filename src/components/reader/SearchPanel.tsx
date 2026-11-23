@@ -3,6 +3,8 @@ import { X, ChevronUp, ChevronDown } from "lucide-react";
 import type { PaperBlock, Section } from "../../types/paper";
 import { sectionDisplayTitle } from "../../services/translation/quality";
 import styles from "./SearchPanel.module.css";
+import { useMotionState } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 type SearchResult = {
   block: PaperBlock;
@@ -61,9 +63,11 @@ export function SearchBar({
   onClose: () => void;
   onStep: (delta: number) => void;
 }) {
+  const motionState = useMotionState();
   return (
     <div
-      className={styles.bar}
+      className={`${styles.bar} ${motion.drop}`}
+      data-motion={motionState}
       data-search-panel=""
       data-testid="reader-search-panel"
       role="search"

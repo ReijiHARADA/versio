@@ -10,6 +10,8 @@ import {
 import { showToast } from "../../stores/toastStore";
 import { isTauriApp } from "../../utils/serverReady";
 import styles from "./PdfFileDropLayer.module.css";
+import { Presence, MotionDiv } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 function dragHasFiles(event: DragEvent): boolean {
   return Array.from(event.dataTransfer?.types ?? []).includes("Files");
@@ -148,13 +150,15 @@ export function PdfFileDropLayer() {
     };
   }, [importDroppedFile]);
 
-  if (location.pathname.startsWith("/import")) return null;
-  if (!hovering) return null;
-
+  const show = hovering && !location.pathname.startsWith("/import");
   return (
-    <div className={styles.overlay} role="status">
-      <Upload size={64} />
-      <p>PDFをドロップしてインポート</p>
-    </div>
+    <Presence>
+      {show && (
+        <MotionDiv className={`${styles.overlay} ${motion.overlay}`} role="status">
+          <Upload size={64} />
+          <p>PDFをドロップしてインポート</p>
+        </MotionDiv>
+      )}
+    </Presence>
   );
 }

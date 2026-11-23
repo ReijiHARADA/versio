@@ -9,6 +9,8 @@ import {
 } from "./popoverPosition";
 import styles from "./MemoPopover.module.css";
 import { isImeComposing } from "../../../utils/ime";
+import { useMotionState } from "../../ui/Presence";
+import motion from "../../../styles/motion.module.css";
 
 type MemoPopoverMode = "compose" | "view" | "edit" | "cross-block";
 
@@ -51,6 +53,7 @@ export function MemoPopover({
   boundsRef,
 }: MemoPopoverProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const motionState = useMotionState();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [size, setSize] = useState({ width: 320, height: 180 });
 
@@ -122,10 +125,11 @@ export function MemoPopover({
     <div
       ref={panelRef}
       role="dialog"
+      data-motion={motionState}
       aria-label={title}
       data-memo-popover="true"
       data-testid="memo-popover"
-      className={styles.popover}
+      className={`${styles.popover} ${motion.popover}`}
       data-hidden={hidden || undefined}
       style={{ top: placement.top, left: placement.left }}
     >

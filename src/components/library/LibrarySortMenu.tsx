@@ -9,6 +9,8 @@ import { displayPaperTitle } from "../../services/translation/quality";
 import type { Paper } from "../../types/paper";
 import menuStyles from "./PaperCard.module.css";
 import styles from "./LibrarySortMenu.module.css";
+import { Presence, MotionDiv } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 const KEYS: Array<{ key: LibrarySortKey; label: string }> = [
   { key: "added", label: "追加日" },
@@ -146,8 +148,8 @@ export function LibrarySortMenu() {
         <ArrowUpDown size={15} aria-hidden="true" />
         {filtering ? <span className={styles.filterDot} aria-hidden="true" /> : null}
       </button>
-      {open && (
-        <div className={menuStyles.menu} role="menu">
+      <Presence>{open && (
+        <MotionDiv className={`${menuStyles.menu} ${motion.popover}`} role="menu">
           {KEYS.map((item) => (
             <button
               key={item.key}
@@ -226,8 +228,8 @@ export function LibrarySortMenu() {
               </div>
             </>
           )}
-        </div>
-      )}
+        </MotionDiv>
+      )}</Presence>
     </div>
   );
 }

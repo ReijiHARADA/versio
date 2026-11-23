@@ -7,6 +7,10 @@
   z-index: var(--z-reader-popover);
 }
 
+.overlay[data-motion="closed"] {
+  pointer-events: none;
+}
+
 .panel {
   composes: surface from "../../styles/squircle.module.css";
   position: fixed;
@@ -19,19 +23,8 @@
   --sq-fill: var(--sq-fill-lg);
   border-radius: var(--sq-radius-lg);
   box-shadow: 0 4px 24px var(--color-shadow);
-  animation: slideIn 0.2s ease-out;
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 .header {
   display: flex;

@@ -258,10 +258,27 @@
   }
 }
 
+/* Closing: mirror of the above. While the inspector slides out, the frame sweeps back over the slot;
+   when the slot empties the layout widens in one step underneath an already-wide frame. */
+.shell:has(.inspectorSlot [data-motion="closed"]) .main::before,
+.shell:has(.inspectorSlot [data-motion="closed"]) .main::after,
+.shell:has(.inspectorSlot [data-motion="closed"]) .mainRim {
+  animation: cardFrameGrow var(--motion-exit-pane) both;
+}
+
+@keyframes cardFrameGrow {
+  to {
+    right: calc(-1px - var(--notes-panel-width));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .shell:has(.inspectorSlot:not(:empty)) .main::before,
   .shell:has(.inspectorSlot:not(:empty)) .main::after,
-  .shell:has(.inspectorSlot:not(:empty)) .mainRim {
+  .shell:has(.inspectorSlot:not(:empty)) .mainRim,
+  .shell:has(.inspectorSlot [data-motion="closed"]) .main::before,
+  .shell:has(.inspectorSlot [data-motion="closed"]) .main::after,
+  .shell:has(.inspectorSlot [data-motion="closed"]) .mainRim {
     animation: none;
   }
 }

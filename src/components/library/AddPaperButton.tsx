@@ -5,6 +5,7 @@ import type { AnchorBox } from "../reader/memo/popoverPosition";
 import { importByIdentifier } from "../../services/import/importByIdentifier";
 import { isImeComposing } from "../../utils/ime";
 import styles from "./AddPaperButton.module.css";
+import { Presence } from "../ui/Presence";
 
 /** 「論文を追加」: a popover offering a PDF file pick or an arXiv id / DOI fetch. */
 export function AddPaperButton({
@@ -63,7 +64,7 @@ export function AddPaperButton({
         <Plus size={18} aria-hidden="true" />
         論文を追加
       </button>
-      {anchor && (
+      <Presence>{anchor && (
         <InfoPopover anchor={anchor} title="論文を追加" onClose={() => setAnchor(null)}>
           <button
             type="button"
@@ -110,7 +111,7 @@ export function AddPaperButton({
             </p>
           ) : null}
         </InfoPopover>
-      )}
+      )}</Presence>
     </>
   );
 }

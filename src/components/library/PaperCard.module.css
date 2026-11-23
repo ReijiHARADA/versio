@@ -298,6 +298,7 @@
   position: absolute;
   top: 32px;
   right: 0;
+  transform-origin: top right;
   z-index: var(--z-card-menu);
   min-width: 220px;
   padding: 6px;

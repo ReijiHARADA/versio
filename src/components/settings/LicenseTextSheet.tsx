@@ -9,6 +9,8 @@ import {
   getNoticeText,
 } from "../../data/licenses";
 import styles from "./LicenseTextSheet.module.css";
+import { Presence, MotionDiv } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 type LicenseTextSheetProps = {
   inventory: LicenseInventory | null;
@@ -33,21 +35,21 @@ export function LicenseTextSheet({ inventory, pkg, onClose }: LicenseTextSheetPr
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, pkg]);
 
-  if (!pkg || !inventory) return null;
+  if (!pkg || !inventory) return <Presence>{null}</Presence>;
 
   const licenseText = getLicenseText(inventory, pkg);
   const noticeText = getNoticeText(inventory, pkg);
 
-  return createPortal(
-    <div
-      className={styles.overlay}
+  return <Presence>{createPortal(
+    <MotionDiv
+      className={`${styles.overlay} ${motion.overlay}`}
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
       <section
-        className={styles.sheet}
+        className={`${styles.sheet} ${motion.sheet}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -98,7 +100,7 @@ export function LicenseTextSheet({ inventory, pkg, onClose }: LicenseTextSheetPr
           ) : null}
         </div>
       </section>
-    </div>,
+    </MotionDiv>,
     document.body
-  );
+  )}</Presence>;
 }

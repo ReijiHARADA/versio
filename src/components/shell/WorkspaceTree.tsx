@@ -27,6 +27,8 @@ import { isWorkspaceRenameDoubleClick } from "./workspaceRenameGesture";
 import { listPapersForWorkspace, renameWorkspaceItem } from "../../services/projectService";
 import { isImeComposing } from "../../utils/ime";
 import styles from "./AppSidebar.module.css";
+import { Presence, MotionDiv, MOTION_EXIT_PANE_MS } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 async function exportFolderCitations(node: WorkspaceNode, format: "bibtex" | "ris"): Promise<void> {
   try {
@@ -156,9 +158,9 @@ export function WorkspaceTree({
   const renderMenu = (node: WorkspaceNode) => {
     if (!menuAnchor) return null;
     return createPortal(
-      <div
+      <MotionDiv
         ref={menuRef}
-        className={styles.projectMenu}
+        className={`${styles.projectMenu} ${motion.popover}`}
         role="menu"
         data-workspace-menu=""
         style={{ top: menuAnchor.top, left: menuAnchor.left }}
@@ -253,7 +255,7 @@ export function WorkspaceTree({
               {deleting ? "移動中…" : "削除"}
             </button>
           </>
-      </div>,
+      </MotionDiv>,
       document.body
     );
   };
@@ -321,8 +323,8 @@ export function WorkspaceTree({
             </NavLink>
           )}
         </div>
-        {isOpen && (
-          <div className={styles.treeNested}>
+        <Presence initial={false} exitMs={MOTION_EXIT_PANE_MS}>{isOpen && (
+          <MotionDiv className={styles.treeNested}>
             <div
               className={styles.treeNestedClip}
               // Guide line runs 7px left of the children's indent, outside
@@ -342,8 +344,8 @@ export function WorkspaceTree({
                 ) : null;
               })}
             </div>
-          </div>
-        )}
+          </MotionDiv>
+        )}</Presence>
       </div>
     );
   };
@@ -366,7 +368,7 @@ export function WorkspaceTree({
       >
         ルートへ移動
       </div>
-      {openNode ? renderMenu(openNode) : null}
+      <Presence>{openNode ? renderMenu(openNode) : null}</Presence>
       <ExportDialog
         open={folderExport.showExport}
         busy={folderExport.exportBusy}

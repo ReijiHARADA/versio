@@ -3,6 +3,8 @@ import { Eye, EyeOff } from "lucide-react";
 import type { PaperBlock } from "../../types/paper";
 import { usableTranslatedText } from "../../services/translation/quality";
 import styles from "./Footnote.module.css";
+import { Presence, MotionP } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 type FootnoteProps = {
   block: PaperBlock;
@@ -27,9 +29,9 @@ export function Footnote({ block }: FootnoteProps) {
           {showOriginal ? <EyeOff size={12} /> : <Eye size={12} />}
         </button>
       )}
-      {showOriginal && block.original && (
-        <p className={styles.original}>{block.original}</p>
-      )}
+      <Presence initial={false}>{showOriginal && block.original && (
+        <MotionP className={`${styles.original} ${motion.reveal}`}>{block.original}</MotionP>
+      )}</Presence>
     </aside>
   );
 }

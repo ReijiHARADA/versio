@@ -1,6 +1,8 @@
 import { X } from "lucide-react";
 import { DisplaySettingsControls } from "./DisplaySettingsControls";
 import styles from "./DisplaySettingsPanel.module.css";
+import { useMotionState } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 type DisplaySettingsPanelProps = {
   /** Toolbar button the popover hangs from; null falls back to the top-right corner. */
@@ -9,10 +11,11 @@ type DisplaySettingsPanelProps = {
 };
 
 export function DisplaySettingsPanel({ anchor, onClose }: DisplaySettingsPanelProps) {
+  const motionState = useMotionState();
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overlay} onClick={onClose} data-motion={motionState}>
       <div
-        className={styles.panel}
+        className={`${styles.panel} ${motion.drop}`}
         style={
           anchor
             ? {

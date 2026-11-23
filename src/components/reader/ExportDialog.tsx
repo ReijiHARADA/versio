@@ -2,6 +2,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import styles from "./ExportDialog.module.css";
+import { Presence, MotionDiv } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 export type ExportDialogValues = {
   mode: "markdown" | "notion" | "verification" | "epub";
@@ -62,18 +64,16 @@ export function ExportDialog({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [busy, onClose, open]);
 
-  if (!open) return null;
-
-  return createPortal(
-    <div
-      className={styles.overlay}
+  return <Presence>{open && createPortal(
+    <MotionDiv
+      className={`${styles.overlay} ${motion.overlay}`}
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !busy) onClose();
       }}
     >
       <section
-        className={styles.modal}
+        className={`${styles.modal} ${motion.sheet}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -231,7 +231,7 @@ export function ExportDialog({
           </button>
         </div>
       </section>
-    </div>
+    </MotionDiv>
     , document.body
-  );
+  )}</Presence>;
 }
