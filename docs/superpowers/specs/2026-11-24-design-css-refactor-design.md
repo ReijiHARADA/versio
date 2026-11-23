@@ -3,7 +3,7 @@ type: Spec
 title: Design CSS refactor (no visual change)
 description: Tokenize font sizes, delete unused CSS, split oversized CSS modules without changing pixels.
 tags: [design, css, refactor]
-status: draft
+status: stable
 ---
 
 # Design CSS refactor (no visual change)

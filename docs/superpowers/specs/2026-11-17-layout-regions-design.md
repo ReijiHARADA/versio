@@ -3,7 +3,7 @@ type: Spec
 title: ページ領域分割による読み順の改善（第 1 段: 表/図領域）
 description: 段組の読み順を組む前に表・図の領域をページから切り出し、本文の分断と正解外警告を減らす設計
 tags: [extraction, layout, reading-order]
-status: draft
+status: stable
 ---
 
 # ページ領域分割による読み順の改善

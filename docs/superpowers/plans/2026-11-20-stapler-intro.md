@@ -3,7 +3,7 @@ type: Playbook
 title: 初回起動イントロ（ホチキス）実装計画
 description: Blender でホチキス綴じアニメーションをレンダーし、初回起動オーバーレイとして表示する手順
 tags: [onboarding, animation, blender]
-status: draft
+status: stable
 ---
 
 # 初回起動イントロ Implementation Plan

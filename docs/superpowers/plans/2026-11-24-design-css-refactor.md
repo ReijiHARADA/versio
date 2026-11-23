@@ -3,7 +3,7 @@ type: Plan
 title: Design CSS refactor implementation plan
 description: Task list for the no-visual-change CSS cleanup.
 tags: [design, css, refactor]
-status: draft
+status: stable
 ---
 
 # Design CSS refactor Implementation Plan
@@ -43,6 +43,6 @@ status: draft
 - [ ] Script lists, per module, classes not referenced as `styles.x`, `styles["x"]`, string `"x"` in the importing TS/TSX, or `composes`.
 - [ ] Remove only rules whose every selector is unused; screenshots equal baseline. Commit.
 
-### Task 4: Split AppSidebar.module.css
+### Task 4: Split AppSidebar.module.css (dropped: 6 selectors cross sidebar state and tree classes; CSS Modules hash per file)
 - [ ] Move sub-component blocks into `AppSidebar*.module.css` imported by the sub-component that uses them (order preserved).
 - [ ] Tests, typecheck, lint, screenshots equal baseline. Commit, PR, merge, CURRENT_STATE note.
