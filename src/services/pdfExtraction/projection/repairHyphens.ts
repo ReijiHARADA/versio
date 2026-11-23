@@ -31,7 +31,7 @@ export function repairLineBreakHyphens(blocks: PaperBlock[]): PaperBlock[] {
     const repaired = b.original.replace(HYPHENATED, (whole, head: string, tail: string) => {
       const joined = `${head}${tail}`.toLowerCase();
       // "co-occurrence" written with its hyphen as often as without is a real compound.
-      if (head.length >= 3 && (vocabulary.get(joined) ?? 0) >= Math.max(1, hyphenated.get(joined) ?? 0)) return `${head}${tail}`;
+      if (head.length >= 2 && (vocabulary.get(joined) ?? 0) >= Math.max(1, hyphenated.get(joined) ?? 0)) return `${head}${tail}`;
       if (head.length >= 3 && SUFFIX_FRAGMENT.test(tail) && !vocabulary.has(tail)) return `${head}${tail}`;
       return whole;
     });

@@ -14,6 +14,13 @@ describe("joinHyphenated", () => {
     expect(joinHyphenated("memory- and interaction-", "perspectives")).toBe("memory- and interaction-perspectives");
   });
 
+  it("keeps the hyphen after a one- or two-letter head", () => {
+    expect(joinHyphenated("measures like kd-", "trees and")).toBe("measures like kd-trees and");
+    expect(joinHyphenated("and e-", "health services")).toBe("and e-health services");
+    expect(joinHyphenated("Al-", "though the")).toBe("Although the");
+    expect(joinHyphenated("the de-", "sign, and")).toBe("the design, and");
+  });
+
   it("keeps a spaced dash at the line end", () => {
     expect(joinHyphenated("Methodology, Writing –", "review & editing")).toBe("Methodology, Writing – review & editing");
   });

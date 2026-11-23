@@ -17,5 +17,8 @@ describe("repairLineBreakHyphens", () => {
   it("joins when the whole word is written elsewhere in the document", () => {
     const out = repairLineBreakHyphens([p("h", "Methodology", "heading"), p("a", "The method-ology follows earlier work.")]);
     expect(out[1].original).toBe("The methodology follows earlier work.");
+    const short = repairLineBreakHyphens([p("a", "Dopaminergic cells and kd-trees."), p("b", "The do-paminergic network.")]);
+    expect(short[1].original).toBe("The dopaminergic network.");
+    expect(short[0].original).toBe("Dopaminergic cells and kd-trees.");
   });
 });
