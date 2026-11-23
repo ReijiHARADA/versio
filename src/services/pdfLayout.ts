@@ -2937,8 +2937,7 @@ function roleForLine(
   if (line.y < (line.pageHeight ?? 792) * 0.18 && /^https?:\/\/\S+$/i.test(text)) {
     return "header";
   }
-  if (line.y < (line.pageHeight ?? 792) * 0.18 &&
-      /\b(?:e-?issn|p-?issn|published\s+by|journal\s+\w+|vol\.\s*\d+)/i.test(text)) {
+  if (isTopBibliographicLine(line, baseFont) && !/^https?:\/\/\S+$/i.test(text)) {
     return "header";
   }
   // Native superscript markers and email-only rows are not standalone
@@ -5269,11 +5268,15 @@ function isDetachedTableHeaderBlock(block: LayoutBlock, previous: LayoutBlock): 
   return Boolean(previousLine && nextLine && Math.abs(previousLine.x - nextLine.x) >= 80);
 }
 
-function isTopBibliographicLine(line: LayoutLine): boolean {
+function isTopBibliographicLine(line: LayoutLine, bodyFont: number): boolean {
   const text = line.text.trim();
-  if (line.y >= (line.pageHeight ?? 792) * 0.18) return false;
+  const height = line.pageHeight ?? 792;
+  if (line.y >= height * 0.18) return false;
+  // Body prose near the top can name a journal (`Journal of Social … (27 articles)`): a body-size line
+  // is a running header only at the very top.
   return /^https?:\/\/\S+$/i.test(text) ||
-    /\b(?:e-?issn|p-?issn|published\s+by|journal\s+\w+|vol\.\s*\d+)/i.test(text);
+    ((line.y < height * 0.08 || Math.abs(line.fontSize - bodyFont) > 0.5) &&
+      /\b(?:e-?issn|p-?issn|published\s+by|journal\s+\w+|vol\.\s*\d+)/i.test(text));
 }
 
 /** Separate top-margin bibliographic lines that a native stream has attached
@@ -5281,12 +5284,14 @@ function isTopBibliographicLine(line: LayoutLine): boolean {
 function splitTopBibliographicLines(blocks: LayoutBlock[]): LayoutBlock[] {
   const result: LayoutBlock[] = [];
   for (const block of blocks) {
-    if (block.role !== "paragraph" || !block.lines.some(isTopBibliographicLine)) {
+    const bodyFont = median(block.lines.map((line) => line.fontSize));
+    const top = (line: LayoutLine) => isTopBibliographicLine(line, bodyFont);
+    if (block.role !== "paragraph" || !block.lines.some(top)) {
       result.push(block);
       continue;
     }
-    const body = block.lines.filter((line) => !isTopBibliographicLine(line));
-    const chrome = block.lines.filter(isTopBibliographicLine);
+    const body = block.lines.filter((line) => !top(line));
+    const chrome = block.lines.filter(top);
     if (body.length > 0) {
       result.push({ ...block, lines: body, text: joinLines(body), pageStart: body[0].page, pageEnd: body.at(-1)!.page, bbox: blockBbox(body) });
     }
