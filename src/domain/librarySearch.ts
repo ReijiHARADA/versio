@@ -1,6 +1,6 @@
 import type { Paper } from "../types/paper";
-import { normalizeIndexText, normalizeSearchText } from "./search/normalizeSearchText";
-import { buildSearchQuery, scoreIndexText } from "./search/searchQuery";
+import { normalizeIndexText } from "./search/normalizeSearchText";
+import { buildSearchQuery, scoreIndexText, type SearchQuery } from "./search/searchQuery";
 
 export type LibrarySearchQuery = {
   query: string;
@@ -10,10 +10,6 @@ export type PaperSearchQuery = {
   paperId: string;
   query: string;
 };
-
-export function normalizeLibraryQuery(query: string): string {
-  return normalizeSearchText(query);
-}
 
 function paperIndexText(paper: Paper): string {
   return normalizeIndexText(
@@ -29,14 +25,14 @@ function paperIndexText(paper: Paper): string {
   );
 }
 
-export function matchesLibraryQuery(paper: Paper, query: string): boolean {
-  const parsed = buildSearchQuery(query);
+export function matchesLibraryQuery(paper: Paper, query: string | SearchQuery): boolean {
+  const parsed = typeof query === "string" ? buildSearchQuery(query) : query;
   if (parsed.groups.length === 0) return true;
   return scoreIndexText(paperIndexText(paper), parsed) > 0;
 }
 
-export function filterPapersByLibraryQuery(papers: Paper[], query: string): Paper[] {
-  const needle = normalizeLibraryQuery(query);
-  if (!needle) return papers;
-  return papers.filter((paper) => matchesLibraryQuery(paper, query));
+export function filterPapersByLibraryQuery(papers: Paper[], query: string | SearchQuery): Paper[] {
+  const parsed = typeof query === "string" ? buildSearchQuery(query) : query;
+  if (parsed.groups.length === 0) return papers;
+  return papers.filter((paper) => matchesLibraryQuery(paper, parsed));
 }

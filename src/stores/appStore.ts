@@ -36,6 +36,8 @@ export type DisplaySettings = {
   /** Paper / folder listing: compact rows or cover tiles. */
   libraryView: LibraryView;
   librarySort: LibrarySort;
+  /** Library search also matches dictionary synonyms / translations / abbreviations (unset = on). */
+  searchSynonyms?: boolean;
   /** Reader right inspector open state + last tab; unset until the user first changes it. */
   readerInspector?: import("../utils/readerRightPanel").ReaderInspectorState;
 };

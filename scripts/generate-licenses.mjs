@@ -581,6 +581,48 @@ function collectCurated() {
     warnings.push("src/services/pdfExtraction/crf/GROBID-LICENSE.txt が見つかりません");
   }
 
+  // Search synonym dictionary (src/generated/synonyms.json, scripts/synonyms/build-dictionary.ts).
+  const synonymSources = JSON.parse(readText(path.join(ROOT, "scripts", "synonyms", "sources.json")));
+  const sudachiTextKey = storeText(readText(path.join(ROOT, "licenses", "sudachidict-LICENSE-2.0.txt")));
+  addPackage({
+    id: "data:sudachidict-synonyms",
+    name: "Sudachi 同義語辞書 (SudachiDict synonyms.txt)",
+    version: synonymSources.sudachi.version.replace(/^SudachiDict@/, "").slice(0, 12),
+    ecosystem: "asset",
+    license: "Apache-2.0",
+    copyright: "Works Applications Co., Ltd.",
+    textKey: sudachiTextKey,
+    noticeKey: storeText(readText(path.join(ROOT, "licenses", "sudachidict-LEGAL.txt"))),
+    status: packageStatus("Apache-2.0", sudachiTextKey),
+    notes: "検索の類義語辞書に、論文検索に関係しない分野（企業名・人名・料理など）を除いて変換・同梱しています。",
+  }, { force: true });
+  const oewnTextKey = storeText(readText(path.join(ROOT, "licenses", "open-english-wordnet-LICENSE.txt")));
+  addPackage({
+    id: "data:open-english-wordnet",
+    name: "Open English WordNet",
+    version: synonymSources.oewn.version,
+    ecosystem: "asset",
+    license: "CC-BY-4.0",
+    copyright: "The Open English WordNet Team; Princeton University",
+    textKey: oewnTextKey,
+    noticeKey: null,
+    status: packageStatus("CC-BY-4.0", oewnTextKey),
+    notes: "Princeton WordNet と Open English WordNet に基づく。語義が 1 つの語だけを残し、日本語 WordNet と ILI で対応づけて検索の類義語辞書に同梱しています。",
+  }, { force: true });
+  const wnjaTextKey = storeText(readText(path.join(ROOT, "licenses", "japanese-wordnet-LICENSE.txt")));
+  addPackage({
+    id: "data:japanese-wordnet",
+    name: "日本語 WordNet (Japanese Wordnet)",
+    version: synonymSources.wnja.version,
+    ecosystem: "asset",
+    license: null, // Own license text (WordNet-style); do not invent an SPDX id.
+    copyright: "NICT; Francis Bond, Takayuki Kuribayashi",
+    textKey: wnjaTextKey,
+    noticeKey: null,
+    status: wnjaTextKey ? "partial" : "unknown",
+    notes: "独自ライセンス（全文を保持）。語義が 1 つの語だけを英語 WordNet と対応づけ、検索の類義語辞書に同梱しています。",
+  }, { force: true });
+
   // PLaMo 3 Translate weights are downloaded on first use for the llama-server sidecar.
   const plamoTextKey = storeText(readText(path.join(ROOT, "licenses", "plamo-community-license.txt")));
   addPackage({

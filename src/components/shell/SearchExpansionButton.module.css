@@ -1,0 +1,93 @@
+/* Sits left of the clear button inside the title-bar search field. */
+.slot {
+  position: absolute;
+  top: 50%;
+  right: calc(4px + 22px + 2px);
+  transform: translateY(-50%);
+  display: flex;
+}
+
+.button {
+  composes: pill from "../../styles/squircle.module.css";
+  height: 20px;
+  min-width: 26px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 999px;
+  --sq-bg: var(--color-accent-light);
+  color: var(--color-accent);
+  font: inherit;
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.button[data-off] {
+  --sq-bg: var(--color-bg-tertiary);
+  color: var(--color-text-tertiary);
+}
+
+.master {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-small);
+}
+
+.empty {
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.term {
+  margin: 0;
+  font-size: var(--font-size-small);
+  font-weight: 600;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  composes: pill from "../../styles/squircle.module.css";
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 8px;
+  border: none;
+  border-radius: 999px;
+  --sq-bg: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] {
+  --sq-bg: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.relation {
+  font-size: var(--font-size-caption);
+  opacity: 0.7;
+}

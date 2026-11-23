@@ -419,8 +419,10 @@ export async function deleteAnnotation(id: string): Promise<void> {
   }
 }
 
-/** Full-text library search via SQLite FTS (or LIKE fallback). Does not load paper bodies. */
-export async function searchLibraryPaperIds(query: string): Promise<string[]> {
+/** Ranked library search over normalized text (see `searchPapersFts`). Does not load paper bodies. */
+export async function searchLibraryPaperIds(
+  query: string | import("../domain/search/searchQuery").SearchQuery
+): Promise<string[]> {
   const { db } = await ready();
   const { searchPapersFts } = await import("../data/sqlite/fts");
   return searchPapersFts(db, query);

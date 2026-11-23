@@ -1,5 +1,6 @@
 import type { Paper } from "../types/paper";
-import { filterPapersByLibraryQuery, normalizeLibraryQuery } from "./librarySearch";
+import { filterPapersByLibraryQuery } from "./librarySearch";
+import { buildSearchQuery, type SearchQuery } from "./search/searchQuery";
 import { searchLibraryPaperIds } from "../services/database";
 
 /**
@@ -8,15 +9,15 @@ import { searchLibraryPaperIds } from "../services/database";
  */
 export async function searchLibraryPapers(
   papers: Paper[],
-  query: string
+  query: string | SearchQuery
 ): Promise<Paper[]> {
-  const needle = normalizeLibraryQuery(query);
-  if (!needle) return papers;
+  const parsed = typeof query === "string" ? buildSearchQuery(query) : query;
+  if (parsed.groups.length === 0) return papers;
 
-  const metaHits = filterPapersByLibraryQuery(papers, query);
+  const metaHits = filterPapersByLibraryQuery(papers, parsed);
   let ftsIds: string[] = [];
   try {
-    ftsIds = await searchLibraryPaperIds(query);
+    ftsIds = await searchLibraryPaperIds(parsed);
   } catch (error) {
     console.warn("FTS library search failed; using metadata only:", error);
   }

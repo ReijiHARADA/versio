@@ -62,6 +62,12 @@
 
 - MADLAD-400 (Python `translation-server`, port 8765) and the Apple short-item router were removed in 2026-11. Old `translation_cache` rows and saved `translationEngine` / `madladServerUrl` keys are ignored, not migrated. Do not reintroduce a Python translation runtime.
 
+## Library search dictionary
+
+- Library search expands queries with the bundled dictionary `src/generated/synonyms.json` (lazy chunk). Rebuild it with `npm run build:synonyms` (sources pinned with SHA-256 in `scripts/synonyms/sources.json`, cached in gitignored `.cache/synonyms-src/`); curated academic terms live in `scripts/synonyms/curated.txt`. Check expansions with `npx tsx scripts/synonyms/probe.ts <query>`.
+- Do not add ShareAlike sources (ConceptNet, JMdict) to the bundled dictionary. New sources need a Settings → ライセンス entry in `scripts/generate-licenses.mjs`.
+- Index and query go through the same `normalizeSearchText`; `papers_fts` stores normalized text only. Scoring runs in the `versio_search_score` SQL function (re-registered after every sql.js `export()`). Background: `docs/research/search-synonym-dictionary-2026-11.md`.
+
 ## Licenses (Settings)
 
 - Settings → ライセンス lists Versio MIT plus **required** third-party notices (distributed on macOS and attribution-required). Regenerate with `npm run generate:licenses` (also `prebuild`). Source of truth is `src/generated/thirdPartyLicenses.json`. Do not invent SPDX identifiers; mark missing metadata as unknown/partial. Exclude: dev-only / non-bundled deps, other-platform Rust crates, and packages where a no-attribution license can be elected (`0BSD` / `Unlicense` / `CC0-1.0` / `MIT-0` / `WTFPL`). Policy details: `THIRD_PARTY_NOTICES.md`.

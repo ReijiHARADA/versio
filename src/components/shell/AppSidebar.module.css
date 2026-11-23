@@ -340,6 +340,11 @@
   padding: 0 calc(4px + 22px + var(--spacing-xs)) 0 var(--control-padding-x);
 }
 
+/* Room for the synonym count pill left of the clear button. */
+.titleSearch:has([data-testid="search-expansion"]) .searchInput {
+  padding-right: calc(4px + 22px + 2px + 34px + var(--spacing-xs));
+}
+
 .searchInput::placeholder {
   color: var(--color-text-tertiary);
 }

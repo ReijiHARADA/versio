@@ -121,3 +121,34 @@ describe("normalized library search", () => {
     expect(searchPapersFts(db, "cognitive load")).toEqual(["fts-1"]);
   });
 });
+
+describe("library search with the bundled synonym dictionary", () => {
+  it("finds an English paper from a Japanese synonym and keeps exact hits first", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { SynonymDictionary } = await import("../../domain/search/synonymDictionary");
+    const { buildSearchQuery } = await import("../../domain/search/searchQuery");
+    const dictionary = new SynonymDictionary(JSON.parse(readFileSync("src/generated/synonyms.json", "utf8")));
+    const db = await openSqlite(createMemoryFileSystem());
+    const english = { ...paper(), id: "en", sourceFileHash: "h-en", titleOriginal: "Measuring usability of wearables" };
+    const japanese = { ...paper(), id: "ja", sourceFileHash: "h-ja", titleOriginal: "使いやすさの評価" };
+    for (const p of [english, japanese]) {
+      upsertPaperIndex(db, p);
+      indexPaperText(db, p, "", "");
+    }
+    const query = buildSearchQuery("使いやすさ", { dictionary });
+    expect(searchPapersFts(db, query)).toEqual(["ja", "en"]);
+    expect(searchPapersFts(db, "使いやすさ")).toEqual(["ja"]);
+  });
+});
+
+describe("search scoring function", () => {
+  it("survives a persist (sql.js export reopens the database)", async () => {
+    const db = await openSqlite(createMemoryFileSystem());
+    const p = paper();
+    upsertPaperIndex(db, p);
+    indexPaperText(db, p, "body", "");
+    await db.persist();
+    db.exportBytes();
+    expect(searchPapersFts(db, "UniqueTitleAlpha")).toEqual(["fts-1"]);
+  });
+});

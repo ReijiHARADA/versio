@@ -5,6 +5,9 @@ type WorkspaceState = {
   workspaceNodes: WorkspaceNode[];
   memberships: WorkspacePaper[];
   searchQuery: string;
+  /** Synonym variants the user switched on/off for the current search, by normalized term. */
+  searchOverrides: Record<string, boolean>;
+  setSearchOverride: (term: string, active: boolean) => void;
   loaded: boolean;
   setLoaded: (loaded: boolean) => void;
   setSearchQuery: (query: string) => void;
@@ -18,8 +21,13 @@ type WorkspaceState = {
   removeMembershipsForPaper: (paperId: string) => void;
 };
 export const useProjectStore = create<WorkspaceState>()((set) => ({
-  workspaceNodes: [], memberships: [], searchQuery: "", loaded: false,
-  setLoaded: (loaded) => set({ loaded }), setSearchQuery: (searchQuery) => set({ searchQuery }),
+  workspaceNodes: [], memberships: [], searchQuery: "", searchOverrides: {}, loaded: false,
+  setLoaded: (loaded) => set({ loaded }),
+  // Choices belong to one search; clearing the field forgets them.
+  setSearchQuery: (searchQuery) =>
+    set((state) => ({ searchQuery, searchOverrides: searchQuery.trim() ? state.searchOverrides : {} })),
+  setSearchOverride: (term, active) =>
+    set((state) => ({ searchOverrides: { ...state.searchOverrides, [term]: active } })),
   setWorkspaceNodes: (workspaceNodes) => set({ workspaceNodes }),
   mergeWorkspaceNodes: (persistedNodes) => set((state) => {
     const current = new Map(state.workspaceNodes.map((node) => [node.id, node]));

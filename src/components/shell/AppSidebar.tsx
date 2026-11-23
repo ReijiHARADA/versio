@@ -29,6 +29,7 @@ import {
 import { setTranslationUiDeferReason } from "../../utils/batchBlockUpdates";
 import { WorkspaceTree } from "./WorkspaceTree";
 import { useLibraryCache } from "../../stores/libraryCache";
+import { SearchExpansionButton } from "./SearchExpansionButton";
 import styles from "./AppSidebar.module.css";
 import { useSelectionSlide } from "./useSelectionSlide";
 
@@ -313,6 +314,7 @@ export function AppSidebar({
                   aria-label={`${searchScope}を検索`}
                   data-testid="library-search"
                 />
+                {searchQuery ? <SearchExpansionButton query={searchQuery} /> : null}
                 {searchQuery ? (
                   <button
                     type="button"

@@ -1,11 +1,7 @@
+import type { Database } from "sql.js";
 import type { SqliteClient } from "./client";
 import { normalizeIndexText } from "../../domain/search/normalizeSearchText";
-import {
-  buildSearchQuery,
-  variantNeedles,
-  type SearchExpander,
-  type SearchQuery,
-} from "../../domain/search/searchQuery";
+import { buildSearchQuery, scoreFields, type SearchQuery } from "../../domain/search/searchQuery";
 
 /**
  * `papers_fts` is a search-only cache. Every column holds `normalizeIndexText`
@@ -37,49 +33,68 @@ export function rebuildPaperFts(
 }
 
 /** A hit in the title outranks one in the body. */
-const FIELD_WEIGHTS = [
-  ["title", 4],
-  ["authors", 3],
-  ["annotation", 2],
-  ["original", 1],
-  ["translation", 1],
-] as const;
+const FIELD_WEIGHTS = { title: 4, authors: 3, annotation: 2, original: 1, translation: 1 } as const;
 
-/** Same `?` order for the WHERE and the score, so one params list serves both. */
-function groupSql(group: SearchQuery["groups"][number]): { where: string; score: string; params: string[] } {
-  const hits: string[] = [];
-  const terms: string[] = [];
-  const params: string[] = [];
-  for (const variant of group) {
-    for (const needle of variantNeedles(variant.term)) {
-      for (const [field, fieldWeight] of FIELD_WEIGHTS) {
-        hits.push(`f.${field} LIKE ?`);
-        terms.push(`(f.${field} LIKE ?) * ${fieldWeight * variant.weight}`);
-        params.push(`%${needle}%`);
+const SCORE_FUNCTION = "versio_search_score";
+
+/**
+ * Registers the scoring function `searchPapersFts` uses. Scoring in one call per
+ * row reads each long body once; one SQL `LIKE` / `instr` per variant and field
+ * re-read the body for every variant and took ~0.6–0.9 s for a 13-variant query
+ * over 300 papers (~40 MB).
+ */
+export function registerSearchFunctions(db: Database): void {
+  let cachedJson = "";
+  let cached: SearchQuery = { groups: [] };
+  db.create_function(
+    SCORE_FUNCTION,
+    (title: unknown, authors: unknown, annotation: unknown, original: unknown, translation: unknown, queryJson: unknown) => {
+      if (queryJson !== cachedJson) {
+        cachedJson = String(queryJson);
+        cached = JSON.parse(cachedJson) as SearchQuery;
       }
+      return scoreFields(
+        [
+          { text: String(title ?? ""), weight: FIELD_WEIGHTS.title },
+          { text: String(authors ?? ""), weight: FIELD_WEIGHTS.authors },
+          { text: String(annotation ?? ""), weight: FIELD_WEIGHTS.annotation },
+          { text: String(original ?? ""), weight: FIELD_WEIGHTS.original },
+          { text: String(translation ?? ""), weight: FIELD_WEIGHTS.translation },
+        ],
+        cached
+      );
     }
-  }
-  return { where: `(${hits.join(" OR ")})`, score: `max(0, ${terms.join(", ")})`, params };
+  );
+}
+
+/** Only what scoring needs, so the per-row JSON stays small. */
+function scoringJson(query: SearchQuery): string {
+  return JSON.stringify({
+    groups: query.groups.map((group) => ({
+      variants: group.variants.map(({ term, weight, relation }) => ({ term, weight, relation })),
+    })),
+  });
 }
 
 /**
- * Ranked paper ids for a library query. Runs on `LIKE` over normalized text on
- * both the FTS5 table and the plain fallback table: the shipped sql.js has no
- * FTS5, and substring matching is what Japanese text without spaces needs.
+ * Ranked paper ids for a library query: substring search over normalized text
+ * (see `scoreFields`), on both the FTS5 table and the plain fallback table. The
+ * shipped sql.js has no FTS5, and substring matching is what Japanese text
+ * without spaces needs.
  */
-export function searchPapersFts(
-  db: SqliteClient,
-  query: string,
-  expand?: SearchExpander
-): string[] {
-  const parsed = buildSearchQuery(query, expand);
+export function searchPapersFts(db: SqliteClient, query: string | SearchQuery): string[] {
+  const parsed = typeof query === "string" ? buildSearchQuery(query) : query;
   if (parsed.groups.length === 0) return [];
-  const parts = parsed.groups.map(groupSql);
-  const sql = `SELECT f.paper_id AS paper_id, (${parts.map((part) => part.score).join(" + ")}) AS score
-    FROM papers_fts f JOIN papers p ON p.id = f.paper_id
-    WHERE p.trashed_at IS NULL AND ${parts.map((part) => part.where).join(" AND ")}
+  // `LIMIT -1` keeps SQLite from flattening the subquery and scoring every row twice.
+  const sql = `SELECT paper_id FROM (
+      SELECT f.paper_id AS paper_id,
+        ${SCORE_FUNCTION}(f.title, f.authors, f.annotation, f.original, f.translation, ?) AS score
+      FROM papers_fts f JOIN papers p ON p.id = f.paper_id
+      WHERE p.trashed_at IS NULL
+      LIMIT -1
+    )
+    WHERE score > 0
     ORDER BY score DESC
     LIMIT 50`;
-  const params = [...parts.flatMap((part) => part.params), ...parts.flatMap((part) => part.params)];
-  return db.query<{ paper_id: string }>(sql, params).map((row) => String(row.paper_id));
+  return db.query<{ paper_id: string }>(sql, [scoringJson(parsed)]).map((row) => String(row.paper_id));
 }
