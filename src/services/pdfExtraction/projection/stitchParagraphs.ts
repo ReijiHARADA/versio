@@ -170,6 +170,14 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j;
           break;
         }
+        // `… for the coordinated optimization of the` | heading `18 PID parameters of a 6-DOF underwater manipulator, standard`
+        // | `PSO may suffer …`: a line read as a (numbered) heading inside a sentence cut at a function word.
+        if (!listItem && j === i + 1 && candidate.type === "heading" && hardOpen && !/,$/.test(currentText) && words(candidateText) >= 6 &&
+          /(?:\s\p{Ll}{2,}|,)$/u.test(candidateText) && /\s(?:of|a|an|the|and|in|for|with|to),?\s|,\s/.test(candidateText) && out[j + 1] && eligible(out[j + 1]) && out[j + 1].pageStart <= current.pageEnd + 1) {
+          formula = j;
+          target = j + 1;
+          break;
+        }
         // `… the concatenated features` [`Fmulti ∈ RH×W`] `are passed through …`: a short unnumbered formula inside
         // the sentence (not after a lead-in, which introduces a display) and the lower-case rest of it.
         if (j === i + 1 && candidate.type === "equation" && candidateText.length <= 80 && !/(?:^|\s)\(\s*\d{1,3}[a-z]?\s*\)\s*$/.test(candidateText) &&

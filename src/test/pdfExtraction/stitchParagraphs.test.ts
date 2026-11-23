@@ -157,6 +157,16 @@ describe("stitchParagraphContinuations through a short inline formula", () => {
     expect(out).toHaveLength(1);
   });
 
+  it("takes a heading-like line inside a sentence back into it", () => {
+    const out = stitchParagraphContinuations([
+      block("a", "paragraph", "PID parameter optimization is an important factor; however, little work addresses the coordinated optimization of the", 3),
+      block("h", "heading", "18 PID parameters of a 6-DOF underwater manipulator, standard", 3),
+      block("b", "paragraph", "PSO may suffer from premature particle aggregation.", 3),
+    ], []);
+    expect(out).toHaveLength(1);
+    expect(out[0].original).toContain("of the 18 PID parameters of a 6-DOF underwater manipulator, standard PSO may suffer");
+  });
+
   it("also continues a list item cut at the formula", () => {
     const out = stitchParagraphContinuations([
       block("a", "paragraph", "3. Type-Specific Feature Aggregation To focus on salient attributes of each type, the concatenated features", 12, { listRole: "item" }),
