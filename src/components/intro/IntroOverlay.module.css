@@ -75,7 +75,7 @@
   mask-composite: intersect;
   transform: scaleX(0);
   opacity: 0;
-  transition: filter 0.15s;
+  transition: filter var(--transition-fast);
 }
 
 .letter {
