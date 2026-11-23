@@ -53,7 +53,11 @@ for (const doc of docs) {
   const result = alignParagraphs(gold, paragraphs);
   // The PDF is another version than the JATS (most paragraphs not found): the gold does not apply.
   const founds = result.paragraphs.map((p) => p.found).sort((a, b) => a - b);
-  if ((founds[founds.length >> 1] ?? 0) < 0.5) {
+  // A preprint PDF (bioRxiv / medRxiv / Research Square) against the published JATS: a fifth or more of the
+  // paragraphs were rewritten between the versions.
+  const preprint = doc.blocks.slice(0, 40).some((b) => /\b(?:bioRxiv|medRxiv|Research Square)\b|this version posted/i.test(b.text));
+  const missingShare = result.paragraphs.filter((p) => p.found < 0.3).length / Math.max(1, result.paragraphs.length);
+  if ((founds[founds.length >> 1] ?? 0) < 0.5 || (preprint && missingShare >= 0.2)) {
     mismatched.push(doc.id);
     continue;
   }
