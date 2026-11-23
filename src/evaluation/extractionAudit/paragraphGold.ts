@@ -58,7 +58,7 @@ const SHINGLE = 5;
 const shingles = (t: string[]): string[] => (t.length < SHINGLE ? [] : Array.from({ length: t.length - SHINGLE + 1 }, (_, i) => t.slice(i, i + SHINGLE)).filter((w) => !w.includes(MARKUP)).map((w) => w.join(" ")));
 const wordCount = (s: string) => tokens(s).filter((t) => t !== MARKUP).length;
 
-export type ExtractedBlock = { id: string; text: string; warning: string | null };
+export type ExtractedBlock = { id: string; text: string; warning: string | null; indent?: boolean; shortEnd?: boolean };
 
 export type ParagraphOutcome = {
   index: number;
@@ -96,6 +96,7 @@ export type BlockOutcome = {
 export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[], hosts: ExtractedBlock[] = []): { paragraphs: ParagraphOutcome[]; blocks: BlockOutcome[] } {
   // Shingle → blocks containing it. Phrases a paper repeats occur in several blocks; they are
   // credited to the block the paragraph's unambiguous shingles point to.
+  const blockIndex = new Map(blocks.map((b, k) => [b.id, k]));
   const owners = new Map<string, string[]>();
   const blockShingles = new Map<string, string[]>();
   for (const block of blocks) {
@@ -132,7 +133,15 @@ export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[],
     }
     const share = [...counts].map(([id, n]) => ({ id, share: n / Math.max(1, found) })).filter((b) => b.share >= 0.1).sort((a, b) => b.share - a.share);
     const f = found / Math.max(1, sh.length);
-    const verdict: ParagraphOutcome["verdict"] = f < 0.3 ? "missing" : share.length >= 2 ? "split" : f < 0.85 ? "partial" : "intact";
+    // The PDF itself starts a new paragraph inside one JATS paragraph: consecutive blocks, each break after a
+    // finished sentence on a short last line or before an indented first line, the next block capitalised. The
+    // extraction reproduced the print.
+    const printedBreaks = share.length >= 2 && f >= 0.85 && (() => {
+      const at = share.map((b) => blockIndex.get(b.id)!).sort((a, b) => a - b);
+      return at.every((k, n) => n === 0 || (k === at[n - 1] + 1 &&
+        /[.!?][”"’')\]]*$/.test(blocks[at[n - 1]].text.trim()) && (blocks[k].indent === true || blocks[at[n - 1]].shortEnd === true) && /^\p{Lu}/u.test(blocks[k].text.trim())));
+    })();
+    const verdict: ParagraphOutcome["verdict"] = f < 0.3 ? "missing" : share.length >= 2 && !printedBreaks ? "split" : f < 0.85 ? "partial" : "intact";
     return { index: p.index, found: f, blocks: share, verdict, warned: share.some((b) => warnedBlocks.has(b.id)) };
   });
 
