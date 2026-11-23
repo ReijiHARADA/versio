@@ -54,6 +54,11 @@
   --color-danger: #c5221f;
   --color-success: #16803c;
   --color-favorite: #f4b400;
+  /* Selected Favorites / Trash nav rows */
+  --color-selection-favorite-bg: var(--color-favorite);
+  --color-selection-favorite-fg: #3d2c00;
+  --color-selection-danger-bg: var(--color-danger);
+  --color-selection-danger-fg: #ffffff;
   --color-original-bg: #fef7e0;
   --color-original-border: #fbbc04;
 
@@ -160,6 +165,10 @@
   --color-danger: #f28b82;
   --color-success: #6ee7b7;
   --color-favorite: #fdd663;
+  --color-selection-favorite-bg: #f4b400;
+  --color-selection-favorite-fg: #2b1f00;
+  --color-selection-danger-bg: #d93025;
+  --color-selection-danger-fg: #ffffff;
   --color-original-bg: #3d3520;
   --color-original-border: #d4a72c;
 

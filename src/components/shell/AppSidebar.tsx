@@ -386,9 +386,9 @@ export function AppSidebar({
                   dropTarget={dropTargetId === INBOX_DROP_ID}
                   preventNav={Boolean(draggingPaperId)}
                 />
-                <LibItem to="/favorites" icon={<Star size={16} />} label="お気に入り" />
+                <LibItem to="/favorites" icon={<Star size={16} />} label="お気に入り" tone="favorite" />
                 <LibItem to="/recent" icon={<Clock size={16} />} label="最近読んだ論文" />
-                <LibItem to="/trash" icon={<Trash2 size={16} />} label="ゴミ箱" />
+                <LibItem to="/trash" icon={<Trash2 size={16} />} label="ゴミ箱" tone="danger" />
               </nav>
             </section>
 
@@ -450,6 +450,7 @@ function LibItem({
   dropTarget,
   preventNav,
   inactive,
+  tone,
   onNavigate,
 }: {
   to: string;
@@ -462,15 +463,18 @@ function LibItem({
   preventNav?: boolean;
   /** Same route, different filter: suppress NavLink's route-based active state. */
   inactive?: boolean;
+  /** Selected-row color: favorites yellow, trash red; default accent. */
+  tone?: "favorite" | "danger";
   onNavigate?: () => void;
 }) {
+  const toneClass = tone === "favorite" ? styles.toneFavorite : tone === "danger" ? styles.toneDanger : "";
   return (
     <NavLink
       to={to}
       end={end}
       data-inbox-drop={inboxDrop ? "" : undefined}
       className={({ isActive }) =>
-        `${styles.item} ${isActive && !inactive ? styles.active : ""} ${dropTarget ? styles.dropTarget : ""}`
+        `${styles.item} ${toneClass} ${isActive && !inactive ? styles.active : ""} ${dropTarget ? styles.dropTarget : ""}`
       }
       aria-current={inactive ? false : undefined}
       title={label}
