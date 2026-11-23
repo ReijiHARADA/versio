@@ -151,7 +151,18 @@ export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[],
     const goldShare = sh.length ? sh.filter((s) => goldOwner.get(s) !== undefined).length / sh.length : 0;
     const paras = [...(perBlockFromPara.get(block.id) ?? new Map<number, number>())].map(([index, here]) => ({ index, here })).sort((a, b) => b.here - a.here);
     const complete = paras.filter((p) => p.here >= 0.85).length;
-    const verdict: BlockOutcome["verdict"] = goldShare < 0.5 ? "outside" : complete >= 2 ? "merged" : complete === 1 ? "complete" : "fragment";
+    // A block holding most of one paragraph but missing its end (or start) where its warning says so is a
+    // fragment: the warning names a real defect, not a false alarm.
+    const lacks = (() => {
+      if (complete !== 1 || paras[0].here >= 0.99 || !block.warning) return false;
+      const gp = scorable.find((g) => g.index === paras[0].index);
+      if (!gp) return false;
+      const goldSh = shingles(tokens(gp.text));
+      const own = new Set(sh);
+      const ends = /末尾/.test(block.warning) ? goldSh.slice(-3) : /先頭/.test(block.warning) ? goldSh.slice(0, 3) : [];
+      return ends.length > 0 && ends.every((x) => !own.has(x));
+    })();
+    const verdict: BlockOutcome["verdict"] = goldShare < 0.5 ? "outside" : complete >= 2 ? "merged" : complete === 1 && !lacks ? "complete" : "fragment";
     return { id: block.id, warning: block.warning, gold: goldShare, paragraphs: paras, verdict };
   });
   const hostShingles = hosts.map((h) => new Set(shingles(tokens(h.text))));
