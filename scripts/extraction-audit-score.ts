@@ -50,7 +50,7 @@ const shown: string[] = [];
 for (const doc of docs) {
   const gold = jatsParagraphs(fs.readFileSync(path.join(cacheDir, `${doc.id.slice(5)}.xml`), "utf8"));
   const paragraphs = doc.blocks.filter((b) => b.type === "paragraph");
-  const result = alignParagraphs(gold, paragraphs);
+  const result = alignParagraphs(gold, paragraphs, doc.blocks.filter((b) => b.type === "footnote"));
   // The PDF is another version than the JATS (most paragraphs not found): the gold does not apply.
   const founds = result.paragraphs.map((p) => p.found).sort((a, b) => a - b);
   // A preprint PDF (bioRxiv / medRxiv / Research Square) against the published JATS: a fifth or more of the
@@ -136,7 +136,7 @@ if (paraExamples) {
   for (const doc of docs.filter((d) => d.split === "dev")) {
     const gold = jatsParagraphs(fs.readFileSync(path.join(cacheDir, `${doc.id.slice(5)}.xml`), "utf8"));
     const paragraphs = doc.blocks.filter((b) => b.type === "paragraph");
-    for (const p of alignParagraphs(gold, paragraphs).paragraphs) {
+    for (const p of alignParagraphs(gold, paragraphs, doc.blocks.filter((b) => b.type === "footnote")).paragraphs) {
       if (p.verdict !== verdict || n >= paraExamples) continue;
       n += 1;
       const g = gold[p.index].text;

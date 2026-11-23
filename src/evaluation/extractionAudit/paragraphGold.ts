@@ -88,7 +88,12 @@ export type BlockOutcome = {
  * - block fragment: every gold paragraph in it is < 85% here; complete: one paragraph ≥ 85% here;
  *   merged: two or more paragraphs ≥ 85% here; outside: < 50% of the block is gold text
  */
-export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[]): { paragraphs: ParagraphOutcome[]; blocks: BlockOutcome[] } {
+/**
+ * `hosts`: non-paragraph blocks that may carry a whole gold paragraph in readable form (a funding or data
+ * statement set as a footnote). A gold paragraph found whole in one of them counts as intact; hosts are
+ * not judged themselves.
+ */
+export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[], hosts: ExtractedBlock[] = []): { paragraphs: ParagraphOutcome[]; blocks: BlockOutcome[] } {
   // Shingle → blocks containing it. Phrases a paper repeats occur in several blocks; they are
   // credited to the block the paragraph's unambiguous shingles point to.
   const owners = new Map<string, string[]>();
@@ -139,7 +144,14 @@ export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[])
     const verdict: BlockOutcome["verdict"] = goldShare < 0.5 ? "outside" : complete >= 2 ? "merged" : complete === 1 ? "complete" : "fragment";
     return { id: block.id, warning: block.warning, gold: goldShare, paragraphs: paras, verdict };
   });
-  return { paragraphs, blocks: blockOutcomes };
+  const hostShingles = hosts.map((h) => new Set(shingles(tokens(h.text))));
+  const hosted = paragraphs.map((p) => {
+    if (p.verdict === "intact" || hostShingles.length === 0) return p;
+    const sh = [...new Set(shingles(tokens(scorable.find((g) => g.index === p.index)!.text)))];
+    const best = Math.max(0, ...hostShingles.map((set) => sh.filter((x) => set.has(x)).length / Math.max(1, sh.length)));
+    return best >= 0.85 ? { ...p, verdict: "intact" as const, found: best } : p;
+  });
+  return { paragraphs: hosted, blocks: blockOutcomes };
 }
 
 
