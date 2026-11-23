@@ -300,6 +300,8 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     // (Items used to inherit the warning of the whole flattened list; each item is now checked on its own.)
     if (block.metadata.listRole === "item") checked = checked.replace(/(?:[;,:]|[;,]\s+(?:and|or))\s*$/, ".");
     if (afterEquation) checked = checked.charAt(0).toUpperCase() + checked.slice(1);
+    // `d. The mechanisms by which …`: a lower-case item letter before a capitalised sentence is a list marker, not a continuation.
+    if (/^[a-z][.)]\s+\p{Lu}/u.test(checked)) checked = checked.replace(/^[a-z][.)]\s+/, "");
     // `(a) …` `(b) …` `(c) …` in a row is an enumeration in the text, not a figure's sub-panel legend.
     const label = (b?: PaperBlock) => (b?.type === "paragraph" ? /^\(([a-z])\)\s/.exec((b.original ?? "").trim())?.[1] : undefined);
     const own = label(block);

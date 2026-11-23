@@ -102,6 +102,8 @@ describe("reconcileTranslationWarnings", () => {
     expect(reconcileTranslationWarnings([lead(), block("l", "paragraph", "a. Research related to the topic has received attention.")])[0].metadata.translationInputWarning).toBeUndefined();
     const evaluatedAs = block("a", "paragraph", "Two advanced decomposition approaches were evaluated as", 1, { translationInputWarning: TAIL });
     expect(reconcileTranslationWarnings([evaluatedAs, block("l", "paragraph", "• Short-Time Fourier Transform (STFT) generates spectrograms.")])[0].metadata.translationInputWarning).toBeUndefined();
+    const item = block("d", "paragraph", "d. The mechanisms by which SCFAs regulate cognitive impairment are summarized.", 1, { translationInputWarning: "段落の先頭が前段から続いている可能性があります" });
+    expect(reconcileTranslationWarnings([item])[0].metadata.translationInputWarning).toBeUndefined();
     const asLead = () => block("a", "paragraph", "The importance of feature j over the data subset is defined as", 1, { translationInputWarning: TAIL });
     expect(reconcileTranslationWarnings([asLead(), block("eq", "equation", "I = sum")])[0].metadata.translationInputWarning).toBeUndefined();
     const commaLead = () => block("a", "paragraph", "Given the transition from bin i to bin j, the joint distribution factorizes over time,", 1, { translationInputWarning: TAIL });
