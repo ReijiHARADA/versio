@@ -3836,7 +3836,10 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     // last line, or a finished sentence before a capital, still ends it.
     const nearlyFull = last.width >= Math.max(...ref.map((l) => l.width)) * 0.8;
     const runsOn = !/[.!?][”"’')\]]*$/.test(a.text.trim()) || /^\p{Ll}/u.test(b.text.trim());
-    if (!unindented || (!full && !(indentStyle && broken && nearlyFull && runsOn))) continue;
+    // At 90% the line is justified short of the margin by a trailing word, not a paragraph end: the
+    // unindented resumption alone decides.
+    const almostFull = last.width >= Math.max(...ref.map((l) => l.width)) * 0.9;
+    if (!unindented || (!full && !(indentStyle && broken && (almostFull || (nearlyFull && runsOn))))) continue;
     // Same place: an indent-marked journal needs no more; otherwise B must follow at the ordinary line pitch.
     const pitch = median(head.slice(1).map((l, k) => l.y - head[k].y));
     if (!broken && !indentStyle && first.y - last.y > pitch * 1.2) continue;
