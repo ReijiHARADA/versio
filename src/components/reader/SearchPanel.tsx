@@ -141,7 +141,6 @@ export function SearchResults({
           >
             {result.section && <span className={styles.sectionName}>{sectionDisplayTitle(result.section)}</span>}
             <p className={styles.snippet}>{highlightMatch(result.snippet)}</p>
-            <span className={styles.matchType}>{result.matchType === "translated" ? "日本語" : "英語原文"}</span>
           </li>
         ))}
       </ul>

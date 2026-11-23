@@ -66,13 +66,13 @@
 }
 
 .results {
-  margin: 0 calc(-1 * var(--spacing-sm));
+  /* No negative inset: the inspector has no left padding and clips overflow, so the selected row's left corners would be cut. */
 }
 
 .resultCount {
   font-size: 0.75rem;
   color: var(--color-text-tertiary);
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-md);
 }
 
 .resultList {
@@ -118,12 +118,6 @@
   margin-bottom: var(--spacing-xs);
 }
 
-.matchType {
-  font-size: 0.6875rem;
-  color: var(--color-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
 
 .highlight {
   composes: surface from "../../styles/squircle.module.css";
