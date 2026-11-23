@@ -1465,6 +1465,11 @@ describe("unsafe extracted translation input", () => {
     expect(isExpectedNonProseParagraph("(a) Folder management options dropdown menu (b) File operation options dropdown menu")).toBe(true);
     expect(isExpectedNonProseParagraph("c) Family tree training d) Family tree inference")).toBe(true);
     expect(isExpectedNonProseParagraph("(a) The model was trained on the full set. We then removed (b) every label and retrained it from scratch.")).toBe(false);
+    expect(isExpectedNonProseParagraph("Abbreviations bpm Breaths per minute ChARM Children’s Automated Respiration Monitor CHCP Community HealthCare")).toBe(true);
+    expect(isExpectedNonProseParagraph('TS=("Natural Language Processing" OR "NLP" OR "Machine Learning" OR "ML") AND TS=("Surgical Workflow" OR')).toBe(true);
+    expect(isExpectedNonProseParagraph("3: Configure Patchwork++ with (ut, dt) 4: // Stage 2: Ground-optimized preprocessing 5: (Pg, Png) ← Patchwork++")).toBe(true);
+    expect(isExpectedNonProseParagraph("OutcomeBespokeLikertnaire (depthannotation,segmenusefulness)ObjectiveAssessmentcal Skills5-pointinterven studentsFamily")).toBe(true);
+    expect(isExpectedNonProseParagraph("We compared iPhone and MacBook users with GitHub and LinkedIn accounts in the study, and the results were similar for")).toBe(false);
     expect(isExpectedNonProseParagraph("Participants were recruited at the University Hospital and the Department of Neurology, and all of them gave written consent before the study began in")).toBe(false);
   });
 

@@ -1908,6 +1908,17 @@ export function isExpectedNonProseParagraph(text: string): boolean {
   // marker such as `• 195:3`. They carry no sentence boundary and native PDF
   // order can otherwise present them as a paragraph on a later page.
   if (/(?:[•·]|\|)\s*\d{1,4}:\d{1,3}\s*$/.test(t)) return true;
+  // An abbreviation glossary (`Abbreviations bpm Breaths per minute ChARM …`).
+  if (/^(?:abbreviations?|list of abbreviations|the following abbreviations are used)\b/i.test(t)) return true;
+  // A database search string (`TS=("NLP" OR "Machine Learning") AND …`).
+  const operators = t.match(/\s(?:OR|AND)\s/g)?.length ?? 0;
+  if (operators >= 3 && operators * 10 >= t.split(/\s+/).length && /\b(?:TS\s*=|TITLE-ABS-KE|TITLE\s*\(|ABS\s*\(|PUBYEAR|ALL\s*\(|\[MeSH|\[tiab)/.test(t)) return true;
+  // A numbered algorithm line (`3: Configure Patchwork++ with (ut, dt)`, `5: (Pg, Png) ← …`).
+  if (/^\d{1,2}:\s/.test(t) && /[←∈]|\/\/|\b(?:for|while|if|return|end)\b/.test(t)) return true;
+  // Table cells read across into one run, words glued at the cell edges (`simulatorenvironment and por(40`):
+  // several different lower-to-upper joins, densely, which prose with a product name (`DirectContacts2`) does not make.
+  const glued = new Set(t.match(/\p{Ll}{3,}\p{Lu}\p{Ll}{2,}/gu) ?? []).size;
+  if (glued >= 4 && glued * 20 >= t.split(/\s+/).length) return true;
   // A row of panel labels under a figure (`(a) Folder management options (b) File operation options`).
   if (t.length <= 200 && /^\(?[a-h]\)\s/i.test(t) && (t.match(/(?:^|\s)\(?[a-h]\)\s/gi)?.length ?? 0) >= 2 && !/[.!?]\s+\p{Lu}\p{Ll}+\s+\p{Ll}/u.test(t)) return true;
   // Pieces of an open-access license footer split across columns (`… No use, distribution or reproduction is permitted`).
