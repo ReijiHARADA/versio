@@ -821,3 +821,72 @@
 .item.selectionArriving::after {
   display: none;
 }
+
+/* ────────────────────────────────────────────────
+   Tags: wrapped chips when expanded, one icon on the collapsed rail
+──────────────────────────────────────────────── */
+.tagChips {
+  display: none;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 2px 0 0;
+}
+
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .tagChips,
+.sidebarExpanded .tagChips,
+.sidebarDropReady .tagChips,
+.sidebarResizing .tagChips {
+  display: flex;
+}
+
+.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .tagRail,
+.sidebarExpanded .tagRail,
+.sidebarDropReady .tagRail,
+.sidebarResizing .tagRail {
+  display: none;
+}
+
+.tagChip {
+  composes: pill from "../../styles/squircle.module.css";
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  max-width: 100%;
+  height: 24px;
+  padding: 0 9px;
+  box-sizing: border-box;
+  --sq-bg: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: none;
+  opacity: var(--sidebar-expand-t);
+  transition:
+    --sq-bg var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.tagChip:hover {
+  --sq-bg: var(--color-border);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.tagChipHash {
+  color: var(--color-text-tertiary);
+}
+
+.tagChipActive,
+.tagChipActive:hover {
+  --sq-bg: var(--color-selection-bg);
+  color: var(--color-selection-fg);
+  font-weight: 500;
+}
+
+.tagChipActive .tagChipHash {
+  color: inherit;
+  opacity: 0.7;
+}

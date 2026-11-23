@@ -397,20 +397,44 @@ export function AppSidebar({
                 <h2 className={styles.sectionTitle}>
                   <span className={styles.label}>タグ</span>
                 </h2>
-                <nav className={styles.nav} data-testid="sidebar-tags">
-                  {allTags.map((tag) => (
-                    <LibItem
-                      key={tag}
-                      to="/"
-                      end
-                      icon={<Tag size={16} />}
-                      label={tag}
-                      inactive={!(tagActive && tagFilter === tag)}
-                      preventNav={Boolean(draggingPaperId)}
-                      onNavigate={() => setLibraryFilter({ tag })}
-                    />
-                  ))}
+                {/* Collapsed rail: one tag icon stands in for the chips. */}
+                <nav className={`${styles.nav} ${styles.tagRail}`}>
+                  <LibItem
+                    to="/"
+                    end
+                    icon={<Tag size={16} />}
+                    label={tagActive && tagFilter ? tagFilter : "タグ"}
+                    inactive={!tagActive}
+                    preventNav={Boolean(draggingPaperId)}
+                  />
                 </nav>
+                <div className={styles.tagChips} data-testid="sidebar-tags">
+                  {allTags.map((tag) => {
+                    const selected = tagActive && tagFilter === tag;
+                    return (
+                      <NavLink
+                        key={tag}
+                        to="/"
+                        end
+                        className={`${styles.tagChip} ${selected ? styles.tagChipActive : ""}`}
+                        aria-current={selected ? "page" : false}
+                        title={tag}
+                        onClick={(event) => {
+                          if (draggingPaperId) {
+                            event.preventDefault();
+                            return;
+                          }
+                          setLibraryFilter({ tag: selected ? null : tag });
+                        }}
+                      >
+                        <span className={styles.tagChipHash} aria-hidden="true">
+                          #
+                        </span>
+                        {tag}
+                      </NavLink>
+                    );
+                  })}
+                </div>
               </section>
             ) : null}
           </div>
