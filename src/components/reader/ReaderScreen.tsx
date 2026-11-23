@@ -29,7 +29,7 @@ import { ExportDialog } from "./ExportDialog";
 import { iconSize } from "../../styles/iconTokens";
 import { Outline } from "./Outline";
 import { DisplaySettingsPanel } from "./DisplaySettingsPanel";
-import { SearchBar, findSearchResults } from "./SearchPanel";
+import { SearchBar, SearchResults, findSearchResults } from "./SearchPanel";
 import { ReaderInspector } from "./ReaderInspector";
 import { PaperInfoPanel } from "./info/PaperInfoPanel";
 import { NotesPanel } from "./notes/NotesPanel";
@@ -40,6 +40,7 @@ import {
   resolveReaderInspector,
   type ReaderInspectorState,
   type ReaderInspectorTab,
+  type ReaderInspectorView,
 } from "../../utils/readerRightPanel";
 import { useReaderDocument } from "./hooks/useReaderDocument";
 import { useReaderGlossary } from "./hooks/useReaderGlossary";
@@ -187,6 +188,7 @@ export function ReaderScreen() {
     searchHitIndex,
     searchHitCount,
     applySearchHits,
+    handleSearchResultClick,
     handleSearchClose,
   } = useReaderSearch({ contentRef, paperContentRef, storeBlocks });
 
@@ -280,8 +282,26 @@ export function ReaderScreen() {
   const openGlossaryInspector = useCallback(() => {
     setInspector(() => ({ open: true, tab: "glossary" }));
   }, [setInspector]);
+  // While ⌘F search has a query, the inspector gains a transient 検索 tab. It opens on its own only
+  // where the inspector sits beside the card (or is already open), so narrow windows never hide hits.
+  const searchActive = showSearch && searchQuery.length >= 2;
+  const [searchView, setSearchView] = useState(false);
+  const searchAutoOpenRef = useRef(false);
+  searchAutoOpenRef.current = inspector.open || inspectorSlot != null;
+  useEffect(() => {
+    setSearchView(searchActive && searchAutoOpenRef.current);
+  }, [searchActive]);
+  const inspectorView: ReaderInspectorView = searchActive && searchView ? "search" : inspector.tab;
+  const inspectorVisible = inspector.open || inspectorView === "search";
   const showInspectorTab = useCallback(
-    (tab: ReaderInspectorTab) => setInspector(() => ({ open: true, tab })),
+    (tab: ReaderInspectorView) => {
+      if (tab === "search") {
+        setSearchView(true);
+        return;
+      }
+      setSearchView(false);
+      setInspector(() => ({ open: true, tab }));
+    },
     [setInspector]
   );
   // Hits in hidden original text are not in the DOM count; the bar still needs to say they exist.
@@ -399,11 +419,14 @@ export function ReaderScreen() {
             <ExternalLink size={iconSize.md} />
           </button>
           <button
-            className={`${styles.iconButton} ${inspector.open ? styles.active : ""}`}
-            onClick={() => setInspector((current) => ({ ...current, open: !current.open }))}
-            aria-label={inspector.open ? "インスペクタを隠す" : "インスペクタを表示"}
-            aria-pressed={inspector.open}
-            data-tooltip={inspector.open ? "インスペクタを隠す" : "インスペクタを表示"}
+            className={`${styles.iconButton} ${inspectorVisible ? styles.active : ""}`}
+            onClick={() => {
+              setSearchView(false);
+              setInspector((current) => ({ ...current, open: !inspectorVisible }));
+            }}
+            aria-label={inspectorVisible ? "インスペクタを隠す" : "インスペクタを表示"}
+            aria-pressed={inspectorVisible}
+            data-tooltip={inspectorVisible ? "インスペクタを隠す" : "インスペクタを表示"}
           >
             <PanelRight size={iconSize.md} />
           </button>
@@ -458,13 +481,14 @@ export function ReaderScreen() {
           />
         )}
 
-        {inspector.open && placeInspector(
+        {inspectorVisible && placeInspector(
           <aside className={styles.rightPane}>
             <ReaderInspector
-              tab={inspector.tab}
+              tab={inspectorView}
+              searchAvailable={searchActive}
               onTabChange={showInspectorTab}
             >
-              {inspector.tab === "info" && (
+              {inspectorView === "info" && (
                 <PaperInfoPanel
                   paper={paper}
                   blocks={storeBlocks}
@@ -474,13 +498,21 @@ export function ReaderScreen() {
                   glossaryCount={glossary.length}
                 />
               )}
-              {inspector.tab === "glossary" && <GlossaryPanel entries={glossary} onChange={setGlossary} />}
-              {inspector.tab === "notes" && (
+              {inspectorView === "glossary" && <GlossaryPanel entries={glossary} onChange={setGlossary} />}
+              {inspectorView === "notes" && (
                 <NotesPanel
                   annotations={annotations}
                   activeIds={activeAnnotationIds}
                   onSelect={handleSelectAnnotation}
                   onDelete={(annotation) => void handleDeleteAnnotation(annotation)}
+                />
+              )}
+              {inspectorView === "search" && (
+                <SearchResults
+                  blocks={storeBlocks}
+                  sections={storeSections}
+                  query={searchQuery}
+                  onResultClick={handleSearchResultClick}
                 />
               )}
             </ReaderInspector>

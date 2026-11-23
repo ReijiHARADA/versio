@@ -1,5 +1,7 @@
 /** Reader right inspector: one tab of paper-attached info at a time (see UI_INTERACTION_PRINCIPLES.md). */
 export type ReaderInspectorTab = "info" | "notes" | "glossary";
+/** What the inspector shows: a saved tab, or in-paper search results while ⌘F search is active (never saved). */
+export type ReaderInspectorView = ReaderInspectorTab | "search";
 export type ReaderInspectorState = { open: boolean; tab: ReaderInspectorTab };
 
 export const READER_INSPECTOR_TABS: { id: ReaderInspectorTab; label: string }[] = [

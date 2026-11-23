@@ -10,7 +10,9 @@
   /* Own text colour: inherited colour differs between the card and the ground slot. */
   color: var(--color-text);
   /* Drawn on the window ground beside the card, not on a surface of its own. */
-  padding: var(--side-panel-pad-top) var(--card-gap) var(--card-gap) 6px;
+  /* Top and left flush with the card: the window's right margin equals the card-to-inspector gap
+     (the card's own --card-gap margin), and the tab row starts level with the card's top. */
+  padding: 0 var(--card-gap) var(--card-gap) 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -66,15 +68,33 @@
   padding: 4px 0;
   cursor: pointer;
   white-space: nowrap;
-  transition: --sq-bg var(--transition-fast), color var(--transition-fast);
+  z-index: 1;
+  transition: color var(--transition-fast);
 }
 
 .tab:hover {
   color: var(--color-text);
 }
 
-.tab[aria-selected="true"] {
+/* One gray pill slides between tabs (the buttons themselves stay transparent). */
+.tabIndicator {
+  composes: surface from "../../styles/squircle.module.css";
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc((100% - 4px - (var(--tab-count) - 1) * 2px) / var(--tab-count));
+  --sq-fill: var(--sq-fill-control-inner);
+  border-radius: var(--sq-radius-control-inner);
   --sq-bg: var(--color-surface-segment-selected);
+  transform: translateX(calc(var(--tab-index) * (100% + 2px)));
+  transition:
+    transform 280ms var(--pane-ease),
+    width 280ms var(--pane-ease);
+  pointer-events: none;
+}
+
+.tab[aria-selected="true"] {
   color: var(--color-text);
   font-weight: var(--font-weight-semibold);
 }
@@ -110,4 +130,23 @@
   flex-direction: column;
   gap: 16px;
   min-height: 0;
+  /* Remounted per tab (key), so each switch fades the new content in. */
+  animation: tabBodyIn 240ms var(--pane-ease);
+}
+
+@keyframes tabBodyIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .body {
+    animation: none;
+  }
+
+  .tabIndicator {
+    transition: none;
+  }
 }

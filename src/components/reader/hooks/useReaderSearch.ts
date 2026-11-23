@@ -160,6 +160,31 @@ export function useReaderSearch(opts: {
     return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [showSearch, applySearchHits]);
 
+  const handleSearchResultClick = useCallback(
+    (blockId: string) => {
+      void (async () => {
+        await paperContentRef.current?.ensureBlockMounted(blockId);
+        const root = contentRef.current;
+        const blockEl = document.getElementById(`block-${blockId}`);
+        if (root && blockEl) {
+          const firstHit = blockEl.querySelector<HTMLElement>("[data-search-hit]");
+          if (firstHit) {
+            const hits = listSearchHits(root);
+            const index = hits.indexOf(firstHit);
+            if (index >= 0) {
+              searchHitIndexRef.current = index;
+              setSearchHitIndex(index);
+              scrollToSearchHit(hits, index);
+              return;
+            }
+          }
+        }
+        blockEl?.scrollIntoView({ behavior: "smooth", block: "center" });
+      })();
+    },
+    [contentRef, paperContentRef]
+  );
+
   const handleSearchClose = useCallback(() => setSearchQuery(""), [setSearchQuery]);
 
   return {
@@ -168,6 +193,7 @@ export function useReaderSearch(opts: {
     searchHitIndex,
     searchHitCount,
     applySearchHits,
+    handleSearchResultClick,
     handleSearchClose,
   };
 }

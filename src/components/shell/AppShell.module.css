@@ -34,7 +34,9 @@
   --sq-fill: var(--sq-fill-card);
   --sq-ring: var(--sq-ring-card);
   border-radius: var(--sq-radius-card);
-  /* No drop shadow: the lit ring alone separates the card. */
+  /* Soft drop shadow lifts the card off the ground. A circle-radius shadow under the clothoid:
+     the blur hides where the two shapes differ. */
+  box-shadow: var(--shadow-card);
 }
 
 /* Clips page content. Its circle radius sits inside the card's clothoid, so the
