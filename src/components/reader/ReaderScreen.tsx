@@ -8,8 +8,6 @@ import {
   Settings2,
   ExternalLink,
   FileUp,
-  StickyNote,
-  BookMarked,
   PanelLeft,
   PanelRight,
 } from "lucide-react";
@@ -376,22 +374,6 @@ export function ReaderScreen() {
             <PanelLeft size={iconSize.md} />
           </button>
           <button
-            className={`${styles.iconButton} ${inspector.open && inspector.tab === "glossary" ? styles.active : ""}`}
-            onClick={() => toggleInspectorTab("glossary")}
-            aria-label="用語集"
-            data-tooltip="用語集"
-          >
-            <BookMarked size={iconSize.md} />
-          </button>
-          <button
-            className={`${styles.iconButton} ${inspector.open && inspector.tab === "notes" ? styles.active : ""}`}
-            onClick={() => toggleInspectorTab("notes")}
-            aria-label="メモ一覧"
-            data-tooltip="メモ一覧"
-          >
-            <StickyNote size={iconSize.md} />
-          </button>
-          <button
             ref={settingsButtonRef}
             className={`${styles.iconButton} ${showSettings ? styles.active : ""}`}
             onClick={() => setShowSettings(!showSettings)}
@@ -489,7 +471,6 @@ export function ReaderScreen() {
             <ReaderInspector
               tab={inspector.tab}
               onTabChange={showInspectorTab}
-              onClose={() => setInspector((current) => ({ ...current, open: false }))}
             >
               {inspector.tab === "info" && <PaperInfoPanel paper={paper} workspaceNames={workspaceNames} />}
               {inspector.tab === "glossary" && <GlossaryPanel entries={glossary} onChange={setGlossary} />}
