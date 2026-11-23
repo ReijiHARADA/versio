@@ -1,4 +1,4 @@
-/* Shared chrome of the Reader side panels (Notes, Glossary). */
+/* Reader right inspector chrome: tab header + one paper-attached panel (info / notes / glossary / search). */
 .panel {
   width: var(--notes-panel-width);
   min-width: var(--notes-panel-min-width);
@@ -35,6 +35,53 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+}
+
+.tabs {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  flex: 1;
+  padding: 2px;
+  gap: 2px;
+  --sq-fill: var(--sq-fill-control);
+  border-radius: var(--sq-radius-control);
+  --sq-bg: var(--color-surface-control);
+}
+
+.tab {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  appearance: none;
+  border: none;
+  --sq-fill: var(--sq-fill-control-inner);
+  border-radius: var(--sq-radius-control-inner);
+  --sq-bg: transparent;
+  color: var(--color-text-tertiary);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-medium);
+  padding: 4px 0;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: --sq-bg var(--transition-fast), color var(--transition-fast);
+}
+
+.tab:hover {
+  color: var(--color-text);
+}
+
+.tab[aria-selected="true"] {
+  --sq-bg: var(--color-selection-bg);
+  color: var(--color-selection-fg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
 }
 
 .title {
@@ -64,4 +111,11 @@
     background: var(--color-bg);
     padding: 16px;
   }
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
 }

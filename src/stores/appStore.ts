@@ -36,6 +36,8 @@ export type DisplaySettings = {
   /** Paper / folder listing: compact rows or cover tiles. */
   libraryView: LibraryView;
   librarySort: LibrarySort;
+  /** Reader right inspector open state + last tab; unset until the user first changes it. */
+  readerInspector?: import("../utils/readerRightPanel").ReaderInspectorState;
 };
 
 /** Transient library filter (not persisted, so papers never stay hidden across launches). */

@@ -1,15 +1,13 @@
 import { useState } from "react";
 import type { GlossaryEntry } from "../../services/llm/types";
-import panelStyles from "./SidePanel.module.css";
 import styles from "./GlossaryPanel.module.css";
 
 type GlossaryPanelProps = {
   entries: GlossaryEntry[];
   onChange: (entries: GlossaryEntry[]) => void;
-  onClose: () => void;
 };
 
-export function GlossaryPanel({ entries, onChange, onClose }: GlossaryPanelProps) {
+export function GlossaryPanel({ entries, onChange }: GlossaryPanelProps) {
   const [draftTerm, setDraftTerm] = useState("");
   const [draftTranslation, setDraftTranslation] = useState("");
 
@@ -33,13 +31,7 @@ export function GlossaryPanel({ entries, onChange, onClose }: GlossaryPanelProps
   };
 
   return (
-    <aside className={panelStyles.panel} aria-label="用語集">
-      <header className={panelStyles.header}>
-        <h2 className={panelStyles.title}>用語集</h2>
-        <button type="button" className={panelStyles.close} onClick={onClose}>
-          閉じる
-        </button>
-      </header>
+    <>
       <p className={styles.help}>
         採用した訳は翻訳後の置換と再翻訳に使います。用語と訳を直接直せます。
       </p>
@@ -91,6 +83,6 @@ export function GlossaryPanel({ entries, onChange, onClose }: GlossaryPanelProps
           追加
         </button>
       </div>
-    </aside>
+    </>
   );
 }

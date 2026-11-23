@@ -1,28 +1,25 @@
 import { describe, expect, it } from "vitest";
-import {
-  toggleReaderRightPanel,
-  type ReaderRightPanel,
-} from "../utils/readerRightPanel";
+import { resolveReaderInspector, toggleReaderInspectorTab } from "../utils/readerRightPanel";
 
-describe("toggleReaderRightPanel", () => {
-  it("opens glossary from none and from notes, and closes glossary", () => {
-    expect(toggleReaderRightPanel("none", "glossary")).toBe("glossary");
-    expect(toggleReaderRightPanel("notes", "glossary")).toBe("glossary");
-    expect(toggleReaderRightPanel("glossary", "glossary")).toBe("none");
+describe("resolveReaderInspector", () => {
+  it("opens the info tab on first launch only in wide windows", () => {
+    expect(resolveReaderInspector(undefined, true)).toEqual({ open: true, tab: "info" });
+    expect(resolveReaderInspector(undefined, false)).toEqual({ open: false, tab: "info" });
   });
 
-  it("opens notes from none and from glossary, and closes notes", () => {
-    expect(toggleReaderRightPanel("none", "notes")).toBe("notes");
-    expect(toggleReaderRightPanel("glossary", "notes")).toBe("notes");
-    expect(toggleReaderRightPanel("notes", "notes")).toBe("none");
+  it("keeps the saved state, including closed", () => {
+    expect(resolveReaderInspector({ open: false, tab: "notes" }, true)).toEqual({ open: false, tab: "notes" });
+    expect(resolveReaderInspector({ open: true, tab: "search" }, false)).toEqual({ open: true, tab: "search" });
+  });
+});
+
+describe("toggleReaderInspectorTab", () => {
+  it("opens on the target tab from closed or another tab", () => {
+    expect(toggleReaderInspectorTab({ open: false, tab: "info" }, "glossary")).toEqual({ open: true, tab: "glossary" });
+    expect(toggleReaderInspectorTab({ open: true, tab: "notes" }, "glossary")).toEqual({ open: true, tab: "glossary" });
   });
 
-  it("never returns a combined panel", () => {
-    const states: ReaderRightPanel[] = ["none", "notes", "glossary"];
-    for (const current of states) {
-      const next = toggleReaderRightPanel(current, "notes");
-      expect(next === "none" || next === "notes").toBe(true);
-      expect(next).not.toBe("glossary");
-    }
+  it("closes when the target tab is already showing, remembering the tab", () => {
+    expect(toggleReaderInspectorTab({ open: true, tab: "notes" }, "notes")).toEqual({ open: false, tab: "notes" });
   });
 });

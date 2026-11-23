@@ -1,50 +1,51 @@
-.panel {
+/* Find bar: floats over the card's top-right corner; the results list lives in the inspector. */
+.bar {
   composes: surface from "../../styles/squircle.module.css";
-  position: fixed;
-  top: var(--header-height);
+  position: absolute;
+  top: var(--spacing-sm);
   right: var(--spacing-lg);
-  width: 400px;
-  max-height: calc(100vh - var(--header-height) - var(--spacing-xl));
-  --sq-bg: var(--color-bg);
-  --sq-fill: var(--sq-fill-lg);
-  border-radius: var(--sq-radius-lg);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  z-index: 30;
   display: flex;
-  flex-direction: column;
-  z-index: 200;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 12px;
+  --sq-bg: var(--color-bg);
+  --sq-fill: var(--sq-fill-md);
+  border-radius: var(--sq-radius-md);
+  box-shadow: 0 2px 12px var(--color-shadow);
   animation: slideIn 0.2s ease-out;
 }
 
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+    transform: translateY(-6px);
   }
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  border-bottom: 1px solid var(--color-border-light);
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    animation: none;
+  }
 }
 
-.title {
-  flex: 1;
-  font-size: var(--font-size-small);
-  font-weight: 600;
+.count {
+  min-width: 6.5em;
+  margin-right: 4px;
+  font-size: 0.75rem;
   color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 .closeButton {
   composes: surface from "../../styles/squircle.module.css";
   position: relative;
-  padding: var(--spacing-xs);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
   border: none;
   --sq-bg: transparent;
   color: var(--color-text-secondary);
@@ -57,17 +58,15 @@
   --sq-bg: var(--color-bg-secondary);
 }
 
-.results {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-sm);
+.hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-tertiary);
 }
 
-.noResults {
-  text-align: center;
-  color: var(--color-text-tertiary);
-  padding: var(--spacing-xl);
-  font-size: 0.875rem;
+.results {
+  margin: 0 calc(-1 * var(--spacing-sm));
 }
 
 .resultCount {
@@ -140,23 +139,6 @@
   color: #fff59d;
 }
 
-.footer {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-top: 1px solid var(--color-border-light);
-}
-
-.hint {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  font-size: 0.6875rem;
-  color: var(--color-text-tertiary);
-}
-
-.separator {
-  margin: 0 var(--spacing-xs);
-}
-
 .stepButton {
   composes: surface from "../../styles/squircle.module.css";
   position: relative;
@@ -179,6 +161,11 @@
 
 .stepButton:hover:not(:disabled) {
   color: var(--color-text);
+  --sq-line: var(--color-accent);
+}
+
+.stepButton.stepActive {
+  color: var(--color-accent);
   --sq-line: var(--color-accent);
 }
 

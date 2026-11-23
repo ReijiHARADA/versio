@@ -64,7 +64,7 @@ export async function reportUiE2eExportSuccess(saved: {
     exportedPath,
     exportDialogVisible: Boolean(document.querySelector('[data-testid="export-dialog"]')),
     annotationVisible: Boolean(document.querySelector('[data-testid="annotation-mark"]')),
-    searchVisible: Boolean(document.querySelector('[data-testid="search-hit"]')),
+    searchVisible: Boolean(document.querySelector("[data-search-hit]")),
     paperTitleHint,
     detail: `exportBytes=${saved.bytes}`,
     at: new Date().toISOString(),
@@ -161,7 +161,7 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
     const readerBody = document.querySelector('[data-testid="reader-body"]');
     const memo = document.querySelector('[data-testid="memo-popover"]');
     const searchPanel = document.querySelector('[data-testid="reader-search-panel"]');
-    const searchHits = document.querySelectorAll('[data-testid="search-hit"]');
+    const searchHits = document.querySelectorAll("[data-search-hit]");
     const exportDialog = document.querySelector('[data-testid="export-dialog"]');
     const annotationMark = document.querySelector('[data-testid="annotation-mark"]');
     const exportStatus = document.querySelector('[data-testid="export-status"]');
