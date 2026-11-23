@@ -3801,6 +3801,23 @@ function rejoinCaptionTails(blocks: LayoutBlock[]): LayoutBlock[] {
     result.splice(i + 1, 1);
     i -= 1;
   }
+  // A small-type paragraph right under a table is its note (`Values are expressed as means (SD). …`).
+  for (let i = 0; i < result.length - 1; i += 1) {
+    const table = result[i];
+    if (table.role !== "table" || table.lines.length === 0) continue;
+    for (let k = i + 1; k < result.length && k <= i + 3; k += 1) {
+      const note = result[k];
+      if (note.role !== "paragraph") break;
+      const last = result[k - 1].lines[result[k - 1].lines.length - 1];
+      const first = note.lines[0];
+      if (!last || !first || first.page !== last.page || first.y <= last.y || first.y - last.y > Math.max(last.fontSize, first.fontSize) * 3) break;
+      if (median(note.lines.map((l) => l.fontSize)) > body * 0.9) break;
+      const noteLike = /^(?:Notes?\b|Values?\b|Data\b|Abbreviations?\b|[*†‡§#]|[a-h]\s|[A-Z][A-Za-z0-9-]{1,10}\s*[,=:]\s)/.test(note.text.trim()) ||
+        (note.text.match(/;/g)?.length ?? 0) >= 2 || /\s=\s/.test(note.text);
+      if (!noteLike) break;
+      result[k] = { ...note, role: "footnote" };
+    }
+  }
   return result;
 }
 
