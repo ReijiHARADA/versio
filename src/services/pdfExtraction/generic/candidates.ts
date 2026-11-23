@@ -727,6 +727,10 @@ function captionedNeighborCellRows(block: LayoutBlock, blocks: LayoutBlock[]): b
     const origins: number[] = [];
     const alignedItems = blocks.flatMap((peer) => {
       if (peer === block || peer.pageStart !== block.pageStart) return [];
+      // The other reading column's prose shares baselines with this one; its words are no table cells.
+      const otherColumn = (peer.column === "left" && block.column === "right") || (peer.column === "right" && block.column === "left");
+      const proseBody = peer.role === "paragraph" && peer.lines.length >= 3 && peer.text.split(/\s+/).length >= 25 && /[a-z]{3,}[.!?]\s+[A-Z]/.test(peer.text);
+      if (otherColumn && proseBody) return [];
       return peer.lines
         .filter((peerLine) => Math.abs(peerLine.y - line.y) <= Math.max(2, line.fontSize * 0.4))
         .flatMap((peerLine) => peerLine.items)
