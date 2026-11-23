@@ -193,7 +193,9 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // Right after a paragraph cut at a function word (`… higher than the` + `Transformer+CAM …`), nothing in between,
         // the next paragraph is its rest when it opens with a term (an acronym or a mixed-case name), not a sentence word.
         // (Also after any unpunctuated lower-case word of a long paragraph: `… Given its proven stability, we selected` + `MAPPO under …`.)
-        if (!listItem && j === i + 1 && (hardOpen || (/\s\p{Ll}{3,}$/u.test(currentText) && words(currentText) >= 20)) && !/,$/.test(currentText) && eligible(candidate) &&
+        // (Past floats only, too: `… HCT116 cells and` | table | `HEK293T, and perform …`.)
+        if (!listItem && (j === i + 1 || (sawFloat && !skippedParagraph && !skippedFragment && hardOpen)) &&
+          (hardOpen || (/\s\p{Ll}{3,}$/u.test(currentText) && words(currentText) >= 20)) && !/,$/.test(currentText) && eligible(candidate) &&
           TERM_START.test(candidateText) && looseContinuation(currentText, candidateText, true)) {
           target = j;
           break;
