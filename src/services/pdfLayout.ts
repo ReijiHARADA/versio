@@ -3759,7 +3759,38 @@ function groupLinesIntoBlocks(
   // parallel table band.
   const postSplitMerged = mergeColumnContinuations(split);
   const ordered = repairInterleavedContinuationOrder(repairPageBoundaryContinuations(repairDetachedMarginContinuations(postSplitMerged)));
-  return trimInterleavedHyphenFragments(trimOrphanTailBeforeChrome(joinFullLineBreaks(ordered)));
+  return trimInterleavedHyphenFragments(trimOrphanTailBeforeChrome(joinFullLineBreaks(absorbTableTailRows(ordered))));
+}
+
+/**
+ * The last row of a table can miss the table region and open the next paragraph block, which then
+ * runs on into the body text after it (`Business (VUEB) Business (VUEB)` + `time of data collection, …`).
+ * Leading lines of a paragraph right after a table that sit just below the table, in the table's type
+ * size and smaller than the paragraph's own text, go back to the table.
+ */
+function absorbTableTailRows(blocks: LayoutBlock[]): LayoutBlock[] {
+  const result = [...blocks];
+  for (let i = 1; i < result.length; i += 1) {
+    const table = result[i - 1];
+    const block = result[i];
+    if (table.role !== "table" || block.role !== "paragraph" || table.lines.length === 0 || block.lines.length < 2) continue;
+    const tableFont = median(table.lines.map((line) => line.fontSize));
+    const lastTable = table.lines.reduce((low, line) => (line.page === low.page ? (line.y > low.y ? line : low) : line.page > low.page ? line : low));
+    let k = 0;
+    while (k < block.lines.length) {
+      const line = block.lines[k];
+      if (line.page !== lastTable.page || line.y <= lastTable.y || line.y - lastTable.y > tableFont * 3 || line.fontSize > tableFont + 0.5) break;
+      k += 1;
+    }
+    const rest = block.lines.slice(k);
+    if (k === 0 || rest.length === 0 || median(rest.map((line) => line.fontSize)) < tableFont + 1) continue;
+    const moved = block.lines.slice(0, k);
+    // A row has cells side by side; a note under the table is one full line.
+    if (!moved.every((line) => moved.some((other) => other !== line && Math.abs(other.y - line.y) < 1.5))) continue;
+    result[i - 1] = { ...table, lines: [...table.lines, ...moved], text: `${table.text} ${joinLines(moved)}`.trim(), bbox: blockBbox([...table.lines, ...moved]) };
+    result[i] = { ...block, lines: rest, text: joinLines(rest), pageStart: rest[0].page, bbox: blockBbox(rest) };
+  }
+  return result;
 }
 
 /**
