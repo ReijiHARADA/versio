@@ -51,11 +51,18 @@ Versio は、誌面の見た目を複製するのではなく、タイトル・�
 
 ## 対応環境
 
-- macOS（Apple Silicon。翻訳は MPS を前提）
+- macOS（Apple Silicon。翻訳は Metal で端末内実行）
 - Tauri 2 デスクトップアプリ（推奨）。ブラウザ UI のみの開発モードも利用可（OCR なし）
 - Windows / クラウド同期 / 常設 AI チャットは現時点では対象外です（[ROADMAP.md](./ROADMAP.md)）
 
-## はじめかた
+## インストール
+
+1. [Releases](https://github.com/ReijiHARADA/versio/releases/latest) から `Versio_<version>_aarch64.dmg` をダウンロードし、`Versio.app` を「アプリケーション」へドラッグします（Apple Silicon の Mac 専用）。
+2. 現在の配布版は Apple の公証を受けていないため、初回は「開けません」と表示されます。「システム設定」→「プライバシーとセキュリティ」を開き、Versio の「このまま開く」を押してください（2 回目以降は通常どおり起動します）。
+3. 初回起動時に、翻訳モデル PLaMo 3 Translate 2B（約 1.8 GB）のダウンロードを案内します。翻訳は端末内で行われ、論文が外部へ送られることはありません。
+4. 新しい版が出ると、起動時またはメニュー「Versio」→「アップデートを確認…」から更新できます。
+
+## 開発者向け：ソースから動かす
 
 ```bash
 npm install

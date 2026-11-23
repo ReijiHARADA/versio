@@ -20,6 +20,8 @@ jobs:
         with:
           components: rustfmt, clippy
       - run: npm ci
+      - name: Build llama-server sidecar
+        run: npm run build:llama-server
       - name: Automated pre-release gates
         run: npm run release:acceptance
       - name: Packaged app build

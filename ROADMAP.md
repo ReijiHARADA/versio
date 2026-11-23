@@ -33,8 +33,7 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 
 - インラインメモ、元 PDF オープン、参考文献 DOI/URL、Notion ZIP の実インポートを配布 `.app` で確認済み
 - 本番 CSP 下で白画面にならず、同梱の PLaMo 翻訳サーバー（`llama-server`）が起動して翻訳できる
-- packaged UI E2E（Layer B）が「カードを開く」以降も通る（現状は AXPress でカードが開かず未通過）
-- 署名・公証済みの `.app` で上記を確認済み（現状は未署名 `.app` の Layer A のみ pass）
+- 署名・公証済みの `.app` で上記を確認済み（現状は ad-hoc 署名 `.app` で Layer A / B が pass）
 
 ### A3. 設定・識別・配布チャネル
 

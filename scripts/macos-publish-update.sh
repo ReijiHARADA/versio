@@ -9,7 +9,8 @@
 #   bash scripts/macos-publish-update.sh --publish  # also create the release
 #
 # Env: VERSIO_UPDATER_KEY (default ~/.tauri/versio-updater.key, never commit),
-#      VERSIO_UPDATER_KEY_PASSWORD (default empty), VERSIO_RELEASE_NOTES.
+#      VERSIO_UPDATER_KEY_PASSWORD (default empty), VERSIO_RELEASE_NOTES,
+#      VERSIO_RELEASE_DRAFT=1 (create the release as a draft).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -46,5 +47,7 @@ if [[ "${1:-}" == "--publish" ]]; then
   assets=("$OUT/$ARCHIVE" "$OUT/latest.json")
   dmg="src-tauri/target/release/bundle/dmg/Versio_${VERSION}_aarch64.dmg"
   [[ -f "$dmg" ]] && assets+=("$dmg")
-  gh release create "$TAG" -R "$REPO" --title "Versio $VERSION" --notes "${VERSIO_RELEASE_NOTES:-}" "${assets[@]}"
+  draft=()
+  [[ "${VERSIO_RELEASE_DRAFT:-}" == "1" ]] && draft=(--draft)
+  gh release create "$TAG" -R "$REPO" ${draft[@]+"${draft[@]}"} --title "Versio $VERSION" --notes "${VERSIO_RELEASE_NOTES:-}" "${assets[@]}"
 fi

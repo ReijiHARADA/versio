@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-23T19:28:09.943Z",
+  "generatedAt": "2026-11-23T19:39:52.378Z",
   "generatorVersion": 2,
   "inclusionPolicy": {
     "distributedOnly": true,
@@ -19,7 +19,7 @@
     {
       "id": "app:versio",
       "name": "Versio",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "ecosystem": "app",
       "license": "MIT",
       "copyright": "Copyright (c) 2026 Reiji HARADA",
