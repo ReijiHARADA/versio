@@ -1458,6 +1458,7 @@ describe("unsafe extracted translation input", () => {
   it("treats dense consortium member and affiliation lists as metadata, not a sentence about an institution", () => {
     expect(isExpectedNonProseParagraph("Institute of Biomedicine, University of Eastern Finland, Kuopio, Finland. Department of Neurology, Hospital Universitario Donostia, San Sebastian, Spain. Institute of Cognitive Neurology and Dementia Research, Magdeburg,")).toBe(true);
     expect(isExpectedNonProseParagraph("Susanne Moebus , 42,43,44 Thomas Tegos , 42,45 Jordi Pérez-Tur , 123,124 Martin Ingelsson , 42,125 Mikko Hiltunen ,")).toBe(true);
+    expect(isExpectedNonProseParagraph("original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is")).toBe(true);
     expect(isExpectedNonProseParagraph("Participants were recruited at the University Hospital and the Department of Neurology, and all of them gave written consent before the study began in")).toBe(false);
   });
 
