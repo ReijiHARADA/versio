@@ -113,7 +113,7 @@
 
 .sheet .primaryButton {
   --sq-bg: var(--color-accent);
-  color: #fff;
+  color: var(--color-selection-fg);
 }
 
 .sheet .primaryButton:hover:not(:disabled) {

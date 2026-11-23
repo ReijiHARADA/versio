@@ -35,7 +35,7 @@
   opacity: 0.25;
   background: radial-gradient(
     80% 60% at 50% 50%,
-    rgba(0, 0, 0, 0.04),
+    rgba(0, 0, 0, 0.04), /* color-literal-ok: translation morph shadow */
     transparent 70%
   );
 }

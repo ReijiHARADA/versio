@@ -154,8 +154,8 @@
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-md) var(--spacing-lg);
-  --sq-bg: #dbeafe;
-  color: #1e40af;
+  --sq-bg: #dbeafe; /* color-literal-ok: fixed citation badge light surface */
+  color: #1e40af; /* color-literal-ok: fixed citation badge light text */
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
   margin-bottom: var(--spacing-xl);
@@ -163,8 +163,8 @@
 }
 
 [data-theme="dark"] .processingBanner {
-  --sq-bg: #1e3a5f;
-  color: #93c5fd;
+  --sq-bg: #1e3a5f; /* color-literal-ok: fixed citation badge dark surface */
+  color: #93c5fd; /* color-literal-ok: fixed citation badge dark text */
 }
 
 .partialBanner {
@@ -174,8 +174,8 @@
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-md) var(--spacing-lg);
-  --sq-bg: #fce8e6;
-  color: #c5221f;
+  --sq-bg: var(--color-danger-surface);
+  color: var(--color-danger-static);
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
   margin-bottom: var(--spacing-xl);
@@ -183,8 +183,8 @@
 }
 
 [data-theme="dark"] .partialBanner {
-  --sq-bg: #3c1f1e;
-  color: #f28b82;
+  --sq-bg: var(--color-danger-surface-dark);
+  color: var(--color-danger-text-dark);
 }
 
 .attentionBanner {
@@ -195,8 +195,8 @@
   appearance: none;
   border: none;
   padding: var(--spacing-sm) var(--spacing-md);
-  --sq-bg: #fef3c7;
-  color: #92400e;
+  --sq-bg: #fef3c7; /* color-literal-ok: fixed warning badge light surface */
+  color: var(--color-annotation-amber-text);
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
   margin-bottom: var(--spacing-xl);
@@ -205,12 +205,12 @@
 }
 
 .attentionBanner:hover {
-  --sq-bg: #fde68a;
+  --sq-bg: #fde68a; /* color-literal-ok: fixed warning badge dark surface */
 }
 
 [data-theme="dark"] .attentionBanner {
-  --sq-bg: #3f2d12;
-  color: #fbbf24;
+  --sq-bg: #3f2d12; /* color-literal-ok: fixed warning badge dark surface */
+  color: var(--color-annotation-amber);
 }
 
 .processingSpinner {

@@ -3,7 +3,7 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-intro-overlay);
-  background: #fcfdfd;
+  background: #fcfdfd; /* color-literal-ok: intro artwork canvas */
   transition: opacity 0.4s ease;
 }
 
@@ -48,7 +48,7 @@
   height: 44px;
   padding: 0 30px;
   border-radius: 999px;
-  color: #1d1d1f;
+  color: #1d1d1f; /* color-literal-ok: intro artwork ink */
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -61,7 +61,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: var(--intro-blue, #1a73e8);
+  background: var(--intro-blue, var(--color-intro-blue));
   /* G2 pill ends, same masks as squircle.module.css .pill */
   -webkit-mask-image: var(--sq-pill-l), var(--sq-pill-r);
   mask-image: var(--sq-pill-l), var(--sq-pill-r);
@@ -103,7 +103,7 @@
 }
 
 .cta:focus-visible {
-  outline: 2px solid #1a73e8;
+  outline: 2px solid var(--color-intro-blue);
   outline-offset: 3px;
 }
 
@@ -117,7 +117,7 @@
 
 @keyframes ink {
   to {
-    color: #fff;
+    color: var(--color-selection-fg);
   }
 }
 

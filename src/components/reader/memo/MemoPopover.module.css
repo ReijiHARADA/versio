@@ -47,7 +47,7 @@
 
 .orphaned,
 .error {
-  color: #c5221f;
+  color: var(--color-danger-static);
 }
 
 .message {
@@ -108,7 +108,7 @@
   /* cta's ring/rim are md; a smaller face radius leaves a gap at the corners. */
   border-radius: var(--sq-radius-md);
   --sq-bg: var(--color-accent);
-  color: #fff;
+  color: var(--color-selection-fg);
 }
 
 .primary:hover {
@@ -117,11 +117,11 @@
 
 .danger {
   --sq-bg: transparent;
-  color: #c5221f;
+  color: var(--color-danger-static);
 }
 
 .danger:hover {
-  --sq-bg: #fce8e6;
+  --sq-bg: var(--color-danger-surface);
 }
 
 .ghost:disabled,

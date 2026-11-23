@@ -101,13 +101,13 @@
 
 /* Row permanent-delete: outline only */
 .dangerButton {
-  color: var(--color-danger, #b42318);
+  color: var(--color-danger, var(--color-danger-fallback));
   --sq-bg: transparent;
-  --sq-line: var(--color-danger, #b42318);
+  --sq-line: var(--color-danger, var(--color-danger-fallback));
 }
 
 .dangerButton:hover:not(:disabled) {
-  --sq-bg: color-mix(in srgb, var(--color-danger, #b42318) 8%, transparent);
+  --sq-bg: color-mix(in srgb, var(--color-danger, var(--color-danger-fallback)) 8%, transparent);
   filter: none;
 }
 
@@ -137,7 +137,7 @@
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
   --sq-bg: var(--color-danger);
-  color: #fff;
+  color: var(--color-selection-fg);
   padding: var(--spacing-sm) var(--spacing-md);
   font-size: 0.875rem;
   font-weight: 500;
@@ -165,7 +165,7 @@
   inset: 0;
   -webkit-mask-box-image: var(--sq-fill);
   clip-path: inset(0 calc((1 - var(--hold-t)) * 100%) 0 0);
-  background: color-mix(in srgb, #000 22%, var(--color-danger));
+  background: color-mix(in srgb, #000 22%, var(--color-danger)); /* color-literal-ok: destructive hold contrast mix */
   pointer-events: none;
   z-index: var(--z-base);
 }

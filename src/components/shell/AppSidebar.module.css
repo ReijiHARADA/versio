@@ -574,7 +574,7 @@
 }
 
 .projectMenu .projectMenuDanger {
-  color: #c5221f;
+  color: var(--color-danger-static);
 }
 
 .badge {
@@ -584,7 +584,7 @@
   font-variant-numeric: tabular-nums;
   line-height: 1;
   background: var(--color-text-secondary);
-  color: #fff;
+  color: var(--color-selection-fg);
   border-radius: 50%;
   text-align: center;
 }
@@ -801,14 +801,14 @@
 .invalidDrop {
   composes: surface from "../../styles/squircle.module.css";
   position: relative;
-  --sq-bg: #c5221f18;
+  --sq-bg: var(--color-danger-static)18;
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
-  box-shadow: inset 0 0 0 1px #c5221f;
+  box-shadow: inset 0 0 0 1px var(--color-danger-static);
   cursor: not-allowed;
 }
 .invalidDrop * { cursor: not-allowed !important; }
-.paperInvalid:hover { outline: 1px dashed #c5221f; cursor: not-allowed; }
+.paperInvalid:hover { outline: 1px dashed var(--color-danger-static); cursor: not-allowed; }
 .rootDrop { display: none; }
 .rootDropVisible { display: block; padding: 8px; font-size: 12px; color: var(--color-text-secondary); }
 
@@ -825,7 +825,7 @@
   --sq-ring: var(--sq-ring-sm);
   border-radius: var(--sq-radius-sm);
 }
-.inlineName span { font-size: 11px; color: #c5221f; }
+.inlineName span { font-size: 11px; color: var(--color-danger-static); }
 .menuNotice { margin: 5px 8px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
 .projectMenu button:disabled { opacity: .5; cursor: not-allowed; }
 

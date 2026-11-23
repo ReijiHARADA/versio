@@ -89,7 +89,7 @@
   composes: pill from "../../styles/squircle.module.css";
   border-radius: 999px;
   --sq-bg: var(--color-accent);
-  color: #fff;
+  color: var(--color-selection-fg);
 }
 
 .primary:hover {

@@ -124,15 +124,15 @@
   width: 82%;
   aspect-ratio: 130 / 100;
   margin: 4px 0 8px;
-  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.1));
+  filter: drop-shadow(0 1px 1.5px var(--color-black-alpha-10));
   perspective: 420px;
   perspective-origin: 50% 0%;
 }
 
 [data-theme="dark"] .folderArt {
-  --folder-back: color-mix(in srgb, var(--color-accent) 55%, #1e1e1e);
-  --folder-front-top: color-mix(in srgb, var(--color-accent) 78%, #1e1e1e);
-  --folder-front-bottom: color-mix(in srgb, var(--color-accent) 62%, #1e1e1e);
+  --folder-back: color-mix(in srgb, var(--color-accent) 55%, var(--color-folder-dark));
+  --folder-front-top: color-mix(in srgb, var(--color-accent) 78%, var(--color-folder-dark));
+  --folder-front-bottom: color-mix(in srgb, var(--color-accent) 62%, var(--color-folder-dark));
 }
 
 .folderBack {
@@ -174,7 +174,7 @@
   position: absolute;
   inset: 24% 0 0;
   /* drop-shadow follows the masked clothoid silhouette drawn by ::before */
-  filter: drop-shadow(0 -1px 1.5px rgba(0, 0, 0, 0.08));
+  filter: drop-shadow(0 -1px 1.5px var(--color-black-alpha-08));
   /* The front flap hinges on its bottom edge and tips toward the viewer. */
   transform-origin: 50% 100%;
   transition:
@@ -187,18 +187,18 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, var(--folder-front-top), var(--folder-front-bottom));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45); /* color-literal-ok: folder highlight shadow */
   -webkit-mask-box-image: var(--sq-fill-7);
 }
 
 .tile:hover .folderFront {
   transform: rotateX(-16deg);
-  filter: drop-shadow(0 -1px 1.5px rgba(0, 0, 0, 0.08)) brightness(1.03);
+  filter: drop-shadow(0 -1px 1.5px var(--color-black-alpha-08)) brightness(1.03);
 }
 
 .tile.opening .folderFront {
   transform: rotateX(-38deg);
-  filter: drop-shadow(0 -1px 1.5px rgba(0, 0, 0, 0.08)) brightness(1.07);
+  filter: drop-shadow(0 -1px 1.5px var(--color-black-alpha-08)) brightness(1.07);
   transition-duration: 220ms;
 }
 

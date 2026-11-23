@@ -13,7 +13,7 @@
 .backdrop {
   position: absolute;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.88);
+  background-color: rgba(0, 0, 0, 0.88); /* color-literal-ok: lightbox backdrop */
   pointer-events: auto;
 }
 
@@ -66,7 +66,7 @@
   z-index: var(--z-sidebar);
   padding: var(--spacing-sm);
   border: none;
-  --sq-bg: rgba(255, 255, 255, 0.12);
+  --sq-bg: rgba(255, 255, 255, 0.12); /* color-literal-ok: lightbox control fill */
   color: white;
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
@@ -78,7 +78,7 @@
 }
 
 .closeButton:hover {
-  --sq-bg: rgba(255, 255, 255, 0.22);
+  --sq-bg: rgba(255, 255, 255, 0.22); /* color-literal-ok: lightbox control hover fill */
 }
 
 .image {
@@ -96,7 +96,7 @@
 .caption {
   margin-top: var(--spacing-md);
   max-width: 600px;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.9); /* color-literal-ok: lightbox caption */
   text-align: center;
   font-size: 0.9375rem;
   opacity: 0;

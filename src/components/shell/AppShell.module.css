@@ -118,17 +118,17 @@
 
 .toastOk {
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-selection-fg);
 }
 
 .toastInfo {
   background: var(--gray-800);
-  color: #fff;
+  color: var(--color-selection-fg);
 }
 
 .toastError {
-  background: #c5221f;
-  color: #fff;
+  background: var(--color-danger-static);
+  color: var(--color-selection-fg);
 }
 
 .toastAction {
@@ -186,8 +186,8 @@
   left: 0;
   width: 72px;
   border-radius: 3px;
-  background: #fff;
-  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.18), 0 8px 18px var(--color-shadow);
+  background: var(--color-selection-fg);
+  box-shadow: 0 0 0 0.5px var(--color-black-alpha-18), 0 8px 18px var(--color-shadow);
 }
 
 .dragCount {
@@ -201,7 +201,7 @@
   padding: 0 6px;
   border-radius: 999px;
   --sq-bg: var(--color-danger);
-  color: #fff;
+  color: var(--color-selection-fg);
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 20px;
@@ -237,9 +237,9 @@
   pointer-events: none;
   background: linear-gradient(
     to bottom right,
-    rgb(255 255 255 / var(--edge-highlight)),
+    rgb(255 255 255 / var(--edge-highlight)), /* color-literal-ok: dynamic edge highlight */
     transparent 50%,
-    rgb(0 0 0 / var(--edge-shade))
+    rgb(0 0 0 / var(--edge-shade)) /* color-literal-ok: dynamic edge shade */
   );
   -webkit-mask-box-image: var(--sq-rim-card);
 }

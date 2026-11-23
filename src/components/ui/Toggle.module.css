@@ -40,8 +40,8 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  background: var(--color-selection-fg);
+  box-shadow: 0 1px 2px var(--color-black-alpha-18);
   transition: transform var(--transition-fast);
   pointer-events: none;
 }

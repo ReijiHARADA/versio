@@ -42,8 +42,8 @@
   justify-content: center;
   gap: 12px;
   padding: 10px 16px;
-  background: #1a365d;
-  color: #ffffff;
+  background: #1a365d; /* color-literal-ok: error-boundary background */
+  color: var(--color-selection-fg);
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
   font-size: 13px;
   /* Banner must not steal clicks from the app chrome below its visual bounds. */
@@ -59,9 +59,9 @@
   --sq-ring: var(--sq-ring-6);
   border-radius: var(--sq-radius-6);
   border: 1px solid transparent;
-  --sq-line: #ffffff;
+  --sq-line: var(--color-selection-fg);
   --sq-bw: 1px;
   --sq-bg: transparent;
-  color: #ffffff;
+  color: var(--color-selection-fg);
   cursor: pointer;
 }

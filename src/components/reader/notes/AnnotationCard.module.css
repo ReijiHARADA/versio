@@ -31,7 +31,7 @@
 }
 
 .card.active .delete:hover {
-  color: #fff;
+  color: var(--color-selection-fg);
   opacity: 0.85;
 }
 
@@ -66,7 +66,7 @@
 .orphaned {
   margin: 0 0 8px;
   font-size: 0.75rem;
-  color: #c5221f;
+  color: var(--color-danger-static);
   line-height: 1.4;
 }
 
@@ -83,5 +83,5 @@
 }
 
 .delete:hover {
-  color: #c5221f;
+  color: var(--color-danger-static);
 }

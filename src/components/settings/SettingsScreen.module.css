@@ -125,7 +125,7 @@
 .pullGauge {
   display: block;
   flex-shrink: 0;
-  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.06));
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.06)); /* color-literal-ok: control shadow */
 }
 
 .pullGaugeTrack {
@@ -379,11 +379,11 @@
 .dangerButton {
   border: none;
   --sq-bg: var(--color-danger);
-  color: #fff;
+  color: var(--color-selection-fg);
 }
 
 [data-theme="dark"] .dangerButton {
-  color: #1a1a1a;
+  color: #1a1a1a; /* color-literal-ok: black swatch label */
 }
 
 .button:disabled,

@@ -176,12 +176,12 @@
 }
 
 .epubSyncButton.epubSyncDone {
-  color: #34a853;
+  color: var(--color-import-success);
   opacity: 1;
 }
 
 .epubSyncButton.epubSyncError {
-  color: #ea4335;
+  color: var(--color-import-error);
   opacity: 1;
 }
 
@@ -235,7 +235,7 @@
 }
 
 .statusReady {
-  color: #34a853;
+  color: var(--color-import-success);
 }
 
 .statusProcessing {
@@ -244,7 +244,7 @@
 }
 
 .statusFailed {
-  color: #ea4335;
+  color: var(--color-import-error);
 }
 
 .statusPending {
@@ -347,12 +347,12 @@
 }
 
 .menuItem.menuDanger {
-  color: #c5221f;
+  color: var(--color-danger-static);
 }
 
 .menuItem.menuDanger:hover:not(:disabled) {
-  --sq-bg: #fce8e6;
-  color: #c5221f;
+  --sq-bg: var(--color-danger-surface);
+  color: var(--color-danger-static);
 }
 
 .menuEmpty {
@@ -383,13 +383,13 @@
 }
 
 .actionButton:hover {
-  --sq-bg: #fce8e6;
-  color: #c5221f;
+  --sq-bg: var(--color-danger-surface);
+  color: var(--color-danger-static);
 }
 
 [data-theme="dark"] .actionButton:hover {
-  --sq-bg: #3c1f1e;
-  color: #f28b82;
+  --sq-bg: var(--color-danger-surface-dark);
+  color: var(--color-danger-text-dark);
 }
 
 .deleteConfirm {
@@ -431,8 +431,8 @@
 }
 
 .deleteConfirmYes {
-  background: #c5221f;
-  color: #fff;
+  background: var(--color-danger-static);
+  color: var(--color-selection-fg);
 }
 
 .deleteConfirmYes:disabled,
@@ -533,9 +533,9 @@
 .tileCover > :first-child {
   border-radius: 0;
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.08),
-    0 4px 10px -2px rgba(0, 0, 0, 0.1),
-    0 14px 28px -10px rgba(0, 0, 0, 0.18);
+    0 1px 2px var(--color-black-alpha-08),
+    0 4px 10px -2px var(--color-black-alpha-10),
+    0 14px 28px -10px var(--color-black-alpha-18);
 }
 
 .tileOverlay {
@@ -549,7 +549,7 @@
 }
 
 .tileOverlay .favoriteButton {
-  --sq-bg: rgba(255, 255, 255, 0.9);
+  --sq-bg: rgba(255, 255, 255, 0.9); /* color-literal-ok: drag-preview surface */
 }
 
 .tile:hover .tileOverlay,
@@ -649,7 +649,7 @@
 
 .tagChip:hover,
 .tagChip[data-active] {
-  color: #fff;
+  color: var(--color-selection-fg);
   --sq-bg: var(--color-accent);
 }
 

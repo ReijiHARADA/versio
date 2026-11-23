@@ -61,6 +61,26 @@
   --color-selection-danger-fg: #ffffff;
   --color-original-bg: #fef7e0;
   --color-original-border: #fbbc04;
+  /* Fixed content colors intentionally do not adapt to the app theme. */
+  --color-intro-blue: #1a73e8;
+  --color-import-success: #34a853;
+  --color-import-error: #ea4335;
+  --color-danger-static: #c5221f;
+  --color-danger-surface: #fce8e6;
+  --color-danger-surface-dark: #3c1f1e;
+  --color-danger-text-dark: #f28b82;
+  --color-danger-fallback: #b42318;
+  --color-annotation-amber-text: #92400e;
+  --color-annotation-amber: #fbbf24;
+  --color-highlight: #fff59d;
+  --color-highlight-dark: #5d4037;
+  --color-highlight-border: #ffb74d;
+  --color-folder-dark: #1e1e1e;
+  --color-black-alpha-08: rgba(0, 0, 0, 0.08);
+  --color-black-alpha-10: rgba(0, 0, 0, 0.1);
+  --color-black-alpha-18: rgba(0, 0, 0, 0.18);
+  --color-black-alpha-50: rgba(0, 0, 0, 0.5);
+  --color-white-alpha-30: rgba(255, 255, 255, 0.3);
 
   /* Surface edges, opted in via squircle.module.css .edged / .cta: OKLCH
      lightness shift of the ring at top / bottom, and alpha of the CTA's inner
@@ -196,6 +216,25 @@
   --color-selection-danger-fg: #ffffff;
   --color-original-bg: #3d3520;
   --color-original-border: #d4a72c;
+  --color-intro-blue: #1a73e8;
+  --color-import-success: #34a853;
+  --color-import-error: #ea4335;
+  --color-danger-static: #c5221f;
+  --color-danger-surface: #fce8e6;
+  --color-danger-surface-dark: #3c1f1e;
+  --color-danger-text-dark: #f28b82;
+  --color-danger-fallback: #b42318;
+  --color-annotation-amber-text: #92400e;
+  --color-annotation-amber: #fbbf24;
+  --color-highlight: #fff59d;
+  --color-highlight-dark: #5d4037;
+  --color-highlight-border: #ffb74d;
+  --color-folder-dark: #1e1e1e;
+  --color-black-alpha-08: rgba(0, 0, 0, 0.08);
+  --color-black-alpha-10: rgba(0, 0, 0, 0.1);
+  --color-black-alpha-18: rgba(0, 0, 0, 0.18);
+  --color-black-alpha-50: rgba(0, 0, 0, 0.5);
+  --color-white-alpha-30: rgba(255, 255, 255, 0.3);
 
   --edge-lift: 0.1;
   --edge-sink: 0.04;
