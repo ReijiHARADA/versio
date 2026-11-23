@@ -1,6 +1,6 @@
 # Versio ロードマップ
 
-> 2026-09-14  
+> 2026-11-24  
 > **これから達成するプロダクト目標**だけを書く。いまの実装は [CURRENT_STATE.md](./CURRENT_STATE.md)。製品の定義と起動は [README.md](./README.md)。
 
 通常の実装修正では本書を更新しない。目標・優先度・スコープが変わったときだけ更新する（[AGENTS.md](./AGENTS.md)）。
@@ -32,7 +32,9 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 **Done when**
 
 - インラインメモ、元 PDF オープン、参考文献 DOI/URL、Notion ZIP の実インポートを配布 `.app` で確認済み
-- 本番 CSP 下で白画面・翻訳サーバー接続の退行がない
+- 本番 CSP 下で白画面にならず、同梱の PLaMo 翻訳サーバー（`llama-server`）が起動して翻訳できる
+- packaged UI E2E（Layer B）が「カードを開く」以降も通る（現状は AXPress でカードが開かず未通過）
+- 署名・公証済みの `.app` で上記を確認済み（現状は未署名 `.app` の Layer A のみ pass）
 
 ### A3. 設定・識別・配布チャネル
 
@@ -91,7 +93,8 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 
 **Done when**
 
-- コーパス上の代表例で列混在・キャプション本文混入が許容水準まで減る
+- JATS 正解の段落監査（評価用 test セット）で intact 98% 以上、警告ブロック 500 以下、誤警告 50 以下。ゲートを緩めて警告を外さない
+- 現状値と測り方は [docs/extraction-next-steps.md](./docs/extraction-next-steps.md)
 - 壊れた PDF ごとに heuristic if を増やさない方針を維持する
 
 ### B2. 数式・引用・表
@@ -106,9 +109,9 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 
 ### B3. 翻訳の一貫性
 
-**Goal** — タイトル／見出しの抜けを減らし、用語の論文内一貫性を保つ。
+**Goal** — PLaMo 3 Translate 2B で、タイトル／見出しの抜けを減らし、用語の論文内一貫性を保つ。用語集の訳語指定（実装済み）を使い、`translationCheck.ts` の決定的チェックで受け入れる。
 
-**Done when** — 監査コーパスで当該失敗が減り、原文との 1 対 1 を崩さない。
+**Done when** — 監査コーパスで当該失敗が減り、原文との 1 対 1 を崩さない。エンジンを替えるときは `docs/research/local-llm-translation-bench-2026-11.md` のベンチを取り直す。
 
 ### B4. 長論文・多様フォーマットの実測
 
@@ -141,4 +144,8 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 - 正式名称（Versio）・アプリアイコン、ライブラリの表紙サムネイル・タグ
 - インラインメモ、Shared Element 図表拡大、Rust 完結の書き出し、パス trail / サイドバーリサイズ
 - フォルダ単位の一括書き出し（Markdown / Notion / 検証 / EPUB を階層つき ZIP。入口はフォルダ画面とサイドバーメニュー）
+- 翻訳エンジンを PLaMo 3 Translate 2B（同梱 `llama-server`、初回ダウンロード）へ移行し、MADLAD / Python 翻訳サーバーを削除
+- 初回起動のイントロとモデル導入画面（オンボーディング）
+- 右インスペクタ（情報 / メモ / 用語）、BibTeX コピーとフォルダ単位の BibTeX / RIS 書き出し
+- ⌘F 論文内検索、論文キーワードの抽出と表示、用語集の訳語を PLaMo に指定
 - Import の中断・再開（実行中ジョブ／日本語化中の論文カードから中断。成功済み抽出・訳は保持。partial は「続きから再開」、failed は「翻訳を再試行」。ユーザー中断後は auto-resume しない）
