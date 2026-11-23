@@ -10,9 +10,10 @@
   /* Own text colour: inherited colour differs between the card and the ground slot. */
   color: var(--color-text);
   /* Drawn on the window ground beside the card, not on a surface of its own. */
-  /* Top and left flush with the card: the window's right margin equals the card-to-inspector gap
-     (the card's own --card-gap margin), and the tab row starts level with the card's top. */
-  padding: 0 var(--card-gap) var(--card-gap) 0;
+  /* Left flush with the card: the window's right margin equals the card-to-inspector gap
+     (the card's own --card-gap margin). The tab row's top sits level with the sidebar's first
+     section title (ワークスペース), using the same offset as AppSidebar's top padding. */
+  padding: calc(var(--side-panel-pad-top) + (1.6rem - 24px) / 2) var(--card-gap) var(--card-gap) 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
