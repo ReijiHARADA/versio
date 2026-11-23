@@ -23,13 +23,13 @@
 }
 
 .track {
-  composes: pill from "../../styles/squircle.module.css";
+  /* squircle-exempt: nested with a circular knob/pill, so both ends must be circular arcs to stay concentric */
   display: block;
   width: 100%;
   height: 100%;
   border-radius: 999px;
-  --sq-bg: var(--color-text-tertiary);
-  transition: --sq-bg var(--transition-fast);
+  background: var(--color-text-tertiary);
+  transition: background var(--transition-fast);
   pointer-events: none;
 }
 
@@ -47,7 +47,7 @@
 }
 
 .input:checked + .track {
-  --sq-bg: var(--color-accent);
+  background: var(--color-accent);
 }
 
 .input:checked + .track .thumb {
