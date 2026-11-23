@@ -1908,6 +1908,13 @@ export function isExpectedNonProseParagraph(text: string): boolean {
   // marker such as `• 195:3`. They carry no sentence boundary and native PDF
   // order can otherwise present them as a paragraph on a later page.
   if (/(?:[•·]|\|)\s*\d{1,4}:\d{1,3}\s*$/.test(t)) return true;
+  // Consortium member and affiliation lists in the back matter (`… Thomas Tegos , 42,43,44 , Jordi Pérez-Tur ,`,
+  // `… University of Eastern Finland, Kuopio, Finland. Institute of …`): institutions or affiliation numbers packed
+  // densely, which a sentence about an institution never does.
+  const tokens = t.split(/\s+/).length;
+  const institutions = t.match(/\b(?:University|Universit[àéä]t?|Universidad|Department|Institute|Institut|Hospital|Centre|Center|Faculty|School of|Laboratory)\b/g)?.length ?? 0;
+  const affiliationNumbers = t.match(/\s,\s*\d{1,3}(?:,\d{1,3})*\b/g)?.length ?? 0;
+  if ((institutions >= 4 && institutions * 12 >= tokens) || (affiliationNumbers >= 3 && affiliationNumbers * 15 >= tokens)) return true;
   // Author affiliation blocks can be extracted as ordinary paragraphs when a
   // PDF has no tagged structure. Credential/member phrases followed by an
   // institution or department are publication metadata, not research prose.
