@@ -14,6 +14,10 @@ describe("joinHyphenated", () => {
     expect(joinHyphenated("memory- and interaction-", "perspectives")).toBe("memory- and interaction-perspectives");
   });
 
+  it("keeps the hyphen before a capital", () => {
+    expect(joinHyphenated("strengths of ConvNeXt-", "Tiny in this setting")).toBe("strengths of ConvNeXt-Tiny in this setting");
+  });
+
   it("keeps the hyphen after a one- or two-letter head", () => {
     expect(joinHyphenated("measures like kd-", "trees and")).toBe("measures like kd-trees and");
     expect(joinHyphenated("and e-", "health services")).toBe("and e-health services");
