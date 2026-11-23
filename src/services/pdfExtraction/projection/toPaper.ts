@@ -4983,6 +4983,8 @@ function finalizeBodyBlocks(rawBlocks: PaperBlock[], layoutBlocks: LayoutBlock[]
       current.pageEnd !== next.pageStart ||
       current.metadata.translationInputWarning ||
       /[.!?。！？:]\s*$/.test((current.original ?? "").trim()) ||
+      // A math fragment (`∣ϑα –`) beside more math is no sentence that runs on.
+      (currentText.match(/[A-Za-z]{3,}/g) ?? []).length < 3 ||
       !/^(?:which|that|and|or|but|where|while|because|although|including)\b/i.test((next.original ?? "").trim()) &&
       !/^[a-z]/.test((next.original ?? "").trim())
     ) continue;
