@@ -45,6 +45,15 @@ Popover / Sheet / Overlay を閉じたあと、次を極力保持する。
 - フェードインだけの置き換えや、突然フルスクリーンが現れる遷移は避ける
 - 新しい「同じものが動く」体験を足すときも、この連続性を優先する
 
+## 開閉のモーション
+
+一時 UI は現れるときも消えるときも動かし、瞬時に消さない。
+
+- 条件付きで出す surface は `<Presence>{open && <X />}</Presence>`（`src/components/ui/Presence.tsx`）で包み、閉じたあとも退場の間だけ残す
+- surface 側は `data-motion={useMotionState()}`（または `MotionDiv` など）を付け、`src/styles/motion.module.css` の `overlay` / `sheet` / `popover` / `drop` / `slideLeft` / `reveal` を使う
+- 表示中にすでに開いていたもの（スクロールで現れる原文展開など）は `initial={false}` で入場を省く
+- `prefers-reduced-motion: reduce` では止める
+
 ## 判断順
 
 1. 局所的な操作か → Popover

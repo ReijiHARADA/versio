@@ -5,6 +5,8 @@ import {
   type AnchorBox,
 } from "./memo/popoverPosition";
 import styles from "./InfoPopover.module.css";
+import { useMotionState } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 type InfoPopoverProps = {
   anchor: AnchorBox;
@@ -23,6 +25,7 @@ export function InfoPopover({
   footer,
 }: InfoPopoverProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const motionState = useMotionState();
   const [size, setSize] = useState({ width: 320, height: 160 });
   const previousFocus = useRef<HTMLElement | null>(null);
 
@@ -88,7 +91,8 @@ export function InfoPopover({
       aria-label={title}
       tabIndex={-1}
       data-info-popover="true"
-      className={styles.popover}
+      className={`${styles.popover} ${motion.popover}`}
+      data-motion={motionState}
       style={{ top: placement.top + shift.y, left: placement.left + shift.x }}
     >
       <div className={styles.header}>

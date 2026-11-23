@@ -531,6 +531,7 @@
   composes: surface from "../../styles/squircle.module.css";
   /* Portaled to document.body so nested tree overflow:hidden cannot clip it. */
   position: fixed;
+  transform-origin: top left;
   z-index: var(--z-sidebar-menu);
   width: 190px;
   padding: 5px;
@@ -786,6 +787,37 @@
   grid-template-rows: 1fr;
   opacity: 1;
   pointer-events: auto;
+}
+
+/* Folder open / close: unfold from and fold back to a zero-height row. In the collapsed rail the row is
+   already 0fr and transparent, so these are visually no-ops there. */
+.treeNested[data-motion="open"] {
+  animation: treeNestedOpen var(--sidebar-motion);
+}
+
+.treeNested[data-motion="closed"] {
+  animation: treeNestedClose var(--motion-exit-pane) both;
+  pointer-events: none;
+}
+
+@keyframes treeNestedOpen {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+
+@keyframes treeNestedClose {
+  to {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .treeNested[data-motion] {
+    animation: none;
+  }
 }
 
 .dropinside {

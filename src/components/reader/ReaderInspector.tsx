@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { READER_INSPECTOR_TABS, type ReaderInspectorView } from "../../utils/readerRightPanel";
 import panelStyles from "./SidePanel.module.css";
+import { useMotionState } from "../ui/Presence";
 
 const SEARCH_TAB = { id: "search" as const, label: "検索" };
 
@@ -23,7 +24,7 @@ export function ReaderInspector({
   const label = tabs[index]?.label;
   const indicator = { "--tab-count": tabs.length, "--tab-index": index } as CSSProperties;
   return (
-    <aside className={panelStyles.panel} aria-label="インスペクタ" data-testid="reader-inspector">
+    <aside className={panelStyles.panel} data-motion={useMotionState()} aria-label="インスペクタ" data-testid="reader-inspector">
       <header className={panelStyles.header}>
         <div className={panelStyles.tabs} role="tablist" aria-label="インスペクタの表示" style={indicator}>
           <span className={panelStyles.tabIndicator} aria-hidden />

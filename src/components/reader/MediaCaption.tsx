@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import styles from "./Figure.module.css";
+import { Presence, MotionP } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 /** Figure/table caption: label, translated text, and a toggle for the original caption. */
 export function MediaCaption({
@@ -31,9 +33,9 @@ export function MediaCaption({
         </button>
       )}
 
-      {showOriginal && captionOriginal && (
-        <p className={styles.originalCaption}>{captionOriginal}</p>
-      )}
+      <Presence initial={false}>{showOriginal && captionOriginal && (
+        <MotionP className={`${styles.originalCaption} ${motion.reveal}`}>{captionOriginal}</MotionP>
+      )}</Presence>
     </figcaption>
   );
 }

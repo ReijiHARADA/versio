@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import styles from "./SettingsSelect.module.css";
+import { Presence, MotionDiv } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 type SettingsSelectOption<T extends string | number> = {
   value: T;
@@ -75,10 +77,10 @@ export function SettingsSelect<T extends string | number>({
         } as CSSProperties
       }
     >
-      {open && options.length > 1 ? (
-        <div
+      <Presence>{open && options.length > 1 ? (
+        <MotionDiv
           id={listboxId}
-          className={styles.menu}
+          className={`${styles.menu} ${motion.popover}`}
           role="listbox"
           aria-label={ariaLabel}
         >
@@ -106,8 +108,8 @@ export function SettingsSelect<T extends string | number>({
               </button>
             )
           )}
-        </div>
-      ) : null}
+        </MotionDiv>
+      ) : null}</Presence>
 
       <button
         id={id}

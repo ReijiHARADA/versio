@@ -22,6 +22,8 @@ import { applyPaperReadStatus, READ_STATUS_LABELS } from "../../services/paperLi
 import type { AnchorBox } from "../reader/memo/popoverPosition";
 import { copyBibTeX } from "../../services/bibliography/copyBibTeX";
 import styles from "./PaperCard.module.css";
+import { Presence, MotionDiv } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 type PaperMenuProps = {
   paper: Paper;
@@ -183,8 +185,8 @@ export function PaperMenu({
       >
         <MoreHorizontal size={16} />
       </button>
-      {open && bulkIds && (
-        <div className={styles.menu} role="menu" aria-label={`${bulkIds.length}件の論文`}>
+      <Presence>{open && bulkIds && (
+        <MotionDiv className={`${styles.menu} ${motion.popover}`} role="menu" aria-label={`${bulkIds.length}件の論文`}>
           <p className={styles.menuEmpty}>{bulkIds.length}件を選択中</p>
           <button type="button" className={styles.menuItem} role="menuitem" disabled={favoriting} onClick={(event) => void toggleFavorite(event)}>
             <Star size={14} />
@@ -262,10 +264,10 @@ export function PaperMenu({
               </button>
             </>
           )}
-        </div>
-      )}
-      {open && !bulkIds && (
-        <div className={styles.menu} role="menu">
+        </MotionDiv>
+      )}</Presence>
+      <Presence>{open && !bulkIds && (
+        <MotionDiv className={`${styles.menu} ${motion.popover}`} role="menu">
           <button
             type="button"
             className={styles.menuItem}
@@ -421,8 +423,8 @@ export function PaperMenu({
               </button>
             </>
           )}
-        </div>
-      )}
+        </MotionDiv>
+      )}</Presence>
       {pickingWorkspace && (
         <div className={styles.menu} role="menu">
           {workspaceNodes.length === 0 ? (
@@ -449,12 +451,12 @@ export function PaperMenu({
           )}
         </div>
       )}
-      {tagsAnchor && (
+      <Presence>{tagsAnchor && (
         <PaperTagsPopover paper={paper} anchor={tagsAnchor} onClose={() => setTagsAnchor(null)} />
-      )}
-      {editingMetadata && (
+      )}</Presence>
+      <Presence>{editingMetadata && (
         <PaperMetadataSheet paper={paper} onClose={() => setEditingMetadata(false)} />
-      )}
+      )}</Presence>
     </div>
   );
 }

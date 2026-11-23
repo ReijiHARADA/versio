@@ -28,8 +28,22 @@
   }
 }
 
+/* Closing: slide back out while the card frame grows over the slot (AppShell cardFrameGrow). */
+.panel[data-motion="closed"] {
+  animation: sidePanelOut var(--motion-exit-pane) both;
+  pointer-events: none;
+}
+
+@keyframes sidePanelOut {
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .panel {
+  .panel,
+  .panel[data-motion="closed"] {
     animation: none;
   }
 }

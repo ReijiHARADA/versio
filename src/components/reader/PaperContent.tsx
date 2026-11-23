@@ -44,6 +44,8 @@ import {
   useStableReferenceIndex,
 } from "./paperContentData";
 import styles from "./PaperContent.module.css";
+import { Presence, MotionDiv } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 const EMPTY_ANNOTATIONS: Annotation[] = [];
 const EMPTY_GLOSSARY: GlossaryEntry[] = [];
@@ -559,8 +561,8 @@ export const PaperContent = memo(
 
     return (
       <article className={styles.article}>
-        {banner.showBusyBanner && (
-          <div className={styles.processingBanner}>
+        <Presence>{banner.showBusyBanner && (
+          <MotionDiv className={`${styles.processingBanner} ${motion.reveal}`}>
             <span className={styles.processingSpinner} />
             <span>
               {paper.processingStatus === "extracting" && "テキストを抽出中..."}
@@ -580,13 +582,13 @@ export const PaperContent = memo(
               {paper.processingStatus === "glossary" && "用語集を生成中..."}
               {paper.processingStatus === "queued" && "処理待ち..."}
             </span>
-          </div>
-        )}
-        {banner.showPartialBanner && (
-          <div className={styles.partialBanner}>
+          </MotionDiv>
+        )}</Presence>
+        <Presence>{banner.showPartialBanner && (
+          <MotionDiv className={`${styles.partialBanner} ${motion.reveal}`}>
             一部の段落の翻訳に失敗しています（{banner.failedCount}件）。該当箇所から再試行できます。
-          </div>
-        )}
+          </MotionDiv>
+        )}</Presence>
         {banner.attentionCount > 0 && (
           <button
             type="button"

@@ -13,21 +13,8 @@
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
   box-shadow: 0 2px 12px var(--color-shadow);
-  animation: slideIn 0.2s ease-out;
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bar {
-    animation: none;
-  }
-}
 
 .count {
   min-width: 6.5em;

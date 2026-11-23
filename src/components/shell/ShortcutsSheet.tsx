@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import sheet from "../settings/LicenseTextSheet.module.css";
 import styles from "./ShortcutsSheet.module.css";
+import { useMotionState } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 // Keep in sync with src-tauri/src/menu.rs and the in-app key handlers.
 const GROUPS: { title: string; items: [string, string][] }[] = [
@@ -30,6 +32,7 @@ const GROUPS: { title: string; items: [string, string][] }[] = [
 ];
 
 export function ShortcutsSheet({ onClose }: { onClose: () => void }) {
+  const motionState = useMotionState();
   const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -46,13 +49,13 @@ export function ShortcutsSheet({ onClose }: { onClose: () => void }) {
 
   return createPortal(
     <div
-      className={sheet.overlay}
+      className={`${sheet.overlay} ${motion.overlay}`} data-motion={motionState}
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <section className={sheet.sheet} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <section className={`${sheet.sheet} ${motion.sheet}`} role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <div className={sheet.header}>
           <h2 id={titleId} className={sheet.title}>キーボードショートカット</h2>
           <button ref={closeButtonRef} type="button" className={sheet.closeButton} onClick={onClose} title="閉じる" aria-label="閉じる">

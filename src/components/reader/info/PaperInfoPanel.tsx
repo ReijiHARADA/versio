@@ -12,6 +12,7 @@ import {
   paperInfoStats,
 } from "./paperInfoData";
 import styles from "./PaperInfoPanel.module.css";
+import { Presence } from "../../ui/Presence";
 
 type Props = {
   paper: Paper;
@@ -145,7 +146,7 @@ export function PaperInfoPanel({ paper, blocks, sections, workspaceNames, annota
         </dl>
       </Section>
 
-      {editing && <PaperMetadataSheet paper={paper} onClose={() => setEditing(false)} />}
+      <Presence>{editing && <PaperMetadataSheet paper={paper} onClose={() => setEditing(false)} />}</Presence>
     </div>
   );
 }

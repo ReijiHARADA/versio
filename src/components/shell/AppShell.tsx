@@ -11,6 +11,7 @@ import type { WorkspaceNode } from "../../types/project";
 import { AppSidebar } from "./AppSidebar";
 import { PaperMarquee } from "./PaperMarquee";
 import { INSPECTOR_SLOT_ID } from "./inspectorSlot";
+import { Presence } from "../ui/Presence";
 import { PaperDragPreview } from "./PaperDragPreview";
 import { NewWorkspaceNodeModal } from "../workspace/NewWorkspaceNodeModal";
 import { ShortcutsSheet } from "./ShortcutsSheet";
@@ -40,6 +41,19 @@ export function AppShell() {
 
   // The search field's scope follows the current screen, so a query never leaks into another scope.
   useEffect(() => setSearchQuery(""), [location.pathname, setSearchQuery]);
+  // Route change: fade the new screen in (opacity only, so fixed-position descendants are unaffected).
+  const mainBodyRef = useRef<HTMLDivElement>(null);
+  const routeMounted = useRef(false);
+  useEffect(() => {
+    if (!routeMounted.current) {
+      routeMounted.current = true;
+      return;
+    }
+    const el = mainBodyRef.current;
+    if (!el?.animate || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const animation = el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
+    return () => animation.cancel();
+  }, [location.pathname]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -199,10 +213,10 @@ export function AppShell() {
     <div className={styles.titlebarDrag} data-tauri-drag-region />
     <PdfFileInput inputRef={fileInputRef} onFile={(file) => { void tryStartPdfImport(file, fileNodeId ? { workspaceNodeId: fileNodeId } : undefined); setFileNodeId(null); }} />
     <AppSidebar workspaceNodes={workspaceNodes} searchQuery={searchQuery} onSearchChange={setSearchQuery} onNewWorkspace={() => setCreateParentId(null)} onNewChild={(node) => setCreateParentId(node.id)} onDeleteNode={deleteNode} onAddPaperToWorkspace={addPaperFile} activeNodeId={routeNodeId} inboxCount={inboxCount} />
-    <div className={styles.main}><div className={styles.mainBody} data-paper-marquee>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><div className={styles.mainRim} aria-hidden /></div><div id={INSPECTOR_SLOT_ID} className={styles.inspectorSlot} /><PaperDragPreview /><PaperMarquee />
+    <div className={styles.main}><div ref={mainBodyRef} className={styles.mainBody} data-paper-marquee>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><div className={styles.mainRim} aria-hidden /></div><div id={INSPECTOR_SLOT_ID} className={styles.inspectorSlot} /><PaperDragPreview /><PaperMarquee />
     <PlamoDownloadToast raised={Boolean(toast)} />
     {toast && <div ref={toastRef} className={`${styles.toast} ${toast.kind === "error" ? styles.toastError : toast.kind === "info" ? styles.toastInfo : styles.toastOk}`} role="status"><span className={styles.toastMessage}>{toast.message}</span>{toast.actionLabel && toast.onAction && <button type="button" className={styles.toastAction} onClick={() => { toast.onAction?.(); clearToast(); }}>{toast.actionLabel}</button>}</div>}
-    {shortcutsOpen && <ShortcutsSheet onClose={() => setShortcutsOpen(false)} />}
-    {createParentId !== undefined && <NewWorkspaceNodeModal parentName={createParentId ? workspaceNodes.find((node) => node.id === createParentId)?.name : undefined} onClose={() => setCreateParentId(undefined)} onCreate={create} />}
+    <Presence>{shortcutsOpen && <ShortcutsSheet onClose={() => setShortcutsOpen(false)} />}</Presence>
+    <Presence>{createParentId !== undefined && <NewWorkspaceNodeModal parentName={createParentId ? workspaceNodes.find((node) => node.id === createParentId)?.name : undefined} onClose={() => setCreateParentId(undefined)} onCreate={create} />}</Presence>
   </div>;
 }

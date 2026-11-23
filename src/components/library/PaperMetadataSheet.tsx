@@ -8,6 +8,8 @@ import { fetchBibliographicRecord } from "../../services/bibliography/fetchRecor
 import { useLibraryCache } from "../../stores/libraryCache";
 import { showToast } from "../../stores/toastStore";
 import styles from "./PaperMetadataSheet.module.css";
+import { useMotionState } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 type Form = {
   title: string;
@@ -43,6 +45,7 @@ type Props = { paper: Paper; onClose: () => void };
 
 /** Sheet for citation metadata: fetch by DOI / arXiv on demand, review, then save. */
 export function PaperMetadataSheet({ paper, onClose }: Props) {
+  const motionState = useMotionState();
   const titleId = useId();
   const [full, setFull] = useState<Paper | null>(null);
   const [form, setForm] = useState<Form | null>(null);
@@ -169,7 +172,7 @@ export function PaperMetadataSheet({ paper, onClose }: Props) {
 
   return createPortal(
     <div
-      className={styles.overlay}
+      className={`${styles.overlay} ${motion.overlay}`} data-motion={motionState}
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
@@ -179,7 +182,7 @@ export function PaperMetadataSheet({ paper, onClose }: Props) {
       onPointerDown={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
     >
-      <section className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <section className={`${styles.sheet} ${motion.sheet}`} role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <div className={styles.header}>
           <h2 id={titleId} className={styles.title}>
             書誌情報

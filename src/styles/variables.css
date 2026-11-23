@@ -146,6 +146,11 @@
   /* Pane open/close/resize: long, soft deceleration (ease-out quint) so panes glide to rest. */
   --pane-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --pane-motion: 420ms var(--pane-ease);
+  /* Transient surfaces (styles/motion.module.css). Exit lengths match Presence's exitMs. */
+  --motion-enter: 180ms var(--pane-ease);
+  --motion-enter-soft: 280ms var(--pane-ease);
+  --motion-exit: 160ms cubic-bezier(0.4, 0, 1, 1);
+  --motion-exit-pane: 260ms cubic-bezier(0.4, 0, 1, 1);
 
   /* Layering */
   --z-base: 0;

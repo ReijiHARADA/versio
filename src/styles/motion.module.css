@@ -1,0 +1,200 @@
+/* Shared enter/exit motion for transient surfaces. Pair with <Presence> + data-motion={useMotionState()}.
+   Enter plays on mount; exit plays while data-motion="closed" (on the element or an ancestor).
+   Uses the individual `translate` / `scale` properties so a surface's own `transform` is untouched. */
+
+/* Backdrop / full-window layer: fade. */
+.overlay {
+  animation: motionFadeIn var(--motion-enter) both;
+}
+
+/* Centered sheet or modal: rise and settle. */
+.sheet {
+  animation: motionSheetIn var(--motion-enter-soft) both;
+}
+
+/* Anchored popover / menu / dropdown: grow from its anchor (set transform-origin on the surface). */
+.popover {
+  animation: motionPopIn var(--motion-enter) both;
+}
+
+/* Panel that drops down from a toolbar (search bar, display settings). */
+.drop {
+  animation: motionDropIn var(--motion-enter) both;
+}
+
+/* Pane that slides in from the left edge (reader outline). */
+.slideLeft {
+  animation: motionSlideLeftIn var(--pane-motion) both;
+}
+
+/* Inline content that unfolds below its toggle (tree children, original text, banners). */
+.reveal {
+  animation: motionRevealIn var(--motion-enter) both;
+}
+
+/* Route content: opacity only, so fixed-position descendants keep the viewport as containing block. */
+.route {
+  animation: motionFadeIn var(--motion-enter) both;
+}
+
+[data-motion="closed"].overlay,
+[data-motion="closed"] .overlay {
+  animation: motionFadeOut var(--motion-exit) both;
+  pointer-events: none;
+}
+
+[data-motion="closed"].sheet,
+[data-motion="closed"] .sheet {
+  animation: motionSheetOut var(--motion-exit) both;
+  pointer-events: none;
+}
+
+[data-motion="closed"].popover,
+[data-motion="closed"] .popover {
+  animation: motionPopOut var(--motion-exit) both;
+  pointer-events: none;
+}
+
+[data-motion="closed"].drop,
+[data-motion="closed"] .drop {
+  animation: motionDropOut var(--motion-exit) both;
+  pointer-events: none;
+}
+
+[data-motion="closed"].slideLeft,
+[data-motion="closed"] .slideLeft {
+  animation: motionSlideLeftOut var(--motion-exit-pane) both;
+  pointer-events: none;
+}
+
+[data-motion="closed"].reveal,
+[data-motion="closed"] .reveal {
+  animation: motionRevealOut var(--motion-exit) both;
+  pointer-events: none;
+}
+
+/* Present before an initial={false} Presence mounted: no enter motion. */
+[data-motion="static"].overlay,
+[data-motion="static"] .overlay,
+[data-motion="static"].sheet,
+[data-motion="static"] .sheet,
+[data-motion="static"].popover,
+[data-motion="static"] .popover,
+[data-motion="static"].drop,
+[data-motion="static"] .drop,
+[data-motion="static"].slideLeft,
+[data-motion="static"] .slideLeft,
+[data-motion="static"].reveal,
+[data-motion="static"] .reveal {
+  animation: none;
+}
+
+@keyframes motionFadeIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes motionFadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes motionSheetIn {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+    scale: 0.97;
+  }
+}
+
+@keyframes motionSheetOut {
+  to {
+    opacity: 0;
+    translate: 0 8px;
+    scale: 0.98;
+  }
+}
+
+@keyframes motionPopIn {
+  from {
+    opacity: 0;
+    translate: 0 -4px;
+    scale: 0.96;
+  }
+}
+
+@keyframes motionPopOut {
+  to {
+    opacity: 0;
+    translate: 0 -2px;
+    scale: 0.98;
+  }
+}
+
+@keyframes motionDropIn {
+  from {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+}
+
+@keyframes motionDropOut {
+  to {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+}
+
+@keyframes motionSlideLeftIn {
+  from {
+    opacity: 0;
+    translate: -24px 0;
+  }
+}
+
+@keyframes motionSlideLeftOut {
+  to {
+    opacity: 0;
+    translate: -24px 0;
+  }
+}
+
+@keyframes motionRevealIn {
+  from {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+
+@keyframes motionRevealOut {
+  to {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .sheet,
+  .popover,
+  .drop,
+  .slideLeft,
+  .reveal,
+  .route,
+  [data-motion="closed"].overlay,
+  [data-motion="closed"] .overlay,
+  [data-motion="closed"].sheet,
+  [data-motion="closed"] .sheet,
+  [data-motion="closed"].popover,
+  [data-motion="closed"] .popover,
+  [data-motion="closed"].drop,
+  [data-motion="closed"] .drop,
+  [data-motion="closed"].slideLeft,
+  [data-motion="closed"] .slideLeft,
+  [data-motion="closed"].reveal,
+  [data-motion="closed"] .reveal {
+    animation: none;
+  }
+}

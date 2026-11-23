@@ -49,6 +49,8 @@ import { useReaderExport } from "./hooks/useReaderExport";
 import { useReaderTranslationResume } from "./hooks/useReaderTranslationResume";
 import { useReaderReadingPosition } from "./hooks/useReaderReadingPosition";
 import styles from "./ReaderScreen.module.css";
+import { Presence, MotionAside, MOTION_EXIT_PANE_MS } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 const EMPTY_BLOCKS: PaperBlock[] = [];
 const EMPTY_SECTIONS: Section[] = [];
@@ -429,15 +431,15 @@ export function ReaderScreen() {
       </header>
 
       <div className={styles.main}>
-        {showOutline && (
-          <aside className={styles.sidebar}>
+        <Presence exitMs={MOTION_EXIT_PANE_MS}>{showOutline && (
+          <MotionAside className={`${styles.sidebar} ${motion.slideLeft}`}>
             <Outline
               sections={storeSections}
               activeSection={activeSection}
               onSectionClick={handleSectionClick}
             />
-          </aside>
-        )}
+          </MotionAside>
+        )}</Presence>
 
         <main
           className={styles.content}
@@ -465,7 +467,7 @@ export function ReaderScreen() {
           />
         </main>
 
-        {showSearch && (
+        <Presence>{showSearch && (
           <SearchBar
             hitIndex={searchHitIndex}
             hitCount={searchHitCount}
@@ -474,9 +476,9 @@ export function ReaderScreen() {
             onClose={handleSearchClose}
             onStep={(delta) => applySearchHits({ delta, scroll: true })}
           />
-        )}
+        )}</Presence>
 
-        {inspectorVisible && placeInspector(
+        <Presence exitMs={MOTION_EXIT_PANE_MS}>{inspectorVisible && placeInspector(
           <aside className={styles.rightPane}>
             <ReaderInspector
               tab={inspectorView}
@@ -513,10 +515,10 @@ export function ReaderScreen() {
             </ReaderInspector>
           </aside>,
           inspectorSlot
-        )}
+        )}</Presence>
       </div>
 
-      {memoSurface && (
+      <Presence>{memoSurface && (
         <MemoPopover
           mode={memoSurface.mode}
           boundsRef={contentRef}
@@ -570,14 +572,14 @@ export function ReaderScreen() {
             }
           }}
         />
-      )}
+      )}</Presence>
 
-      {showSettings && (
+      <Presence>{showSettings && (
         <DisplaySettingsPanel
           anchor={settingsButtonRef.current?.getBoundingClientRect() ?? null}
           onClose={() => setShowSettings(false)}
         />
-      )}
+      )}</Presence>
 
 
       <ExportDialog

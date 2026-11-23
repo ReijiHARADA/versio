@@ -21,6 +21,8 @@ import infoStyles from "./InfoPopover.module.css";
 import type { AnchorBox } from "./memo/popoverPosition";
 import { resolveParagraphTranslationUi } from "./paragraphTranslationUi";
 import styles from "./Paragraph.module.css";
+import { Presence, MotionDiv } from "../ui/Presence";
+import motion from "../../styles/motion.module.css";
 
 type ParagraphProps = {
   block: PaperBlock;
@@ -395,19 +397,19 @@ export function Paragraph({
             </button>
           )}
 
-          {isExpanded && block.original && (
-            <div className={styles.originalWrapper}>
+          <Presence initial={false}>{isExpanded && block.original && (
+            <MotionDiv className={`${styles.originalWrapper} ${motion.reveal}`}>
               <p className={styles.original}>
                 {highlightText
                   ? highlightMatches(block.original, highlightText)
                   : block.original}
               </p>
-            </div>
-          )}
+            </MotionDiv>
+          )}</Presence>
         </>
       )}
 
-      {confidenceMenu && (
+      <Presence>{confidenceMenu && (
         <InfoPopover
           anchor={confidenceMenu.anchor}
           title="要確認"
@@ -443,23 +445,23 @@ export function Paragraph({
             この箇所は読み順の信頼度が低い可能性があります
           </p>
         </InfoPopover>
-      )}
-      {citationPreview && (
+      )}</Presence>
+      <Presence>{citationPreview && (
         <CitationPreviewPopover
           model={citationPreview.model}
           anchor={citationPreview.anchor}
           onClose={() => setCitationPreview(null)}
           onJump={(targetId) => onJumpToTarget?.(targetId)}
         />
-      )}
-      {termPreview && (
+      )}</Presence>
+      <Presence>{termPreview && (
         <GlossaryTermPopover
           entry={termPreview.entry}
           anchor={termPreview.anchor}
           onClose={() => setTermPreview(null)}
           onOpenInspector={onOpenGlossaryInspector}
         />
-      )}
+      )}</Presence>
     </div>
   );
 }
