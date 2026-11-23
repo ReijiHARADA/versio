@@ -3866,8 +3866,7 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     // Small type in between (a caption running on into the next column, a table note) is skipped like a caption.
     while (j < result.length && j <= i + 8 && (result[j].role === "figure_caption" || result[j].role === "table_caption" ||
       result[j].role === "table" || isTransparentMetadataBlock(result[j], repeated) ||
-      // Math in small type (`n i = 1` under a sum) is part of a display equation, not such a note.
-      (result[j].role === "paragraph" && median(result[j].lines.map(textSize)) < font * 0.92 && !/=/.test(result[j].text)) ||
+      (result[j].role === "paragraph" && median(result[j].lines.map(textSize)) < font * 0.92) ||
       // Figure-internal labels (`PC2`, `0.6 0.6`) read in as tiny paragraphs.
       (result[j].role === "paragraph" && result[j].lines.length <= 2 && (result[j].text.match(/\p{L}{3,}/gu) ?? []).length < 2 && !/[.!?:]$/.test(result[j].text.trim())))) j += 1;
     const b = result[j];
