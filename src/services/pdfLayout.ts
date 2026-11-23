@@ -546,6 +546,9 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
       })()
     : asymmetricRail
       ? rightX - leftX >= page.width * 0.15 && asymmetricRail.leftCount >= 15 && asymmetricRail.rightCount >= 20
+    // Eight or more rows starting at each of two x positions are columns even when a figure or an equation
+    // leaves one of them with few text items.
+    : rowStartPeaks != null && leftShare >= 0.08 && rightShare >= 0.08 && rightX - leftX >= page.width * 0.22 ? true
     : leftItems.length >= MIN_COLUMN_ITEMS &&
       rightItems.length >= MIN_COLUMN_ITEMS &&
       (rowStartPeaks != null || (leftLong.length >= MIN_COLUMN_ITEMS &&
