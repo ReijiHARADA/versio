@@ -2489,7 +2489,7 @@ export function joinHyphenated(prev: string, next: string): string {
   if (/[-\u00ad\u2010\u2011\u2012\u2013]$/u.test(prev) && /^[a-z0-9]/i.test(next)) {
     if (/^\d/.test(next)) return `${prev}${next}`;
     // A word broken at the line end (`cate-` + `gories`) whose joined form is a dictionary word.
-    const broken = prev.match(/(?<![A-Za-z])([A-Za-z]{3,})-$/)?.[1];
+    const broken = prev.match(/(?<![A-Za-z])([A-Za-z]{2,})-$/)?.[1];
     const tail = next.match(/^[a-z]+/)?.[0];
     if (broken && tail && joinsAsEnglishWord(broken, tail)) return prev.slice(0, -1) + next;
     // "jewellery-, memory- and interaction-" + "perspectives"
@@ -2498,8 +2498,9 @@ export function joinHyphenated(prev: string, next: string): string {
     }
     // Soft hyphen / mid-word line break: drop the hyphen.
     if (/\u00ad$/.test(prev)) return prev.slice(0, -1) + next;
-    // Compound title/word breaks keep the hyphen (`decision-` + `support`).
-    if (/[A-Za-z]{3,}[-]$/.test(prev) && /^[a-z]/.test(next)) return `${prev}${next}`;
+    // Compound title/word breaks keep the hyphen (`decision-` + `support`), as do
+    // one- or two-letter heads that do not join into a word (`kd-` + `trees`, `e-` + `health`).
+    if (/(?:[A-Za-z]{3,}|(?<![A-Za-z])[A-Za-z]{1,2})[-]$/.test(prev) && /^[a-z]/.test(next)) return `${prev}${next}`;
     return prev.slice(0, -1) + next;
   }
   return `${prev} ${next}`;
