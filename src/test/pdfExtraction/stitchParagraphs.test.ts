@@ -107,6 +107,16 @@ describe("reconcileTranslationWarnings", () => {
     expect(reconcileTranslationWarnings([lead(), block("h", "heading", "TP + TN"), block("c", "paragraph", "recognition performance from two views.")])[0].metadata.translationInputWarning).toBeUndefined();
   });
 
+  it("takes an (a) (b) (c) run of paragraphs as an enumeration, not sub-panel legends", () => {
+    const sub = "図表のサブパネル説明が本文に混ざっている可能性があります";
+    const run = reconcileTranslationWarnings([
+      block("a", "paragraph", "(a) Avatar Response: Calm encouragement with gentle expressions and soft speech.", 1, { translationInputWarning: sub }),
+      block("b", "paragraph", "(b) Environment Description: A tranquil forest environment with birdsong.", 1, { translationInputWarning: sub }),
+    ]);
+    expect(run.map((b) => b.metadata.translationInputWarning)).toEqual([undefined, undefined]);
+    expect(reconcileTranslationWarnings([block("a", "paragraph", "(a) Avatar Response: Calm encouragement with gentle expressions and soft speech.", 1, { translationInputWarning: sub })])[0].metadata.translationInputWarning).toBe(sub);
+  });
+
   it("keeps other defects of an introduced lead-in and leaves context warnings and list items alone", () => {
     const hyphen = reconcileTranslationWarnings([block("a", "paragraph", "The state of the of robot that is optimized in the local window of the map is defined as:"), block("eq", "equation", "x")]);
     expect(hyphen[0].metadata.translationInputWarning).toMatch(/機能語/);
