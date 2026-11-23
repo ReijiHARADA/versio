@@ -168,10 +168,7 @@
 }
 
 .pageTitle {
-  margin: 0;
-  font-size: var(--font-size-title);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
+  composes: title;
 }
 
 .cardStack {
@@ -421,9 +418,7 @@
 }
 
 .fieldStack {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
+  composes: cardStack;
 }
 
 .fieldLabel {
