@@ -15,13 +15,13 @@
   flex-direction: column;
   gap: 16px;
   /* Transform + opacity only: animating width would reflow the paper every frame. */
-  animation: sidePanelIn 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: sidePanelIn var(--pane-motion);
 }
 
 @keyframes sidePanelIn {
   from {
     opacity: 0;
-    transform: translateX(16px);
+    transform: translateX(24px);
   }
 }
 
