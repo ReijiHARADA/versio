@@ -172,3 +172,26 @@ describe("library terms", () => {
     expect(listLibraryTerms(db)).toEqual([]);
   });
 });
+
+describe("library terms backfill", () => {
+  it("re-extracts once from package Markdown when the extractor version is newer", async () => {
+    const { syncPaperIndexesFromPackages, LIBRARY_TERMS_VERSION } = await import("../../data/package/syncIndex");
+    const { listLibraryTerms } = await import("../../data/repositories/paperRepository");
+    const fs = createMemoryFileSystem();
+    const db = await openSqlite(fs);
+    const p = { ...paper(), packageRevision: 0 };
+    upsertPaperIndex(db, p);
+    await fs.writeText(`papers/${p.id}/paper.json`, JSON.stringify({ revision: 0 }));
+    await fs.writeText(`papers/${p.id}/original.md`, "We used augmented reality (AR) glasses.");
+    await fs.writeText(`papers/${p.id}/ja.md`, "");
+    db.exec("INSERT OR REPLACE INTO meta (key, value) VALUES ('library_terms_version', '1')");
+
+    await syncPaperIndexesFromPackages(fs, db);
+    expect(listLibraryTerms(db)).toEqual([{ term: "AR", longForm: "augmented reality", papers: 1 }]);
+    expect(db.get("SELECT value FROM meta WHERE key = 'library_terms_version'")?.value).toBe(String(LIBRARY_TERMS_VERSION));
+
+    db.exec("DELETE FROM library_terms");
+    await syncPaperIndexesFromPackages(fs, db);
+    expect(listLibraryTerms(db)).toEqual([]);
+  });
+});

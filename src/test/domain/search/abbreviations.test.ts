@@ -30,4 +30,10 @@ describe("extractAbbreviations", () => {
     extractAbbreviations(text);
     expect(performance.now() - started).toBeLessThan(200);
   });
+
+  it("rejects long forms that run into a citation and Japanese labels with digits", () => {
+    expect(extractAbbreviations("as in Sheng et al., 2023; Xu et al., 2024 (Pie)")).toEqual([]);
+    expect(extractAbbreviations("仮説（H1-H3）を立てた")).toEqual([]);
+    expect(extractAbbreviations("拡張現実（AR）を使う")).toEqual([{ abbr: "AR", longForm: "拡張現実" }]);
+  });
 });
