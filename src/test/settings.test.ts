@@ -103,13 +103,21 @@ describe("mergeTranslationSettingsV2", () => {
       translationConcurrency: 8,
       useCache: false,
     });
-    expect(merged).toEqual({ translationConcurrency: 8, useCache: false });
+    expect(merged).toEqual({ translationConcurrency: 8, useCache: false, concurrencyMigrated: true });
   });
 
   it("bumps legacy concurrency of 3 or less up to 8", () => {
     expect(mergeTranslationSettingsV2({ translationConcurrency: 1 }).translationConcurrency).toBe(8);
     expect(mergeTranslationSettingsV2({ translationConcurrency: 3 }).translationConcurrency).toBe(8);
     expect(mergeTranslationSettingsV2({ translationConcurrency: 4 }).translationConcurrency).toBe(4);
+  });
+
+  it("runs the legacy bump only once so 安定 (2) survives a reload", () => {
+    const migrated = mergeTranslationSettingsV2({ translationConcurrency: 1 });
+    expect(migrated.concurrencyMigrated).toBe(true);
+    const chosen = mergeTranslationSettingsV2({ ...migrated, translationConcurrency: 2 });
+    expect(chosen.translationConcurrency).toBe(2);
+    expect(mergeTranslationSettingsV2(chosen).translationConcurrency).toBe(2);
   });
 });
 
