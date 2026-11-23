@@ -113,6 +113,13 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 
 **Done when** — 監査コーパスで当該失敗が減り、原文との 1 対 1 を崩さない。エンジンを替えるときは `docs/research/local-llm-translation-bench-2026-11.md` のベンチを取り直す。
 
+**論文翻訳特化モデル（検証中）** — CC 論文の合成対訳で CAT-Translate 3.3B（MIT）を QLoRA し、PLaMo を超えられるかを打ち切り条件つきで確かめる。方針は [docs/research/translation-ft-pipeline-plan-2026-11.md](./docs/research/translation-ft-pipeline-plan-2026-11.md)。
+
+- 最初に教師（gpt-oss-20b / 120b）を測り、PLaMo（MQM 0.59）以上でなければ計画を止めて PLaMo を使い続ける
+- QLoRA 約 1,000 件で、学習なしの MQM 3.89 との差が半分以上縮まる（2.2 以下）ことが続行の条件
+- 採用するのは、PLaMo と同等以上の品質で、論文 1 本の処理時間・メモリ・`translationCheck` の不合格率が悪くならないときだけ
+- 学習データに PLaMo / 商用 API / MADLAD の出力を使わない
+
 ### B4. 長論文・多様フォーマットの実測
 
 **Goal** — 50–100 ページ級と主要出版社フォーマットで、抽出＋Reader が実用速度で動く。
