@@ -3668,7 +3668,9 @@ function groupLinesIntoBlocks(
       continue;
     }
 
-    if (mergeable || affiliationContinue || captionContinue || grantContinue || keywordContinuation || titleContinue || footnoteContinue || headingContinue || headingWrapContinue) {
+    // A `Keywords` label line after a finished abstract starts the keyword band, not more abstract.
+    const keywordLabel = /^(?:key\s?words?|index terms)\b/i.test(line.text.trim()) && /[.!?)\]]$/.test(joinLines(current).trim());
+    if (!keywordLabel && (mergeable || affiliationContinue || captionContinue || grantContinue || keywordContinuation || titleContinue || footnoteContinue || headingContinue || headingWrapContinue)) {
       current.push(line);
       continue;
     }
