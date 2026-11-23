@@ -143,6 +143,7 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
       const currentText = current.original?.trim() ?? "";
       if (!isOpenEnded(currentText) || words(currentText) < 6) break;
       let target = -1;
+      let formula = -1;
       const hardOpen = isHardOpen(currentText) || afterReferenceCaption;
       let skippedParagraph = false;
       let skippedFragment = false;
@@ -155,6 +156,16 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         const candidateText = candidate.original?.trim() ?? "";
         if (eligible(candidate) && words(candidateText) >= 2 && CONTINUATION_START.test(candidateText)) {
           target = j;
+          break;
+        }
+        // `… the concatenated features` [`Fmulti ∈ RH×W`] `are passed through …`: a short unnumbered formula inside
+        // the sentence (not after a lead-in, which introduces a display) and the lower-case rest of it.
+        if (j === i + 1 && candidate.type === "equation" && candidateText.length <= 80 && !/\(\s*\d{1,3}[a-z]?\s*\)\s*$/.test(candidateText) &&
+          !isHardOpen(currentText) && !/(?:\b(?:as|follows|where|then|gives|yields)|[:=;–—-])\s*$/.test(currentText) &&
+          out[j + 1] && eligible(out[j + 1]) && out[j + 1].pageStart <= current.pageEnd + 1 && /^\p{Ll}/u.test(out[j + 1].original?.trim() ?? "") &&
+          words(out[j + 1].original ?? "") >= 3) {
+          formula = j;
+          target = j + 1;
           break;
         }
         if (j === i + 1 && (isProseEquation(candidate) || isFullWidthProseEquation(current, candidate) || isInlineReferenceCaption(currentText, candidate) || isProseLineEquation(candidate, out[j + 1]))) {
@@ -207,8 +218,9 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
       if (target < 0) break;
       const next = out[target];
       afterReferenceCaption = isInlineReferenceCaption(currentText, next);
-      out[i] = appendContinuation(current, next);
+      out[i] = appendContinuation(formula >= 0 ? appendContinuation(current, out[formula]) : current, next);
       out.splice(target, 1);
+      if (formula >= 0) out.splice(formula, 1);
     }
   }
   out.forEach((block, index) => {

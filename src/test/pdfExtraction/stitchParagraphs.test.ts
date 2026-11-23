@@ -128,6 +128,25 @@ describe("reconcileTranslationWarnings", () => {
   });
 });
 
+describe("stitchParagraphContinuations through a short inline formula", () => {
+  it("joins the formula and the lower-case rest of the sentence", () => {
+    const out = stitchParagraphContinuations([
+      block("a", "paragraph", "To focus on salient attributes of each type, the concatenated features", 12),
+      block("e", "equation", "Fmulti ∈ RH×W×C", 12),
+      block("b", "paragraph", "are passed through attribute-specific attention modules.", 12),
+    ], []);
+    expect(out).toHaveLength(1);
+    expect(out[0].original).toBe("To focus on salient attributes of each type, the concatenated features Fmulti ∈ RH×W×C are passed through attribute-specific attention modules.");
+  });
+
+  it("keeps a numbered display or one after a lead-in apart", () => {
+    const lead = (text: string) => block("a", "paragraph", text, 1);
+    const rest = block("b", "paragraph", "where x is the input of the layer.", 1);
+    expect(stitchParagraphContinuations([lead("The output of each attention layer is computed as"), block("e", "equation", "y = Wx"), rest], [])).toHaveLength(3);
+    expect(stitchParagraphContinuations([lead("The output of each attention layer follows the update"), block("e", "equation", "y = Wx (3)"), rest], [])).toHaveLength(3);
+  });
+});
+
 describe("stitchParagraphContinuations past a table note", () => {
   it("joins the rest of the sentence across a table and its unfinished note", () => {
     const blocks = [
