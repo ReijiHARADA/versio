@@ -74,8 +74,8 @@
 }
 
 .tab[aria-selected="true"] {
-  --sq-bg: var(--color-selection-bg);
-  color: var(--color-selection-fg);
+  --sq-bg: var(--color-surface-segment-selected);
+  color: var(--color-text);
   font-weight: var(--font-weight-semibold);
 }
 
