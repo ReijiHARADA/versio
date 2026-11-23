@@ -17,9 +17,6 @@ export function NotesPanel({
 }: NotesPanelProps) {
   return (
     <>
-
-      <p className={styles.hint}>一覧から選ぶと、本文の該当位置へ移動します。</p>
-
       <div className={styles.list}>
         {annotations.length === 0 ? (
           <p className={styles.empty}>この論文のメモはまだありません</p>
