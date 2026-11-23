@@ -148,6 +148,15 @@ describe("stitchParagraphContinuations through a short inline formula", () => {
     expect(out[0].original).toBe("To focus on salient attributes of each type, the concatenated features Fmulti ∈ RH×W×C are passed through attribute-specific attention modules.");
   });
 
+  it("reads a formula ending in an argument `(0)` as no equation number", () => {
+    const out = stitchParagraphContinuations([
+      block("a", "paragraph", "Experimental data reveal an inhibitory effect that does not require much additional complexity in the model", 7),
+      block("e", "equation", "c10 = B10(t)/B10(0)", 7),
+      block("b", "paragraph", "because B10 lymphocytes secrete rapidly large amounts of IL-10.", 7),
+    ], []);
+    expect(out).toHaveLength(1);
+  });
+
   it("also continues a list item cut at the formula", () => {
     const out = stitchParagraphContinuations([
       block("a", "paragraph", "3. Type-Specific Feature Aggregation To focus on salient attributes of each type, the concatenated features", 12, { listRole: "item" }),

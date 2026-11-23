@@ -172,7 +172,7 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         }
         // `… the concatenated features` [`Fmulti ∈ RH×W`] `are passed through …`: a short unnumbered formula inside
         // the sentence (not after a lead-in, which introduces a display) and the lower-case rest of it.
-        if (j === i + 1 && candidate.type === "equation" && candidateText.length <= 80 && !/\(\s*\d{1,3}[a-z]?\s*\)\s*$/.test(candidateText) &&
+        if (j === i + 1 && candidate.type === "equation" && candidateText.length <= 80 && !/(?:^|\s)\(\s*\d{1,3}[a-z]?\s*\)\s*$/.test(candidateText) &&
           !isHardOpen(currentText) && !/(?:\b(?:as|follows|where|then|gives|yields)|[:=;–—-])\s*$/.test(currentText) &&
           out[j + 1] && eligible(out[j + 1]) && out[j + 1].pageStart <= current.pageEnd + 1 && /^\p{Ll}/u.test(out[j + 1].original?.trim() ?? "") &&
           words(out[j + 1].original ?? "") >= 3) {
