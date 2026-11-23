@@ -296,7 +296,10 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     const afterEquation = /^\p{Ll}/u.test(text) && adjacentDisplay(blocks.slice(Math.max(0, index - 3), index).reverse(), block, false);
     // `… is defined as` / `… is given by` / `… the matrix,` straight before a display equation introduces it like a colon.
     const introducesDisplay = /(?:\b(?:as|by|follows|is|are|be)|[,;])\s*$/.test(text) &&
-      (adjacentDisplay(blocks.slice(index + 1, index + 3), block, false) || (/\b(?:as|follows)\s*$/.test(text) && LIST_START.test(nextText)));
+      (adjacentDisplay(blocks.slice(index + 1, index + 3), block, false) || (/\b(?:as|follows)\s*$/.test(text) && LIST_START.test(nextText))) ||
+      // Any unfinished lead-in straight before an equation block (`… the grid consisted of` + `λ ∈ {0, 2, 4} m/s`) introduces it;
+      // a formula read as a table counts after `as`.
+      (/[\p{Ll},]$/u.test(text) && (blocks[index + 1]?.type === "equation" || (/\bas$/.test(text) && adjacentDisplay(blocks.slice(index + 1, index + 2), block, true))));
     let checked = introduced ? text.replace(/:\s*$/, ".") : introducesDisplay ? `${text.replace(/[,;]\s*$/, "")}.` : text;
     // A list item may close with ";", ",", ":" or "; and" — the list goes on in the next item.
     // (Items used to inherit the warning of the whole flattened list; each item is now checked on its own.)
