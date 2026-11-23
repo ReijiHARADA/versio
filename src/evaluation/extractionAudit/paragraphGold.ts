@@ -154,7 +154,10 @@ export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[],
     // A block holding most of one paragraph but missing its end (or start) where its warning says so is a
     // fragment: the warning names a real defect, not a false alarm.
     const lacks = (() => {
-      if (complete !== 1 || paras[0].here >= 0.99 || !block.warning) return false;
+      if (complete !== 1 || !block.warning) return false;
+      // A piece of another paragraph glued before or after the complete one is what a start/end warning points at.
+      if (/末尾|先頭/.test(block.warning) && paras.length >= 2 && paras[1].here >= 0.05) return true;
+      if (paras[0].here >= 0.99) return false;
       const gp = scorable.find((g) => g.index === paras[0].index);
       if (!gp) return false;
       const goldSh = shingles(tokens(gp.text));
