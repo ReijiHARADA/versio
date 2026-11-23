@@ -228,6 +228,16 @@ describe("stitchParagraphContinuations after a subordinator", () => {
   });
 });
 
+describe("stitchParagraphContinuations after a determiner", () => {
+  it("joins the very next paragraph whatever its first letter", () => {
+    const out = stitchParagraphContinuations([
+      block("a", "paragraph", "After recalibration, XGBoost retained the highest AUC among the six models, and its", 12),
+      block("b", "paragraph", "Brier score was among the lowest of the recalibrated models in the validation cohort.", 13),
+    ], []);
+    expect(out).toHaveLength(1);
+  });
+});
+
 describe("stitchParagraphContinuations past a table note", () => {
   it("joins the rest of the sentence across a table and its unfinished note", () => {
     const blocks = [

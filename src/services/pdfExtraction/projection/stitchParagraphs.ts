@@ -206,6 +206,15 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // the next paragraph is its rest when it opens with a term (an acronym or a mixed-case name), not a sentence word.
         // (Also after any unpunctuated lower-case word of a long paragraph: `… Given its proven stability, we selected` + `MAPPO under …`.)
         // (Past floats only, too: `… HCT116 cells and` | table | `HEK293T, and perform …`.)
+        // A paragraph cannot end on a determiner or preposition (`… XGBoost retained the highest AUC, and its` |
+        // `Brier score was …`): the very next paragraph is its rest, whatever its first letter.
+        if (!listItem && j === i + 1 && /\s(?:the|a|an|its|their|our|his|her|this|these|those|of|to|in|for|with|by|from|on|at|into|between|among)$/i.test(currentText) &&
+          eligible(candidate) && looseContinuation(currentText, candidateText, true) && !/^(?:Table|Figure|Fig\.|Abbreviations?|Note|Notes|Keywords?)\b/.test(candidateText) &&
+          // A lower-case continuation a little later is the real rest; this one is a legend or the other column.
+          !out.slice(j + 1, j + 5).some((b) => eligible(b) && CONTINUATION_START.test(b.original?.trim() ?? ""))) {
+          target = j;
+          break;
+        }
         if (!listItem && (j === i + 1 || (sawFloat && !skippedParagraph && !skippedFragment && hardOpen)) &&
           (hardOpen || (/\s\p{Ll}{3,}$/u.test(currentText) && words(currentText) >= 20)) && !/,$/.test(currentText) && eligible(candidate) &&
           TERM_START.test(candidateText) && looseContinuation(currentText, candidateText, true)) {
