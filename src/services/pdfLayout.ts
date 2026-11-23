@@ -3772,7 +3772,36 @@ function groupLinesIntoBlocks(
   // parallel table band.
   const postSplitMerged = mergeColumnContinuations(split);
   const ordered = repairInterleavedContinuationOrder(repairPageBoundaryContinuations(repairDetachedMarginContinuations(postSplitMerged)));
-  return trimInterleavedHyphenFragments(trimOrphanTailBeforeChrome(joinFullLineBreaks(absorbTableTailRows(ordered))));
+  return trimInterleavedHyphenFragments(trimOrphanTailBeforeChrome(joinFullLineBreaks(absorbTableTailRows(rejoinCaptionTails(ordered)))));
+}
+
+/**
+ * A caption's later lines can leave the caption block (a wider line gap, a panel letter at the line start) and read
+ * as a body paragraph (`(H) Motor angle … variance in reset position`, `Panels show ClinVar variants …`). A paragraph
+ * right below a caption on its page, set in the caption's small type and smaller than the body text, goes back to it.
+ */
+function rejoinCaptionTails(blocks: LayoutBlock[]): LayoutBlock[] {
+  const bodySizes = blocks.filter((b) => b.role === "paragraph").flatMap((b) => b.lines.map((l) => l.fontSize));
+  if (bodySizes.length === 0) return blocks;
+  const body = median(bodySizes);
+  const result = [...blocks];
+  for (let i = 0; i < result.length - 1; i += 1) {
+    const caption = result[i];
+    const next = result[i + 1];
+    if ((caption.role !== "figure_caption" && caption.role !== "table_caption") || next.role !== "paragraph") continue;
+    const last = caption.lines[caption.lines.length - 1];
+    const first = next.lines[0];
+    if (!last || !first || first.page !== last.page || first.y <= last.y || first.y - last.y > last.fontSize * 3) continue;
+    const captionFont = median(caption.lines.map((l) => l.fontSize));
+    const nextFont = median(next.lines.map((l) => l.fontSize));
+    if (Math.abs(nextFont - captionFont) > 0.4 || nextFont > body * 0.9) continue;
+    if (Math.min(first.x + first.width, last.x + last.width) - Math.max(first.x, last.x) < Math.min(first.width, last.width) * 0.5) continue;
+    const lines = [...caption.lines, ...next.lines];
+    result[i] = { ...caption, lines, text: joinLines(lines), pageEnd: Math.max(caption.pageEnd, next.pageEnd), bbox: blockBbox(lines) };
+    result.splice(i + 1, 1);
+    i -= 1;
+  }
+  return result;
 }
 
 /**
