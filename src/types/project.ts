@@ -23,6 +23,6 @@ export type WorkspaceCorpus = {
   memberships: WorkspacePaper[];
 };
 
-export type LibraryView = "all" | "inbox" | "favorites" | "recent" | "project";
+export type LibraryView = "all" | "inbox" | "favorites" | "project";
 
 export type { WorkspaceNode, WorkspaceTreeNode } from "../data/types/workspace";
