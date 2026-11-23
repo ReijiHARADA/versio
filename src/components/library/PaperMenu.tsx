@@ -20,26 +20,8 @@ import { PaperMetadataSheet } from "./PaperMetadataSheet";
 import { PaperTagsPopover } from "./PaperTagsPopover";
 import { applyPaperReadStatus, READ_STATUS_LABELS } from "../../services/paperLibraryState";
 import type { AnchorBox } from "../reader/memo/popoverPosition";
+import { copyBibTeX } from "../../services/bibliography/copyBibTeX";
 import styles from "./PaperCard.module.css";
-
-async function copyBibTeX(paper: Paper): Promise<void> {
-  try {
-    const text = import("../../services/bibliography/exportCitations").then(({ formatCitations }) =>
-      formatCitations([paper], "bibtex")
-    );
-    // WebKit drops clipboard writes made after an await; a promised ClipboardItem keeps the gesture.
-    if (typeof ClipboardItem !== "undefined" && navigator.clipboard.write) {
-      await navigator.clipboard.write([
-        new ClipboardItem({ "text/plain": text.then((t) => new Blob([t], { type: "text/plain" })) }),
-      ]);
-    } else {
-      await navigator.clipboard.writeText(await text);
-    }
-    showToast({ kind: "success", message: "BibTeX をコピーしました" });
-  } catch {
-    showToast({ kind: "error", message: "BibTeX をコピーできませんでした" });
-  }
-}
 
 type PaperMenuProps = {
   paper: Paper;

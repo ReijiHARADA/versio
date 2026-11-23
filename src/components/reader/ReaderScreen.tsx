@@ -491,7 +491,16 @@ export function ReaderScreen() {
               onTabChange={showInspectorTab}
               onClose={() => setInspector((current) => ({ ...current, open: false }))}
             >
-              {inspector.tab === "info" && <PaperInfoPanel paper={paper} workspaceNames={workspaceNames} />}
+              {inspector.tab === "info" && (
+                <PaperInfoPanel
+                  paper={paper}
+                  blocks={storeBlocks}
+                  sections={storeSections}
+                  workspaceNames={workspaceNames}
+                  annotationCount={annotations.length}
+                  glossaryCount={glossary.length}
+                />
+              )}
               {inspector.tab === "glossary" && <GlossaryPanel entries={glossary} onChange={setGlossary} />}
               {inspector.tab === "notes" && (
                 <NotesPanel

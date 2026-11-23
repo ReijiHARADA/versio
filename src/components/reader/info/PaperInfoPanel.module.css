@@ -1,13 +1,23 @@
 .info {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
-.titleBlock {
+.head {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.typeBadge {
+  composes: pill from "../../../styles/squircle.module.css";
+  padding: 1px 8px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  --sq-bg: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
 }
 
 .title {
@@ -24,42 +34,89 @@
   color: var(--color-text-secondary);
 }
 
-.fields {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin: 0;
+.authors {
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
 }
 
-.field dt {
-  margin-bottom: 2px;
-  font-size: 0.6875rem;
-  font-weight: 600;
+.authors sup,
+.affiliations sup {
+  margin-left: 1px;
+  font-size: 0.625rem;
   color: var(--color-text-tertiary);
 }
 
-.field dd {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-}
-
 .affiliations {
-  margin: 2px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
   font-size: 0.75rem;
+  line-height: 1.5;
   color: var(--color-text-secondary);
 }
 
-.sub {
+.affiliations sup {
+  margin: 0 3px 0 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text-tertiary);
+}
+
+.abstract {
+  font-size: 0.8125rem;
+  line-height: 1.65;
+}
+
+.abstract p {
+  margin: 0 0 6px;
+}
+
+.clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  overflow: hidden;
+}
+
+.rows {
+  display: grid;
+  /* One label width across sections so the values line up, as in Zotero's info pane. */
+  grid-template-columns: 5.75rem minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 6px;
+  margin: 0;
+}
+
+.row {
+  display: contents;
+}
+
+.row dt {
   font-size: 0.75rem;
-  color: var(--color-text-secondary);
+  line-height: 1.55;
+  color: var(--color-text-tertiary);
+}
+
+.row dd {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .link {
@@ -92,7 +149,12 @@
   color: var(--color-text-secondary);
 }
 
-.edit {
+.actions {
+  display: flex;
+  gap: 14px;
+}
+
+.textButton {
   align-self: flex-start;
   appearance: none;
   border: none;
