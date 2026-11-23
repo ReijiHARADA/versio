@@ -1,0 +1,215 @@
+status	concept	ja forms PLaMo used	PLaMo ja not listed	en forms PLaMo used	PLaMo en	library sentences
+confirmed	HCI / human-computer interaction / human–computer interaction / ヒューマンコンピュータインタラクション / ヒューマンコンピューターインタラクション / ヒューマン・コンピュータ・インタラクション / 人間とコンピュータの相互作用 / 人とコンピュータの相互作用	ヒューマンコンピュータインタラクション / ヒューマンコンピューターインタラクション / ヒューマン・コンピュータ・インタラクション		human-computer interaction / human–computer interaction	human–computer interaction	4
+confirmed-en→ja	CSCW / computer-supported cooperative work / コンピュータ支援協調作業	コンピュータ支援協調作業			computer-aided collaborative work	1
+confirmed	UI / user interface / ユーザインタフェース / ユーザーインターフェース / ユーザインターフェイス	ユーザインタフェース / ユーザーインターフェース		user interface	user interface	2
+confirmed	GUI / graphical user interface / グラフィカルユーザインタフェース / グラフィカルユーザーインターフェース	グラフィカルユーザインタフェース / グラフィカルユーザーインターフェース		graphical user interface	graphical user interface	0
+confirmed	TUI / tangible user interface / タンジブルユーザインタフェース / タンジブルユーザーインターフェース	タンジブルユーザインタフェース / タンジブルユーザーインターフェース	有形ユーザーインターフェース	tangible user interface	Tangible User Interface	0
+unconfirmed	NUI / natural user interface / ナチュラルユーザインタフェース		自然ユーザーインターフェース	natural user interface	Natural User Interface	0
+confirmed	UX / user experience / ユーザエクスペリエンス / ユーザーエクスペリエンス / ユーザー体験 / ユーザ体験	ユーザエクスペリエンス / ユーザーエクスペリエンス		user experience	User Experience / user experience / User experience	2
+confirmed	usability / ユーザビリティ ~ 使いやすさ / 使い勝手 ~ 操作性	ユーザビリティ		usability	Usability / Ease of use / Operability	0
+unconfirmed	SUS / System Usability Scale / システムユーザビリティスケール		システムユーザビリティ尺度	System Usability Scale	System Usability Scale	0
+confirmed	cognitive load / 認知負荷 / 認知的負荷 ~ mental workload / メンタルワークロード / 精神的負荷 ~ mental effort / 心的努力	認知負荷 / 精神的負荷	精神的努力	cognitive load / mental workload / mental effort	cognitive load / mental workload / mental load / mental effort	0
+confirmed	workload / ワークロード / 作業負荷	ワークロード		workload	Workload / workload	2
+confirmed	user-centered design / user-centred design / UCD / ユーザ中心設計 / ユーザー中心設計 / 人間中心設計 ~ human-centered design / HCD / 人間中心デザイン	ユーザ中心設計 / ユーザー中心設計 / 人間中心設計		user-centered design / human-centered design	User-centered design / user-centered design / human-centered design	0
+confirmed	participatory design / 参加型デザイン / 参加型設計 ~ co-design / 共創デザイン / コ・デザイン	参加型デザイン	共同設計	participatory design / co-design	participatory design / Co-creation Design / Co-Design	0
+confirmed	interaction design / インタラクションデザイン / 対話設計	インタラクションデザイン		interaction design	interaction design / Dialogue Design	2
+confirmed	design fiction / デザインフィクション ~ speculative design / スペキュラティブデザイン	デザインフィクション	投機的設計	design fiction / speculative design	design fiction / Speculative design	0
+unconfirmed	research through design / RtD / デザインを通じた研究		デザインによるリサーチ	research through design	Research through Design	2
+confirmed	affordance / アフォーダンス	アフォーダンス		affordance	Affordance	2
+confirmed	mental model / メンタルモデル	メンタルモデル		mental model	mental model	0
+confirmed	accessibility / アクセシビリティ / a11y ~ inclusive design / インクルーシブデザイン	アクセシビリティ / インクルーシブデザイン	a11y	accessibility / inclusive design	accessibility / inclusive design	0
+confirmed	assistive technology / 支援技術 / アシスティブテクノロジー	支援技術		assistive technology	assistive technology	0
+confirmed	universal design / ユニバーサルデザイン	ユニバーサルデザイン		universal design	Universal Design	0
+confirmed	user study / ユーザスタディ / ユーザースタディ / ユーザ調査 / ユーザー調査	ユーザスタディ / ユーザースタディ		user study	User study / User Survey / User research	1
+confirmed	usability testing / ユーザビリティテスト / ユーザビリティ評価	ユーザビリティテスト		usability testing	usability testing / Usability evaluation	0
+unconfirmed	think-aloud / think aloud / 発話思考法 / 思考発話法 / シンクアラウド		思考発話	think-aloud / think aloud	Speech-thinking method / thought-speech method / Think Aloud	2
+confirmed	heuristic evaluation / ヒューリスティック評価	ヒューリスティック評価		heuristic evaluation	Heuristic evaluation	0
+unconfirmed	Wizard of Oz / オズの魔法使い法 / ウィザードオブオズ		オズの魔法使い	Wizard of Oz	Wizard of Oz Act / The Wizard of Oz	2
+confirmed	prototype / プロトタイプ / 試作 / 試作品 ~ mock-up / mockup / モックアップ	プロトタイプ / モックアップ		prototype / mockup	Prototype / prototype / Mockup	2
+confirmed	low-fidelity prototype / ローファイプロトタイプ / 低忠実度プロトタイプ	低忠実度プロトタイプ		low-fidelity prototype	lo-fi prototype / low-fidelity prototype	0
+confirmed	persona / ペルソナ	ペルソナ		persona	Persona	2
+confirmed	user journey / ユーザージャーニー / カスタマージャーニー	ユーザージャーニー		user journey	user journey / Customer journey	0
+confirmed	information visualization / InfoVis / 情報可視化 ~ data visualization / データ可視化	情報可視化 / データ可視化		information visualization / data visualization	information visualization / data visualization	0
+confirmed	visual analytics / ビジュアルアナリティクス / 視覚的分析	ビジュアルアナリティクス		visual analytics	Visual analytics / visual analysis	0
+confirmed	haptics / haptic feedback / ハプティクス / 触覚フィードバック ~ tactile feedback / 触覚提示	ハプティクス / 触覚フィードバック		haptics / haptic feedback	Haptics / haptic feedback / tactile presentation	0
+confirmed-en→ja	vibrotactile / 振動触覚	振動触覚			vibratory-tactile	0
+confirmed	eye tracking / eye-tracking / アイトラッキング / 視線追跡 / 視線計測	アイトラッキング		eye tracking / eye-tracking	eye tracking / Eye-tracking	0
+confirmed	gaze / 視線 ~ gaze interaction / 視線入力 / 視線インタラクション	視線	視線相互作用	gaze / gaze interaction	gaze / Eye gaze input / Gaze interaction	0
+confirmed	gesture / ジェスチャ / ジェスチャー ~ gesture recognition / ジェスチャ認識 / ジェスチャー認識	ジェスチャ / ジェスチャー / ジェスチャ認識 / ジェスチャー認識		gesture / gesture recognition	Gesture / gesture recognition / Gesture recognition	2
+confirmed	touchscreen / touch screen / タッチスクリーン / タッチパネル	タッチスクリーン		touchscreen	touchscreen / touch panel	4
+confirmed	multimodal interaction / マルチモーダルインタラクション	マルチモーダルインタラクション		multimodal interaction	Multimodal interaction	0
+confirmed	voice user interface / VUI / 音声ユーザインタフェース / 音声インタフェース	音声ユーザインタフェース		voice user interface	voice user interface / voice interface	0
+confirmed	conversational agent / 会話エージェント / 対話エージェント ~ chatbot / チャットボット	対話エージェント / チャットボット		conversational agent / chatbot	conversational agent / Dialogue agent / chatbot	0
+unconfirmed	embodied interaction / 身体性インタラクション		身体性を伴うインタラクション	embodied interaction	embodied interaction	2
+confirmed	ubiquitous computing / ubicomp / ユビキタスコンピューティング ~ pervasive computing / パーベイシブコンピューティング	ユビキタスコンピューティング / パーベイシブコンピューティング	ユビコンプ	ubiquitous computing / pervasive computing	ubiquitous computing / pervasive computing	3
+confirmed	wearable computing / ウェアラブルコンピューティング ~ wearable device / wearables / ウェアラブルデバイス / ウェアラブル端末	ウェアラブルコンピューティング / ウェアラブルデバイス		wearable computing / wearable device	wearable computing / wearable device	6
+confirmed	smart jewelry / smart jewellery / スマートジュエリー ~ interactive jewelry / interactive jewellery / インタラクティブジュエリー	スマートジュエリー / インタラクティブジュエリー		smart jewelry / interactive jewelry	smart jewelry / Interactive jewelry	4
+confirmed	e-textiles / electronic textiles / 電子テキスタイル ~ smart textiles / スマートテキスタイル	電子テキスタイル / スマートテキスタイル		smart textiles	electronic textile / smart textiles	0
+confirmed	smartwatch / smart watch / スマートウォッチ	スマートウォッチ		smartwatch	smartwatch	3
+confirmed	IoT / Internet of Things / モノのインターネット	モノのインターネット		Internet of Things	Internet of Things	0
+confirmed	digital fabrication / デジタルファブリケーション	デジタルファブリケーション		digital fabrication	digital fabrication	0
+unconfirmed	personal fabrication / パーソナルファブリケーション		個人捏造	personal fabrication	personal fabrication	0
+confirmed	3D printing / 3Dプリンティング / 3D印刷 / 三次元印刷 ~ additive manufacturing / 積層造形 / 付加製造	3Dプリンティング / 積層造形		3D printing / additive manufacturing	3D printing / additive manufacturing	0
+confirmed	shape-changing interface / 形状変化インタフェース	形状変化インタフェース		shape-changing interface	Shape-Changing Interface	0
+confirmed	physical computing / フィジカルコンピューティング	フィジカルコンピューティング		physical computing	Physical computing	0
+confirmed	calm technology / カームテクノロジー / 穏やかな技術	カームテクノロジー		calm technology	Calm Technology / Gentle Technology	0
+confirmed	persuasive technology / パーシュエイシブテクノロジー / 説得技術	説得技術		persuasive technology	Persuasive Technology / persuasion techniques	0
+confirmed-en→ja	behavior change / behaviour change / 行動変容	行動変容			behavioral change	0
+confirmed	self-tracking / セルフトラッキング ~ quantified self / 定量化された自己 / クオンティファイドセルフ	セルフトラッキング / 定量化された自己	量的自己	self-tracking / quantified self	Self-tracking / Quantified Self	0
+confirmed	personal informatics / パーソナルインフォマティクス	パーソナルインフォマティクス		personal informatics	Personal Informatics	0
+confirmed	digital wellbeing / digital well-being / デジタルウェルビーイング	デジタルウェルビーイング		digital wellbeing	digital wellbeing	0
+confirmed	wellbeing / well-being / ウェルビーイング / 幸福	ウェルビーイング		well-being	well-being / Happiness	0
+confirmed	older adults / 高齢者 ~ elderly / 老人	高齢者		elderly	elderly people / old man	0
+confirmed-en→ja	children / 子ども / 子供 / 児童	子ども / 児童	子どもたち		child	1
+confirmed	notification / 通知	通知		notification	Notification	0
+confirmed	interruption / 割り込み / 中断	中断		interruption	interrupt / interruption	0
+confirmed	attention / 注意 / 注意力	注意		attention	Caution / attention	2
+confirmed	situational awareness / situation awareness / 状況認識	状況認識		situational awareness	situational awareness	0
+unconfirmed	sense of agency / 主体感 / 行為主体感		主体性	sense of agency	sense of mastery / sense of agency	0
+confirmed	presence / 臨場感 / プレゼンス ~ immersion / 没入感 / 没入	プレゼンス / 没入	存在	presence / immersion	sense of presence / Presence / Immersion	0
+confirmed	embodiment / 身体化 / 身体性	身体性	実施形態	embodiment	embodiment	0
+confirmed	avatar / アバター / アバタ	アバター / アバタ		avatar	Avatar / Abata	0
+confirmed	telepresence / テレプレゼンス / 遠隔臨場感	テレプレゼンス		telepresence	telepresence / Remote Presence	0
+confirmed	remote collaboration / 遠隔協調 / 遠隔共同作業 / リモートコラボレーション	リモートコラボレーション		remote collaboration	Remote collaboration / remote collaboration	0
+confirmed	VR / virtual reality / バーチャルリアリティ / 仮想現実	仮想現実 / バーチャルリアリティ		virtual reality	virtual reality	0
+confirmed	AR / augmented reality / 拡張現実 / オーグメンテッドリアリティ	拡張現実		augmented reality	augmented reality	2
+confirmed	MR / mixed reality / 複合現実 / ミクストリアリティ	複合現実		mixed reality	mixed reality / Mixed Reality	1
+confirmed	XR / extended reality / クロスリアリティ / エクステンデッドリアリティ	エクステンデッドリアリティ	拡張現実	extended reality	Cross Reality / Extended Reality	0
+confirmed	HMD / head-mounted display / ヘッドマウントディスプレイ / 頭部搭載型ディスプレイ	ヘッドマウントディスプレイ		head-mounted display	head-mounted display	0
+confirmed	cybersickness / サイバー酔い ~ simulator sickness / シミュレータ酔い / VR酔い	シミュレータ酔い	サイバーシックネス	cybersickness / simulator sickness	cybersickness / Simulator sickness / VR sickness	0
+unconfirmed	redirected walking / リダイレクテッドウォーキング		リダイレクト・ウォーキング	redirected walking	Redirected walking	0
+confirmed	AI / artificial intelligence / 人工知能	人工知能		artificial intelligence	artificial intelligence	1
+confirmed	ML / machine learning / 機械学習	機械学習		machine learning	machine learning	2
+confirmed	DL / deep learning / 深層学習 / ディープラーニング	深層学習		deep learning	deep learning	0
+confirmed	NN / neural network / ニューラルネットワーク / ニューラルネット	ニューラルネットワーク / ニューラルネット		neural network	neural network	2
+confirmed	CNN / convolutional neural network / 畳み込みニューラルネットワーク	畳み込みニューラルネットワーク		convolutional neural network	convolutional neural network	0
+confirmed	RNN / recurrent neural network / 再帰型ニューラルネットワーク / リカレントニューラルネットワーク	リカレントニューラルネットワーク		recurrent neural network	recurrent neural network / Recurrent neural network	0
+confirmed-en→ja	LSTM / long short-term memory / 長短期記憶	長短期記憶			long- and short-term memory	0
+confirmed	GAN / generative adversarial network / 敵対的生成ネットワーク	敵対的生成ネットワーク		generative adversarial network	Generative Adversarial Network	0
+confirmed	transformer / トランスフォーマー / Transformer	トランスフォーマー		transformer / Transformer	Transformers	0
+confirmed	LLM / large language model / 大規模言語モデル	大規模言語モデル		large language model	large language model	2
+confirmed	NLP / natural language processing / 自然言語処理	自然言語処理		natural language processing	natural language processing	0
+confirmed	LM / language model / 言語モデル	言語モデル		language model	language model	2
+confirmed	generative AI / 生成AI / 生成的AI / 生成系AI	生成AI		generative AI	generative AI / Generative AI	0
+confirmed	RL / reinforcement learning / 強化学習	強化学習		reinforcement learning	reinforcement learning	0
+confirmed	supervised learning / 教師あり学習	教師あり学習		supervised learning	supervised learning	0
+confirmed	unsupervised learning / 教師なし学習	教師なし学習		unsupervised learning	unsupervised learning	1
+confirmed	transfer learning / 転移学習	転移学習		transfer learning	transfer learning	0
+confirmed	fine-tuning / fine tuning / ファインチューニング / 微調整	ファインチューニング		fine-tuning / fine tuning	Fine-tuning	4
+confirmed	prompt engineering / プロンプトエンジニアリング	プロンプトエンジニアリング		prompt engineering	Prompt engineering	0
+confirmed	embedding / 埋め込み / エンベディング	埋め込み		embedding	Embedding	1
+confirmed	classification / 分類	分類		classification	classification	1
+confirmed	regression / 回帰	回帰		regression	Regression	2
+confirmed	clustering / クラスタリング	クラスタリング		clustering	Clustering	1
+confirmed	CV / computer vision / コンピュータビジョン	コンピュータビジョン		computer vision	computer vision	2
+confirmed	ASR / automatic speech recognition / 自動音声認識 ~ speech recognition / 音声認識	自動音声認識 / 音声認識		automatic speech recognition / speech recognition	Automatic speech recognition / speech recognition	0
+unconfirmed	TTS / text-to-speech / 音声合成		テキスト読み上げ		speech synthesis	0
+confirmed	MT / machine translation / 機械翻訳 ~ NMT / neural machine translation / ニューラル機械翻訳	機械翻訳 / ニューラル機械翻訳		machine translation / neural machine translation	machine translation / Neural machine translation	0
+confirmed	OCR / optical character recognition / 光学文字認識	光学文字認識		optical character recognition	optical character recognition	0
+confirmed	explainable AI / XAI / 説明可能なAI / 説明可能AI	説明可能なAI		explainable AI	Explainable AI / explainable AI	0
+unconfirmed	human-AI interaction / 人間とAIのインタラクション / 人とAIのインタラクション		人間とAIの相互作用	human-AI interaction	Human–AI interaction	0
+confirmed	human-in-the-loop / ヒューマンインザループ	ヒューマンインザループ		human-in-the-loop	Human-in-the-loop	0
+confirmed	crowdsourcing / クラウドソーシング	クラウドソーシング		crowdsourcing	crowdsourcing	2
+confirmed	recommender system / recommendation system / 推薦システム / レコメンドシステム / レコメンダシステム	推薦システム		recommendation system / recommender system	Recommendation System / recommendation system / Recommender system	0
+confirmed	information retrieval / IR / 情報検索	情報検索		information retrieval	information retrieval	0
+confirmed	search engine / 検索エンジン	検索エンジン		search engine	search engine	0
+confirmed	knowledge graph / 知識グラフ / ナレッジグラフ	ナレッジグラフ		knowledge graph	knowledge graph / Knowledge Graph	0
+confirmed	ontology / オントロジー	オントロジー		ontology	ontology	0
+confirmed	algorithm / アルゴリズム	アルゴリズム		algorithm	algorithm	2
+confirmed	dataset / data set / データセット	データセット		dataset	dataset	4
+confirmed	benchmark / ベンチマーク	ベンチマーク		benchmark	Benchmark	0
+confirmed	sensor / センサ / センサー	センサ / センサー		sensor	sensor / Sensor	2
+confirmed	accelerometer / 加速度センサ / 加速度センサー / 加速度計	加速度計		accelerometer	accelerometer	0
+confirmed	IMU / inertial measurement unit / 慣性計測装置 / 慣性センサ	慣性計測装置		inertial measurement unit	inertial measurement unit / inertial sensor	0
+confirmed	BCI / brain-computer interface / ブレインコンピュータインタフェース / ブレイン・コンピュータ・インタフェース	ブレインコンピュータインタフェース / ブレイン・コンピュータ・インタフェース		brain-computer interface	brain–computer interface	0
+confirmed	EEG / electroencephalography / electroencephalogram / 脳波 / 脳波計	脳波	脳波検査	electroencephalogram	electroencephalogram / electroencephalograph	0
+confirmed	fNIRS / functional near-infrared spectroscopy / 機能的近赤外分光法	機能的近赤外分光法		functional near-infrared spectroscopy	Functional near-infrared spectroscopy	0
+confirmed	fMRI / functional magnetic resonance imaging / 機能的磁気共鳴画像法	機能的磁気共鳴画像法		functional magnetic resonance imaging	functional magnetic resonance imaging	0
+confirmed	EMG / electromyography / 筋電 / 筋電図	筋電 / 筋電図		electromyography	electromyography / electromyogram	0
+confirmed	ECG / EKG / electrocardiogram / 心電図	心電図		electrocardiogram	electrocardiogram	0
+unconfirmed	GSR / galvanic skin response / EDA / electrodermal activity / 皮膚電気活動 / 皮膚電気反応		ガルバニック皮膚反応 / 電気皮膚活動	electrodermal activity	electrodermal activity / electrodermal response	0
+confirmed	HRV / heart rate variability / 心拍変動	心拍変動		heart rate variability	heart rate variability	0
+confirmed	privacy / プライバシー	プライバシー		privacy	Privacy	1
+confirmed	security / セキュリティ	セキュリティ		security	Security	0
+confirmed	trust / 信頼	信頼		trust	Trust	0
+confirmed	ethics / 倫理	倫理		ethics	ethics	0
+confirmed	bias / バイアス / 偏り	バイアス / 偏り		bias	Bias / bias	2
+confirmed	fairness / 公平性	公平性		fairness	fairness	0
+confirmed	transparency / 透明性	透明性		transparency	transparency	0
+confirmed	sustainability / 持続可能性 / サステナビリティ	持続可能性		sustainability	sustainability / Sustainability	0
+confirmed	energy harvesting / エネルギーハーベスティング / 環境発電	エネルギーハーベスティング		energy harvesting	energy harvesting / environmental power generation	0
+confirmed	literature review / 文献レビュー ~ systematic review / システマティックレビュー / 系統的レビュー ~ survey / サーベイ	文献レビュー / システマティックレビュー	調査	literature review / systematic review / survey	literature review / systematic review / Survey	3
+confirmed	scoping review / スコーピングレビュー	スコーピングレビュー	スコープレビュー	scoping review	scoping review	0
+unconfirmed	meta-analysis / メタ分析 / メタアナリシス		メタ解析	meta-analysis	meta-analysis	0
+confirmed	qualitative research / 質的研究 / 定性的研究	質的研究		qualitative research	qualitative research	0
+confirmed	quantitative research / 量的研究 / 定量的研究	量的研究 / 定量的研究		quantitative research	quantitative research	0
+confirmed	mixed methods / 混合研究法 / ミックスドメソッド	混合研究法		mixed methods	mixed-methods research / Mixed method	0
+confirmed	interview / インタビュー / 面接 ~ semi-structured interview / 半構造化インタビュー / 半構造化面接	インタビュー / 半構造化インタビュー		interview / semi-structured interview	Interview / interview / Semi-structured interview	1
+confirmed	focus group / フォーカスグループ	フォーカスグループ		focus group	focus group	2
+confirmed	questionnaire / 質問紙 / アンケート ~ survey questionnaire / 調査票	アンケート / 質問紙 / 調査票		questionnaire	questionnaire / Survey	2
+confirmed-en→ja	Likert scale / リッカート尺度 / リッカートスケール	リッカート尺度			Rickert scale	1
+confirmed	thematic analysis / テーマ分析 / 主題分析	主題分析 / テーマ分析		thematic analysis	theme analysis / thematic analysis	0
+confirmed	grounded theory / グラウンデッド・セオリー / グラウンデッドセオリー	グラウンデッド・セオリー / グラウンデッドセオリー		grounded theory	grounded theory	0
+confirmed	affinity diagram / 親和図 / 親和図法 ~ KJ method / KJ法	KJ法	アフィニティダイアグラム	affinity diagram / KJ method	affinity diagram / affine projection / KJ method	0
+confirmed	coding / コーディング	コーディング		coding	Coding	2
+confirmed	inter-rater reliability / 評定者間信頼性 / 評価者間信頼性	評定者間信頼性	評者間信頼性	inter-rater reliability	Inter-rater reliability	0
+confirmed	Cohen's kappa / コーエンのカッパ / カッパ係数	コーエンのカッパ		Cohen's kappa	Cohen's kappa / Kappa coefficient	0
+confirmed	ethnography / エスノグラフィ / エスノグラフィー / 民族誌	民族誌 / エスノグラフィ / エスノグラフィー		ethnography	ethnography	0
+confirmed	field study / フィールドスタディ / フィールド調査 / 現地調査	フィールド調査		field study	field study / field survey	0
+unconfirmed	in-the-wild study / in the wild / 実環境研究		野外調査 / 野生で		Real-world Research	1
+confirmed	case study / ケーススタディ / 事例研究	ケーススタディ		case study	Case Study / case study	0
+unconfirmed	diary study / ダイアリースタディ / 日記調査		日誌研究	diary study	Diary study	0
+confirmed	longitudinal study / 縦断研究 / 縦断的研究 / 長期研究	縦断研究 / 縦断的研究		longitudinal study	longitudinal study / long-term study	0
+confirmed	cross-sectional study / 横断研究	横断研究		cross-sectional study	cross-sectional study	0
+confirmed	controlled experiment / 統制実験 / 対照実験 ~ lab study / 実験室実験	対照実験	室内試験	controlled experiment	controlled experiment / laboratory experiment	0
+confirmed	user evaluation / ユーザ評価 / ユーザー評価	ユーザ評価 / ユーザー評価		user evaluation	User evaluation / User rating	1
+unconfirmed	within-subjects design / within-subject design / 被験者内計画 / 参加者内計画		被験者内デザイン	within-subjects design	Within-subjects design / Participant-led planning	0
+unconfirmed	between-subjects design / between-subject design / 被験者間計画 / 参加者間計画		被験者間デザイン	between-subjects design	Between-subjects design / Participant-to-participant planning	0
+confirmed	participant / 参加者 / 実験参加者 ~ subject / 被験者	参加者 / 被験者	主題	participant / subject	participants / experimental participant / subject	4
+confirmed	RCT / randomized controlled trial / ランダム化比較試験 / 無作為化比較試験	ランダム化比較試験		randomized controlled trial	randomized controlled trial	0
+confirmed	pilot study / パイロットスタディ / 予備実験 / 予備調査	パイロットスタディ	パイロット研究	pilot study	pilot study / preliminary experiment / preliminary investigation	0
+confirmed	design space / デザイン空間	デザイン空間	デザインスペース	design space	Design Space	1
+confirmed	design guideline / design guidelines / デザインガイドライン / 設計指針	デザインガイドライン		design guideline / design guidelines	Design Guidelines	0
+confirmed	framework / フレームワーク / 枠組み	フレームワーク		framework	Framework / framework	2
+unconfirmed	taxonomy / タクソノミー / 分類体系 / 分類法		分類学	taxonomy	Taxonomy / taxonomy	0
+confirmed	contribution / 貢献	貢献	寄与	contribution	contribution	2
+confirmed-en→ja	limitation / limitations / 限界 / 制約	限界 / 制約	制限 / 制限事項		Limit / constraints	4
+confirmed-en→ja	future work / 今後の課題 / 今後の研究	今後の課題 / 今後の研究	今後の取り組み		Future Challenges / Future Research	2
+confirmed-en→ja	related work / 関連研究	関連研究			Related Research	2
+confirmed	methodology / 方法論 ~ method / 手法 / 方法	方法論 / 方法 / 手法		methodology / method	methodology / Method	4
+confirmed	ANOVA / analysis of variance / 分散分析	分散分析		analysis of variance	analysis of variance	0
+confirmed	t-test / t test / t検定	t検定		t-test / t test	t-test	0
+unconfirmed	Wilcoxon signed-rank test / ウィルコクソンの符号順位検定		ウィルコクソン符号順位検定	Wilcoxon signed-rank test	Wilcoxon signed-rank test	2
+confirmed	Mann-Whitney U test / マン・ホイットニーのU検定	マン・ホイットニーのU検定		Mann-Whitney U test	Mann–Whitney U test	0
+confirmed	chi-square test / chi-squared test / カイ二乗検定 / χ二乗検定	カイ二乗検定		chi-square test	chi-square test / χ² test	0
+confirmed	Friedman test / フリードマン検定	フリードマン検定		Friedman test	Friedman test	0
+confirmed-en→ja	Kruskal-Wallis test / クラスカル・ウォリス検定	クラスカル・ウォリス検定			Craska–Wallis test	0
+confirmed	post hoc test / 事後検定 / 多重比較	事後検定	事後テスト	post hoc test	post-hoc test / multiple comparison	2
+confirmed	statistical significance / 統計的有意性 / 有意差	統計的有意性		statistical significance	statistical significance / significant difference	1
+confirmed	p-value / p value / p値	p値		p-value / p value	p-value	4
+confirmed	effect size / 効果量	効果量		effect size	effect size	1
+confirmed	confidence interval / CI / 信頼区間	信頼区間		confidence interval	confidence interval	1
+confirmed	standard deviation / SD / 標準偏差	標準偏差		standard deviation	standard deviation	2
+confirmed	mean / 平均 / 平均値	平均 / 平均値		mean	average / mean value	2
+confirmed	median / 中央値	中央値		median	median	2
+confirmed	correlation / 相関 ~ Pearson correlation / ピアソンの相関係数	相関 / ピアソンの相関係数		correlation	correlation / Pearson's correlation coefficient	2
+confirmed	regression analysis / 回帰分析	回帰分析		regression analysis	regression analysis	0
+confirmed	linear mixed model / linear mixed-effects model / LMM / 線形混合モデル / 線形混合効果モデル	線形混合モデル / 線形混合効果モデル		linear mixed model / linear mixed-effects model	linear mixed model / Linear mixed-effects model	0
+confirmed	GLMM / generalized linear mixed model / 一般化線形混合モデル	一般化線形混合モデル		generalized linear mixed model	generalized linear mixed model	0
+confirmed	factor analysis / 因子分析	因子分析		factor analysis	factor analysis	0
+confirmed	reliability / 信頼性 ~ Cronbach's alpha / クロンバックのα / クロンバックのアルファ	信頼性 / クロンバックのα		reliability	reliability / Kronbach's α / Kronbach's alpha	2
+confirmed	validity / 妥当性	妥当性		validity	validity	2
+confirmed	sample size / サンプルサイズ / 標本サイズ	標本サイズ / サンプルサイズ		sample size	sample size	0
+confirmed	statistical power / power analysis / 検出力 / 検出力分析	検出力	統計的検出力 / パワーアナリシス	power analysis	power / power analysis	0
+confirmed	paper / 論文	論文	紙	paper	paper	2
+confirmed	abstract / 要旨 / 概要 / アブストラクト	概要 / 要旨		abstract	Abstract / Overview	2
+confirmed	introduction / はじめに / 序論 / 緒言	はじめに		introduction	Introduction / Preface	2
+confirmed	conclusion / 結論 / おわりに / まとめ	結論		conclusion	Conclusion / Summary	0
+confirmed	discussion / 考察 / 議論	議論		discussion	Discussion / discussion	2
+confirmed	results / 結果	結果		results	Results	2
+confirmed	evaluation / 評価	評価		evaluation	Evaluation	2
+confirmed	experiment / 実験	実験		experiment	experiment	2
+confirmed	hypothesis / 仮説	仮説		hypothesis	hypothesis	2
+confirmed	reproducibility / 再現性 ~ replicability / 追試可能性	再現性		reproducibility	Reproducibility / reproducibility	0
+confirmed	open science / オープンサイエンス	オープンサイエンス		open science	open science	0
+confirmed	peer review / 査読	査読		peer review	peer review	0
