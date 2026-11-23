@@ -50,6 +50,7 @@ describe("Japanese figure and table captions", () => {
     expect(isFigureCaption("Figure 2. A workshop layout.")).toBe(true);
     expect(isFigureCaption("FIGURE 1PRISMA flow diagram of the study selection")).toBe(true);
     expect(isFigureCaption("Figure 1 contrasts two trajectories arising from repeated interaction.")).toBe(false);
+    expect(isFigureCaption("Figure 8a–d. In each scenario, we visualized the 147 facial landmarks.")).toBe(false);
     expect(isFigureCaption("Figure 2c also shows that the model captures the trend.")).toBe(false);
     expect(isFigureCaption("Fig. 1, The general areas for wearable objects")).toBe(true);
     expect(isFigureCaption("Figure 3, Even simple motions change body shape")).toBe(true);
