@@ -101,6 +101,14 @@ Europe PMC の dev 全件（868 本、main 2a4649f + 共同筆頭著者の注記
 
 ## 次にやること（効果の大きい順）
 
+### 実論文テストの残り（2026-11-24、#415 の続き）
+
+`npx vitest run src/test/pdfExtraction`（実データをリンクした worktree）で 2 件が落ちたまま。
+- `keeps a short diagram annotation out of an adjacent prose paragraph`（cognitive-psychology-gpt3 p14、0f0a13f2 から）：キャプションの無い 3 列の表（Problem / Prompt / Response）が 1 つの段落（skipped）になり、`A: Option 2.` が隣の列の文と同じブロックに入る。`orderPageLines` の段の切れ目の行を x 順に出す変更で、行のラベル `Linda` が残るようになったのがきっかけ。
+- `keeps a figure-adjacent numeric label matrix …`（language-model-physics）の残り 2 か所：
+  - p7 の数式 `1 P 1 P P …` / `|S| x∈S len(x)+1`（本文より小さい 7.8 / 8.1pt）が前の `… as follows:` の段落に入り、equation にならない（7217a6f5 から。以前は見出しと誤判定され、それが段落の切れ目になっていた）。`classifyLine` で数式の行を `equation` にしても直らず、報告書の著者のテストが壊れたので見送り。
+  - p13 の図 10（DP の図）のノードが `copyright` になる。
+
 ### 要素正解
 
 1. **Europe PMC の著者の残り**（80.5%、126 人）：113 人は `PMC12280214` の 1 本（「著者は論文の末尾」のコンソーシアム論文。末尾の一覧を取るのは専用の処理が要る。本文の `Gradient Boosting Machines (GBMs)` が著者になる誤りもある）。側欄の段 PR で `PMC11557553` は 9/9 になった。`PMC12484009` 8/13 などは残り。一覧は `tools/authmiss.ts <run>`。

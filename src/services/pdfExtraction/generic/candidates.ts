@@ -345,7 +345,10 @@ function figurePanelLabelEvidence(block: LayoutBlock, blocks: LayoutBlock[], pag
   if (blocks.some((candidate) => candidate.pageStart === block.pageStart && candidate.role === "table_caption" &&
     Math.abs(candidate.bbox.y - block.bbox.y) <= 360)) return 0;
   const fontSize = median(block.lines.map((line) => line.fontSize).filter((size) => size > 0));
-  if (fontSize <= 0 || fontSize > 4 || crossTextThickness(block) > Math.max(22, fontSize * 7)) return 0;
+  // One short label repeated across side-by-side panels (`lay1 lay1`) is wide but still a panel label.
+  const tokens = block.text.trim().split(/\s+/);
+  const repeatedLabel = tokens.length >= 2 && new Set(tokens).size === 1 && tokens[0].length <= 8;
+  if (fontSize <= 0 || fontSize > 4 || (!repeatedLabel && crossTextThickness(block) > Math.max(22, fontSize * 7))) return 0;
   const figureCaption = blocks.find((candidate) => {
     if (candidate.pageStart !== block.pageStart || candidate.role !== "figure_caption") return false;
     const candidateBottom = candidate.bbox.y + candidate.bbox.height;
