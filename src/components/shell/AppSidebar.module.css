@@ -6,7 +6,7 @@
   --sidebar-collapsed-w: calc(var(--sidebar-icon-box) + 2 * var(--card-gap));
   --sidebar-expanded-w: 220px;
   --sidebar-icon-box: var(--control-height);
-  --sidebar-motion: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --sidebar-motion: var(--pane-motion);
   /* Shared content inset. Chevron hangs into this pad so icons share one left edge. */
   --sidebar-pad-x: 8px;
   --sidebar-resize-handle-w: 4px;

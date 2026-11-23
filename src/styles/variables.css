@@ -115,6 +115,9 @@
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
+  /* Pane open/close/resize: long, soft deceleration (ease-out quint) so panes glide to rest. */
+  --pane-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --pane-motion: 420ms var(--pane-ease);
 
   /* Border Radius */
   --radius-sm: 4px;
