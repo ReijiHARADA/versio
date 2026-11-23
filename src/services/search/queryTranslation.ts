@@ -48,11 +48,10 @@ async function requestTranslation(term: string, deps: Deps): Promise<string | nu
         messages: [{ role: "user", content: term }],
         temperature: 0,
         max_tokens: 48,
-        chat_template_kwargs: {
-          source_lang: english ? "en" : "ja",
-          target_lang: english ? "ja" : "en",
-          form: "plain",
-        },
+        // `form` is a Japanese register; the chat template rejects it when the target is English.
+        chat_template_kwargs: english
+          ? { source_lang: "en", target_lang: "ja", form: "plain" }
+          : { source_lang: "ja", target_lang: "en" },
         stop: ["<|plamo:tag|>", "<|plamo:bos|>"],
       }),
     });

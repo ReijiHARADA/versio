@@ -22,7 +22,7 @@ describe("translateQueryTerm", () => {
   it("translates Japanese to English and cleans the answer", async () => {
     const fetchImpl = vi.fn(async () => reply("「gaze input」。"));
     expect(await translateQueryTerm("視線入力B", { getServer: async () => server, fetchImpl })).toBe("gaze input");
-    expect(requestBody(fetchImpl).chat_template_kwargs).toMatchObject({ source_lang: "ja", target_lang: "en" });
+    expect(requestBody(fetchImpl).chat_template_kwargs).toEqual({ source_lang: "ja", target_lang: "en" });
   });
 
   it("translates English to Japanese and caches the answer", async () => {
