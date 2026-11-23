@@ -35,15 +35,20 @@ status: draft
 
 Europe PMC の dev 全件（868 本、main 2a4649f + 共同筆頭著者の注記の PR、2026-11-21）：タイトル 95.9%、著者 90.9%、DOI 96.2%（DOI の PR 後。前は 72.1%）、誌名 88.6%、見出し 93.5%、見出しの精度 84.0%、本文段落 92.5%、脚注 85.4%、図 87.8%、表 95.6%、表のセル 62.7%、参考文献 95.1%、本文への漏れ 7.1%（324/4,593。裏の所属一覧の 2 つの PR で 618→450→324）。106 本の部分集合より脚注が低い（全件では共同筆頭著者の注記が多い）。本文への漏れが弱い。全件は 10 並列（`--shard k/10`）で約 15 分。test split は 11-17 以降まだ測っていない。
 
-### 段落正解（main 5d60cf2、2026-11-24）
+### 段落正解（main 5d60cf2、2026-11-24、採点の正解の扱いを直した後）
 
-| 指標 | dev 287 本 | 評価用 405 本 | 目標（評価用） |
+採点の正解（JATS の段落）の扱いを 2 点直した（2026-11-24）。(1) 独立数式（`disp-formula`）を含む `<p>` は数式の前後で別の正解段落にする（Reader は数式を別ブロックで表示する）。(2) PDF に印字されていない正解段落（語の 2-gram の一致 0.9 未満で intact でないもの：版違い・JATS にしかない文）は intact の分母から外す（以前は別の行で参考値として出していた）。被覆は `scripts/paragraph-gold-coverage.ts` → `test-data/field-gold/_cache/coverage-v2/`（段落の番号が変わったので v1 とは別）。PDF で字下げのある別段落を JATS がまとめたものは正解側からは判別できず、そのまま。
+
+| 指標 | dev 287 本 | 評価用 406 本 | 目標（評価用） |
 |---|---|---|---|
-| intact | 92.6% | 91.5% | 98% |
+| intact | 94.5%（旧採点 92.6%） | 93.7%（旧 91.5%） | 98% |
 | 警告ブロック | 1,086 | 1,775 | 500 |
-| うち fragment / complete（誤警告）/ merged / outside | 401 / 195 / 15 / 475 | 669 / 307 / 31 / 768 | complete 50 |
+| うち fragment / complete（誤警告）/ merged / outside | 389 / 203 / 15 / 479 | 615 / 332 / 31 / 797 | complete 50 |
+| 外した印字されていない段落 | 329 | 532 | — |
 
-- 壊れた段落の原因（dev、run `m4-dev`）: lost-text 294、split-interrupted 286、split-column 132、in-non-paragraph-block 73、merged-paragraphs 60。
+- 誤警告が旧採点より増えたのは、数式の前の導入文（`… is defined as:`）が単独の正解段落になり、その末尾への警告が complete に数えられるようになったため。
+
+- 壊れた段落の原因（dev、run `m4-dev`、新採点）: lost-text 322、split-interrupted 288、split-column 136、in-non-paragraph-block 74、merged-paragraphs 61、interleaved-columns 48。
 - 誤警告（complete）の大半は本当に末尾・先頭が欠けている段落（正解の 85% 以上が入っているので complete になる）。警告を外すのではなく抽出を直す。
 
 ### 段落正解（main 582a123 + 見出しの行の PR、2026-11-21）

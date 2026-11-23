@@ -7,7 +7,7 @@
  * paragraphs cannot be intact whatever the extractor does, so the scorer reports
  * integrity over printed paragraphs next to the raw figure. Coverage is the share of the
  * paragraph's word bigrams present anywhere in the PDF text (bigrams barely depend on
- * reading order). Writes field-gold/_cache/coverage/<pmcid>.json: one value per gold
+ * reading order). Writes field-gold/_cache/coverage-v2/<pmcid>.json: one value per gold
  * paragraph index.
  */
 import fs from "node:fs";
@@ -20,7 +20,8 @@ const args = process.argv.slice(2);
 const shardArg = args.indexOf("--shard") >= 0 ? args[args.indexOf("--shard") + 1] : "0/1";
 const [k, n] = shardArg.split("/").map(Number);
 const cacheDir = path.join(root, "test-data/field-gold/_cache/epmc");
-const outDir = path.join(root, "test-data/field-gold/_cache/coverage");
+// v2: gold paragraphs split at display formulas (indices differ from the v1 cache).
+const outDir = path.join(root, "test-data/field-gold/_cache/coverage-v2");
 fs.mkdirSync(outDir, { recursive: true });
 
 const bigrams = (t: string[]) => t.slice(1).map((x, i) => `${t[i]} ${x}`);

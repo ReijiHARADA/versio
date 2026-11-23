@@ -29,9 +29,13 @@ export function jatsParagraphs(xml: string): GoldParagraph[] {
     for (const p of containers.flatMap((c) => elements(removeElements(removeElements(c, "list"), "boxed-text"), "p"))) {
       if (/<p[\s>]/.test(p.inner)) continue;
       const hasDisplayFormula = /<disp-formula/.test(p.inner);
-      // Inline formulas carry their LaTeX source next to the MathML; the PDF prints only the formula.
-      const plain = decodeEntities(text(removeElements(removeElements(p.inner, "disp-formula"), "tex-math"))).replace(/\s+/g, " ").trim();
-      if (plain) out.push({ index: out.length, part, text: plain, hasDisplayFormula });
+      // A display formula is its own block in the Reader, so the text around it forms separate paragraphs
+      // (`… is defined as:` | formula | `where θ denotes …`).
+      for (const piece of p.inner.split(/<disp-formula[\s>][\s\S]*?<\/disp-formula>/)) {
+        // Inline formulas carry their LaTeX source next to the MathML; the PDF prints only the formula.
+        const plain = decodeEntities(text(removeElements(piece, "tex-math"))).replace(/\s+/g, " ").trim();
+        if (plain) out.push({ index: out.length, part, text: plain, hasDisplayFormula });
+      }
     }
   }
   return out;
