@@ -18,6 +18,7 @@ status: draft
 
 - マージ済み（2026-11-23）: #271 ページ枠の罫線、#272 参考文献の後の back matter、#273 数式ブロックになった本文の行・`et al.`、#274 括弧で始まる続き、#275 行頭の `Table 6.`、#276 数字で始まる続き、#277 懸垂ハイフン、#278 箇条書き記号・混在大文字、#281 プレプリントの行番号、#283 完結した段落を越える小文字の続き、#284 小さい字を越えて `joinFullLineBreaks`、#285 図のラベルを越えて同、#286 1 行の前半・続きを段の行で測る、#289 機能語の直後の用語で始まる段落。11-22 分は git log。
 - 続き（2026-11-24）: #291 `joinFullLineBreaks` の本文の字の大きさを文字数で決める、#292 最初の並びが 1 行の複数行ブロックも測る、#293 字下げの論文で 80% 以上の最終行でも文が続けばつなぐ、#294 `Figure 1 contrasts …` を図のキャプションにしない（`isFigureCaption` の詰まり判定の誤り）。
+- 続き（2026-11-24 後半）: #299 上端のプレプリントのライセンス帯が割れた行を `chrome` にする（dev で帯の文の出現 54→6、残りは 1 ページ目の翻訳対象外表示）、#300 1 行目が数式で小さく測られたキャプションの続き（行間 1.6 倍以内に限る）。
 - 評価用 split（main 5d60cf2、run `m4-test`）: 旧採点 intact 91.5%（11-23 朝 90.1%）、新採点 93.7%。警告 1,775、誤警告は新採点で 332。
 - dev（run `m4-dev`）: intact 92.6%、警告 1,086、誤警告 195。
 - 変更の A/B: worktree `../app-worktrees/element-notes` で 1 コミットにした変更を `zsh test-data/extraction-audit/tools/ab.sh <worktreeの絶対パス> <基準の接頭辞> <変更の接頭辞>`（HEAD~1 と HEAD で elementgold 40 本・Europe PMC 106 本・dev 287 本を流して差を出す。約 15 分、負荷が高いと 30 分超なので `timeout` を長く）。悪化した論文は `docdiff.ts` / `pdiff.ts` で 1 本ずつ見る。評価用は `run-wt.sh` の中身を worktree で直接流す（`SPLIT=test`）。
@@ -27,8 +28,7 @@ status: draft
 
 1. `joinFullLineBreaks`（`pdfLayout.ts`）が効く型がまだ残る：間に図の中の文（2 語以上）や別の段の本文が入るページ。`interrupt.ts`（`BLOCK=1`）の `A-terminal none`（dev 約 80）を 1 本ずつ見て、どの条件で止まるかを調べる。
 2. split-column の `A-terminal same`（dev 約 100）の多くは PDF では字下げのある別段落で、正解の JATS がまとめているもの（採点側）。本物だけを拾う。
-3. キャプションの 2 行目以降が字の大きさの違いで本文に回り、前ページの段落の続きとして取られる（`PMC12612131` p13 の Fig. 11）。
-4. bioRxiv の重ね書き（`… was not certified by peer review …`）が本文段落・表に入る（dev 5 本、どれも採点外）。`isPreprintOverlayBlock` が分割された行に効いていない。
+3. `(r = –0.78)` のような括弧付きの数値の行が数式ブロックになり段落が切れる（`PMC12827417` p12）。#273 の続き。
 
 ## 判断待ち・未確認
 
