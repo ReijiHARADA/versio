@@ -3667,8 +3667,11 @@ function groupLinesIntoBlocks(
       continue;
     }
 
-    // A `Keywords` label line after a finished abstract starts the keyword band, not more abstract.
-    const keywordLabel = /^(?:key\s?words?|index terms)\b/i.test(line.text.trim()) && /[.!?)\]]$/.test(joinLines(current).trim());
+    // A `Keywords` or abstract-section label line after a finished sentence starts a new band.
+    const keywordLabel = /[.!?)\]]$/.test(joinLines(current).trim()) &&
+      (/^(?:key\s?words?|index terms)\b/i.test(line.text.trim()) ||
+        // A structured-abstract label on a line of its own (`Trial registration`), not an inline `Conclusions:`.
+        /^(?:background|objectives?|aims?|purpose|methods?|results?|conclusions?|trial registration|design|setting|participants|interventions?|findings|interpretation)$/i.test(line.text.trim()));
     if (!keywordLabel && (mergeable || affiliationContinue || captionContinue || grantContinue || keywordContinuation || titleContinue || footnoteContinue || headingContinue || headingWrapContinue)) {
       current.push(line);
       continue;
