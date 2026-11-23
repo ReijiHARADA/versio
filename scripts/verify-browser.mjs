@@ -296,10 +296,16 @@ try {
       const field = page.getByPlaceholder("この論文を検索");
       await field.waitFor({ state: "visible", timeout: 10_000 });
       await field.fill("glossary");
-      await page.locator("[data-search-panel]").waitFor({ state: "visible", timeout: 5_000 });
+      await page.getByTestId("reader-search-panel").waitFor({ state: "visible", timeout: 5_000 });
+      // Results show in the inspector's transient 検索 tab while the query is active.
+      await page.locator('#inspector-tab-search[aria-selected="true"]').waitFor({ timeout: 5_000 });
+      await page.getByTestId("search-hit").first().waitFor({ timeout: 5_000 });
       await shot("reader-search");
       await page.keyboard.press("Escape");
-      await page.locator("[data-search-panel]").waitFor({ state: "detached", timeout: 5_000 });
+      await page.getByTestId("reader-search-panel").waitFor({ state: "detached", timeout: 5_000 });
+      if (await page.locator("#inspector-tab-search").count()) {
+        throw new Error("search tab stayed after the search closed");
+      }
     });
     await shot("reader");
 

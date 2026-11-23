@@ -1,5 +1,7 @@
+import { useState, useMemo, useEffect } from "react";
 import { X, ChevronUp, ChevronDown } from "lucide-react";
 import type { PaperBlock, Section } from "../../types/paper";
+import { sectionDisplayTitle } from "../../services/translation/quality";
 import styles from "./SearchPanel.module.css";
 
 type SearchResult = {
@@ -85,6 +87,64 @@ export function SearchBar({
       <button type="button" className={styles.closeButton} onClick={onClose} title="検索を閉じる（Esc）" aria-label="検索を閉じる">
         <X size={14} />
       </button>
+    </div>
+  );
+}
+
+/** Results list the inspector shows while in-paper search is active. */
+export function SearchResults({
+  blocks,
+  sections,
+  query,
+  onResultClick,
+}: {
+  blocks: PaperBlock[];
+  sections: Section[];
+  query: string;
+  onResultClick: (blockId: string) => void;
+}) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const results = useMemo(() => findSearchResults(blocks, sections, query), [query, blocks, sections]);
+
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [results]);
+
+  const highlightMatch = (text: string): React.ReactNode => {
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    return text.split(regex).map((part, i) =>
+      i % 2 === 1 ? <mark key={i} className={styles.highlight}>{part}</mark> : part
+    );
+  };
+
+  if (query.length < 2) {
+    return <p className={styles.hint}>2 文字以上入力すると、ここに結果が並びます。</p>;
+  }
+  if (results.length === 0) {
+    return <p className={styles.hint}>「{query}」は見つかりませんでした。</p>;
+  }
+  return (
+    <div className={styles.results} data-search-panel="">
+      <p className={styles.resultCount}>
+        {results.length}件{results.length === MAX_RESULTS && "（最初の50件）"}
+      </p>
+      <ul className={styles.resultList}>
+        {results.map((result, index) => (
+          <li
+            key={`${result.block.id}-${result.matchType}`}
+            className={`${styles.resultItem} ${index === selectedIndex ? styles.selected : ""}`}
+            data-testid="search-hit"
+            onClick={() => {
+              setSelectedIndex(index);
+              onResultClick(result.block.id);
+            }}
+          >
+            {result.section && <span className={styles.sectionName}>{sectionDisplayTitle(result.section)}</span>}
+            <p className={styles.snippet}>{highlightMatch(result.snippet)}</p>
+            <span className={styles.matchType}>{result.matchType === "translated" ? "日本語" : "英語原文"}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
