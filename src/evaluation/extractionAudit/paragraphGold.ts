@@ -155,6 +155,9 @@ export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[],
     // fragment: the warning names a real defect, not a false alarm.
     const lacks = (() => {
       if (complete !== 1 || !block.warning) return false;
+      // Warnings about damaged characters (an unmapped glyph, a leftover line-break hyphen, glued words, a broken set
+      // or exponent) point at the block's own text, not at a missing part: a complete paragraph can carry them rightly.
+      if (/未復元文字|改行ハイフン|隣接語が連結|集合記法|指数情報/.test(block.warning)) return true;
       // A piece of another paragraph glued before or after the complete one is what a start/end warning points at.
       if (/末尾|先頭/.test(block.warning) && paras.length >= 2 && paras[1].here >= 0.05) return true;
       if (paras[0].here >= 0.99) return false;
