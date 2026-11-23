@@ -93,3 +93,31 @@ describe("FTS incremental freshness", () => {
     await db.close();
   });
 });
+
+describe("normalized library search", () => {
+  it("absorbs spelling variants, ranks title hits first and checks short words", async () => {
+    const db = await openSqlite(createMemoryFileSystem());
+    const titleHit = { ...paper(), id: "title-hit", sourceFileHash: "h1", titleOriginal: "インターフェース設計" };
+    const bodyHit = { ...paper(), id: "body-hit", sourceFileHash: "h2", titleOriginal: "Other" };
+    upsertPaperIndex(db, titleHit);
+    upsertPaperIndex(db, bodyHit);
+    indexPaperText(db, titleHit, "", "");
+    indexPaperText(db, bodyHit, "BUILD pipeline", "ユーザ・インタフェースの評価");
+
+    expect(searchPapersFts(db, "インタフェース")).toEqual(["title-hit", "body-hit"]);
+    expect(searchPapersFts(db, "ユーザーインターフェース")).toEqual(["body-hit"]);
+    expect(searchPapersFts(db, "ui")).toEqual([]);
+    expect(searchPapersFts(db, "build パイプライン")).toEqual([]);
+    expect(searchPapersFts(db, "build pipeline")).toEqual(["body-hit"]);
+  });
+
+  it("keeps working after an annotation refresh re-reads stored text", async () => {
+    const db = await openSqlite(createMemoryFileSystem());
+    const p = paper();
+    upsertPaperIndex(db, p);
+    indexPaperText(db, p, "Cognitive Load", "コンピューター");
+    refreshPaperAnnotationFts(db, p.id);
+    expect(searchPapersFts(db, "コンピュータ")).toEqual(["fts-1"]);
+    expect(searchPapersFts(db, "cognitive load")).toEqual(["fts-1"]);
+  });
+});

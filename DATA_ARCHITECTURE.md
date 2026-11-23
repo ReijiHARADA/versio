@@ -268,7 +268,7 @@ Tables:
 - `annotations` — block-anchored notes
 - `reading_positions` — `paperId + blockId + offset`
 - `glossaries`, `translation_cache`, `translation_jobs`, `settings`, `benchmarks`
-- `papers_fts` — FTS5 cache; rebuildable from packages + annotations
+- `papers_fts` — FTS5 cache; rebuildable from packages + annotations. Columns hold normalized search text (`normalizeIndexText`), not display text; searched with `LIKE` (schema v10 rewrote existing rows)
 
 ### Soft delete / Trash (schema v7)
 
