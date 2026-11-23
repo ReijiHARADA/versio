@@ -2,7 +2,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: var(--z-intro-overlay);
   background: #fcfdfd;
   transition: opacity 0.4s ease;
 }

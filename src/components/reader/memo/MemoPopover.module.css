@@ -1,7 +1,7 @@
 .popover {
   composes: surface from "../../../styles/squircle.module.css";
   position: fixed;
-  z-index: 50;
+  z-index: var(--z-memo-popover);
   width: min(320px, calc(100vw - 24px));
   padding: 12px;
   --sq-bg: var(--color-bg);

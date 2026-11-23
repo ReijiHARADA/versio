@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 400;
+  z-index: var(--z-project-modal);
   padding: var(--spacing-xl);
 }
 

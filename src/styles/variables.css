@@ -127,6 +127,31 @@
   --pane-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --pane-motion: 420ms var(--pane-ease);
 
+  /* Layering */
+  --z-base: 0;
+  --z-raised: 1;
+  --z-sidebar: 2;
+  --z-main: 3;
+  --z-sidebar-resize: 6;
+  --z-menu-open: 10;
+  --z-card-menu: 20;
+  --z-select: 30;
+  --z-toast: 39;
+  --z-side-panel: 40;
+  --z-memo-popover: 50;
+  --z-info-popover: 55;
+  --z-marquee: 70;
+  --z-cursor: 80;
+  --z-page-header: 100;
+  --z-main-rim: 101;
+  --z-reader-popover: 200;
+  --z-project-modal: 400;
+  --z-overlay: 1000;
+  --z-titlebar-controls: 1001;
+  --z-sidebar-menu: 1200;
+  --z-error-overlay: 9999;
+  --z-intro-overlay: 10000;
+
   /* Border Radius */
   --radius-sm: 4px;
   --radius-md: 8px;

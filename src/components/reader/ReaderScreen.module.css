@@ -17,7 +17,7 @@
   border-bottom: 1px solid var(--color-border-light);
   background-color: var(--color-bg);
   position: relative;
-  z-index: 100;
+  z-index: var(--z-page-header);
 }
 
 .headerLeft {
@@ -99,7 +99,7 @@
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  z-index: 200;
+  z-index: var(--z-reader-popover);
   width: max-content;
   max-width: min(18rem, calc(100vw - var(--spacing-lg)));
   padding: 5px 8px;
@@ -193,7 +193,7 @@
     left: 0;
     top: var(--header-height);
     bottom: 0;
-    z-index: 50;
+    z-index: var(--z-memo-popover);
     box-shadow: 2px 0 8px var(--color-shadow);
   }
 

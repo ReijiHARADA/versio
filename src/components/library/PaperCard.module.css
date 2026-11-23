@@ -298,7 +298,7 @@
   position: absolute;
   top: 32px;
   right: 0;
-  z-index: 20;
+  z-index: var(--z-card-menu);
   min-width: 220px;
   padding: 6px;
   border: 1px solid transparent;
@@ -500,7 +500,7 @@
 
 /* The squircle surface isolates the tile, so an open menu must lift the whole tile above its neighbours. */
 .tile:has(.menu) {
-  z-index: 20;
+  z-index: var(--z-card-menu);
 }
 
 .tile:hover {
