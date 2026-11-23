@@ -16,7 +16,7 @@
   padding: calc(var(--side-panel-pad-top) + (1.6rem - 24px) / 2) var(--card-gap) var(--card-gap) 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--spacing-md);
   /* Transform + opacity only: animating width would reflow the paper every frame. */
   animation: sidePanelIn var(--pane-motion);
 }
@@ -52,7 +52,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .tabs {
@@ -62,8 +62,8 @@
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   flex: 1;
-  padding: 2px;
-  gap: 2px;
+  padding: var(--spacing-2xs);
+  gap: var(--spacing-2xs);
   --sq-fill: var(--sq-fill-control);
   border-radius: var(--sq-radius-control);
   --sq-bg: var(--color-surface-control);
@@ -80,7 +80,7 @@
   color: var(--color-text-tertiary);
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-medium);
-  padding: 4px 0;
+  padding: var(--spacing-xs) 0;
   cursor: pointer;
   white-space: nowrap;
   z-index: var(--z-raised);
@@ -136,14 +136,14 @@
     box-shadow: -8px 0 24px var(--color-shadow);
     /* Narrow windows keep the panel inside the card as an overlay, so it needs its own surface. */
     background: var(--color-bg);
-    padding: 16px;
+    padding: var(--spacing-md);
   }
 }
 
 .body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--spacing-md);
   min-height: 0;
   /* Remounted per tab (key), so each switch fades the new content in. */
   animation: tabBodyIn 240ms var(--pane-ease);

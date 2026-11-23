@@ -51,7 +51,7 @@
 }
 
 .meta {
-  margin: 4px 0 0;
+  margin: var(--spacing-xs) 0 0;
   font-size: var(--font-size-caption);
   color: var(--color-text-secondary);
   line-height: 1.4;

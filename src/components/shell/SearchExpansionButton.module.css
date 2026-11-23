@@ -11,7 +11,7 @@
   composes: pill from "../../styles/squircle.module.css";
   height: 20px;
   min-width: 26px;
-  padding: 0 6px;
+  padding: 0 var(--spacing-xs-plus);
   border: none;
   border-radius: 999px;
   --sq-bg: var(--color-accent-light);
@@ -46,7 +46,7 @@
 .group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--spacing-xs-plus);
 }
 
 .term {
@@ -58,15 +58,15 @@
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--spacing-xs-plus);
 }
 
 .chip {
   composes: pill from "../../styles/squircle.module.css";
   display: inline-flex;
   align-items: baseline;
-  gap: 4px;
-  padding: 2px 8px;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-2xs) var(--spacing-sm);
   border: none;
   border-radius: 999px;
   --sq-bg: var(--color-bg-tertiary);

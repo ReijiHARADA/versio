@@ -1,7 +1,7 @@
 .failedRow {
   align-items: flex-start;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
   cursor: default;
 }
 
@@ -10,15 +10,15 @@
 }
 
 .failureDetail {
-  margin-top: 2px;
+  margin-top: var(--spacing-2xs);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-2xs);
   max-width: 36rem;
 }
 
 .duplicateRow .failureDetail {
-  margin-top: 1px;
+  margin-top: 1px; /* spacing-literal-ok: 1px baseline nudge under the duplicate row */
 }
 
 .failureTitle {
@@ -47,7 +47,7 @@
 }
 
 .failedTrailing {
-  padding-top: 2px;
+  padding-top: var(--spacing-2xs);
 }
 
 .duplicateRow .failedTrailing {
@@ -59,7 +59,7 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-xs-plus);
   border: 1px solid transparent;
   --sq-line: var(--color-accent);
   --sq-bw: 1px;
@@ -132,8 +132,8 @@
 .cancelAction {
   width: auto;
   min-width: max-content;
-  gap: 5px;
-  padding: 0 8px;
+  gap: 5px; /* spacing-snap-candidate */
+  padding: 0 var(--spacing-sm);
   white-space: nowrap;
 }
 
@@ -166,7 +166,7 @@
   justify-content: flex-start;
   min-width: 0;
   max-width: 100%;
-  gap: 4px;
+  gap: var(--spacing-xs);
   text-align: center;
 }
 

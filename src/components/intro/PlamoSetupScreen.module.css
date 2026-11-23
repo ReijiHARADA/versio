@@ -3,7 +3,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  padding: 48px 16px;
+  padding: var(--spacing-2xl) var(--spacing-md);
   overflow-y: auto;
   background: var(--color-bg);
   color: var(--color-text);
@@ -21,7 +21,7 @@
   place-items: center;
   width: 52px;
   height: 52px;
-  margin-bottom: 24px;
+  margin-bottom: var(--spacing-lg);
   --sq-fill: var(--sq-fill-14);
   border-radius: var(--sq-radius-14);
   --sq-bg: var(--color-accent-light);
@@ -29,14 +29,14 @@
 }
 
 .title {
-  margin: 0 0 12px;
+  margin: 0 0 var(--spacing-sm-plus);
   font-size: var(--font-size-display);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.01em;
 }
 
 .lead {
-  margin: 0 0 24px;
+  margin: 0 0 var(--spacing-lg);
   font-size: var(--font-size-body);
   line-height: 1.8;
   color: var(--color-text-secondary);
@@ -46,9 +46,9 @@
   composes: surface from "../../styles/squircle.module.css";
   position: relative;
   display: grid;
-  gap: 12px;
-  margin: 0 0 32px;
-  padding: 16px 18px;
+  gap: var(--spacing-sm-plus);
+  margin: 0 0 var(--spacing-xl);
+  padding: var(--spacing-md) 18px; /* spacing-snap-candidate */
   list-style: none;
   --sq-fill: var(--sq-fill-lg);
   border-radius: var(--sq-radius-lg);
@@ -60,7 +60,7 @@
 .facts li {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 10px; /* spacing-snap-candidate */
 }
 
 .facts svg {
@@ -71,13 +71,13 @@
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .primary,
 .secondary {
   height: 36px;
-  padding: 0 20px;
+  padding: 0 20px; /* spacing-snap-candidate */
   border: none;
   font: inherit;
   font-size: var(--font-size-small);

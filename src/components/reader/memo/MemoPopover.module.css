@@ -26,7 +26,7 @@
 
 .body {
   margin: 0;
-  padding: 14px 14px 4px;
+  padding: 14px 14px var(--spacing-xs); /* spacing-snap-candidate */
   font-size: var(--font-size-body);
   line-height: 1.5;
   color: var(--color-text);
@@ -37,7 +37,7 @@
 .message,
 .error {
   margin: 0;
-  padding: 12px 14px 0;
+  padding: var(--spacing-sm-plus) 14px 0; /* spacing-snap-candidate */
   font-size: var(--font-size-caption);
   line-height: 1.4;
 }
@@ -59,7 +59,7 @@
   max-height: 40vh;
   resize: none;
   margin: 0;
-  padding: 14px 14px 6px;
+  padding: 14px 14px var(--spacing-xs-plus); /* spacing-snap-candidate */
   border: none;
   outline: none;
   background: transparent;
@@ -76,8 +76,8 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 10px 10px 14px;
+  gap: var(--spacing-xs-plus);
+  padding: var(--spacing-sm) 10px 10px 14px; /* spacing-snap-candidate */
 }
 
 .meta {
@@ -93,7 +93,7 @@
   appearance: none;
   border: none;
   font-size: 0.78125rem; /* font-size-literal-ok: memo popover fine type */
-  padding: 5px 12px;
+  padding: 5px var(--spacing-sm-plus); /* spacing-snap-candidate */
   cursor: pointer;
 }
 

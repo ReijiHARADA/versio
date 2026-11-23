@@ -237,7 +237,7 @@
   left: 80px;
   z-index: var(--z-titlebar-controls);
   display: flex;
-  gap: 2px;
+  gap: var(--spacing-2xs);
 }
 
 .historyButton {
@@ -356,7 +356,7 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-2xs);
   margin-top: 0;
   transition: margin-top var(--sidebar-motion);
 }
@@ -396,7 +396,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 4px;
+  gap: var(--spacing-xs);
   /* Tight box so the title reads as part of the group below it. */
   height: calc(24px * var(--sidebar-expand-t));
   padding: 0;
@@ -423,7 +423,7 @@
   justify-content: center;
   width: 22px;
   height: 22px;
-  margin-right: -4px;
+  margin-right: -4px; /* spacing-literal-ok: pulls the add button to the row edge */
   padding: 0;
   border: none;
   --sq-fill: var(--sq-fill-sm);
@@ -460,7 +460,7 @@
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-2xs);
 }
 
 /* ────────────────────────────────────────────────
@@ -521,7 +521,7 @@
   transform-origin: top left;
   z-index: var(--z-sidebar-menu);
   width: 190px;
-  padding: 5px;
+  padding: 5px; /* spacing-snap-candidate */
   border: 1px solid transparent;
   --sq-line: var(--color-border-light);
   --sq-bw: 1px;
@@ -541,7 +541,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: 7px 8px;
+  padding: 7px var(--spacing-sm); /* spacing-snap-candidate */
   border: none;
   border-radius: var(--sq-radius-sm);
   --sq-bg: transparent;
@@ -557,7 +557,7 @@
 
 .projectMenuSeparator {
   height: 1px;
-  margin: 4px;
+  margin: var(--spacing-xs);
   background: var(--color-border-light);
 }
 
@@ -588,10 +588,10 @@
   box-sizing: border-box;
   min-width: 1.125rem;
   height: 1.125rem;
-  padding: 0 3px;
+  padding: 0 3px; /* spacing-literal-ok: count badge geometry */
   flex: 0 0 auto;
   margin-left: auto;
-  margin-right: 6px;
+  margin-right: var(--spacing-xs-plus);
   max-width: none;
 }
 
@@ -726,7 +726,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-2xs);
 }
 
 /*
@@ -835,11 +835,11 @@
 }
 .invalidDrop * { cursor: not-allowed !important; }
 .rootDrop { display: none; }
-.rootDropVisible { display: block; padding: 8px; font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+.rootDropVisible { display: block; padding: var(--spacing-sm); font-size: var(--font-size-caption); color: var(--color-text-secondary); }
 
 .inlineName { flex: 1; min-width: 0; }
 .inlineName input {
-  width: 100%; min-width: 0; padding: 2px 3px;
+  width: 100%; min-width: 0; padding: var(--spacing-2xs) 3px; /* spacing-literal-ok: aligns the rename input text with the label */
   font: inherit; color: var(--color-text);
 }
 /* A div, not a span: `.inlineName span` styles the error text. */
@@ -878,8 +878,8 @@
 .tagChips {
   display: none;
   flex-wrap: wrap;
-  gap: 4px;
-  padding: 2px 0 0;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-2xs) 0 0;
 }
 
 .sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .tagChips,
@@ -900,10 +900,10 @@
   composes: pill from "../../styles/squircle.module.css";
   display: inline-flex;
   align-items: center;
-  gap: 1px;
+  gap: 1px; /* spacing-literal-ok: 1px tight icon and label gap */
   max-width: 100%;
   height: 24px;
-  padding: 0 9px;
+  padding: 0 9px; /* spacing-snap-candidate */
   box-sizing: border-box;
   --sq-bg: var(--color-bg-tertiary);
   color: var(--color-text-secondary);

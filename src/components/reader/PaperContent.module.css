@@ -33,7 +33,7 @@
 
 .affiliations {
   display: grid;
-  gap: 2px;
+  gap: var(--spacing-2xs);
   margin-bottom: var(--spacing-sm);
 }
 
@@ -47,7 +47,7 @@
 .keywords {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 6px;
+  gap: var(--spacing-xs) var(--spacing-xs-plus);
   margin: 0 0 var(--spacing-sm);
   padding: 0;
   list-style: none;
@@ -55,7 +55,7 @@
 
 .keyword {
   composes: pill from "../../styles/squircle.module.css";
-  padding: 1px 8px;
+  padding: 1px var(--spacing-sm); /* spacing-literal-ok: 1px keeps the keyword pill compact */
   border-radius: 999px;
   --sq-bg: var(--color-bg-secondary);
   font-size: var(--font-size-caption);

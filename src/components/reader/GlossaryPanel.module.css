@@ -30,8 +30,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 14px minmax(0, 1fr) 22px;
   align-items: center;
-  column-gap: 8px;
-  padding: 0 8px 0 12px;
+  column-gap: var(--spacing-sm);
+  padding: 0 var(--spacing-sm) 0 var(--spacing-sm-plus);
 }
 
 .header {
@@ -61,7 +61,7 @@
   min-width: 0;
   box-sizing: border-box;
   margin: 0;
-  padding: 8px 0;
+  padding: var(--spacing-sm) 0;
   border: none;
   outline: none;
   background: transparent;

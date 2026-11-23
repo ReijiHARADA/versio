@@ -46,7 +46,7 @@
   display: inline-flex;
   align-items: center;
   height: 44px;
-  padding: 0 30px;
+  padding: 0 30px; /* spacing-snap-candidate */
   border-radius: 999px;
   color: #1d1d1f; /* color-literal-ok: intro artwork ink */
   font-size: var(--font-size-heading);

@@ -112,8 +112,11 @@
   --font-weight-semibold: 600;
 
   /* Spacing */
+  --spacing-2xs: 2px;
   --spacing-xs: 4px;
+  --spacing-xs-plus: 6px;
   --spacing-sm: 8px;
+  --spacing-sm-plus: 12px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
