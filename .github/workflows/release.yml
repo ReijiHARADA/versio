@@ -53,7 +53,13 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-        run: npm run tauri:build:clean
+        run: |
+          # Empty secrets arrive as empty strings; Tauri would then try to sign
+          # with identity "" and fail. Unset them for the ad-hoc path.
+          if [ -z "$APPLE_SIGNING_IDENTITY" ]; then
+            unset APPLE_SIGNING_IDENTITY APPLE_ID APPLE_TEAM_ID APPLE_APP_SPECIFIC_PASSWORD
+          fi
+          npm run tauri:build:clean
       - name: Create draft release
         env:
           GH_TOKEN: ${{ github.token }}

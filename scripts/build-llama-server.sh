@@ -7,6 +7,9 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$ROOT/.cache/llama.cpp"
 OUT_DIR="$ROOT/src-tauri/binaries"
 OUT="$OUT_DIR/llama-server-aarch64-apple-darwin"
+# Keep build output visible in CI; locally it goes to /dev/null.
+LOG=/dev/null
+[[ -n "${CI:-}" ]] && LOG=/dev/stdout
 
 if [[ -x "$OUT" && "$(cat "$OUT_DIR/.llama-tag" 2>/dev/null)" == "$TAG" ]]; then
   echo "llama-server $TAG already built"; exit 0
@@ -18,8 +21,9 @@ fi
 
 cmake -S "$SRC" -B "$SRC/build" -DBUILD_SHARED_LIBS=OFF -DGGML_METAL=ON -DGGML_METAL_EMBED_LIBRARY=ON \
   -DLLAMA_USE_PREBUILT_UI=OFF -DLLAMA_BUILD_UI=OFF -DLLAMA_CURL=OFF -DLLAMA_OPENSSL=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF \
-  -DCMAKE_BUILD_TYPE=Release >/dev/null
-cmake --build "$SRC/build" --target llama-server -j >/dev/null
+  -DCMAKE_BUILD_TYPE=Release >"$LOG"
+# Bounded parallelism: a bare -j is unlimited and stalls small CI runners.
+cmake --build "$SRC/build" --target llama-server -j "$(sysctl -n hw.ncpu)" >>"$LOG"
 
 mkdir -p "$OUT_DIR"
 cp "$SRC/build/bin/llama-server" "$OUT"

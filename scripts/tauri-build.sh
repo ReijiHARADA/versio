@@ -41,7 +41,8 @@ fi
 
 export PATH="${HOME}/.cargo/bin:/opt/homebrew/bin:${PATH}"
 # shellcheck disable=SC1091
-source "${HOME}/.cargo/env" 2>/dev/null || true
+# bash 3.2 exits on `source <missing file>` even with `|| true` (CI has no ~/.cargo/env).
+if [[ -f "${HOME}/.cargo/env" ]]; then source "${HOME}/.cargo/env"; fi
 
 export VERSIO_BUILD_TIMINGS="$TIMING_FILE"
 
