@@ -152,6 +152,16 @@ describe("stitchParagraphContinuations through a short inline formula", () => {
   });
 });
 
+describe("stitchParagraphContinuations into a term after an unpunctuated word", () => {
+  it("joins a long paragraph cut after a verb to the next one opening with an acronym", () => {
+    const out = stitchParagraphContinuations([
+      block("a", "paragraph", "Many algorithms have been proposed for cooperative tasks among agents in recent years. Given its proven stability in complex cooperative tasks, we selected", 2),
+      block("b", "paragraph", "MAPPO under the CTDE paradigm as the foundational reactive execution baseline.", 3),
+    ], []);
+    expect(out).toHaveLength(1);
+  });
+});
+
 describe("stitchParagraphContinuations past a table note", () => {
   it("joins the rest of the sentence across a table and its unfinished note", () => {
     const blocks = [
