@@ -5,7 +5,6 @@ import { LibraryScreen } from "./components/library/LibraryScreen";
 import { ProjectScreen } from "./components/project/ProjectScreen";
 import { InboxScreen } from "./components/library/InboxScreen";
 import { FavoritesScreen } from "./components/library/FavoritesScreen";
-import { RecentScreen } from "./components/library/RecentScreen";
 import { TrashScreen } from "./components/library/TrashScreen";
 import { PdfFileDropLayer } from "./components/shell/PdfFileDropLayer";
 import { IntroOverlay } from "./components/intro/IntroOverlay";
@@ -119,7 +118,6 @@ function App() {
               <Route path="/" element={<LibraryScreen />} />
               <Route path="/inbox" element={<InboxScreen />} />
               <Route path="/favorites" element={<FavoritesScreen />} />
-              <Route path="/recent" element={<RecentScreen />} />
               <Route path="/trash" element={<TrashScreen />} />
               <Route path="/project/:projectId" element={<ProjectScreen />} />
               <Route path="/settings" element={<Suspense fallback={null}><SettingsScreen /></Suspense>} />

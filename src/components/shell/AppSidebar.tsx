@@ -4,7 +4,6 @@ import { NavLink, useLocation, useNavigate, useNavigationType } from "react-rout
 import {
   ChevronLeft,
   ChevronRight,
-  Clock,
   Inbox,
   Library,
   PanelLeftClose,
@@ -387,7 +386,6 @@ export function AppSidebar({
                   preventNav={Boolean(draggingPaperId)}
                 />
                 <LibItem to="/favorites" icon={<Star size={16} />} label="お気に入り" tone="favorite" />
-                <LibItem to="/recent" icon={<Clock size={16} />} label="最近読んだ論文" />
                 <LibItem to="/trash" icon={<Trash2 size={16} />} label="ゴミ箱" tone="danger" />
               </nav>
             </section>
@@ -522,7 +520,6 @@ export function searchScopeLabel(pathname: string, nodes: WorkspaceNode[]): stri
   if (pathname.startsWith("/reader/")) return "この論文";
   if (pathname === "/inbox") return "インボックス";
   if (pathname === "/favorites") return "お気に入り";
-  if (pathname === "/recent") return "最近";
   const project = pathname.match(/^\/project\/([^/]+)/);
   if (project) return nodes.find((n) => n.id === decodeURIComponent(project[1]))?.name ?? "ワークスペース";
   return "ライブラリ";
