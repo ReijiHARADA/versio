@@ -519,6 +519,7 @@ export function ReaderScreen() {
       {memoSurface && (
         <MemoPopover
           mode={memoSurface.mode}
+          boundsRef={contentRef}
           anchor={memoSurface.fallback}
           annotation={
             memoSurface.mode === "view" || memoSurface.mode === "edit"
