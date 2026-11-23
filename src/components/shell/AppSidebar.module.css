@@ -584,6 +584,16 @@
   max-width: none;
 }
 
+.item.active.toneFavorite {
+  --sq-bg: var(--color-selection-favorite-bg);
+  color: var(--color-selection-favorite-fg);
+}
+
+.item.active.toneDanger {
+  --sq-bg: var(--color-selection-danger-bg);
+  color: var(--color-selection-danger-fg);
+}
+
 .item.active .badge {
   --sq-bg: color-mix(in srgb, var(--color-selection-fg) 22%, transparent);
   color: var(--color-selection-fg);
