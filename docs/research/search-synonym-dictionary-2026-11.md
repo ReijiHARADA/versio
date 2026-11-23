@@ -3,7 +3,7 @@ type: Report
 title: 検索の類義語辞書（調査と実装方針, 2026-11）
 description: 類義語・日英横断・略語展開・表記ゆれ吸収をライブラリ検索に入れるための辞書ソース調査と、段階的な実装方針。
 tags: [search, synonyms, wordnet, sudachi, dictionary]
-status: draft
+status: stable
 generated: 2026-11-24
 sources:
   - https://github.com/WorksApplications/SudachiDict/blob/develop/docs/synonyms.md

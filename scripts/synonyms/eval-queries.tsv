@@ -1,0 +1,41 @@
+# category	query	gold terms (a paper is relevant when it contains any of these; written independently of the dictionary)
+synonym	使いやすさ	使いやすさ|使い勝手|ユーザビリティ|操作性|usability|ease of use
+synonym	ユーザビリティ	ユーザビリティ|使いやすさ|使い勝手|usability|ease of use
+synonym	認知負荷	認知負荷|認知的負荷|cognitive load|mental workload|mental load
+synonym	参加型デザイン	参加型デザイン|参加型設計|participatory design|co-design|codesign
+synonym	没入感	没入感|没入|immersion|immersive experience|sense of presence
+synonym	被験者	被験者|参加者|実験参加者|participant|subject
+cross	視線追跡	視線追跡|視線計測|アイトラッキング|eye tracking|eye-tracking|gaze tracking
+cross	触覚フィードバック	触覚フィードバック|触覚提示|haptic feedback|tactile feedback|vibrotactile
+cross	機械学習	機械学習|machine learning
+cross	深層学習	深層学習|ディープラーニング|deep learning
+cross	大規模言語モデル	大規模言語モデル|large language model|LLM
+cross	ウェアラブル	ウェアラブル|wearable
+cross	拡張現実	拡張現実|augmented reality
+cross	仮想現実	仮想現実|バーチャルリアリティ|virtual reality
+cross	質的研究	質的研究|定性的研究|qualitative research|qualitative study|qualitative analysis
+cross	半構造化インタビュー	半構造化インタビュー|半構造化面接|semi-structured interview
+cross	テーマ分析	テーマ分析|主題分析|thematic analysis
+cross	効果量	効果量|effect size
+cross	分散分析	分散分析|ANOVA|analysis of variance
+cross	信頼区間	信頼区間|confidence interval
+cross	プライバシー	プライバシー|privacy
+cross	タッチスクリーン	タッチスクリーン|タッチパネル|touchscreen|touch screen
+cross	スマートウォッチ	スマートウォッチ|smartwatch|smart watch
+cross	自然言語処理	自然言語処理|natural language processing|NLP
+cross	推薦システム	推薦システム|レコメンドシステム|recommender system|recommendation system
+cross	cognitive load	認知負荷|認知的負荷|cognitive load|mental workload
+cross	usability	ユーザビリティ|使いやすさ|usability
+abbr	HCI	HCI|human-computer interaction|human computer interaction|ヒューマンコンピュータインタラクション
+abbr	LLM	LLM|large language model|大規模言語モデル
+abbr	IoT	IoT|Internet of Things|モノのインターネット
+abbr	SUS	SUS|System Usability Scale
+abbr	NASA-TLX	NASA-TLX|NASA TLX|Task Load Index
+abbr	EEG	EEG|electroencephalography|electroencephalogram|脳波
+abbr	human-computer interaction	HCI|human-computer interaction|human computer interaction
+abbr	augmented reality	augmented reality|拡張現実
+spelling	インターフェース	インターフェース|インタフェース|インターフェイス|インタフェイス|interface
+spelling	ユーザー	ユーザー|ユーザ|user
+spelling	コンピューター	コンピューター|コンピュータ|computer
+spelling	user-centred design	user-centred design|user-centered design|user centered design|ユーザ中心設計|ユーザー中心設計
+spelling	jewellery	jewellery|jewelry|ジュエリー
