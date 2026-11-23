@@ -80,7 +80,7 @@
 }
 
 .ghost { composes: surface from "../../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); }
-.primary { composes: surface cta from "../../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); --sq-ring: var(--sq-ring-sm); --sq-rim: var(--sq-rim-sm); }
+.primary { composes: surface cta from "../../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-md); }
 .danger { composes: surface from "../../../styles/squircle.module.css"; position: relative; --sq-fill: var(--sq-fill-sm); }
 
 .ghost,
@@ -105,6 +105,8 @@
 }
 
 .primary {
+  /* cta's ring/rim are md; a smaller face radius leaves a gap at the corners. */
+  border-radius: var(--sq-radius-md);
   --sq-bg: var(--color-accent);
   color: #fff;
 }
