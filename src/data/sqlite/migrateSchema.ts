@@ -1,6 +1,7 @@
 import type { Database } from "sql.js";
 import { SQLITE_SCHEMA_VERSION } from "../schemaVersion";
 import { sqliteSchemaVersionSql } from "./schema";
+import { normalizeIndexText } from "../../domain/search/normalizeSearchText";
 
 type SchemaMigration = {
   from: number;
@@ -336,6 +337,25 @@ function migrateV8ToV9(db: Database): void {
   db.run("CREATE INDEX IF NOT EXISTS papers_by_doi ON papers(doi)");
 }
 
+/** `papers_fts` now stores normalized search text; rewrite the rows already there. */
+function migrateV9ToV10(db: Database): void {
+  const exists = db.exec("SELECT 1 FROM sqlite_master WHERE name = 'papers_fts' LIMIT 1");
+  if (!exists[0]?.values.length) return;
+  const fields = ["title", "authors", "original", "translation", "annotation"] as const;
+  const result = db.exec(`SELECT paper_id, ${fields.join(", ")} FROM papers_fts`);
+  const rows = result[0]?.values ?? [];
+  const update = db.prepare(
+    `UPDATE papers_fts SET ${fields.map((field) => `${field} = ?`).join(", ")} WHERE paper_id = ?`
+  );
+  try {
+    for (const [paperId, ...values] of rows) {
+      update.run([...values.map((value) => normalizeIndexText(String(value ?? ""))), paperId]);
+    }
+  } finally {
+    update.free();
+  }
+}
+
 const MIGRATIONS: SchemaMigration[] = [
   { from: 1, to: 2, run: migrateV1ToV2 },
   { from: 2, to: 3, run: migrateV2ToV3 },
@@ -345,6 +365,7 @@ const MIGRATIONS: SchemaMigration[] = [
   { from: 6, to: 7, run: migrateV6ToV7 },
   { from: 7, to: 8, run: migrateV7ToV8 },
   { from: 8, to: 9, run: migrateV8ToV9 },
+  { from: 9, to: 10, run: migrateV9ToV10 },
 ];
 
 export function applySqliteSchemaMigrations(db: Database): number {
