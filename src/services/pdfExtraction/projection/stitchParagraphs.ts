@@ -20,6 +20,8 @@ import { isExpectedNonProseParagraph, unsafeParagraphStructureReason } from "../
 
 const words = (text: string) => text.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu)?.length ?? 0;
 const PAGE_NUMBER = /^\d{1,4}(?:\s*\/\s*\d{1,4})?$/;
+// A long table's running label on each page it fills (`TABLE 3 (Continued)`).
+const CONTINUED_FLOAT = /^(?:table|figure|fig\.)\s*\d+[a-z]?\.?\s*\(continued\)$/i;
 const TERMINAL = /[.!?。！？][”"’')\]]*\s*$/;
 // `(Rapport et al.` + `2022). …`: an abbreviation's period does not end the sentence.
 const ABBREVIATION_END = /\b(?:et al|e\.g|i\.e|cf|vs)\.$/i;
@@ -145,10 +147,10 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
       let skippedParagraph = false;
       let skippedFragment = false;
       let passedFinished = 0;
-      // Full-page figures and tables can push the rest of a paragraph several pages on.
+      // Full-page figures and tables (a long table runs over several pages) can push the rest of a paragraph several pages on.
       let onlyFloats = true;
       let sawFloat = false;
-      for (let j = i + 1; j < out.length && j <= i + 12 && out[j].pageStart <= current.pageEnd + (onlyFloats && j > i + 1 ? 3 : 1); j += 1) {
+      for (let j = i + 1; j < out.length && j <= i + 12 && out[j].pageStart <= current.pageEnd + (onlyFloats && j > i + 1 ? 8 : 1); j += 1) {
         const candidate = out[j];
         const candidateText = candidate.original?.trim() ?? "";
         if (eligible(candidate) && words(candidateText) >= 2 && CONTINUATION_START.test(candidateText)) {
@@ -199,7 +201,7 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         else if (candidate.type === "paragraph") skippedFragment = true;
         // A page number (`10 / 23`) between the pages does not stop the look past full-page floats.
         // (Nor does a table's own footnote or note.)
-        if (candidate.type !== "figure" && candidate.type !== "table" && !PAGE_NUMBER.test(candidateText) &&
+        if (candidate.type !== "figure" && candidate.type !== "table" && !PAGE_NUMBER.test(candidateText) && !CONTINUED_FLOAT.test(candidateText) &&
           !(candidate.type === "footnote" && out[j - 1]?.type === "table") && !tableNote) onlyFloats = false;
       }
       if (target < 0) break;
