@@ -468,14 +468,23 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
       const previous = rightRows.at(-1);
       if (previous === undefined || item.y - previous > Math.max(3, item.fontSize * 0.45)) rightRows.push(item.y);
     }
-    if (leftLong.length < 8 || rightWords.length < 40 || rightRows.length < 8) return null;
+    // A short last page (back matter) has only a handful of lines per column.
+    if (leftLong.length < 5 || rightWords.length < 25 || rightRows.length < 5) return null;
     const leftX = median(leftLong.map((item) => item.x));
     // The right column is word-split, so its median x is deep inside the
     // column. Use the leading edge to keep short spans attached to the right
     // column during line clustering and reading-order reconstruction.
     const rightX = Math.min(...rightWords.map((item) => item.x));
     if (rightX - leftX < page.width * 0.35) return null;
-    return { leftX, rightX };
+    // A gutter separates the columns; a single-column line cut at its inline math runs straight on.
+    const leftEnds = leftLong.map((item) => item.x + item.width);
+    if (median(leftEnds) > rightX - 10) return null;
+    // Below the usual counts, the left column must also be justified to one right edge, as a column is; a
+    // single-column page cut at inline math ends its pieces anywhere.
+    const justified = leftEnds.filter((end) => Math.abs(end - median(leftEnds)) <= 4).length >= leftEnds.length * 0.6;
+    const relaxed = leftLong.length < 8 || rightWords.length < 40 || rightRows.length < 8;
+    if (relaxed && !justified) return null;
+    return { leftX, rightX, justified };
   })();
 
   if (layoutEnv("PDF_LAYOUT_DEBUG") === "columns" && page.pageNumber === 1) {
@@ -526,8 +535,10 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
   const isMultiColumn = alignedColumnPairs
     ? rightX - leftX >= page.width * 0.22 && leftShare >= 0.22 && rightShare >= 0.22
     : asymmetricWordColumns
-      ? rightX - leftX >= page.width * 0.35 && leftLong.length >= 8 &&
-        usable.filter((item) => item.x >= page.width * 0.5 && item.width <= page.width * 0.24).length >= 40
+      ? rightX - leftX >= page.width * 0.35 && (() => {
+        const narrowRight = usable.filter((item) => item.x >= page.width * 0.5 && item.width <= page.width * 0.24).length;
+        return (leftLong.length >= 8 && narrowRight >= 40) || (asymmetricWordColumns.justified && leftLong.length >= 5 && narrowRight >= 25);
+      })()
     : asymmetricRail
       ? rightX - leftX >= page.width * 0.15 && asymmetricRail.leftCount >= 15 && asymmetricRail.rightCount >= 20
     : leftItems.length >= MIN_COLUMN_ITEMS &&
