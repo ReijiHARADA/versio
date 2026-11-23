@@ -69,4 +69,35 @@ describe("resolveParagraphTranslationUi", () => {
     expect(ui.skipTranslation).toBe(false);
     expect(ui.isWaiting).toBe(false);
   });
+
+  it("explains a skipped prose fragment that has no extraction warning", () => {
+    const ui = resolveParagraphTranslationUi(makeBlock({
+      translationStatus: "skipped",
+      metadata: {},
+      original: "Conversely, coherence can boost the creativity of final products, as the following passage illustrates for creativity:",
+    }));
+    expect(ui.hasTranslation).toBe(false);
+    expect(ui.untranslatedReason).toBeTruthy();
+  });
+
+  it("keeps intentionally untranslated chrome and references silent", () => {
+    const refs = new Set(["refs"]);
+    expect(resolveParagraphTranslationUi(makeBlock({
+      translationStatus: "skipped", metadata: {}, sectionId: "refs",
+      original: "Smith J, Doe A. A study of things that happen in the world of papers. Nature. 2020.",
+    }), refs).untranslatedReason).toBeNull();
+    expect(resolveParagraphTranslationUi(makeBlock({
+      translationStatus: "skipped", metadata: { role: "copyright" },
+      original: "Copyright is held by the owner and author of this work and its publication rights are licensed.",
+    })).untranslatedReason).toBeNull();
+  });
+
+  it("does not warn about a completed translation", () => {
+    const original = "We designed the experiment to foster both mundane and psychological realism in the study.";
+    const ui = resolveParagraphTranslationUi(makeBlock({
+      translationStatus: "completed", metadata: {}, original,
+      translated: "私たちは、研究において日常的リアリズムと心理的リアリズムの両方を育むよう実験を設計した。",
+    }));
+    expect(ui.untranslatedReason).toBeNull();
+  });
 });

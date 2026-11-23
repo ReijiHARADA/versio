@@ -100,13 +100,10 @@ export function Paragraph({
     hasTranslation,
     isFailed,
     isWaiting,
+    untranslatedReason: translationInputWarning,
   } = resolveParagraphTranslationUi(block, refSectionIds ?? new Set());
   const hasOriginal = Boolean(block.original && translated);
   const lowConfidence = isLowExtractionConfidence(block.extractionConfidence);
-  const translationInputWarning =
-    !hasTranslation && typeof block.metadata.translationInputWarning === "string"
-      ? block.metadata.translationInputWarning
-      : null;
 
   // Translation changes line wrapping (and therefore block height). Reserve
   // the height observed while waiting so completion cannot pull the viewport

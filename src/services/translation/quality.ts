@@ -2215,7 +2215,7 @@ export function shouldTranslateParagraph(text: string): boolean {
   // period, so keep those structural forms eligible; otherwise preserve the
   // source instead of asking the model to complete a missing clause.
   const isClosedQuote = /^(?:["“]).*(?:["”])(?:\s*\[[^\]]+\])?$/s.test(t);
-  if (t.length >= 400 && !/[.!?。！？]$/.test(t) && !terminalCitationSuffix && !isClosedQuote && !/^(?:[-•‣▪∙*]|\d+[.)])\s+/.test(t)) return false;
+  if (t.length >= 400 && !/[.!?。！？]["”’)\]]*$/.test(t) && !terminalCitationSuffix && !isClosedQuote && !/^(?:[-•‣▪∙*]|\d+[.)])\s+/.test(t)) return false;
   if (!isCompleteFormulaDefinition && /^(?:of|and|or|but|to|for|with|where|which|that)\b/.test(t)) return false;
   // A lower-case lexical fragment followed by a coordinating conjunction is
   // strong evidence that extraction started mid-sentence ("data, and ...").

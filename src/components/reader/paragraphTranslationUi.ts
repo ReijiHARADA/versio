@@ -1,5 +1,5 @@
 import type { PaperBlock } from "../../types/paper";
-import { shouldTranslateBlock } from "../../services/import/policy";
+import { shouldTranslateBlock, untranslatedParagraphReason } from "../../services/import/policy";
 import { usableTranslatedText } from "../../services/translation/quality";
 
 type ParagraphTranslationUi = {
@@ -10,6 +10,7 @@ type ParagraphTranslationUi = {
   isProcessing: boolean;
   isFailed: boolean;
   isWaiting: boolean;
+  untranslatedReason: string | null;
 };
 
 /**
@@ -43,6 +44,9 @@ export function resolveParagraphTranslationUi(
   const isFailed = !skipTranslation && block.translationStatus === "failed" && !hasTranslation;
   const isWaiting = !hasTranslation && (isPending || isProcessing);
 
+  const untranslatedReason =
+    hasTranslation ? null : untranslatedParagraphReason(block, refSectionIds);
+
   return {
     translated,
     hasTranslation,
@@ -51,5 +55,6 @@ export function resolveParagraphTranslationUi(
     isProcessing,
     isFailed,
     isWaiting,
+    untranslatedReason,
   };
 }
