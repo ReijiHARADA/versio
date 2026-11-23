@@ -79,6 +79,8 @@ export function looksLikeBibliographyEntry(text: string): boolean {
   if (
     /^[A-Z][A-Z'’-]+,\s*(?:[A-Z]\.|[A-Z][a-z]+).*?\b(?:and|&)\s+[A-Z][A-Z'’-]+,.*?\((?:19|20)\d{2}\)\./.test(t)
   ) return true;
+  // APA byline: `Chen, L. et al. (2018). …`, `Gupta, M., & Ito, K. (2017). …`.
+  if (/^\p{Lu}[\p{L}'’-]+,\s(?:\p{Lu}\.\s?)+(?:,?\s(?:&|and)\s\p{Lu}[\p{L}'’-]+,\s(?:\p{Lu}\.\s?)+)*(?:\s?et al\.)?\s\((?:19|20)\d{2}[a-z]?\)\.\s/u.test(t)) return true;
   if (/^\d+\.\s+[A-Z]/.test(t)) {
     if (/\b(19|20)\d{2}\b/.test(t)) return true;
     if (/\b[A-Z]\.\s+[A-Z]/.test(t)) return true;

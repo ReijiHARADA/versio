@@ -1459,6 +1459,9 @@ describe("unsafe extracted translation input", () => {
     expect(isExpectedNonProseParagraph("Institute of Biomedicine, University of Eastern Finland, Kuopio, Finland. Department of Neurology, Hospital Universitario Donostia, San Sebastian, Spain. Institute of Cognitive Neurology and Dementia Research, Magdeburg,")).toBe(true);
     expect(isExpectedNonProseParagraph("Susanne Moebus , 42,43,44 Thomas Tegos , 42,45 Jordi Pérez-Tur , 123,124 Martin Ingelsson , 42,125 Mikko Hiltunen ,")).toBe(true);
     expect(isExpectedNonProseParagraph("original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is")).toBe(true);
+    expect(isExpectedNonProseParagraph("Chen, L. et al. (2018). Machine Learning in Cardiology: A Systematic Review. HeartTech,")).toBe(true);
+    expect(isExpectedNonProseParagraph("Gupta, M., & Ito, K. (2017). Predictive Analytics in Hospital Management. Health Systems Review,")).toBe(true);
+    expect(isExpectedNonProseParagraph("Chen, the first author, reported in 2018 that machine learning in cardiology was still rare in practice and")).toBe(false);
     expect(isExpectedNonProseParagraph("Participants were recruited at the University Hospital and the Department of Neurology, and all of them gave written consent before the study began in")).toBe(false);
   });
 
