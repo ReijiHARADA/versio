@@ -1,7 +1,6 @@
 import type { TranslationSettingsV2 } from "../../utils/translationSettings";
 import { Toggle } from "../ui/Toggle";
-import { SettingsCard, SettingsRow, SettingsStatusRow } from "./SettingsPrimitives";
-import { TranslationMorphPreview } from "./TranslationMorphPreview";
+import { SettingsCard, SettingsRow } from "./SettingsPrimitives";
 import { usePlamoModel } from "./usePlamoModel";
 import styles from "./SettingsScreen.module.css";
 
@@ -34,9 +33,6 @@ export function TranslationSettingsSection({
 }: Props) {
   const selected = speed(settings.translationConcurrency);
   const plamo = usePlamoModel();
-  const plamoReady = plamo.state === "present";
-  const engineState = plamoReady ? "ok" : plamo.state === "checking" ? "checking" : "error";
-  const engineLabel = plamoReady ? "準備完了" : modelLabel[plamo.state];
 
   return (
     <div className={styles.page}>
@@ -96,17 +92,6 @@ export function TranslationSettingsSection({
           </SettingsRow>
         </SettingsCard>
 
-        <SettingsCard title="翻訳演出プレビュー">
-          <TranslationMorphPreview />
-        </SettingsCard>
-
-        <SettingsCard title="ステータス">
-          <SettingsStatusRow
-            label="翻訳エンジン"
-            state={engineState}
-            stateLabel={engineLabel}
-          />
-        </SettingsCard>
       </div>
     </div>
   );

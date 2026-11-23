@@ -77,29 +77,6 @@ export function DiagnosticsSettingsSection({
           </div>
         </SettingsCard>
 
-        <SettingsCard title="パフォーマンス">
-          <div className={styles.fieldStack}>
-            <label className={styles.fieldLabel}>
-              Translation concurrency
-              <span className={styles.inputField}>
-                <input
-                  className={styles.input}
-                  type="number"
-                  min={1}
-                  max={8}
-                  value={settings.translationConcurrency}
-                  onChange={(e) =>
-                    onChange({ translationConcurrency: Number(e.target.value) })
-                  }
-                />
-              </span>
-            </label>
-            <p className={styles.hint}>
-              一般向けの「翻訳速度」と同じ値です。細かく指定したいときだけ変更してください。
-            </p>
-          </div>
-        </SettingsCard>
-
       </div>
     </div>
   );
