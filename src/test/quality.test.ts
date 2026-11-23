@@ -1479,6 +1479,7 @@ describe("unsafe extracted translation input", () => {
     expect(isExpectedNonProseParagraph("We compared iPhone and MacBook users with GitHub and LinkedIn accounts in the study, and the results were similar for")).toBe(false);
     expect(isExpectedNonProseParagraph("1 Step 1. Calculate the similarity between samples using the local topology-preserving metric (see Equation")).toBe(true);
     expect(isExpectedNonProseParagraph("Input: Minority class dataset D, desired number of synthetic samples N Output: augmented dataset")).toBe(true);
+    expect(isExpectedNonProseParagraph("1: Step 1: Model Training 2: Perform stratified train-test split on the raw data")).toBe(true);
     expect(isExpectedNonProseParagraph("12 patients completed the study and 3 withdrew before the second visit because of scheduling conflicts and")).toBe(false);
     expect(isExpectedNonProseParagraph("Participants were recruited at the University Hospital and the Department of Neurology, and all of them gave written consent before the study began in")).toBe(false);
   });
