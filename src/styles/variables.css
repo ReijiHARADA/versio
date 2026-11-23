@@ -3,6 +3,8 @@
   --titlebar-h: 50px;
   /* Main card inset from the window's right and bottom edges, and its corner radius. */
   --card-gap: 10px;
+  /* Reader side panels (Notes, Glossary) start their header this far below the titlebar. */
+  --side-panel-pad-top: 12px;
   --card-radius: 10px;
   /* Gray ramp: one cool (blue-tinted, OKLCH hue 250) scale shared by both
      themes. Semantic tokens below map onto it; use those in components. */
