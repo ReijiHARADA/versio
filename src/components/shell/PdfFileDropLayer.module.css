@@ -8,7 +8,7 @@
   justify-content: center;
   color: var(--color-selection-fg);
   gap: var(--spacing-md);
-  font-size: 1.25rem;
+  font-size: var(--font-size-title);
   font-weight: 500;
   z-index: var(--z-overlay);
   pointer-events: none;

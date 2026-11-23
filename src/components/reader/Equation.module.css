@@ -21,7 +21,7 @@
 
 .latex {
   font-family: var(--font-family-mono);
-  font-size: 1rem;
+  font-size: var(--font-size-lead);
   color: var(--color-text);
   white-space: pre-wrap;
   word-break: break-word;
@@ -34,12 +34,12 @@
 
 .fallback {
   font-family: var(--font-family-mono);
-  font-size: 0.9375rem;
+  font-size: var(--font-size-heading);
   color: var(--color-text);
 }
 
 .number {
   flex-shrink: 0;
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   color: var(--color-text-secondary);
 }

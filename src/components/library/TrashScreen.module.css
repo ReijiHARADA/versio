@@ -36,14 +36,14 @@
 
 .name {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.95rem; /* font-size-literal-ok: trash row name, between small and heading */
   font-weight: 600;
   color: var(--color-text);
 }
 
 .detail {
   margin: 4px 0 0;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   color: var(--color-text-secondary);
 }
 
@@ -87,7 +87,7 @@
   color: var(--color-text);
   border-radius: var(--sq-radius-md);
   padding: var(--spacing-sm) var(--spacing-md);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
@@ -139,7 +139,7 @@
   --sq-bg: var(--color-danger);
   color: var(--color-selection-fg);
   padding: var(--spacing-sm) var(--spacing-md);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;

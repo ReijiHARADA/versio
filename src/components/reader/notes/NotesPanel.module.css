@@ -6,7 +6,7 @@
 
 .empty {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   color: var(--color-text-tertiary);
 }
 
@@ -22,7 +22,7 @@
   padding: 8px 10px;
   --sq-bg: var(--color-bg-secondary);
   border-radius: var(--sq-radius-sm);
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
 }
 
 .undoBar button,
@@ -32,5 +32,5 @@
   background: transparent;
   color: var(--color-accent);
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
 }

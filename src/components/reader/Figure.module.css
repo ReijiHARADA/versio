@@ -46,7 +46,7 @@
   padding: 2.5rem 1rem;
   text-align: center;
   color: var(--color-text-tertiary);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
 }
 
 .tableFallbackText {
@@ -58,7 +58,7 @@
   white-space: pre-wrap;
   word-break: break-word;
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   line-height: 1.55;
   color: var(--color-text-secondary);
   --sq-bg: var(--color-bg);
@@ -98,7 +98,7 @@
   min-width: 6rem;
   padding: 0.45rem 0.55rem;
   color: var(--color-text-secondary);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   line-height: 1.35;
   white-space: normal;
   border-left: 1px solid var(--color-border-light);
@@ -136,7 +136,7 @@
 
 .caption {
   margin-top: var(--spacing-md);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   color: var(--color-text-secondary);
   line-height: 1.5;
 }
@@ -177,6 +177,6 @@
   padding: var(--spacing-sm);
   background-color: var(--color-original-bg);
   font-style: italic;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   color: var(--color-text-tertiary);
 }

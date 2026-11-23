@@ -55,11 +55,11 @@
 }
 
 .md {
-  font-size: 1.25rem;
+  font-size: var(--font-size-title);
 }
 
 .md .sep {
-  font-size: 1.125rem;
+  font-size: var(--font-size-subtitle);
 }
 
 /* Small path line above a title ("A / B /"). Earlier folders give way first. */

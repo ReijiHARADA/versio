@@ -53,7 +53,7 @@
 }
 
 .title {
-  font-size: 0.9375rem;
+  font-size: var(--font-size-heading);
   font-weight: 500;
   color: var(--color-text);
   margin: 0;
@@ -150,7 +150,7 @@
   --sq-bg: transparent;
   color: var(--color-text-secondary);
   font: inherit;
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
@@ -196,7 +196,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: var(--spacing-sm);
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
 }
 
 .status {
@@ -204,7 +204,7 @@
   align-items: center;
   gap: 4px;
   color: var(--color-text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   white-space: nowrap;
 }
 
@@ -262,7 +262,7 @@
 
 .date {
   color: var(--color-text-tertiary);
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   white-space: nowrap;
 }
 
@@ -326,7 +326,7 @@
   --sq-bg: transparent;
   color: var(--color-text);
   border-radius: var(--sq-radius-sm);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   line-height: 1.25;
   text-align: left;
   cursor: pointer;
@@ -359,7 +359,7 @@
 .menuEmpty {
   margin: 0;
   padding: 8px 10px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   color: var(--color-text-secondary);
 }
 
@@ -404,7 +404,7 @@
 
 .deleteConfirmText {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   color: var(--color-text-secondary);
   text-align: right;
 }
@@ -425,7 +425,7 @@
 .deleteConfirmNo {
   appearance: none;
   border: none;
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   padding: 4px 8px;
   border-radius: var(--sq-radius-sm);
   cursor: pointer;
@@ -566,7 +566,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   font-weight: 500;
   line-height: 1.35;
   text-align: center;
@@ -610,7 +610,7 @@
 .tagMore {
   flex: none;
   padding: 1px 7px;
-  font-size: 0.6875rem;
+  font-size: var(--font-size-micro);
   line-height: 1.5;
   white-space: nowrap;
 }

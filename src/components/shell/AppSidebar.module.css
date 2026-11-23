@@ -282,7 +282,7 @@
   background: transparent;
   color: var(--color-text);
   font: inherit;
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   padding: 0;
 }
 
@@ -384,7 +384,7 @@
 }
 
 .sectionTitle {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   font-weight: 600;
   letter-spacing: 0.03em;
   color: var(--color-text-tertiary);
@@ -434,7 +434,7 @@
 }
 
 .empty {
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   color: var(--color-text-tertiary);
   height: calc(24px * var(--sidebar-expand-t));
   padding: calc(4px * var(--sidebar-expand-t)) 0;
@@ -467,7 +467,7 @@
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   text-decoration: none;
   /* Rows, tree rows and the sliding selection ghost (also an .item) share one
      layer above the tree guide (z auto). The ghost is the sidebar's first child,
@@ -548,7 +548,7 @@
   --sq-bg: transparent;
   color: var(--color-text);
   font: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   text-align: left;
 }
 
@@ -568,7 +568,7 @@
 
 .badge {
   /* Inbox count: a solid dark-grey circle with a white figure. */
-  font-size: 0.625rem;
+  font-size: var(--font-size-tiny);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -852,7 +852,7 @@
   --sq-ring: var(--sq-ring-sm);
   border-radius: var(--sq-radius-sm);
 }
-.inlineName span { font-size: 11px; color: var(--color-danger-static); }
+.inlineName span { font-size: var(--font-size-micro); color: var(--color-danger-static); }
 .menuNotice { margin: 5px 8px; font-size: var(--font-size-caption); color: var(--color-text-secondary); line-height: 1.5; }
 .projectMenu button:disabled { opacity: .5; cursor: not-allowed; }
 
@@ -910,7 +910,7 @@
   box-sizing: border-box;
   --sq-bg: var(--color-bg-tertiary);
   color: var(--color-text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   line-height: 1;
   white-space: nowrap;
   overflow: hidden;

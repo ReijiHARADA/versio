@@ -19,7 +19,7 @@
 .count {
   min-width: 6.5em;
   margin-right: 4px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
 }
@@ -47,7 +47,7 @@
 
 .hint {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   line-height: 1.5;
   color: var(--color-text-tertiary);
 }
@@ -57,7 +57,7 @@
 }
 
 .resultCount {
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   color: var(--color-text-tertiary);
   padding: var(--spacing-xs) var(--spacing-md);
 }
@@ -92,14 +92,14 @@
 
 .sectionName {
   display: block;
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   color: var(--color-accent);
   margin-bottom: var(--spacing-xs);
   font-weight: 500;
 }
 
 .snippet {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   color: var(--color-text);
   line-height: 1.5;
   margin-bottom: var(--spacing-xs);

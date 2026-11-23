@@ -14,16 +14,16 @@
 
 .label {
   display: block;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   font-weight: 500;
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-sm);
 }
 
-.description { margin: calc(var(--spacing-xs) * -1) 0 var(--spacing-sm); font-size: .8125rem; line-height: 1.5; color: var(--color-text-tertiary); }
-.sliderRow { display: grid; grid-template-columns: auto minmax(120px, 1fr) auto; align-items: center; gap: var(--spacing-sm); font-size: .75rem; color: var(--color-text-tertiary); }
+.description { margin: calc(var(--spacing-xs) * -1) 0 var(--spacing-sm); font-size: var(--font-size-small); line-height: 1.5; color: var(--color-text-tertiary); }
+.sliderRow { display: grid; grid-template-columns: auto minmax(120px, 1fr) auto; align-items: center; gap: var(--spacing-sm); font-size: var(--font-size-caption); color: var(--color-text-tertiary); }
 .sliderRow input { width: 100%; accent-color: var(--color-accent); }
-.resetButton { align-self: flex-end; margin: 0 0 var(--spacing-md); border: 0; background: transparent; color: var(--color-accent); font-size: .8125rem; cursor: pointer; }
+.resetButton { align-self: flex-end; margin: 0 0 var(--spacing-md); border: 0; background: transparent; color: var(--color-accent); font-size: var(--font-size-small); cursor: pointer; }
 
 .themeButtons {
   display: flex;
@@ -47,7 +47,7 @@
   --sq-fill: var(--sq-fill-md);
   --sq-ring: var(--sq-ring-md);
   border-radius: var(--sq-radius-md);
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   cursor: pointer;
   transition: --sq-bg var(--transition-fast),
     --sq-line var(--transition-fast), color var(--transition-fast);

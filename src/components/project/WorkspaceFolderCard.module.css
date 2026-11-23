@@ -58,7 +58,7 @@
 }
 
 .title {
-  font-size: 1rem;
+  font-size: var(--font-size-lead);
   font-weight: 600;
   color: var(--color-text);
   margin: 0 0 2px;
@@ -68,7 +68,7 @@
 }
 
 .description {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   color: var(--color-text-tertiary);
   margin: 0 0 4px;
   overflow: hidden;
@@ -78,7 +78,7 @@
 
 .meta {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-small);
   color: var(--color-text-tertiary);
 }
 
@@ -228,13 +228,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   font-weight: 500;
   color: var(--color-text);
 }
 
 .tileMeta {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: var(--font-size-caption);
   color: var(--color-text-secondary);
 }
