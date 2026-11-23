@@ -79,6 +79,8 @@ export type AuditBlock = {
   indent?: boolean;
   /** The last line ends well short of the block's line width (a typeset paragraph end). */
   shortEnd?: boolean;
+  /** A blank band above the first line, after the previous paragraph's last line in the same column (a block-style paragraph start). */
+  spaced?: boolean;
 };
 
 const lastLineShort = (boxes: Array<{ page: number; y: number; width: number }>): boolean => {
@@ -114,6 +116,19 @@ for (const [n, doc] of docs.entries()) {
     const result = extractFromPages({ pages, paperId: doc.id, filePath: doc.pdf, fileHash: doc.id, metadata: { pageCount: pages.length } });
     await enhanceReferencesWithCrf(result, pages, loadNodeCrfRuntime);
     const sectionTitle = new Map(result.sections.map((s) => [s.id, `${s.normalizedKind}:${s.originalTitle ?? ""}`]));
+    const textBlocks = result.blocks.filter((b) => b.type === "paragraph" && b.boundingBoxes.length > 0);
+    const spacedIds = new Set<string>();
+    textBlocks.forEach((b, k) => {
+      const prev = textBlocks[k - 1];
+      const first = b.boundingBoxes[0];
+      if (!prev || !first) return;
+      const above = prev.boundingBoxes.filter((box) => box.page === first.page && box.y < first.y &&
+        Math.min(box.x + box.width, first.x + first.width) - Math.max(box.x, first.x) > first.width * 0.5);
+      if (above.length === 0) return;
+      const last = above.reduce((low, box) => (box.y > low.y ? box : low));
+      const pitch = first.height;
+      if (first.y - (last.y + last.height) >= pitch * 0.6 && first.y - (last.y + last.height) <= pitch * 3) spacedIds.add(b.id);
+    });
     const blocks: AuditBlock[] = result.blocks
       .filter((b) => !TEXT_TYPES.has(b.type) || (b.original ?? "").trim())
       .map((b) => ({
@@ -127,6 +142,7 @@ for (const [n, doc] of docs.entries()) {
         translatable: b.translationStatus !== "skipped",
         ...(b.type === "paragraph" && firstLineIndented(b.boundingBoxes) ? { indent: true } : {}),
         ...(b.type === "paragraph" && lastLineShort(b.boundingBoxes) ? { shortEnd: true } : {}),
+        ...(spacedIds.has(b.id) ? { spaced: true } : {}),
         ...(Array.isArray(b.metadata.tableRows) ? { cells: (b.metadata.tableRows as Array<Array<{ text: string }>>).flat().map((c) => c.text) } : {}),
       }));
     fs.writeFileSync(path.join(outDir, "docs", `${doc.id}.json`), JSON.stringify({ id: doc.id, language: doc.language ?? null, split: auditSplit(doc.id), pages: pages.length, paper: { title: result.paper.titleOriginal, authors: result.paper.authors, publication: result.paper.publication, doi: result.paper.doi ?? null }, blocks }, null, 1));

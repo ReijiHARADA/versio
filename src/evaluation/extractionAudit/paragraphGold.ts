@@ -58,7 +58,7 @@ const SHINGLE = 5;
 const shingles = (t: string[]): string[] => (t.length < SHINGLE ? [] : Array.from({ length: t.length - SHINGLE + 1 }, (_, i) => t.slice(i, i + SHINGLE)).filter((w) => !w.includes(MARKUP)).map((w) => w.join(" ")));
 const wordCount = (s: string) => tokens(s).filter((t) => t !== MARKUP).length;
 
-export type ExtractedBlock = { id: string; text: string; warning: string | null; indent?: boolean; shortEnd?: boolean };
+export type ExtractedBlock = { id: string; text: string; warning: string | null; indent?: boolean; shortEnd?: boolean; spaced?: boolean };
 
 export type ParagraphOutcome = {
   index: number;
@@ -140,7 +140,7 @@ export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[],
       const at = share.map((b) => blockIndex.get(b.id)!).sort((a, b) => a - b);
       // A few paragraph blocks between the pieces (figure text, a sidebar) do not change where the print breaks.
       return at.every((k, n) => n === 0 || (k - at[n - 1] <= 4 &&
-        /[.!?][”"’')\]]*$/.test(blocks[at[n - 1]].text.trim()) && (blocks[k].indent === true || blocks[at[n - 1]].shortEnd === true) && /^\p{Lu}/u.test(blocks[k].text.trim())));
+        /[.!?][”"’')\]]*$/.test(blocks[at[n - 1]].text.trim()) && (blocks[k].indent === true || blocks[k].spaced === true || blocks[at[n - 1]].shortEnd === true) && /^\p{Lu}/u.test(blocks[k].text.trim())));
     })();
     const verdict: ParagraphOutcome["verdict"] = f < 0.3 ? "missing" : share.length >= 2 && !printedBreaks ? "split" : f < 0.85 ? "partial" : "intact";
     return { index: p.index, found: f, blocks: share, verdict, warned: share.some((b) => warnedBlocks.has(b.id)) };
