@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { jatsParagraphs } from "../../evaluation/extractionAudit/paragraphGold";
+import { jatsParagraphs, tokens } from "../../evaluation/extractionAudit/paragraphGold";
 
 const doc = (body: string) => `<article><front></front><body>${body}</body></article>`;
 
@@ -12,4 +12,11 @@ describe("jatsParagraphs", () => {
       ["Plain paragraph.", false],
     ]);
   });
+
+describe("tokens", () => {
+  it("separates a citation number from the word whether it is spaced or not", () => {
+    expect(tokens("explored in29.")).toEqual(tokens("explored in 29."));
+    expect(tokens("Scopus1, IEEE2")).toEqual(["scopus", "1", "ieee", "2"]);
+  });
+});
 });

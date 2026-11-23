@@ -42,7 +42,9 @@ export function jatsParagraphs(xml: string): GoldParagraph[] {
 }
 
 // Fold accents: LaTeX gold drops math accents (`\\tilde{A}` → `A`) that the PDF text keeps.
-export const tokens = (s: string): string[] => s.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+// Letters and digits are separate tokens: a superscript citation is set tight against its word in one source
+// and spaced in the other (`explored in29.` / `articulation 11`), with the same text.
+export const tokens = (s: string): string[] => s.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().match(/\p{L}+|\p{N}+/gu) ?? [];
 const SHINGLE = 5;
 const shingles = (t: string[]): string[] => (t.length < SHINGLE ? [] : Array.from({ length: t.length - SHINGLE + 1 }, (_, i) => t.slice(i, i + SHINGLE).join(" ")));
 
