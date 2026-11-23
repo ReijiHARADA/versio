@@ -34,6 +34,17 @@ describe("paragraph breaks the PDF prints", () => {
   });
 });
 
+describe("warnings that name the defect", () => {
+  it("takes a tail warning on a block missing the paragraph's end as right, not as a false alarm", () => {
+    const text = "The participants completed the questionnaire twice, once before and once after the six-week training, and their answers were compared across the three groups with a mixed model that accounted for clinic and age.";
+    const gold = jatsParagraphs(doc(`<p>${text}</p>`));
+    const cut = text.replace(/ that accounted for clinic and age\.$/, "");
+    const tail = "段落の末尾が欠けている可能性があります";
+    expect(alignParagraphs(gold, [{ id: "b", text: cut, warning: tail }]).blocks[0].verdict).toBe("fragment");
+    expect(alignParagraphs(gold, [{ id: "b", text, warning: tail }]).blocks[0].verdict).toBe("complete");
+  });
+});
+
 describe("hosted paragraphs", () => {
   it("counts a gold paragraph set whole as a footnote as intact", () => {
     const xml = doc(`<p>This work was supported by the National Science Foundation under award 1234567 and by the regional research council, which had no role in the study design, data collection or the decision to publish.</p>`);
