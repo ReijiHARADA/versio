@@ -467,6 +467,10 @@
   color: var(--color-text-secondary);
   font-size: 0.875rem;
   text-decoration: none;
+  /* Rows, tree rows and the sliding selection ghost (also an .item) share one
+     layer above the tree guide (z auto). The ghost is the sidebar's first child,
+     so DOM order keeps it under every label while the guide stays under it. */
+  z-index: 1;
 }
 
 .item:hover {
@@ -622,6 +626,7 @@
   position: relative;
   display: flex;
   align-items: center;
+  z-index: 1; /* same layer as .item, see there */
   user-select: none;
   touch-action: none;
   /* Nesting indent only — chevron is out of flow so icons share the library left edge. */
@@ -736,12 +741,6 @@
   box-sizing: border-box;
   border-bottom: 1.5px solid var(--tree-line-color);
   border-bottom-left-radius: 7px;
-}
-
-/* Rows paint above the guide from the first frame; without this WKWebView drew
-   the line over a freshly selected row until the highlight transition ended. */
-.treeNestedClip > * > .item {
-  z-index: 1;
 }
 
 .treeNestedClip > *:not(:last-child)::after {
