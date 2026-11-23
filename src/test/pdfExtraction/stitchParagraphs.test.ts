@@ -99,6 +99,11 @@ describe("reconcileTranslationWarnings", () => {
     expect(reconcileTranslationWarnings([lead(), block("h", "heading", "Results")])[0].metadata.translationInputWarning).toBeUndefined();
     expect(reconcileTranslationWarnings([lead(), block("c", "paragraph", "the sum of squared errors over every tree in the ensemble.")])[0].metadata.translationInputWarning).toBe(TAIL);
     expect(reconcileTranslationWarnings([lead(), block("w", "paragraph", "where β is the slope index of inequality.")])[0].metadata.translationInputWarning).toBeUndefined();
+    const asLead = () => block("a", "paragraph", "The importance of feature j over the data subset is defined as", 1, { translationInputWarning: TAIL });
+    expect(reconcileTranslationWarnings([asLead(), block("eq", "equation", "I = sum")])[0].metadata.translationInputWarning).toBeUndefined();
+    const commaLead = () => block("a", "paragraph", "Given the transition from bin i to bin j, the joint distribution factorizes over time,", 1, { translationInputWarning: TAIL });
+    expect(reconcileTranslationWarnings([commaLead(), block("eq", "equation", "p = prod")])[0].metadata.translationInputWarning).toBeUndefined();
+    expect(reconcileTranslationWarnings([commaLead(), block("p", "paragraph", "and the rest follows.")])[0].metadata.translationInputWarning).toBe(TAIL);
     expect(reconcileTranslationWarnings([lead(), block("h", "heading", "TP + TN"), block("c", "paragraph", "recognition performance from two views.")])[0].metadata.translationInputWarning).toBeUndefined();
   });
 
