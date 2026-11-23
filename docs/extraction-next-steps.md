@@ -135,6 +135,13 @@ Europe PMC の dev 全件（868 本、main 2a4649f + 共同筆頭著者の注記
 - Frontiers の 1 ページ目を側欄として読む（2026-11-20 の 1 回目。11-21 に著者投影ごと直して採用、上の「済んだこと」）: (1) `EDITED BY` + `REVIEWED BY` を引き金にすると著者テスト 8 件失敗。うち 1 件（marketing-neuroconsumer）はテストの期待値の誤り（Aurelija Burinskiene は査読者）。残りは編集者・査読者名が著者・所属に流入。(2) 側欄の編集者・査読者の行を落とすと 5 件まで減るが、所属の分割と抄録の検出が崩れる。(3) RECEIVED / CITATION / COPYRIGHT / KEYWORDS より上を 1 段のまま読むと 14 件失敗。Frontiers の著者テストの多くが旧来の崩れた読み順を前提にしている。
 - lost-text の「途中が消えた」型の大半は採点側の差（版違いの言い回し、引用の書式、行内数式が JATS に無い、引用番号の範囲展開）。本物は 2 割程度で原因はばらばら。
 
+## 他の抽出器との比較
+
+- **Zotero pdf-worker（Zotero の読み取りモード、2026-11-23）**: 行の特徴量 → ONNX の clusterer（ブロック分割）→ classifier（種類 7 つ＋本文／補助／除外）を 1 ページずつ端末内で回し、後処理はルール。AGPL-3.0 なので比較は手元だけ（`test-data/extraction-audit/zotero/`、gitignore。`REPORT.md` に手順と全数値）。
+  - 段落正解 dev 285 本: intact **Zotero 79.5% / Versio 92.7%**。Zotero は split-page 864・split-column 1,155（ページ・段をまたぐ結合が無い）で負けるが、ページ内のブロックは Versio よりきれい（missing 0.2% / 1.2%、merged-paragraphs 9 / 88、in-non-paragraph-block 16 / 126）。
+  - 要素正解 dev: 見出しの再現率は Zotero が上（ACL 340 / 328、arXiv 183 / 173 of 348 / 186）、精度はほぼ同じかやや下。図・表・数式・表のセルは Zotero が画像として扱うので比較できない（0 はマッピング上の値）。著者・所属は Zotero に無い。
+  - 結論: 丸ごと置き換える価値は無い。学習モデルの効き目は「ページ内のブロック分割と種類の判定」（Versio の missing・誤結合・本文が非段落ブロックに入る分、計 約 3%）に限られる。取り入れるならその部分だけを自前の小さなモデルで、段・ページをまたぐ結合は今のルールのまま。
+
 ## 測り方
 
 ### 要素正解
