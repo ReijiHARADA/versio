@@ -10,7 +10,7 @@
   /* Own text colour: inherited colour differs between the card and the ground slot. */
   color: var(--color-text);
   /* Drawn on the window ground beside the card, not on a surface of its own. */
-  padding: 12px var(--card-gap) var(--card-gap) 6px;
+  padding: var(--side-panel-pad-top) var(--card-gap) var(--card-gap) 6px;
   display: flex;
   flex-direction: column;
   gap: 16px;

@@ -54,8 +54,9 @@
   /* Top pad is 0 so the search can occupy the same vertical band as the page header. */
   /* Same inset as the main card's gap, collapsed or expanded. */
   --sidebar-content-pad: var(--card-gap);
-  /* First section title's glyphs and + icon (13px/14px in a 24px row) start at the main card's top edge. */
-  padding: calc(var(--titlebar-h) - (24px - 0.8125rem) / 2) var(--sidebar-content-pad) var(--card-gap);
+  /* The first section's 24px title row is centred on the Reader side panel's header row
+     (1rem title, line-height 1.6), so ワークスペース lines up with メモ / 用語集. */
+  padding: calc(var(--titlebar-h) + var(--side-panel-pad-top) + (1.6rem - 24px) / 2) var(--sidebar-content-pad) var(--card-gap);
   background-color: var(--color-bg-secondary);
   overflow: visible;
   box-sizing: border-box;
