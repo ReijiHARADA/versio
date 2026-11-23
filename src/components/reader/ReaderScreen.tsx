@@ -39,7 +39,6 @@ import { useTextSelection } from "./selection/useTextSelection";
 import {
   resolveReaderInspector,
   type ReaderInspectorState,
-  type ReaderInspectorTab,
   type ReaderInspectorView,
 } from "../../utils/readerRightPanel";
 import { useReaderDocument } from "./hooks/useReaderDocument";
