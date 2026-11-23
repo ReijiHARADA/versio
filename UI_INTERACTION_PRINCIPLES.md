@@ -1,3 +1,11 @@
+---
+type: Spec
+title: UI Interaction Principles
+description: Versio の Surface（Popover / Sheet / Inspector / Modal / Route）の使い分けと、読書の流れを止めないための原則
+tags: [ui, interaction, reader]
+status: stable
+---
+
 # UI Interaction Principles
 
 Versio の UI は、読書の流れを止めないことを最優先する。
@@ -12,7 +20,7 @@ Versio の UI は、読書の流れを止めないことを最優先する。
 |---|---|---|
 | **Popover** | 今触っている対象に紐づく局所操作 | メモ作成・確認・編集、引用 preview、用語、Workspace 追加先 |
 | **Sheet / Overlay** | 少し大きい一時作業 | Export、図の拡大、詳細 preview |
-| **Inspector** | 論文全体の一覧・管理 | Notes 一覧、用語集一覧 |
+| **Inspector** | 論文に付随する情報（本文ではない）の一覧・管理 | 論文情報、Notes 一覧、用語集一覧、検索結果一覧 |
 | **Modal** | 作業を止めないと進めない重大判断 | 取り消せない破壊操作 |
 | **Route** | ユーザーが明確に場所を移るとき | Library / Reader / Workspace / Settings |
 
@@ -55,6 +63,17 @@ Popover / Sheet / Overlay を閉じたあと、次を極力保持する。
 - Import 中の一時行から論文行への移行
 - Export Dialog、図・表の lightbox（Shared Element で拡大／縮小）、⌘F / ⌘K のスコープ分離
 - Workspace 追加のメニュー picker
+
+## Reader の右 Inspector
+
+左の Outline は「本文の構造」、右の Inspector は「本文に付随する、論文単位の情報」を置く場所。本文そのもの（abstract を含む）は置かない。
+
+- タブは **情報 / メモ / 用語 / 検索** の 4 つで、同時に開くのは 1 つ。今後の付随情報（引用文献一覧など）もここへタブとして足し、別の右パネルを作らない
+- **情報** が既定のタブ。タイトル（原題・訳題）、著者と所属、掲載誌・年・巻号・ページ、DOI / arXiv / URL、キーワード、タグ、所属 Workspace、読書状態を表示する
+- 情報タブは表示が主。編集は既存の `PaperMetadataSheet` を開く（編集 UI を二重に作らない）
+- 開閉と最後のタブは保持する。初回は広い窓（地に置ける幅）で情報タブを開いた状態、狭い窓（オーバーレイになる幅）では閉じた状態で始める
+- 検索の入力・件数・前後移動はツールバーの検索バーに残す（⌘F → Esc の軽さを保つ）。Inspector の検索タブは結果一覧だけを置き、検索バーの「一覧」から移る
+- 本文上の操作（メモ作成、用語クリックなど）でタブを切り替えたり Inspector を開いたりしない。ツールバーのボタンと明示的な「一覧で見る」だけが切り替える
 
 ## メモ
 
