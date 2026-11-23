@@ -10,6 +10,9 @@ export type ExportDialogValues = {
   syncToFolder: boolean;
 };
 
+/** 検証用の書き出し（パッケージ・block comment 付き Markdown）は開発ビルドだけで出す */
+const SHOW_DEVELOPER_EXPORTS = import.meta.env.DEV;
+
 type ExportDialogProps = {
   open: boolean;
   busy: boolean;
@@ -103,17 +106,19 @@ export function ExportDialog({
                 checked={mode === "markdown"}
                 onChange={() => setMode("markdown")}
               />
-              Markdown
+              Markdown（.md）
             </label>
-            <label className={styles.option}>
-              <input
-                type="radio"
-                name="export-mode"
-                checked={mode === "verification"}
-                onChange={() => setMode("verification")}
-              />
-              検証用パッケージ（source.pdf + translated.md + assets）
-            </label>
+            {SHOW_DEVELOPER_EXPORTS ? (
+              <label className={styles.option}>
+                <input
+                  type="radio"
+                  name="export-mode"
+                  checked={mode === "verification"}
+                  onChange={() => setMode("verification")}
+                />
+                検証用パッケージ（source.pdf + translated.md + assets）
+              </label>
+            ) : null}
             <label className={styles.option}>
               <input
                 type="radio"
@@ -121,7 +126,7 @@ export function ExportDialog({
                 checked={mode === "notion"}
                 onChange={() => setMode("notion")}
               />
-              Notion インポート用 ZIP（Markdown + 画像）
+              Notion 用 ZIP（Markdown + 画像）
             </label>
             <label className={styles.option}>
               <input
@@ -134,7 +139,7 @@ export function ExportDialog({
             </label>
           </fieldset>
 
-          {mode === "markdown" && (
+          {SHOW_DEVELOPER_EXPORTS && mode === "markdown" && (
             <fieldset className={styles.fieldset} disabled={busy}>
               <legend>Markdown の形式</legend>
               <label className={styles.option}>
@@ -165,7 +170,7 @@ export function ExportDialog({
               disabled={busy}
               onChange={(event) => setIncludeFailedTranslations(event.target.checked)}
             />
-            翻訳失敗箇所を含める
+            翻訳できなかった段落も原文のまま含める
           </label>
           {mode === "epub" && allowEpubSync && epubSyncFolder ? (
             <label className={styles.option}>
@@ -182,10 +187,10 @@ export function ExportDialog({
             {mode === "notion"
               ? "Notion では「設定 → インポート → ZIP」を選び、この ZIP を読み込んでください。画像も一緒に追加されます。"
               : mode === "epub"
-                ? "EPUB 3形式で、Apple BooksやKindleなどの電子書籍リーダーに読み込めます。"
+                ? "Apple Books や Kindle などの電子書籍リーダーで読めます。"
                 : mode === "verification"
-                  ? "保存ダイアログでパッケージフォルダの名前と場所を一度に選びます。OFF のときは失敗した段落を書き出しません。"
-              : "OFF のときは失敗した段落を書き出しません。ON のときは訳を作らず、原文と失敗マークを残します。"}
+                  ? "保存ダイアログでパッケージフォルダの名前と場所を一度に選びます。"
+                  : "日本語訳と図表を 1 つの Markdown ファイルにまとめます。"}
           </p>
 
           {status && (
