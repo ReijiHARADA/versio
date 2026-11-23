@@ -31,6 +31,8 @@
   --color-surface-grouped: var(--gray-50);
   --color-surface-hover: var(--gray-200);
   --color-surface-control: #ffffff;
+  /* Neutral (gray) fill for the selected segment of a segmented control. */
+  --color-surface-segment-selected: var(--gray-200);
   --color-text: var(--gray-950);
   --color-text-secondary: var(--gray-700);
   --color-text-tertiary: var(--gray-500);
@@ -136,6 +138,7 @@
   --color-surface-grouped: var(--gray-850);
   --color-surface-hover: var(--gray-800);
   --color-surface-control: var(--gray-800);
+  --color-surface-segment-selected: var(--gray-700);
   --color-text: var(--gray-300);
   --color-text-secondary: var(--gray-500);
   --color-text-tertiary: var(--gray-600);

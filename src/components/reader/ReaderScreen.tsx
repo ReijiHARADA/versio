@@ -29,7 +29,7 @@ import { ExportDialog } from "./ExportDialog";
 import { iconSize } from "../../styles/iconTokens";
 import { Outline } from "./Outline";
 import { DisplaySettingsPanel } from "./DisplaySettingsPanel";
-import { SearchBar, SearchResults, findSearchResults } from "./SearchPanel";
+import { SearchBar, findSearchResults } from "./SearchPanel";
 import { ReaderInspector } from "./ReaderInspector";
 import { PaperInfoPanel } from "./info/PaperInfoPanel";
 import { NotesPanel } from "./notes/NotesPanel";
@@ -38,7 +38,6 @@ import { MemoPopover } from "./memo/MemoPopover";
 import { useTextSelection } from "./selection/useTextSelection";
 import {
   resolveReaderInspector,
-  toggleReaderInspectorTab,
   type ReaderInspectorState,
   type ReaderInspectorTab,
 } from "../../utils/readerRightPanel";
@@ -188,7 +187,6 @@ export function ReaderScreen() {
     searchHitIndex,
     searchHitCount,
     applySearchHits,
-    handleSearchResultClick,
     handleSearchClose,
   } = useReaderSearch({ contentRef, paperContentRef, storeBlocks });
 
@@ -282,10 +280,6 @@ export function ReaderScreen() {
   const openGlossaryInspector = useCallback(() => {
     setInspector(() => ({ open: true, tab: "glossary" }));
   }, [setInspector]);
-  const toggleInspectorTab = useCallback(
-    (tab: ReaderInspectorTab) => setInspector((current) => toggleReaderInspectorTab(current, tab)),
-    [setInspector]
-  );
   const showInspectorTab = useCallback(
     (tab: ReaderInspectorTab) => setInspector(() => ({ open: true, tab })),
     [setInspector]
@@ -459,10 +453,8 @@ export function ReaderScreen() {
             hitCount={searchHitCount}
             query={searchQuery}
             resultCount={searchResultCount}
-            resultsOpen={inspector.open && inspector.tab === "search"}
             onClose={handleSearchClose}
             onStep={(delta) => applySearchHits({ delta, scroll: true })}
-            onShowResults={() => toggleInspectorTab("search")}
           />
         )}
 
@@ -489,14 +481,6 @@ export function ReaderScreen() {
                   activeIds={activeAnnotationIds}
                   onSelect={handleSelectAnnotation}
                   onDelete={(annotation) => void handleDeleteAnnotation(annotation)}
-                />
-              )}
-              {inspector.tab === "search" && (
-                <SearchResults
-                  blocks={storeBlocks}
-                  sections={storeSections}
-                  query={searchQuery}
-                  onResultClick={handleSearchResultClick}
                 />
               )}
             </ReaderInspector>
