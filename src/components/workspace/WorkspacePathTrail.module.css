@@ -61,3 +61,23 @@
 .md .sep {
   font-size: 1.125rem;
 }
+
+/* Small path line above a title ("A / B /"). Earlier folders give way first. */
+.prefix {
+  font-size: var(--font-size-caption);
+  line-height: 1.3;
+}
+
+.prefix .ancestor {
+  font-weight: 400;
+}
+
+/* The nearest folder (just before the trailing "/") gives way last. */
+.prefix .segmentWrap:nth-last-child(2) {
+  flex: 0 1 auto;
+  min-width: 3ch;
+}
+
+.prefix > .sep {
+  margin-right: 0;
+}

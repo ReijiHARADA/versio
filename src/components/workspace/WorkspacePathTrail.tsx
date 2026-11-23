@@ -10,15 +10,21 @@ type WorkspacePathTrailProps = {
    * When omitted, the last folder is the current location (not a link).
    */
   leaf?: { label: string };
+  /**
+   * Small "A / B /" line shown above a title. Every folder is a link and the
+   * trail ends with a separator, since the title itself follows below.
+   */
+  prefix?: boolean;
 };
 
 export function WorkspacePathTrail({
   folders,
   leaf,
+  prefix = false,
 }: WorkspacePathTrailProps) {
   if (folders.length === 0 && !leaf) return null;
 
-  const folderIsCurrent = !leaf;
+  const folderIsCurrent = !leaf && !prefix;
   const segments: Array<{
     key: string;
     label: string;
@@ -35,7 +41,7 @@ export function WorkspacePathTrail({
     };
   });
 
-  if (leaf) {
+  if (leaf && !prefix) {
     segments.push({
       key: "leaf",
       label: leaf.label,
@@ -44,7 +50,10 @@ export function WorkspacePathTrail({
   }
 
   return (
-    <nav className={`${styles.trail} ${styles.md}`} aria-label="場所">
+    <nav
+      className={`${styles.trail} ${prefix ? styles.prefix : styles.md}`}
+      aria-label="場所"
+    >
       {segments.map((segment, index) => (
         <span key={segment.key} className={styles.segmentWrap}>
           {index > 0 && (
@@ -63,6 +72,11 @@ export function WorkspacePathTrail({
           )}
         </span>
       ))}
+      {prefix && (
+        <span className={styles.sep} aria-hidden="true">
+          /
+        </span>
+      )}
     </nav>
   );
 }
