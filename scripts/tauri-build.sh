@@ -105,7 +105,8 @@ echo "app_bundle_s=included_in_rust_s" >>"$TIMING_FILE"
 echo "⏱  Rust compile + .app bundle: ${rust_bundle_s}s"
 
 APP_PATH="src-tauri/target/release/bundle/macos/Versio.app"
-DMG_PATH="src-tauri/target/release/bundle/dmg/Versio_0.1.0_aarch64.dmg"
+VERSION="$(node -p 'require("./src-tauri/tauri.conf.json").version')"
+DMG_PATH="src-tauri/target/release/bundle/dmg/Versio_${VERSION}_aarch64.dmg"
 SIGNED_RELEASE="no"
 dmg_s="skipped"
 
@@ -125,6 +126,8 @@ elif [[ "$MODE" == "clean" ]]; then
   echo "== Unsigned DMG from .app (credentials not requested) =="
   echo "Result: unsigned acceptance only — NOT a signed release."
   t0="$(now_ms)"
+  # Seal the bundle ad hoc so a downloaded copy is not reported as "damaged".
+  bash "$SCRIPT_DIR/macos-adhoc-sign.sh"
   bash "$SCRIPT_DIR/macos-build-dmg.sh"
   dmg_s="$(elapsed_s "$t0")"
   echo "dmg_s=$dmg_s" >>"$TIMING_FILE"

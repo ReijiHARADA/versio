@@ -13,6 +13,8 @@ This document covers **clean release** signing only. Fast development builds
 
 ## PLaMo license condition (commercial distribution)
 
+Versio is currently distributed free of charge and non-commercially, so the registration below does not apply yet. Revisit it before any paid distribution.
+
 The translation model is PLaMo 3 Translate (PLaMo Community License). Commercial distribution requires registering with Preferred Networks, and the licensee's annual revenue must be ≤ ¥1B (10億円). Ship the license text (`licenses/plamo-community-license.txt`, shown in Settings → ライセンス) and keep the "Built with PLaMo" notice. The `llama-server` sidecar (`src-tauri/binaries/`) is signed as part of the `.app`.
 
 ## Correct order
@@ -67,6 +69,10 @@ signed acceptance not executed
 
 Do **not** treat unsigned artifacts as a signed release.
 
+## Unsigned (ad-hoc) releases
+
+Until a Developer ID is available, releases ship ad-hoc signed. `npm run tauri:build:clean` without `VERSIO_SIGN` runs `scripts/macos-adhoc-sign.sh` before building the DMG. Tauri's bundle is only linker-signed; without sealing the bundle, a downloaded copy is reported as "damaged". With the ad-hoc seal, Gatekeeper instead blocks the first launch and the user allows it once from System Settings → Privacy & Security → "Open Anyway" (README → インストール). The updater still verifies its own minisign signature, so in-app updates work the same.
+
 ## In-app updates (GitHub Releases)
 
 The app checks `https://github.com/ReijiHARADA/versio/releases/latest/download/latest.json` on launch (silent) and from Versio → アップデートを確認…. Updates are verified with the updater key, separate from the Apple signature.
@@ -74,6 +80,10 @@ The app checks `https://github.com/ReijiHARADA/versio/releases/latest/download/l
 - Private key: `~/.tauri/versio-updater.key` (outside the repo, empty password). Public key: `plugins.updater.pubkey` in `src-tauri/tauri.conf.json`. Losing the private key means existing installs can no longer update; back it up.
 - Release: bump `version` in `src-tauri/tauri.conf.json` → `VERSIO_SIGN=1 npm run tauri:build:clean` → `bash scripts/macos-publish-update.sh --publish`. The archive is made from the final (notarized) `.app`, so it must run after signing.
 - Without `--publish` the script only writes `src-tauri/target/release/bundle/updater/` (archive, `.sig`, `latest.json`).
+
+## GitHub Actions release (`.github/workflows/release.yml`)
+
+`Actions → Release → Run workflow` builds the sidecar and the `.app`/`.dmg` on `macos-latest` and creates a **draft** release (`VERSIO_RELEASE_DRAFT=1`). Check the draft, then publish it; the updater only sees published releases. It signs with Developer ID when the Apple secrets below exist, otherwise ad hoc. It needs `TAURI_UPDATER_PRIVATE_KEY` (the contents of `~/.tauri/versio-updater.key`): `gh secret set TAURI_UPDATER_PRIVATE_KEY < ~/.tauri/versio-updater.key`.
 
 ## GitHub Actions secrets (recommended names)
 
@@ -107,7 +117,7 @@ xcrun stapler validate "Versio_….dmg"
 | --- | --- | --- |
 | `macOSPrivateApi: true` | Used | **Conflicts with Mac App Store** sandbox — recorded only; unchanged for Developer ID. |
 | Apple Vision OCR | Used | Developer ID OK |
-| Python translation sidecar | Bundled | Nested Mach-O must sign successfully |
+| `llama-server` translation sidecar (PLaMo) | Bundled | Nested Mach-O must sign successfully |
 | Preview page jump | Best-effort | Keep on **manual** acceptance |
 | Entitlements | `src-tauri/entitlements.plist` | Hardened runtime |
 

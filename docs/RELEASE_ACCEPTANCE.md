@@ -1,3 +1,10 @@
+---
+type: Playbook
+title: Packaged .app release acceptance
+description: 配布 .app の受け入れ手順（Layer A 統合 E2E / Layer B UI E2E）と手動確認。
+tags: [release, e2e, macos]
+---
+
 # Packaged `.app` release acceptance
 
 PR CI covers TypeScript / Rust / lightweight Python / browser smoke and must not skip important Reader tests for missing fixtures.
@@ -58,6 +65,13 @@ Open panel import
 → quit → relaunch
 → Library card → Reader → persisted annotation mark visible
 ```
+
+**Constraints:**
+
+- Quit every other Versio first (any build). The single-instance plugin hands the E2E launch over to it, and System Events resolves the process name `app` to the other instance. The script refuses to start when one is running.
+- The window is exposed to Accessibility only while Versio is frontmost, so each AX action re-activates it.
+- AXPress on the paper card (`role="button"` article) does not reach React's `onClick`; the card is focused and opened with Return (`ax_click_by_label … enter`). Native `<button>`s use AXPress.
+- Text input sends 英数 (key code 102) first so a Japanese IME does not convert it.
 
 **Constraint:** WKWebView AX text selection is unreliable, so selection is
 synthesized once via the DOM Range API; Save / Search / Export stay external.

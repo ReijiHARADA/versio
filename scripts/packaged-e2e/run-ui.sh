@@ -107,6 +107,15 @@ if [[ ! -x "$BIN" ]]; then
 fi
 [[ -x "$BIN" ]] || fail "executable not found"
 
+# Another running Versio (any build: same identifier, same process name "app")
+# takes over through the single-instance plugin: the E2E instance never shows a
+# window and System Events resolves "app" to the other process. Refuse early.
+PROC_NAME="$(basename "$BIN")"
+if pgrep -f "/Contents/MacOS/$PROC_NAME\$" >/dev/null 2>&1; then
+  echo "FAIL: another Versio is running (pid $(pgrep -f "/Contents/MacOS/$PROC_NAME\$" | tr '\n' ' ')). Quit it before UI E2E." >&2
+  exit 1
+fi
+
 SHORT_FIXTURE="$ARTIFACT_DIR/Acceptance.pdf"
 cp "$FIXTURE_PDF" "$SHORT_FIXTURE"
 
@@ -145,6 +154,8 @@ if want == "ui_library_card_visible":
     } else 1)
 if want == "ui_reader_visible":
     sys.exit(0 if "reader" in step or step in {"ui_core_flow_ready", "ui_relaunch_annotation_visible"} else 1)
+if want == "ui_memo_open":
+    sys.exit(0 if step == "ui_memo_open" or has_ann() else 1)
 if want == "ui_annotation_visible":
     sys.exit(0 if has_ann() or step in {"ui_annotation_visible", "ui_core_flow_ready"} else 1)
 if want == "ui_search_hits_visible":
@@ -166,38 +177,87 @@ PY
   fail "timeout waiting for UI step=$want"
 }
 
+# ax_click_by_label LABEL [press|enter|focus]: act on the first element whose
+# AX description or title contains LABEL (default AXPress).
 ax_click_by_label() {
-  local label="$1"
-  osascript - "$label" <<'OSA' || return 1
+  local label="$1" mode="${2:-press}"
+  # `entire contents` returns references that fail inside the WKWebView web
+  # area, so walk UI elements recursively and AXPress the first match.
+  osascript - "$label" "${PROC_NAME:-}" "$mode" <<'OSA' || return 1
+global targetLabel, found, clickMode
+on walk(el, depth)
+  if found or depth > 40 then return
+  tell application "System Events"
+    set kids to {}
+    try
+      set kids to UI elements of el
+    end try
+    repeat with k in kids
+      if found then return
+      set lab to ""
+      try
+        set lab to value of attribute "AXDescription" of k
+      end try
+      if lab is missing value then set lab to ""
+      set titleVal to ""
+      try
+        set titleVal to title of k
+      end try
+      if titleVal is missing value then set titleVal to ""
+      if lab contains targetLabel or titleVal contains targetLabel then
+        -- AXPress on a WKWebView element with role="button" (the paper card)
+        -- does not reach React's onClick: mode "enter" focuses it and presses
+        -- Return instead. Mode "focus" only focuses (text fields).
+        if clickMode is "focus" or clickMode is "enter" then
+          try
+            set value of attribute "AXFocused" of k to true
+            delay 0.3
+            if clickMode is "enter" then key code 36
+            set found to true
+            return
+          end try
+        end if
+        try
+          perform action "AXPress" of k
+          set found to true
+          return
+        end try
+        try
+          click k
+          set found to true
+          return
+        end try
+      end if
+      my walk(k, depth + 1)
+    end repeat
+  end tell
+end walk
 on run argv
   set targetLabel to item 1 of argv
-  with timeout of 10 seconds
+  set procName to item 2 of argv
+  set clickMode to item 3 of argv
+  set found to false
+  with timeout of 60 seconds
     tell application "System Events"
-      set frontApp to first process whose frontmost is true
-      -- Native controls are cheap to query. Try this before recursively
-      -- walking a large WKWebView accessibility tree during startup.
+      if procName is not "" then
+        set proc to first process whose name is procName
+      else
+        set proc to first process whose frontmost is true
+      end if
+      -- The window is only exposed to AX while Versio is frontmost, and the
+      -- terminal running this script can take focus back at any time.
+      set frontmost of proc to true
+      delay 0.5
       try
-        click button targetLabel of window 1 of frontApp
+        click button targetLabel of window 1 of proc
         return "clicked"
       end try
-      set matches to entire contents of frontApp
-      repeat with el in matches
-        try
-          set lab to value of attribute "AXDescription" of el
-          if lab is missing value then set lab to ""
-          set titleVal to ""
-          try
-            set titleVal to title of el
-          end try
-          if lab contains targetLabel or titleVal contains targetLabel then
-            try
-              click el
-              return "clicked"
-            end try
-          end if
-        end try
-      end repeat
+      set wins to windows of proc
     end tell
+    repeat with w in wins
+      my walk(contents of w, 0)
+      if found then return "pressed"
+    end repeat
   end timeout
   error "element not found: " & targetLabel
 end run
@@ -236,7 +296,7 @@ launch_app() {
   # timeout.  Activate by bundle/application name unconditionally, then use
   # the PID as a best-effort fallback for dev builds with a different name.
   osascript -e 'tell application "Versio" to activate' 2>/dev/null || true
-  osascript -e 'tell application "System Events" to set frontmost of first process whose name is "app" to true' 2>/dev/null || true
+  osascript -e 'tell application "System Events" to set frontmost of first process whose name is "'"$PROC_NAME"'" to true' 2>/dev/null || true
   osascript -e 'tell application "System Events" to set frontmost of first process whose unix id is '"$APP_PID"' to true' 2>/dev/null || true
   osascript -e 'tell application "Versio" to activate' 2>/dev/null || true
   sleep 1
@@ -322,7 +382,8 @@ step "wait library card"
 wait_ui_step "ui_library_card_visible" "${VERSIO_UI_E2E_LIBRARY_TIMEOUT_S:-180}"
 
 step "open paper card"
-ax_click_by_label "論文" || ax_click_by_label "Acceptance" || true
+# Cards are labelled "論文 <title>"; a bare "論文" also matches the sidebar ("すべての論文").
+ax_click_by_label "論文 " enter || ax_click_by_label "Acceptance" enter || true
 sleep 2
 wait_ui_step "ui_reader_visible" "${VERSIO_UI_E2E_READER_TIMEOUT_S:-120}"
 
@@ -342,26 +403,41 @@ PY
 fi
 
 step "save memo via UI"
-sleep 2
-osascript <<'OSA' || true
-tell application "System Events"
-  keystroke "ui-e2e-note"
-  delay 0.2
-end tell
+# The watcher synthesizes the selection once the translation text renders.
+wait_ui_step "ui_memo_open" 60
+sleep 1
+ax_click_by_label "メモを入力" focus || true
+osascript - "$PROC_NAME" <<'OSA' || true
+on run argv
+  tell application "System Events"
+    -- The memo textarea is focused on open; make sure Versio gets the keys
+    -- and that a Japanese IME does not convert them (key code 102 = 英数).
+    set frontmost of process (item 1 of argv) to true
+    delay 0.5
+    key code 102
+    keystroke "ui-e2e-note"
+    delay 0.2
+  end tell
+end run
 OSA
 ax_click_by_label "メモを保存" || ax_click_by_label "保存" || true
 sleep 2
 wait_ui_step "ui_annotation_visible" 60
 
 step "open search UI and query"
-ax_click_by_label "検索" || true
-sleep 1
-osascript <<'OSA' || true
-tell application "System Events"
-  keystroke "f" using {command down}
-  delay 0.4
-  keystroke "Acceptance"
-end tell
+# ⌘F opens in-paper search ("検索" alone would also match library search).
+QUERY="${VERSIO_UI_E2E_SEARCH_QUERY:-SINGLECOL}"
+osascript - "$PROC_NAME" "$QUERY" <<'OSA' || true
+on run argv
+  tell application "System Events"
+    set frontmost of process (item 1 of argv) to true
+    delay 0.5
+    keystroke "f" using {command down}
+    delay 0.6
+    key code 102
+    keystroke (item 2 of argv)
+  end tell
+end run
 OSA
 sleep 2
 wait_ui_step "ui_search_hits_visible" 60
@@ -382,7 +458,8 @@ launch_app
 step "relaunch: open paper and require annotation mark in Reader UI"
 sleep 5
 wait_ui_step "ui_library_card_visible" 120
-ax_click_by_label "論文" || ax_click_by_label "Acceptance" || true
+# Cards are labelled "論文 <title>"; a bare "論文" also matches the sidebar ("すべての論文").
+ax_click_by_label "論文 " enter || ax_click_by_label "Acceptance" enter || true
 sleep 3
 wait_ui_step "ui_relaunch_annotation_visible" 120
 

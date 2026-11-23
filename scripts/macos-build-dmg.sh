@@ -6,7 +6,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APP_PATH="${VERSIO_APP_PATH:-$ROOT/src-tauri/target/release/bundle/macos/Versio.app}"
 DMG_DIR="${VERSIO_DMG_DIR:-$ROOT/src-tauri/target/release/bundle/dmg}"
-DMG_NAME="${VERSIO_DMG_NAME:-Versio_0.1.0_aarch64.dmg}"
+VERSION="$(node -p "require('$ROOT/src-tauri/tauri.conf.json').version")"
+DMG_NAME="${VERSIO_DMG_NAME:-Versio_${VERSION}_aarch64.dmg}"
 DMG_PATH="${VERSIO_DMG_PATH:-$DMG_DIR/$DMG_NAME}"
 VOL_NAME="${VERSIO_DMG_VOLUME:-Versio}"
 

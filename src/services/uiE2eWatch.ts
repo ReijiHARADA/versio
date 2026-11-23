@@ -24,6 +24,8 @@ export type UiE2eMarker = {
 
 let started = false;
 let selectionTried = false;
+/** The Library card unmounts once the Reader opens; remember that it was shown. */
+let paperCardSeen = false;
 let phase: UiE2ePhase = "initial";
 let lastMarker: UiE2eMarker | null = null;
 let exportCompleted = false;
@@ -157,6 +159,7 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
 
   const tick = async () => {
     const paperCard = document.querySelector('[data-testid="paper-card"]');
+    if (paperCard) paperCardSeen = true;
     const reader = document.querySelector('[data-testid="reader-screen"]');
     const readerBody = document.querySelector('[data-testid="reader-body"]');
     const memo = document.querySelector('[data-testid="memo-popover"]');
@@ -245,20 +248,18 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
       !memo &&
       !annotationMark
     ) {
-      selectionTried = true;
-      const target =
-        readerBody.querySelector<HTMLElement>("[data-block-id]") ||
-        readerBody.querySelector<HTMLElement>("p, span, div");
-      if (target && target.textContent?.trim()) {
+      // Memo selection must sit inside a translation text root
+      // (readTranslationSelection). Retry until one with text has rendered.
+      const target = readerBody.querySelector<HTMLElement>("[data-text-role='translation']");
+      const walker = target ? document.createTreeWalker(target, NodeFilter.SHOW_TEXT) : null;
+      let textNode: Node | null = walker?.nextNode() ?? null;
+      while (textNode && !(textNode.textContent || "").trim()) textNode = walker?.nextNode() ?? null;
+      if (target && textNode) {
+        selectionTried = true;
         const range = document.createRange();
-        const textNode = target.firstChild;
-        if (textNode && textNode.nodeType === Node.TEXT_NODE) {
-          const len = Math.min(12, (textNode.textContent || "").length);
-          range.setStart(textNode, 0);
-          range.setEnd(textNode, len);
-        } else {
-          range.selectNodeContents(target);
-        }
+        const len = Math.min(12, (textNode.textContent || "").length);
+        range.setStart(textNode, 0);
+        range.setEnd(textNode, len);
         const sel = window.getSelection();
         sel?.removeAllRanges();
         sel?.addRange(range);
@@ -279,7 +280,7 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
       ok =
         smokeOnly
           ? ok
-          : Boolean(paperCard) &&
+          : paperCardSeen &&
             Boolean(reader) &&
             annotationVisible &&
             searchVisible &&
@@ -287,7 +288,7 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
             exportBytes > 0;
       if (ok && !smokeOnly) step = "ui_core_flow_ready";
     } else {
-      ok = Boolean(paperCard) && Boolean(reader) && annotationVisible;
+      ok = paperCardSeen && Boolean(reader) && annotationVisible;
       if (ok) step = "ui_relaunch_annotation_visible";
     }
 

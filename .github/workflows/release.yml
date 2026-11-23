@@ -1,0 +1,66 @@
+# Build Versio.app/.dmg on macOS and create a DRAFT GitHub Release with the
+# updater artifacts (latest.json + .app.tar.gz + .sig). Publish the draft by
+# hand after checking it; the in-app updater only sees published releases.
+#
+# Signing: with APPLE_* secrets the Developer ID + notarization flow runs
+# (VERSIO_SIGN=1). Without them the .app is ad-hoc signed (unsigned release).
+# Required secret: TAURI_UPDATER_PRIVATE_KEY (contents of ~/.tauri/versio-updater.key).
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: Release notes (Markdown)
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm ci
+      - name: Build llama-server sidecar
+        run: npm run build:llama-server
+      - name: Import Developer ID certificate (optional)
+        env:
+          P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          P12_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ -z "$P12" ]; then echo "No Apple certificate: ad-hoc (unsigned) release"; exit 0; fi
+          KC="$RUNNER_TEMP/build.keychain"
+          echo "$P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p ci "$KC"
+          security set-keychain-settings -lut 21600 "$KC"
+          security unlock-keychain -p ci "$KC"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KC" -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k ci "$KC"
+          security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
+          echo "VERSIO_SIGN=1" >> "$GITHUB_ENV"
+      - name: Build .app and .dmg
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: npm run tauri:build:clean
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPDATER_KEY: ${{ secrets.TAURI_UPDATER_PRIVATE_KEY }}
+          VERSIO_RELEASE_NOTES: ${{ inputs.notes }}
+          VERSIO_RELEASE_DRAFT: "1"
+        run: |
+          if [ -z "$UPDATER_KEY" ]; then echo "Missing secret TAURI_UPDATER_PRIVATE_KEY"; exit 1; fi
+          printf '%s\n' "$UPDATER_KEY" > "$RUNNER_TEMP/updater.key"
+          VERSIO_UPDATER_KEY="$RUNNER_TEMP/updater.key" bash scripts/macos-publish-update.sh --publish
