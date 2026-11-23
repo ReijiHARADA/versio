@@ -20,7 +20,8 @@ status: draft
 - 続き（2026-11-24）: #291 `joinFullLineBreaks` の本文の字の大きさを文字数で決める、#292 最初の並びが 1 行の複数行ブロックも測る、#293 字下げの論文で 80% 以上の最終行でも文が続けばつなぐ、#294 `Figure 1 contrasts …` を図のキャプションにしない（`isFigureCaption` の詰まり判定の誤り）。
 - 評価用 split（main 5d60cf2、run `m4-test`）: 旧採点 intact 91.5%（11-23 朝 90.1%）、新採点 93.7%。警告 1,775、誤警告は新採点で 332。
 - dev（run `m4-dev`）: intact 92.6%、警告 1,086、誤警告 195。
-- 比べる基準 run は同じ worktree で HEAD~1 と HEAD を流す（スクラッチの `ab.sh`）。worktree は `../app-worktrees/element-notes`。
+- 変更の A/B: worktree `../app-worktrees/element-notes` で 1 コミットにした変更を `zsh test-data/extraction-audit/tools/ab.sh <worktreeの絶対パス> <基準の接頭辞> <変更の接頭辞>`（HEAD~1 と HEAD で elementgold 40 本・Europe PMC 106 本・dev 287 本を流して差を出す。約 15 分、負荷が高いと 30 分超なので `timeout` を長く）。悪化した論文は `docdiff.ts` / `pdiff.ts` で 1 本ずつ見る。評価用は `run-wt.sh` の中身を worktree で直接流す（`SPLIT=test`）。
+- 採点は #296 で新しくなった（独立数式で段落を分け、PDF に印字されていない段落を外す）。旧採点の数値とは比べない。
 
 ## 次の一手
 
