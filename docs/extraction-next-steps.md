@@ -158,7 +158,7 @@ npx vite-node --script scripts/extraction-audit-score.ts -- --run <run> --split 
 ```
 
 - `run-wt.sh` の ID ファイルは絶対パスで渡す。zsh では `set -- $var` で単語に分かれない（`${=var}`）。
-- 道具（`test-data/extraction-audit/tools/`、gitignore）: `docdiff.ts A B`（論文ごとの intact の増減、`SPLIT=test`）、`pdiff.ts A B <docId>`（判定の変わった正解段落）、`interrupt.ts <run>`（分断の間にあるもの。`RAIL=1` 側欄、`WHY=1`、`BLOCK=1`、`SEC=1`）、`outside.ts <run>`（正解外警告。`JATS=1`、`SHOW=`）、`lostkind.ts <run>`（lost-text の型。`TOK=1`、`DIFF=1 SHOW=`）、`dropped.ts`（出力に届かない canonical ノード）、`kw.ts`（キーワードと JATS kwd）、`pat.ts`、`geom.ts`、`trace.ts <docId> <page>`（`NODES=1`、`W=`）、`lines.ts <docId|pdf> <page> [文字列]`、`cols.ts <docId|pdf>`（ページの段組判定）。
+- 道具（`test-data/extraction-audit/tools/`、gitignore）: `docdiff.ts A B`（論文ごとの intact の増減、`SPLIT=test`）、`pdiff.ts A B <docId>`（判定の変わった正解段落）、`interrupt.ts <run>`（分断の間にあるもの。`RAIL=1` 側欄、`WHY=1`、`BLOCK=1`、`SEC=1`）、`outside.ts <run>`（正解外警告。`JATS=1`、`SHOW=`）、`lostkind.ts <run>`（lost-text の型。`TOK=1`、`DIFF=1 SHOW=`）、`dropped.ts`（出力に届かない canonical ノード）、`kw.ts`（キーワードと JATS kwd）、`pat.ts`、`geom.ts`、`trace.ts <docId> <page>`（`NODES=1`、`W=`）、`lines.ts <docId|pdf> <page> [文字列]`、`cols.ts <docId|pdf>`（ページの段組判定）、`fw.ts <run> [理由]`（警告の付いたブロックを判定別に。`V=outside`、`HEAD=1`）、`abs.ts <run>`（正解段落の判定を抄録・本文・巻末別に）、`rawline.ts <docId> <page> <文字列>`（pdf.js の生の項目。`RAW=1`）、`blocks.ts`（`lines.ts` に全ブロックの y 範囲）、`mkwt.sh <名前> <ブランチ>`（テストデータをリンクした worktree を作る）、`merge-pr.sh <PR>`（CI が出揃って通ってからマージ）。道具は main の `src` を読むので、worktree の変更を見るときは import の path を worktree に書き換えた写しを使う。
 - 採否の基準: intact が上がり、docdiff の改善が悪化より多く、悪化した論文を 1 本ずつ目で確かめる。merged-paragraphs（誤結合）が増えていないことも見る。評価用は調整に使わず、変更ごとに最後に 1 回だけ測る（使った回数は PR に書く）。
 
 ## 作業上の注意
