@@ -160,6 +160,12 @@ export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[],
       if (/未復元文字|改行ハイフン|隣接語が連結|集合記法|指数情報/.test(block.warning)) return true;
       // A label or caption said to be mixed into the paragraph is there when part of the block is not the paragraph.
       if (/混入|混ざ/.test(block.warning) && goldShare < 0.95) return true;
+      // An unclosed bracket is the extraction's when the paragraph itself has its brackets paired.
+      if (/括弧|引用符/.test(block.warning)) {
+        const gp = scorable.find((g) => g.index === paras[0].index);
+        const paired = (t: string) => (t.match(/\(/g)?.length ?? 0) === (t.match(/\)/g)?.length ?? 0);
+        if (gp && paired(gp.text) && !paired(block.text)) return true;
+      }
       // A piece of another paragraph glued before or after the complete one is what a start/end warning points at.
       if (/末尾|先頭/.test(block.warning) && paras.length >= 2 && paras[1].here >= 0.05) return true;
       if (paras[0].here >= 0.99) return false;
