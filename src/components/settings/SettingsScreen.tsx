@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Settings } from "lucide-react";
 import { getSetting, saveSetting, clearTranslationCache, restoreTranslationCache } from "../../services/database";
-import { checkOllamaAvailability } from "../../services/llm/ollamaProvider";
 import { showToast } from "../../stores/toastStore";
 import {
   mergeTranslationSettingsV2,
@@ -18,16 +17,13 @@ import { SettingsNavigation } from "./SettingsNavigation";
 import { TranslationSettingsSection } from "./TranslationSettingsSection";
 import { ReadingSettingsSection } from "./ReadingSettingsSection";
 import { StorageSettingsSection } from "./StorageSettingsSection";
-import { DiagnosticsSettingsSection } from "./DiagnosticsSettingsSection";
 import { LicensesSettingsSection } from "./LicensesSettingsSection";
 import {
   useSettingsPanelTransition,
   type SettingsPanelPage,
 } from "./useSettingsElasticPull";
-import type { ServiceStatus } from "./settingsTypes";
 import styles from "./SettingsScreen.module.css";
 
-const IDLE_STATUS: ServiceStatus = { checking: false, available: false };
 const LAST_SCROLL_SECTION =
   SETTINGS_SCROLL_SECTIONS[SETTINGS_SCROLL_SECTIONS.length - 1].id;
 
@@ -76,10 +72,6 @@ export function SettingsScreen() {
     mergeTranslationSettingsV2(null)
   );
   const [loaded, setLoaded] = useState(false);
-  const [ollamaStatus, setOllamaStatus] = useState<ServiceStatus>({
-    ...IDLE_STATUS,
-    models: [],
-  });
   const [activeSection, setActiveSection] = useState<SettingsSectionId>("reading");
   const [clearingCache, setClearingCache] = useState(false);
   const pendingScrollRef = useRef<SettingsScrollSectionId | null>(null);
@@ -104,7 +96,7 @@ export function SettingsScreen() {
       return;
     }
     // Pull-back from licenses: stay where the user left settings (usually the
-    // bottom / 詳細), instead of scrolling to the top of that section.
+    // bottom), instead of scrolling to the top of that section.
     restoreScrollTopRef.current = settingsScrollTopRef.current;
     setActiveSection(LAST_SCROLL_SECTION);
   }, []);
@@ -155,29 +147,6 @@ export function SettingsScreen() {
       void saveSetting("translationSettingsV2", settingsRef.current);
     };
   }, [loaded]);
-
-  const checkOllama = useCallback(async (url = settingsRef.current.ollamaServerUrl) => {
-    setOllamaStatus((prev) => ({ ...prev, checking: true }));
-    const status = await checkOllamaAvailability(url);
-    setOllamaStatus({
-      checking: false,
-      available: status.available,
-      models: status.models,
-      error: status.error,
-    });
-    if (
-      status.available &&
-      status.models.length > 0 &&
-      !status.models.includes(settingsRef.current.ollamaModel)
-    ) {
-      setSettings((prev) => ({ ...prev, ollamaModel: status.models[0] }));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!loaded) return;
-    void checkOllama();
-  }, [loaded, checkOllama]);
 
   const updateSettings = (patch: Partial<TranslationSettingsV2>) => {
     setSettings((prev) => ({ ...prev, ...patch }));
@@ -351,16 +320,6 @@ export function SettingsScreen() {
                 <StorageSettingsSection
                   busy={clearingCache}
                   onClearCache={() => void handleClearCache()}
-                />
-              </section>
-              <section id={settingsSectionElementId("advanced")} className={styles.section}>
-                <DiagnosticsSettingsSection
-                  ollamaStatus={ollamaStatus}
-                  settings={settings}
-                  onChange={updateSettings}
-                  onRecheck={() => {
-                    void checkOllama();
-                  }}
                 />
               </section>
             </main>

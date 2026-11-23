@@ -1,15 +1,9 @@
 export type TranslationSettingsV2 = {
-  ollamaServerUrl: string;
-  ollamaModel: string;
-  generateGlossary: boolean;
   translationConcurrency: number;
   useCache: boolean;
 };
 
 export const DEFAULT_TRANSLATION_SETTINGS_V2: TranslationSettingsV2 = {
-  ollamaServerUrl: "http://localhost:11434",
-  ollamaModel: "gemma2:9b",
-  generateGlossary: true,
   translationConcurrency: 8,
   useCache: true,
 };
@@ -17,8 +11,14 @@ export const DEFAULT_TRANSLATION_SETTINGS_V2: TranslationSettingsV2 = {
 export function mergeTranslationSettingsV2(
   saved: (Partial<TranslationSettingsV2> & Record<string, unknown>) | null | undefined
 ): TranslationSettingsV2 {
-  const { translationEngine: _translationEngine, madladServerUrl: _madladServerUrl, ...current } = saved ?? {};
-  const merged = { ...DEFAULT_TRANSLATION_SETTINGS_V2, ...current };
+  const merged: TranslationSettingsV2 = {
+    translationConcurrency:
+      typeof saved?.translationConcurrency === "number"
+        ? saved.translationConcurrency
+        : DEFAULT_TRANSLATION_SETTINGS_V2.translationConcurrency,
+    useCache:
+      typeof saved?.useCache === "boolean" ? saved.useCache : DEFAULT_TRANSLATION_SETTINGS_V2.useCache,
+  };
   const previous = saved?.translationConcurrency ?? 1;
   if (previous <= 3) {
     merged.translationConcurrency = 8;

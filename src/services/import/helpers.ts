@@ -7,11 +7,6 @@ import type { ImportConfig } from "./types";
 
 export const DEFAULT_IMPORT_CONFIG: Required<ImportConfig> = {
   presentationDemo: false,
-  ollamaServerUrl: "http://localhost:11434",
-  ollamaModel: "gemma2:9b",
-  ollamaModels: [],
-  enableSelectiveCascade: false,
-  generateGlossary: true,
   translationConcurrency: 8,
   useCache: true,
 };
@@ -72,11 +67,12 @@ export async function finalizeJapaneseLayoutOnly(
 }
 
 export function resolveImportConfig(config: ImportConfig): Required<ImportConfig> {
-  const { translationEngine: _translationEngine, madladServerUrl: _madladServerUrl, enableAppleTranslation: _enableAppleTranslation, ...current } = config as ImportConfig & Record<string, unknown>;
-  const merged = { ...DEFAULT_IMPORT_CONFIG, ...current };
-  if (!merged.ollamaServerUrl?.trim()) {
-    merged.ollamaServerUrl = DEFAULT_IMPORT_CONFIG.ollamaServerUrl;
-  }
+  const merged = {
+    ...DEFAULT_IMPORT_CONFIG,
+    presentationDemo: config.presentationDemo ?? DEFAULT_IMPORT_CONFIG.presentationDemo,
+    translationConcurrency: config.translationConcurrency ?? DEFAULT_IMPORT_CONFIG.translationConcurrency,
+    useCache: config.useCache ?? DEFAULT_IMPORT_CONFIG.useCache,
+  };
   // Older installs may contain an arbitrary value.  Preserve the three
   // values exposed by the settings UI: stable (2), standard (4), fast (8).
   // In particular, 2 must not silently turn into 8 at import time.

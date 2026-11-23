@@ -1,5 +1,4 @@
 import type { TranslationSettingsV2 } from "../../utils/translationSettings";
-import { Toggle } from "../ui/Toggle";
 import { SettingsCard, SettingsRow } from "./SettingsPrimitives";
 import { usePlamoModel } from "./usePlamoModel";
 import styles from "./SettingsScreen.module.css";
@@ -51,19 +50,6 @@ export function TranslationSettingsSection({
             ) : plamo.state === "downloading" ? (
               <progress max={100} value={plamo.percent} aria-label="ダウンロードの進捗" />
             ) : null}
-          </SettingsRow>
-
-          <SettingsRow
-            label="用語集を自動生成"
-            description="論文内の専門用語を抽出し、訳し方を揃えます。"
-            htmlFor="generate-glossary"
-          >
-            <Toggle
-              id="generate-glossary"
-              aria-label="用語集を自動生成"
-              checked={settings.generateGlossary}
-              onChange={(checked) => onChange({ generateGlossary: checked })}
-            />
           </SettingsRow>
 
           <SettingsRow

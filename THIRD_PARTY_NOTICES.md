@@ -44,7 +44,3 @@ npm run generate:licenses
 ## 開発専用依存
 
 Vite、Vitest、Playwright、oxlint、TypeScript などの **devDependencies** および未同梱の開発用 Python パッケージは、配布物のライセンス一覧には含めません。
-
-## Ollama
-
-Versio は用語集のために **任意** でローカルの Ollama HTTP API（既定 `http://localhost:11434`）へ接続します。Ollama 本体もそのモデル重みもこのリポジトリには同梱していません。Ollama を使う場合は、Ollama および読み込むモデルそれぞれのライセンスが別途適用されます。
