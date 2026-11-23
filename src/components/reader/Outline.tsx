@@ -103,7 +103,7 @@ export function Outline({
         <button
           type="button"
           className={`${styles.link} ${isActive ? styles.active : ""}`}
-          style={{ paddingLeft: `${Math.max(0, section.level - 1) * 16 + 12}px` }}
+          style={{ paddingLeft: `${Math.max(0, section.level - 1) * 16 + 16}px` }}
           data-outline-section={section.id}
           aria-current={isActive ? "location" : undefined}
           onClick={() => onSectionClick(section.id)}
