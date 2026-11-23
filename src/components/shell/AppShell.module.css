@@ -45,7 +45,8 @@
   flex-shrink: 0;
   min-height: 0;
   display: flex;
-  margin: var(--titlebar-h) 0 0;
+  /* Same bottom inset as the main card, so the inspector's scroll ends level with the card. */
+  margin: var(--titlebar-h) 0 var(--card-gap);
 }
 
 .inspectorSlot:empty {
