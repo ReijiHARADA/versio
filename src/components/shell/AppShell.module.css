@@ -99,9 +99,9 @@
   z-index: var(--z-side-panel);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-sm-plus);
   max-width: min(640px, calc(100vw - 32px));
-  padding: 10px 16px;
+  padding: 10px var(--spacing-md); /* spacing-snap-candidate */
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
   font-size: var(--font-size-body);
@@ -152,9 +152,9 @@
   pointer-events: none;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
   max-width: 280px;
-  padding: 6px 10px;
+  padding: var(--spacing-xs-plus) 10px; /* spacing-snap-candidate */
   --sq-fill: var(--sq-fill-8);
   --sq-ring: var(--sq-ring-8);
   border-radius: var(--sq-radius-8);
@@ -198,7 +198,7 @@
   z-index: var(--z-menu-open);
   min-width: 20px;
   height: 20px;
-  padding: 0 6px;
+  padding: 0 var(--spacing-xs-plus);
   border-radius: 999px;
   --sq-bg: var(--color-danger);
   color: var(--color-selection-fg);

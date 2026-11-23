@@ -11,7 +11,7 @@
   justify-content: center;
   max-width: min(640px, calc(100vw - 32px));
   overflow: hidden;
-  padding: 10px 16px;
+  padding: 10px var(--spacing-md); /* spacing-snap-candidate */
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
   background: var(--color-accent);
@@ -38,13 +38,13 @@
   display: inline-flex;
   flex: none;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-sm-plus);
 }
 
 .message {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -97,7 +97,7 @@
   display: inline-flex;
   flex: none;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-sm-plus);
 }
 
 .message {

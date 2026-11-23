@@ -1,19 +1,19 @@
 .info {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 20px; /* spacing-snap-candidate */
 }
 
 .head {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: var(--spacing-xs-plus);
 }
 
 .typeBadge {
   composes: pill from "../../../styles/squircle.module.css";
-  padding: 1px 8px;
+  padding: 1px var(--spacing-sm); /* spacing-literal-ok: 1px keeps the badge pill compact */
   font-size: var(--font-size-micro);
   font-weight: 600;
   --sq-bg: var(--color-bg-secondary);
@@ -35,14 +35,14 @@
 }
 
 .authors {
-  margin: 4px 0 0;
+  margin: var(--spacing-xs) 0 0;
   font-size: var(--font-size-small);
   line-height: 1.55;
 }
 
 .authors sup,
 .affiliations sup {
-  margin-left: 1px;
+  margin-left: 1px; /* spacing-literal-ok: 1px gap before superscript markers */
   font-size: var(--font-size-tiny);
   color: var(--color-text-tertiary);
 }
@@ -57,15 +57,15 @@
 }
 
 .affiliations sup {
-  margin: 0 3px 0 0;
+  margin: 0 3px 0 0; /* spacing-literal-ok: 3px after superscript markers */
 }
 
 .section {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 8px;
-  padding-top: 14px;
+  gap: var(--spacing-sm);
+  padding-top: 14px; /* spacing-snap-candidate */
   border-top: 1px solid var(--color-border-light);
 }
 
@@ -83,7 +83,7 @@
 }
 
 .abstract p {
-  margin: 0 0 6px;
+  margin: 0 0 var(--spacing-xs-plus);
 }
 
 .clamped {
@@ -97,8 +97,8 @@
   display: grid;
   /* One label width across sections so the values line up, as in Zotero's info pane. */
   grid-template-columns: 5.75rem minmax(0, 1fr);
-  column-gap: 12px;
-  row-gap: 6px;
+  column-gap: var(--spacing-sm-plus);
+  row-gap: var(--spacing-xs-plus);
   margin: 0;
 }
 
@@ -138,12 +138,12 @@
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
 .chip {
   composes: pill from "../../../styles/squircle.module.css";
-  padding: 1px 8px;
+  padding: 1px var(--spacing-sm); /* spacing-literal-ok: 1px keeps the chip pill compact */
   font-size: var(--font-size-caption);
   --sq-bg: var(--color-bg-secondary);
   color: var(--color-text-secondary);
@@ -151,7 +151,7 @@
 
 .actions {
   display: flex;
-  gap: 14px;
+  gap: 14px; /* spacing-snap-candidate */
 }
 
 .textButton {

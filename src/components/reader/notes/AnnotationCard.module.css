@@ -1,7 +1,7 @@
 .card {
   composes: surface from "../../../styles/squircle.module.css";
   position: relative;
-  padding: 12px;
+  padding: var(--spacing-sm-plus);
   border: 1px solid transparent;
   --sq-line: var(--color-border-light);
   --sq-bw: 1px;
@@ -38,13 +38,13 @@
 .cardHeader {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .quote {
   flex: 1;
   min-width: 0;
-  margin: 0 0 8px;
+  margin: 0 0 var(--spacing-sm);
   font-size: var(--font-size-small);
   color: var(--color-text-secondary);
   line-height: 1.5;
@@ -64,7 +64,7 @@
 }
 
 .orphaned {
-  margin: 0 0 8px;
+  margin: 0 0 var(--spacing-sm);
   font-size: var(--font-size-caption);
   color: var(--color-danger-static);
   line-height: 1.4;
@@ -78,7 +78,7 @@
   color: var(--color-text-tertiary);
   font-size: var(--font-size-micro);
   line-height: 1.4;
-  padding: 0 0 0 4px;
+  padding: 0 0 0 var(--spacing-xs);
   cursor: pointer;
 }
 

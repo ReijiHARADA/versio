@@ -43,7 +43,7 @@
 
 .missingImage {
   width: 100%;
-  padding: 2.5rem 1rem;
+  padding: 2.5rem var(--spacing-md); /* spacing-literal-ok: empty figure placeholder height */
   text-align: center;
   color: var(--color-text-tertiary);
   font-size: var(--font-size-body);
@@ -96,7 +96,7 @@
 
 .tableFallbackCell {
   min-width: 6rem;
-  padding: 0.45rem 0.55rem;
+  padding: 0.45rem 0.55rem; /* spacing-literal-ok: table cell padding scales with reader text */
   color: var(--color-text-secondary);
   font-size: var(--font-size-small);
   line-height: 1.35;
@@ -157,7 +157,7 @@
   display: inline-flex;
   align-items: center;
   margin-left: var(--spacing-sm);
-  padding: 2px var(--spacing-xs);
+  padding: var(--spacing-2xs) var(--spacing-xs);
   border: none;
   --sq-bg: transparent;
   color: var(--color-text-tertiary);

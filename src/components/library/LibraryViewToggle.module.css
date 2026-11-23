@@ -3,8 +3,8 @@
   /* squircle-exempt: nested with a circular knob/pill, so both ends must be circular arcs to stay concentric */
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  padding: 3px;
+  gap: var(--spacing-2xs);
+  padding: 3px; /* spacing-literal-ok: segmented control inset, sized with the thumb */
   border-radius: 999px;
   background: color-mix(in srgb, var(--color-text) 6%, transparent);
 }
@@ -20,7 +20,7 @@
   overflow: hidden;
   height: 28px;
   margin: 0;
-  padding: 0 0 0 7px;
+  padding: 0 0 0 7px; /* spacing-literal-ok: segmented control geometry */
   border: none;
   border-radius: 999px;
   background: transparent;
@@ -55,7 +55,7 @@
 }
 
 .active .label > span {
-  padding-left: 5px;
+  padding-left: 5px; /* spacing-literal-ok: segmented control geometry */
 }
 
 .active .label {
@@ -78,7 +78,7 @@
 .option.active {
   /* 9 pad + 15 icon + 5 gap + 4em label + 11 pad */
   width: calc(40px + 4em);
-  padding-left: 9px;
+  padding-left: 9px; /* spacing-literal-ok: segmented control geometry */
   background: color-mix(in srgb, var(--color-text) 11%, transparent);
   color: var(--color-text);
 }

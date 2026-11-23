@@ -87,7 +87,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--spacing-xs-plus);
   color: var(--color-text-tertiary);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
@@ -221,11 +221,11 @@
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   min-height: var(--control-height);
-  padding: 2px;
+  padding: var(--spacing-2xs);
   --sq-fill: var(--sq-fill-control);
   border-radius: var(--sq-radius-control);
   --sq-bg: var(--color-surface-control);
-  gap: 2px;
+  gap: var(--spacing-2xs);
   max-width: 100%;
 }
 
@@ -266,8 +266,8 @@
   composes: surface from "../../styles/squircle.module.css";
   position: relative;
   display: inline-flex;
-  gap: 2px;
-  padding: 2px;
+  gap: var(--spacing-2xs);
+  padding: var(--spacing-2xs);
   --sq-fill: var(--sq-fill-control);
   border-radius: var(--sq-radius-control);
   --sq-bg: var(--color-surface-control);
@@ -279,7 +279,7 @@
   appearance: none;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-xs-plus);
   border: none;
   --sq-fill: var(--sq-fill-control-inner);
   border-radius: var(--sq-radius-control-inner);
@@ -287,7 +287,7 @@
   color: var(--color-text-tertiary);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
-  padding: 0 10px;
+  padding: 0 10px; /* spacing-snap-candidate */
   min-height: calc(var(--control-height) - 4px);
   cursor: pointer;
 }

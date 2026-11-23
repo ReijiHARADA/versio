@@ -8,7 +8,7 @@
 .filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
 .filterChip {
@@ -22,7 +22,7 @@
   color: var(--color-text-tertiary);
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-medium);
-  padding: 0 10px;
+  padding: 0 10px; /* spacing-snap-candidate */
   min-height: 28px;
   cursor: pointer;
 }
@@ -133,7 +133,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-2xs);
 }
 
 .packageName {
@@ -153,7 +153,7 @@
   flex: none;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-xs-plus);
   color: var(--color-text-tertiary);
   font-size: var(--font-size-caption);
 }
@@ -166,7 +166,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 20px;
-  padding: 0 6px;
+  padding: 0 var(--spacing-xs-plus);
   border-radius: var(--sq-radius-sm);
   font-size: var(--font-size-micro);
   font-weight: var(--font-weight-semibold);

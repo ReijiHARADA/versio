@@ -5,7 +5,7 @@
   align-items: center;
   gap: var(--spacing-sm);
   min-height: 40px;
-  padding: 6px 4px;
+  padding: var(--spacing-xs-plus) var(--spacing-xs);
   border: none;
   border-bottom: 1px solid var(--color-border-light);
   border-radius: 0;
@@ -47,7 +47,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-xs-plus);
   margin: 0;
   min-width: 0;
 }
@@ -110,7 +110,7 @@
   top: 50%;
   width: 16px;
   height: 16px;
-  margin-right: 2px;
+  margin-right: var(--spacing-2xs);
   transform: translateY(-50%);
 }
 
@@ -130,7 +130,7 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--spacing-2xs);
   flex-shrink: 0;
 }
 
@@ -140,10 +140,10 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 5px; /* spacing-snap-candidate */
   height: 28px;
   margin: 0;
-  padding: 0 8px;
+  padding: 0 var(--spacing-sm);
   border: none;
   --sq-fill: var(--sq-fill-sm);
   border-radius: var(--sq-radius-sm);
@@ -194,7 +194,7 @@
 .status {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--spacing-xs);
   color: var(--color-text-secondary);
   font-size: var(--font-size-caption);
   white-space: nowrap;
@@ -212,7 +212,7 @@
   display: block;
   width: 72px;
   height: 4px;
-  margin-left: 2px;
+  margin-left: var(--spacing-2xs);
   border-radius: 999px;
   background: var(--color-bg-tertiary);
   overflow: hidden;
@@ -293,7 +293,7 @@
   transform-origin: top right;
   z-index: var(--z-card-menu);
   min-width: 220px;
-  padding: 6px;
+  padding: var(--spacing-xs-plus);
   border: 1px solid transparent;
   --sq-line: var(--color-border-light);
   --sq-bw: 1px;
@@ -310,10 +310,10 @@
   --sq-fill: var(--sq-fill-sm);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
   width: 100%;
   /* ~26px rows, close to a native macOS menu. */
-  padding: 5px 10px;
+  padding: 5px 10px; /* spacing-snap-candidate */
   border: none;
   --sq-bg: transparent;
   color: var(--color-text);
@@ -335,7 +335,7 @@
 
 .menuSep {
   height: 1px;
-  margin: 3px 6px;
+  margin: 3px var(--spacing-xs-plus); /* spacing-snap-candidate */
   background: var(--color-border-light);
 }
 
@@ -350,7 +350,7 @@
 
 .menuEmpty {
   margin: 0;
-  padding: 8px 10px;
+  padding: var(--spacing-sm) 10px; /* spacing-snap-candidate */
   font-size: var(--font-size-small);
   color: var(--color-text-secondary);
 }
@@ -388,7 +388,7 @@
 .importActions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--spacing-2xs);
   flex: 0 0 auto;
 }
 
@@ -425,9 +425,9 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
   min-width: 0;
-  padding: 10px;
+  padding: 10px; /* spacing-snap-candidate */
   --sq-fill: var(--sq-fill-16);
   --sq-ring: var(--sq-ring2-16);
   border-radius: var(--sq-radius-16);
@@ -532,7 +532,7 @@
   display: inline-flex;
   flex: none;
   align-items: center;
-  gap: 4px;
+  gap: var(--spacing-xs);
   max-width: 50%;
   overflow: hidden;
 }
@@ -547,7 +547,7 @@
 .tagChip,
 .tagMore {
   flex: none;
-  padding: 1px 7px;
+  padding: 1px 7px; /* spacing-snap-candidate */
   font-size: var(--font-size-micro);
   line-height: 1.5;
   white-space: nowrap;

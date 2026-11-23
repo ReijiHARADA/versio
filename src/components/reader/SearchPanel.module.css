@@ -7,8 +7,8 @@
   z-index: var(--z-select);
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 4px 4px 12px;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) var(--spacing-sm-plus);
   --sq-bg: var(--color-bg);
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
@@ -18,7 +18,7 @@
 
 .count {
   min-width: 6.5em;
-  margin-right: 4px;
+  margin-right: var(--spacing-xs);
   font-size: var(--font-size-caption);
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
@@ -110,7 +110,7 @@
   composes: surface from "../../styles/squircle.module.css";
   position: relative;
   --sq-bg: var(--color-selection-fg)59d;
-  padding: 0 1px;
+  padding: 0 1px; /* spacing-literal-ok: 1px hugs highlighted text */
   --sq-fill: var(--sq-fill-2);
   border-radius: var(--sq-radius-2);
 }

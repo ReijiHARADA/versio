@@ -1,7 +1,7 @@
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--spacing-xs-plus);
 }
 
 .empty {
@@ -13,8 +13,8 @@
   composes: pill from "../../styles/squircle.module.css";
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  padding: 2px 4px 2px 8px;
+  gap: var(--spacing-2xs);
+  padding: var(--spacing-2xs) var(--spacing-xs) var(--spacing-2xs) var(--spacing-sm);
   border-radius: 999px;
   --sq-bg: var(--color-accent-light);
   color: var(--color-accent);
@@ -24,7 +24,7 @@
 
 .remove {
   display: inline-flex;
-  padding: 2px;
+  padding: var(--spacing-2xs);
   border: none;
   border-radius: 50%;
   background: transparent;
@@ -55,7 +55,7 @@
 
 .suggestion {
   /* squircle-exempt: dashed border follows border-radius; no G2 ring for pills yet */
-  padding: 2px 8px;
+  padding: var(--spacing-2xs) var(--spacing-sm);
   border: 1px dashed var(--color-border);
   border-radius: 999px;
   background: transparent;

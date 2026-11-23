@@ -93,7 +93,7 @@
 
 .option input {
   flex: none;
-  margin-top: 0.18rem;
+  margin-top: 0.18rem; /* spacing-literal-ok: aligns the checkbox with the first text line */
   accent-color: var(--color-accent);
 }
 

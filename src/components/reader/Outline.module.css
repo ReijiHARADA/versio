@@ -20,7 +20,7 @@
   list-style: none;
   /* Indentation belongs to the label padding, not this container: every
      row's hover/active surface must span the same full sidebar width. */
-  margin: 0 0 2px;
+  margin: 0 0 var(--spacing-2xs);
 }
 
 .item {
@@ -30,7 +30,7 @@
 .link {
   display: block;
   width: 100%;
-  padding: 6px var(--spacing-md);
+  padding: var(--spacing-xs-plus) var(--spacing-md);
   border: none;
   background: transparent;
   text-align: left;

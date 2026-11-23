@@ -2,14 +2,14 @@
   position: relative;
   overflow-anchor: none;
   margin-bottom: var(--spacing-md);
-  padding-right: 1.75rem;
+  padding-right: 1.75rem; /* spacing-literal-ok: gutter for the paragraph action button */
   border-left: 2px solid transparent;
-  margin-left: -2px;
-  padding-left: 2px;
+  margin-left: -2px; /* spacing-literal-ok: optical alignment with the margin rule */
+  padding-left: var(--spacing-2xs);
 }
 
 .container.lowConfidence {
-  padding-left: 1.5rem;
+  padding-left: var(--spacing-lg);
 }
 
 .container:hover,
@@ -197,7 +197,7 @@
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   border-radius: 3px;
-  padding: 0 2px;
+  padding: 0 var(--spacing-2xs);
   scroll-margin-top: calc(var(--header-height) + 16px);
   scroll-margin-bottom: 16px;
 }
@@ -224,7 +224,7 @@
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   border-radius: 3px;
-  padding: 0 1px;
+  padding: 0 1px; /* spacing-literal-ok: 1px hugs highlighted text */
   cursor: pointer;
 }
 
@@ -239,7 +239,7 @@
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   border-radius: 3px;
-  padding: 0 1px;
+  padding: 0 1px; /* spacing-literal-ok: 1px hugs highlighted text */
 }
 
 [data-theme="dark"] .annotationMark {
