@@ -1028,8 +1028,9 @@ describe("canonical extraction pipeline", () => {
       node.pageStart === 7 && node.text?.startsWith("In this study, there was a significant difference between gist memory") &&
       node.text?.includes("and detailed memory at 10 min")
     );
+    // With page 7 read as two columns the sentence is one paragraph (`… analysis between the` + `forgetting rate …`).
     const inlineBodyContinuation = result.canonical.nodes.find((node) =>
-      node.pageStart === 7 && node.text?.startsWith("forgetting rate of gist and detailed memories. The results showed that they were")
+      node.pageStart === 7 && /^(?:We also performed the correlational analysis between the )?forgetting rate of gist and detailed memories\. The results showed that they were/.test(node.text ?? "")
     );
     expect(bodyLead?.role).toBe("paragraph");
     // The left-side statistics table sits physically between these two right
@@ -1049,8 +1050,9 @@ describe("canonical extraction pipeline", () => {
     expect(result.blocks.some((block) =>
       block.pageStart === 7 &&
       block.type === "table" &&
-      block.translationStatus === "skipped" &&
-      /TABLE 3 SPSS results of the accuracy/i.test(block.original ?? "")
+      // A caption-owned table is `pending` (its caption is translated) like TABLE 1, 2 and 4.
+      /TABLE 3 SPSS results of the accuracy\. Source F Sig\./i.test(block.original ?? "") &&
+      !/In this study|forgetting rate of gist/.test(block.original ?? "")
     )).toBe(true);
   }, 60_000);
 
