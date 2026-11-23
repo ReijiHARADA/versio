@@ -564,11 +564,14 @@
 }
 
 .badge {
-  composes: pill from "../../styles/squircle.module.css";
-  font-size: 0.6875rem;
-  --sq-bg: var(--color-bg-tertiary);
-  color: var(--color-text-secondary);
-  border-radius: 999px;
+  /* Inbox count: a solid dark-grey circle with a white figure. */
+  font-size: 0.625rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  background: var(--color-text-secondary);
+  color: #fff;
+  border-radius: 50%;
   text-align: center;
 }
 
@@ -577,10 +580,15 @@
 .sidebarResizing .badge,
 .sidebarDropReady .badge,
 .sidebar:has([data-workspace-editing]) .badge {
-  min-width: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 3px;
   flex: 0 0 auto;
   margin-left: 2px;
-  padding: 0 6px;
   max-width: none;
 }
 
@@ -592,11 +600,6 @@
 .item.active.toneDanger {
   --sq-bg: var(--color-selection-danger-bg);
   color: var(--color-selection-danger-fg);
-}
-
-.item.active .badge {
-  --sq-bg: color-mix(in srgb, var(--color-selection-fg) 22%, transparent);
-  color: var(--color-selection-fg);
 }
 
 .scroll {
