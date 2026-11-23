@@ -810,7 +810,7 @@
 .invalidDrop * { cursor: not-allowed !important; }
 .paperInvalid:hover { outline: 1px dashed var(--color-danger-static); cursor: not-allowed; }
 .rootDrop { display: none; }
-.rootDropVisible { display: block; padding: 8px; font-size: 12px; color: var(--color-text-secondary); }
+.rootDropVisible { display: block; padding: 8px; font-size: var(--font-size-caption); color: var(--color-text-secondary); }
 
 .inlineName { flex: 1; min-width: 0; }
 .inlineName input {
@@ -826,7 +826,7 @@
   border-radius: var(--sq-radius-sm);
 }
 .inlineName span { font-size: 11px; color: var(--color-danger-static); }
-.menuNotice { margin: 5px 8px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+.menuNotice { margin: 5px 8px; font-size: var(--font-size-caption); color: var(--color-text-secondary); line-height: 1.5; }
 .projectMenu button:disabled { opacity: .5; cursor: not-allowed; }
 
 /* Sliding selection pill (useSelectionSlide): the ghost travels, the arriving item hides its fill. */

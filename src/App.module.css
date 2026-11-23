@@ -45,7 +45,7 @@
   background: #1a365d; /* color-literal-ok: error-boundary background */
   color: var(--color-selection-fg);
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
-  font-size: 13px;
+  font-size: var(--font-size-small);
   /* Banner must not steal clicks from the app chrome below its visual bounds. */
   pointer-events: none;
 }
