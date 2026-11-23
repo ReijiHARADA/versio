@@ -96,6 +96,16 @@ CREATE TABLE IF NOT EXISTS reading_positions (
   FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE
 );
 
+-- Abbreviation / term pairs defined in paper text ("Human-Computer Interaction (HCI)"),
+-- used to expand library search. Rebuilt with the search index.
+CREATE TABLE IF NOT EXISTS library_terms (
+  paper_id TEXT NOT NULL,
+  term TEXT NOT NULL,
+  long_form TEXT NOT NULL,
+  PRIMARY KEY (paper_id, term, long_form),
+  FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS glossaries (
   paper_id TEXT PRIMARY KEY,
   entries_json TEXT NOT NULL,

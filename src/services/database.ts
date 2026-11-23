@@ -419,6 +419,13 @@ export async function deleteAnnotation(id: string): Promise<void> {
   }
 }
 
+/** Abbreviation / term pairs defined in library papers, for search expansion. */
+export async function listLibrarySearchTerms(): Promise<Array<{ term: string; longForm: string; papers: number }>> {
+  const { db } = await ready();
+  const { listLibraryTerms } = await import("../data/repositories/paperRepository");
+  return listLibraryTerms(db);
+}
+
 /** Ranked library search over normalized text (see `searchPapersFts`). Does not load paper bodies. */
 export async function searchLibraryPaperIds(
   query: string | import("../domain/search/searchQuery").SearchQuery

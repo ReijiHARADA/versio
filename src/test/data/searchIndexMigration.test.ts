@@ -18,10 +18,30 @@ describe("schema v9 → v10", () => {
       INSERT INTO meta (key, value) VALUES ('schema_version', '9');
       INSERT INTO papers_fts VALUES ('p1', 'インターフェース Design', 'Ｓｍｉｔｈ', 'UI/UX', NULL, '');
     `);
-    expect(applySqliteSchemaMigrations(raw)).toBe(10);
+    expect(applySqliteSchemaMigrations(raw)).toBe(11);
     expect(raw.exec("SELECT title, authors, original, translation, annotation FROM papers_fts")[0].values).toEqual([
       [" インタフェス design ", " smith ", " ui ux ", "", ""],
     ]);
+    raw.close();
+  });
+});
+
+describe("schema v10 → v11", () => {
+  it("adds library_terms and asks the package sync to backfill them", async () => {
+    const req = createRequire(import.meta.url);
+    const wasm = readFileSync(req.resolve("sql.js/dist/sql-wasm.wasm"));
+    const SQL = await initSqlJs({
+      wasmBinary: wasm.buffer.slice(wasm.byteOffset, wasm.byteOffset + wasm.byteLength) as ArrayBuffer,
+    });
+    const raw = new SQL.Database();
+    raw.run(`
+      CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+      CREATE TABLE papers (id TEXT PRIMARY KEY);
+      INSERT INTO meta (key, value) VALUES ('schema_version', '10');
+    `);
+    expect(applySqliteSchemaMigrations(raw)).toBe(11);
+    expect(raw.exec("SELECT value FROM meta WHERE key = 'library_terms_backfill'")[0].values).toEqual([["pending"]]);
+    expect(raw.exec("SELECT COUNT(*) FROM library_terms")[0].values).toEqual([[0]]);
     raw.close();
   });
 });

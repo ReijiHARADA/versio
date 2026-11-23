@@ -6,11 +6,13 @@ import {
   getPaperIndex,
   getTrashedPaperIndexes,
   indexPaperText,
+  indexPaperTerms,
   upsertPaperIndex,
   setPaperDoiIndex,
 } from "../repositories/paperRepository";
 import { rememberDocument } from "../repositories/documentRepository";
 import type { SqliteClient } from "../sqlite/client";
+import { LIBRARY_TERMS_BACKFILL_KEY } from "../sqlite/migrateSchema";
 import { loadPaperPackage } from "./persist";
 import { packageToProjection } from "./toProjection";
 
@@ -83,6 +85,26 @@ async function rebuildIndexFromPackage(
 }
 
 /**
+ * Libraries from before schema v11 have no `library_terms`; the stored search
+ * text is normalized (lowercase), so read the package Markdown once instead.
+ */
+async function backfillLibraryTerms(fs: FileSystem, db: SqliteClient): Promise<boolean> {
+  const flag = db.get("SELECT value FROM meta WHERE key = ?", [LIBRARY_TERMS_BACKFILL_KEY]);
+  if (!flag) return false;
+  for (const index of [...getAllPaperIndexes(db), ...getTrashedPaperIndexes(db)]) {
+    try {
+      const original = (await fs.readText(`papers/${index.id}/original.md`)) ?? "";
+      const translation = (await fs.readText(`papers/${index.id}/ja.md`)) ?? "";
+      indexPaperTerms(db, index.id, original, translation);
+    } catch (error) {
+      console.warn("Failed to backfill library terms:", index.id, error);
+    }
+  }
+  db.exec("DELETE FROM meta WHERE key = ?", [LIBRARY_TERMS_BACKFILL_KEY]);
+  return true;
+}
+
+/**
  * Keep SQLite paper rows aligned with on-disk Paper Packages.
  * Also re-index packages that exist on disk but are missing from library.sqlite
  * (e.g. after a truncated/corrupt index write on quit).
@@ -136,6 +158,8 @@ export async function syncPaperIndexesFromPackages(
     if (getPaperIndex(db, paperId)) continue;
     if (await rebuildIndexFromPackage(fs, db, paperId)) rebuilt += 1;
   }
+
+  if (await backfillLibraryTerms(fs, db)) backfilled = true;
 
   if (rebuilt > 0 || backfilled) {
     await db.persist();

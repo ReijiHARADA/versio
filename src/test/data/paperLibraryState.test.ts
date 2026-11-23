@@ -70,7 +70,7 @@ describe("paper library state in SQLite", () => {
       INSERT INTO meta (key, value) VALUES ('schema_version', '7');
       INSERT INTO papers (id, last_opened_at) VALUES ('opened', 't'), ('fresh', NULL);
     `);
-    expect(applySqliteSchemaMigrations(raw)).toBe(10);
+    expect(applySqliteSchemaMigrations(raw)).toBe(11);
     const rows = raw.exec("SELECT id, read_status, tags_json FROM papers ORDER BY id")[0].values;
     expect(rows).toEqual([
       ["fresh", "unread", "[]"],
