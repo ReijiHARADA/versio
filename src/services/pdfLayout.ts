@@ -3592,7 +3592,13 @@ function groupLinesIntoBlocks(
       (/^(?:figure|fig\.?|図)\s*\d+[a-z]?(?:\s*,\s*[a-z]\b)*$/i.test(layoutPlain(joinLines(current))) ||
         line.fontSize <= (current.find((part) =>
           !/^(?:figure|fig\.?|図)\s*\d+[a-z]?(?:\s*,\s*[a-z]\b)*$/i.test(layoutPlain(part.text))
-        )?.fontSize ?? current[0].fontSize) + 0.6) &&
+        )?.fontSize ?? current[0].fontSize) + 0.6 ||
+        // Inline math can pull a one-line caption's measured size below body
+        // size; an unfinished line at the same indent still continues.
+        (current[0].fontSize < baseFont - 0.5 && line.fontSize <= baseFont + 0.3 && Math.abs(line.x - current[0].x) <= 2 &&
+          line.y - current[current.length - 1].y <= current[current.length - 1].fontSize * 1.6 &&
+          current.slice(1).every((part) => Math.abs(part.fontSize - line.fontSize) <= 0.6) &&
+          !/[.!?:]\s*$/.test(current[current.length - 1].text.trim()))) &&
       captionShouldContinue(joinLines(current), line, baseFont);
 
     const footnoteContinue =
