@@ -138,7 +138,8 @@ export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[],
     // extraction reproduced the print.
     const printedBreaks = share.length >= 2 && f >= 0.85 && (() => {
       const at = share.map((b) => blockIndex.get(b.id)!).sort((a, b) => a - b);
-      return at.every((k, n) => n === 0 || (k === at[n - 1] + 1 &&
+      // A few paragraph blocks between the pieces (figure text, a sidebar) do not change where the print breaks.
+      return at.every((k, n) => n === 0 || (k - at[n - 1] <= 4 &&
         /[.!?][”"’')\]]*$/.test(blocks[at[n - 1]].text.trim()) && (blocks[k].indent === true || blocks[at[n - 1]].shortEnd === true) && /^\p{Lu}/u.test(blocks[k].text.trim())));
     })();
     const verdict: ParagraphOutcome["verdict"] = f < 0.3 ? "missing" : share.length >= 2 && !printedBreaks ? "split" : f < 0.85 ? "partial" : "intact";
