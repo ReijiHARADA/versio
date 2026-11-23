@@ -277,6 +277,12 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     // (Items used to inherit the warning of the whole flattened list; each item is now checked on its own.)
     if (block.metadata.listRole === "item") checked = checked.replace(/(?:[;,:]|[;,]\s+(?:and|or))\s*$/, ".");
     if (afterEquation) checked = checked.charAt(0).toUpperCase() + checked.slice(1);
+    // `(a) …` `(b) …` `(c) …` in a row is an enumeration in the text, not a figure's sub-panel legend.
+    const label = (b?: PaperBlock) => (b?.type === "paragraph" ? /^\(([a-z])\)\s/.exec((b.original ?? "").trim())?.[1] : undefined);
+    const own = label(block);
+    if (own && (label(blocks[index - 1]) === String.fromCharCode(own.charCodeAt(0) - 1) || label(blocks[index + 1]) === String.fromCharCode(own.charCodeAt(0) + 1))) {
+      checked = checked.replace(/^\([a-z]\)\s+/, "");
+    }
     // A supporting-information entry ends with its file type after the last sentence (`… policy. (ZIP)`).
     checked = checked.replace(/([.!?])\s*\((?:[A-Z][A-Z0-9]{1,4}(?:\s*\/\s*[A-Z][A-Z0-9]{1,4})?)\)$/, "$1");
     const warning = isExpectedNonProseParagraph(text) ? null : unsafeParagraphStructureReason(checked);
