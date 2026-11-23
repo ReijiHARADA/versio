@@ -1452,6 +1452,11 @@ describe("unsafe extracted translation input", () => {
     expect(unsafeParagraphStructureReason(email)).not.toBeNull();
   });
 
+  it("does not take an identifier at the start for a continuation", () => {
+    expect(unsafeParagraphStructureReason("mmu-miR-337-3p markedly decreased the luciferase activity of reporters carrying the wild-type sequence.")).toBeNull();
+    expect(unsafeParagraphStructureReason("segregated by the second criterion and then pooled across the remaining sites in the study.")).toMatch(/先頭/);
+  });
+
   it("ends a quotation at its speaker attribution", () => {
     const quote = "One leader explained that the older programme “gave the therapists who don’t have the expertise for it a scaffold that the newer tools never offered to anyone.” (Leader 11, Clinic 2)";
     expect(unsafeParagraphStructureReason(quote)).toBeNull();
