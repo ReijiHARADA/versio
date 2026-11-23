@@ -6497,7 +6497,11 @@ export function reconstructDocument(inputPages: ExtractedPage[]): {
   blocks: LayoutBlock[];
   baseFontSize: number;
 } {
-  const pages = stripMarginLineNumbers(inputPages);
+  // A font's glyph sample (`1234567890():,;`), printed tiny or off the page, is never text.
+  const pages = stripMarginLineNumbers(inputPages).map((page) => ({
+    ...page,
+    textItems: page.textItems.filter((item) => !/^(?:1234567890|0123456789)\S*$/.test(item.text.trim())),
+  }));
   const patterns = detectHeaderFooterPatterns(pages);
   const layouts = pages.map(detectPageColumns);
   const docLayout = dominantColumnLayout(layouts);
