@@ -370,7 +370,21 @@
 
 /* Collapsed: leave one icon-row gap between workspace and library groups */
 .section + .section {
+  position: relative;
   margin-top: var(--sidebar-icon-box);
+}
+
+/* Collapsed: a hairline in the middle of that gap separates the groups; it fades out as titles appear. */
+.section + .section::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--sidebar-icon-box) / -2);
+  left: 25%;
+  right: 25%;
+  height: 1px;
+  background: var(--color-border);
+  opacity: calc(1 - var(--sidebar-expand-t));
+  pointer-events: none;
 }
 
 .sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .section + .section,
