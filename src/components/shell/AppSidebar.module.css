@@ -156,18 +156,6 @@
   max-width: none;
 }
 
-/*
- * Badge sits beside the label — don't let the label grow and shove the count
- * to the far right edge of the rail.
- */
-.sidebarAuto:is(:has(.sidebar:hover), :has([data-workspace-editing])) .item:has(.badge) .itemLabel,
-.sidebarExpanded .item:has(.badge) .itemLabel,
-.sidebarResizing .item:has(.badge) .itemLabel,
-.sidebarDropReady .item:has(.badge) .itemLabel,
-.sidebar:has([data-workspace-editing]) .item:has(.badge) .itemLabel {
-  flex: 0 1 auto;
-}
-
 /* ────────────────────────────────────────────────
    Rows: always full sidebar width; icon column fixed
 ──────────────────────────────────────────────── */
@@ -603,8 +591,15 @@
   height: 1.125rem;
   padding: 0 3px;
   flex: 0 0 auto;
-  margin-left: 2px;
+  margin-left: auto;
+  margin-right: 6px;
   max-width: none;
+}
+
+/* Selected row: invert the count to a white disc so it reads on the accent fill. */
+.item.active .badge {
+  background: var(--color-selection-fg);
+  color: var(--color-selection-bg);
 }
 
 .item.active.toneFavorite {
