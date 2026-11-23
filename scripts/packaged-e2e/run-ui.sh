@@ -247,7 +247,11 @@ on run argv
       -- The window is only exposed to AX while Versio is frontmost, and the
       -- terminal running this script can take focus back at any time.
       set frontmost of proc to true
-      delay 0.5
+      repeat 40 times
+        if (count of windows of proc) > 0 then exit repeat
+        delay 0.25
+      end repeat
+      delay 0.3
       try
         click button targetLabel of window 1 of proc
         return "clicked"
@@ -262,6 +266,24 @@ on run argv
   error "element not found: " & targetLabel
 end run
 OSA
+}
+
+# Open the first paper card, retrying while the Reader has not appeared.
+open_paper_card() {
+  local attempt
+  for attempt in 1 2 3; do
+    # Cards are labelled "論文 <title>"; a bare "論文" also matches the sidebar.
+    ax_click_by_label "論文 " enter || ax_click_by_label "Acceptance" enter || true
+    for _ in $(seq 1 10); do
+      local result
+      result="$(find_ui_result)"
+      if [[ -n "$result" ]] && grep -qE '"step": *"[^"]*(reader|annotation|memo|search|export|core_flow)' "$result" 2>/dev/null; then
+        return 0
+      fi
+      sleep 1
+    done
+    echo "card open attempt $attempt did not reach the Reader; retrying" >>"$LOG_FILE"
+  done
 }
 
 launch_app() {
@@ -383,8 +405,7 @@ wait_ui_step "ui_library_card_visible" "${VERSIO_UI_E2E_LIBRARY_TIMEOUT_S:-180}"
 
 step "open paper card"
 # Cards are labelled "論文 <title>"; a bare "論文" also matches the sidebar ("すべての論文").
-ax_click_by_label "論文 " enter || ax_click_by_label "Acceptance" enter || true
-sleep 2
+open_paper_card
 wait_ui_step "ui_reader_visible" "${VERSIO_UI_E2E_READER_TIMEOUT_S:-120}"
 
 if [[ "${VERSIO_UI_E2E_SMOKE_ONLY:-0}" == "1" ]]; then
@@ -459,7 +480,7 @@ step "relaunch: open paper and require annotation mark in Reader UI"
 sleep 5
 wait_ui_step "ui_library_card_visible" 120
 # Cards are labelled "論文 <title>"; a bare "論文" also matches the sidebar ("すべての論文").
-ax_click_by_label "論文 " enter || ax_click_by_label "Acceptance" enter || true
+open_paper_card
 sleep 3
 wait_ui_step "ui_relaunch_annotation_visible" 120
 
