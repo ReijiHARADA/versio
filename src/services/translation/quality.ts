@@ -1933,6 +1933,12 @@ export function isExpectedNonProseParagraph(text: string): boolean {
   const institutions = t.match(/\b(?:University|Universit[àéä]t?|Universidad|Department|Institute|Institut|Hospital|Centre|Center|Faculty|School of|Laboratory)\b/g)?.length ?? 0;
   const affiliationNumbers = t.match(/\s,\s*\d{1,3}(?:,\d{1,3})*\b/g)?.length ?? 0;
   if ((institutions >= 4 && institutions * 12 >= tokens) || (affiliationNumbers >= 3 && affiliationNumbers * 15 >= tokens)) return true;
+  // Member names between bare affiliation-number groups (`42,125 , Victoria Fernández , 28,29 132,138 …`).
+  const numberGroups = t.split(/\s+/).filter((w) => /^\d{1,3}(?:,\d{1,3})*$/.test(w)).length;
+  if (numberGroups >= 5 && numberGroups * 6 >= tokens && (t.match(/\s,\s/g)?.length ?? 0) >= 3) return true;
+  // A keyword list set off by semicolons (`checklist; communication disorder; language disorder; psychoses`).
+  const items = t.replace(/[.;]\s*$/, "").split(/;\s*/);
+  if (items.length >= 4 && items.every((item) => item.trim().split(/\s+/).length <= 4 && !/[.!?]/.test(item))) return true;
   // Author affiliation blocks can be extracted as ordinary paragraphs when a
   // PDF has no tagged structure. Credential/member phrases followed by an
   // institution or department are publication metadata, not research prose.
