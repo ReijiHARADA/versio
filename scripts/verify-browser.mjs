@@ -341,8 +341,8 @@ try {
       });
       const dialog = page.getByRole("dialog", { name: "メモを追加" });
       await dialog.waitFor({ state: "visible", timeout: 5_000 });
-      // Header button also has aria-label メモ一覧; the inspector is an <aside>.
-      if (await page.locator('aside[aria-label="メモ一覧"]').count()) {
+      // A body selection must not switch the inspector to its Notes tab.
+      if (await page.locator('#inspector-tab-notes[aria-selected="true"]').count()) {
         throw new Error("Notes inspector opened from a body selection");
       }
       await page.keyboard.press("Escape");

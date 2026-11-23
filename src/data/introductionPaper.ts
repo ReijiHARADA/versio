@@ -115,16 +115,16 @@ const chapters: Chapter[] = [
     parts: [
       h("4 Notes and Glossary", "4 メモと用語集"),
       p(
-        "Select any phrase in the text and choose “Add note” to highlight it; type a comment, or leave it empty to keep a plain highlight. Notes stay anchored to the paragraph even if the paper is extracted again, and the notes list in the toolbar collects every note in this paper.",
-        "本文の語句を選択して「メモを追加」を選ぶとハイライトされます。コメントを書けばメモに、空のままならハイライトだけが残ります。メモは論文を抽出し直しても段落に結びついたまま残り、ツールバーのメモ一覧にこの論文のメモがすべて集まります。"
+        "Select any phrase in the text and choose “Add note” to highlight it; type a comment, or leave it empty to keep a plain highlight. Notes stay anchored to the paragraph even if the paper is extracted again, and the Notes tab of the right inspector collects every note in this paper.",
+        "本文の語句を選択して「メモを追加」を選ぶとハイライトされます。コメントを書けばメモに、空のままならハイライトだけが残ります。メモは論文を抽出し直しても段落に結びついたまま残り、右インスペクタの「メモ」タブにこの論文のメモがすべて集まります。"
       ),
       p(
         "Try it: select the words “stay anchored” in the paragraph above and add a short note.",
         "試してみよう：上の段落の「結びついたまま」を選択して、短いメモを付けてみてください。"
       ),
       p(
-        "The glossary keeps your preferred translation for technical terms. Open the glossary from the toolbar and add an English term with its Japanese rendering; Versio then marks the term wherever it appears.",
-        "用語集には、専門用語をどう訳したいかを登録しておけます。ツールバーから用語集を開き、英語の用語と日本語の訳語を追加すると、Versio は本文中でその用語が現れる箇所に印を付けます。"
+        "The glossary keeps your preferred translation for technical terms. Open the Glossary tab of the right inspector and add an English term with its Japanese rendering; Versio then marks the term wherever it appears.",
+        "用語集には、専門用語をどう訳したいかを登録しておけます。右インスペクタの「用語」タブを開き、英語の用語と日本語の訳語を追加すると、Versio は本文中でその用語が現れる箇所に印を付けます。"
       ),
     ],
   },

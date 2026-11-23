@@ -6,12 +6,10 @@ import panelStyles from "./SidePanel.module.css";
 export function ReaderInspector({
   tab,
   onTabChange,
-  onClose,
   children,
 }: {
   tab: ReaderInspectorTab;
   onTabChange: (tab: ReaderInspectorTab) => void;
-  onClose: () => void;
   children: ReactNode;
 }) {
   const label = READER_INSPECTOR_TABS.find((item) => item.id === tab)?.label;
@@ -34,9 +32,6 @@ export function ReaderInspector({
             </button>
           ))}
         </div>
-        <button type="button" className={panelStyles.close} onClick={onClose}>
-          閉じる
-        </button>
       </header>
       <div
         id="inspector-tabpanel"
