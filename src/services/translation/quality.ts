@@ -1915,6 +1915,9 @@ export function isExpectedNonProseParagraph(text: string): boolean {
   if (operators >= 3 && operators * 10 >= t.split(/\s+/).length && /\b(?:TS\s*=|TITLE-ABS-KE|TITLE\s*\(|ABS\s*\(|PUBYEAR|ALL\s*\(|\[MeSH|\[tiab)/.test(t)) return true;
   // A numbered algorithm line (`3: Configure Patchwork++ with (ut, dt)`, `5: (Pg, Png) ← …`).
   if (/^\d{1,2}:\s/.test(t) && /[←∈]|\/\/|\b(?:for|while|if|return|end)\b/.test(t)) return true;
+  // Line-numbered algorithm steps (`1 Step 1. Calculate …`, `20 e) Update the number of iterations: 21 t ← t + 1`)
+  // and an algorithm's header (`Input: … Output: …`).
+  if (/^\d{1,2}\s+(?:Step\s+\d+[.:]|\p{Ll}\)\s)/u.test(t) || /^Input:\s.*\bOutput:/s.test(t)) return true;
   // Table cells read across into one run, words glued at the cell edges (`simulatorenvironment and por(40`):
   // several different lower-to-upper joins, densely, which prose with a product name (`DirectContacts2`) does not make.
   const glued = new Set(t.match(/\p{Ll}{3,}\p{Lu}\p{Ll}{2,}/gu) ?? []).size;
