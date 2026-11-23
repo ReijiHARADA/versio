@@ -371,10 +371,6 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
       rightCount: right.length,
     };
   })();
-  // Only the PLOS and editor/reviewer rails may override this: their abstract lines legitimately bridge the midpoint.
-  if (!asymmetricRail?.bridgesMidpoint && !cleanGutter && midpointBridgedRows >= 8 && midpointBridgedRows / Math.max(midpointRows.length, 1) >= 0.55) {
-    return fallback;
-  }
 
   const longLines = usable.filter(
     (item) =>
@@ -416,7 +412,7 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
       // center gutter; pairs wholly inside a centered table are not evidence
       // of a page-wide two-column layout.
       return right && pair.x <= page.width * 0.27 && right.x >= page.width * 0.38 && right.x <= page.width * 0.68
-        ? [{ leftX: pair.x, rightX: right.x, fontSize: pair.fontSize }]
+        ? [{ leftX: pair.x, rightX: right.x, fontSize: pair.fontSize, gap: right.x - pair.x - pair.width, balance: Math.abs(right.width - pair.width) / pair.width }]
         : [];
     });
     const near = (a: { leftX: number; rightX: number }, b: { leftX: number; rightX: number }) =>
@@ -436,8 +432,21 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     return {
       leftX: median(matching.map((pair) => pair.leftX)),
       rightX: median(matching.map((pair) => pair.rightX)),
+      count: matching.length,
+      gap: median(matching.map((pair) => pair.gap)),
+      balance: median(matching.map((pair) => pair.balance)),
     };
   })();
+
+  // Only the PLOS and editor/reviewer rails may override this: their abstract lines legitimately bridge the midpoint.
+  // A full-width masthead over a two-column start (page 1) bridges the midpoint
+  // on most rows; six or more aligned pairs of equal-width lines across a gutter (not one line cut at an
+  // italic, not table cells far apart) still win.
+  if (!asymmetricRail?.bridgesMidpoint && !cleanGutter && midpointBridgedRows >= 8 && midpointBridgedRows / Math.max(midpointRows.length, 1) >= 0.55 &&
+      !(alignedColumnPairs && alignedColumnPairs.count >= 6 && alignedColumnPairs.gap >= 14 && alignedColumnPairs.gap <= 40 &&
+        alignedColumnPairs.balance <= 0.1)) {
+    return fallback;
+  }
 
   // Some reference-heavy journal pages encode the left column as long text
   // spans but the right column as one native span per word. The ordinary
