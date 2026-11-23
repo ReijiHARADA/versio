@@ -35,7 +35,7 @@ const CONTINUATION_START = /^(?:[a-z]|(?:which|that|and|or|but|where|while|where
  * inside an open parenthesis.
  */
 const isHardOpen = (text: string) =>
-  /(?:,|\b(?:and|or|but|nor|that|which|whose|the|a|an|of|to|in|for|with|without|among|between|by|from|on|at|as|than|versus|into|onto|over|under|about|including|such|whether|its|their|our|this|these|those|is|are|was|were|be|been|has|have|had))$/i.test(text) ||
+  /(?:,|\b(?:and|or|but|nor|that|which|whose|the|a|an|of|to|in|for|with|without|among|between|by|from|on|at|as|than|versus|into|onto|over|under|about|including|such|whether|its|their|our|this|these|those|is|are|was|were|be|been|has|have|had|because|although|though|while|whereas|since|unless|if|when|where))$/i.test(text) ||
   hasOpenParenthesis(text) || ABBREVIATION_END.test(text);
 const hasOpenParenthesis = (text: string) => (text.match(/\(/g)?.length ?? 0) > (text.match(/\)/g)?.length ?? 0);
 /**
@@ -194,7 +194,11 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         }
         // Without a lower-case start, only the first paragraph after the interruption can be the continuation.
         // After a skipped fragment, text opening with `,` / `;` continues that fragment.
-        if (!listItem && hardOpen && !skippedParagraph && !(skippedFragment && /^[,;:.]/.test(candidateText)) && eligible(candidate) && looseContinuation(currentText, candidateText, afterReferenceCaption)) {
+        // A sentence cut right after a subordinator (`… with full pooling. Because` | figure | `Accmax does not …`)
+        // goes on in the first paragraph past the floats, whatever its first letter.
+        const cutAtSubordinator = sawFloat && !skippedParagraph && !skippedFragment &&
+          /\s(?:because|although|though|while|whereas|since|unless|if|when)$/i.test(currentText);
+        if (!listItem && hardOpen && !skippedParagraph && !(skippedFragment && /^[,;:.]/.test(candidateText)) && eligible(candidate) && looseContinuation(currentText, candidateText, afterReferenceCaption || cutAtSubordinator)) {
           target = j;
           break;
         }

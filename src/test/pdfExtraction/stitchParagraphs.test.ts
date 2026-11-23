@@ -217,6 +217,17 @@ describe("stitchParagraphContinuations into a term past a float", () => {
   });
 });
 
+describe("stitchParagraphContinuations after a subordinator", () => {
+  it("joins the first paragraph past a figure, whatever its first letter", () => {
+    const out = stitchParagraphContinuations([
+      block("a", "paragraph", "Best-configuration accuracy represents the upper bound of each pipeline under equivalence with full pooling. Because", 6),
+      block("f", "figure", "FIGURE 2 Grouped boxplot comparison", 7),
+      block("b", "paragraph", "Accmax does not rely on a pipeline-specific proxy, it compares configurations fairly.", 7),
+    ], []);
+    expect(out.map((b) => b.id)).toEqual(["a", "f"]);
+  });
+});
+
 describe("stitchParagraphContinuations past a table note", () => {
   it("joins the rest of the sentence across a table and its unfinished note", () => {
     const blocks = [
