@@ -22,6 +22,18 @@ describe("markup boundaries", () => {
   });
 });
 
+describe("paragraph breaks the PDF prints", () => {
+  it("accepts a JATS paragraph split where the print starts a new one", () => {
+    const first = "The first part of the study recruited forty participants from three clinics and measured their gait at baseline.";
+    const second = "Participants then stepped to music beats to hit targets, and their gait speed was measured again after six weeks.";
+    const gold = jatsParagraphs(doc(`<p>${first} ${second}</p>`));
+    const blocks = [{ id: "a", text: first, warning: null }, { id: "b", text: second, warning: null }];
+    expect(alignParagraphs(gold, blocks).paragraphs[0].verdict).toBe("split");
+    expect(alignParagraphs(gold, [blocks[0], { ...blocks[1], indent: true }]).paragraphs[0].verdict).toBe("intact");
+    expect(alignParagraphs(gold, [{ ...blocks[0], shortEnd: true }, blocks[1]]).paragraphs[0].verdict).toBe("intact");
+  });
+});
+
 describe("hosted paragraphs", () => {
   it("counts a gold paragraph set whole as a footnote as intact", () => {
     const xml = doc(`<p>This work was supported by the National Science Foundation under award 1234567 and by the regional research council, which had no role in the study design, data collection or the decision to publish.</p>`);

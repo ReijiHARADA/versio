@@ -75,6 +75,26 @@ export type AuditBlock = {
   translatable: boolean;
   /** Table blocks: native cell texts (metadata.tableRows) the Reader can show. */
   cells?: string[];
+  /** The first line starts indented against the block's other lines on its page (a typeset paragraph start). */
+  indent?: boolean;
+  /** The last line ends well short of the block's line width (a typeset paragraph end). */
+  shortEnd?: boolean;
+};
+
+const lastLineShort = (boxes: Array<{ page: number; y: number; width: number }>): boolean => {
+  const page = boxes.at(-1)?.page;
+  const own = boxes.filter((box) => box.page === page);
+  if (own.length < 2) return false;
+  const last = own.reduce((low, box) => (box.y > low.y ? box : low));
+  return last.width < Math.max(...own.map((box) => box.width)) * 0.8;
+};
+
+const firstLineIndented = (boxes: Array<{ page: number; x: number; height: number }>): boolean => {
+  const [first, ...rest] = boxes;
+  const others = rest.filter((box) => box.page === first?.page);
+  if (!first || others.length === 0) return false;
+  const shift = first.x - Math.min(...others.map((box) => box.x));
+  return shift >= Math.max(3, first.height * 0.35) && shift <= first.height * 4;
 };
 
 // Text blocks carry the Reader's text; other blocks (figure, table, equation,
@@ -105,6 +125,8 @@ for (const [n, doc] of docs.entries()) {
         text: (b.original ?? "").replace(/\s+/g, " ").trim(),
         warning: typeof b.metadata.translationInputWarning === "string" ? b.metadata.translationInputWarning : null,
         translatable: b.translationStatus !== "skipped",
+        ...(b.type === "paragraph" && firstLineIndented(b.boundingBoxes) ? { indent: true } : {}),
+        ...(b.type === "paragraph" && lastLineShort(b.boundingBoxes) ? { shortEnd: true } : {}),
         ...(Array.isArray(b.metadata.tableRows) ? { cells: (b.metadata.tableRows as Array<Array<{ text: string }>>).flat().map((c) => c.text) } : {}),
       }));
     fs.writeFileSync(path.join(outDir, "docs", `${doc.id}.json`), JSON.stringify({ id: doc.id, language: doc.language ?? null, split: auditSplit(doc.id), pages: pages.length, paper: { title: result.paper.titleOriginal, authors: result.paper.authors, publication: result.paper.publication, doi: result.paper.doi ?? null }, blocks }, null, 1));
