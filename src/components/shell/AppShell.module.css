@@ -243,3 +243,25 @@
   );
   -webkit-mask-box-image: var(--sq-rim-card);
 }
+
+/* Opening the inspector: the layout narrows in one step (no per-frame reflow of the paper), and only the
+   card's painted frame (fill, ring, rim) sweeps in from the old right edge, uncovering the inspector. */
+.shell:has(.inspectorSlot:not(:empty)) .main::before,
+.shell:has(.inspectorSlot:not(:empty)) .main::after,
+.shell:has(.inspectorSlot:not(:empty)) .mainRim {
+  animation: cardFrameShrink var(--pane-motion);
+}
+
+@keyframes cardFrameShrink {
+  from {
+    right: calc(-1px - var(--notes-panel-width));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell:has(.inspectorSlot:not(:empty)) .main::before,
+  .shell:has(.inspectorSlot:not(:empty)) .main::after,
+  .shell:has(.inspectorSlot:not(:empty)) .mainRim {
+    animation: none;
+  }
+}
