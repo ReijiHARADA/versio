@@ -1,10 +1,12 @@
 import type { PaperBlock, Section } from "../../types/paper";
 import {
+  isExpectedNonProseParagraph,
   isReferencesHeading,
   looksLikeBibliographyEntry,
   shouldTranslateCaption,
   shouldTranslateHeading,
   shouldTranslateParagraph,
+  unsafeParagraphStructureReason,
 } from "../translation/quality";
 
 export function asSectionIdSet(value: unknown): Set<string> {
@@ -78,6 +80,30 @@ export function shouldTranslateBlock(
     return shouldTranslateCaption(translationInputForBlock(block));
   }
   return false;
+}
+
+/**
+ * Why a prose paragraph/footnote is shown in the source language, or null when
+ * it is intentionally untranslated (references, bylines, chrome, short labels)
+ * or is not skipped at all. The Reader shows this so a preserved fragment is
+ * never silent English.
+ */
+export function untranslatedParagraphReason(
+  block: PaperBlock,
+  refSectionIds: Set<string> = new Set()
+): string | null {
+  const warning = block.metadata?.translationInputWarning;
+  if (typeof warning === "string" && warning) return warning;
+  if (block.type !== "paragraph" && block.type !== "footnote") return null;
+  const text = block.original?.trim() ?? "";
+  if (!text) return null;
+  if (block.translationStatus !== "skipped" && shouldTranslateBlock(block, refSectionIds)) return null;
+  if (block.sectionId && asSectionIdSet(refSectionIds).has(block.sectionId)) return null;
+  const role = String(block.metadata?.role ?? "");
+  if (role === "author" || role === "affiliation" || role === "copyright") return null;
+  if (isReferencesHeading(text) || isExpectedNonProseParagraph(text)) return null;
+  if ((text.match(/[A-Za-z]{3,}/g)?.length ?? 0) < 6) return null;
+  return unsafeParagraphStructureReason(text) ?? "この段落は翻訳対象外と判定されました";
 }
 
 export function isRetryableTranslationFailure(

@@ -2192,3 +2192,10 @@ describe("unsafeParagraphStructureReason sentence ends", () => {
     expect(unsafeParagraphStructureReason("The results across different musical repertoires are detailed in")).toMatch(/末尾/);
   });
 });
+
+describe("shouldTranslateParagraph sentence end inside a closing quote", () => {
+  it("accepts a long paragraph ending with a period inside a closing quote", () => {
+    const body = "Next, in the elaboration stage, participants were asked to flesh out their initial idea in a more detailed outline. ".repeat(4);
+    expect(shouldTranslateParagraph(`${body}They were told: “Use your idea as a starting point—you can deviate from it if you'd like.”`)).toBe(true);
+  });
+});
