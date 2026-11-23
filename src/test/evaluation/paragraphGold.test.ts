@@ -22,6 +22,16 @@ describe("markup boundaries", () => {
   });
 });
 
+describe("hosted paragraphs", () => {
+  it("counts a gold paragraph set whole as a footnote as intact", () => {
+    const xml = doc(`<p>This work was supported by the National Science Foundation under award 1234567 and by the regional research council, which had no role in the study design, data collection or the decision to publish.</p>`);
+    const gold = jatsParagraphs(xml);
+    const note = { id: "f", text: gold[0].text, warning: null };
+    expect(alignParagraphs(gold, []).paragraphs[0].verdict).toBe("missing");
+    expect(alignParagraphs(gold, [], [note]).paragraphs[0].verdict).toBe("intact");
+  });
+});
+
 describe("tokens", () => {
   it("separates a citation number from the word whether it is spaced or not", () => {
     expect(tokens("explored in29.")).toEqual(tokens("explored in 29."));
