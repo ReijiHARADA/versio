@@ -98,6 +98,8 @@ describe("reconcileTranslationWarnings", () => {
     expect(reconcileTranslationWarnings([lead(), block("q", "paragraph", "“I could not have afforded the fees otherwise,” one student said.")])[0].metadata.translationInputWarning).toBeUndefined();
     expect(reconcileTranslationWarnings([lead(), block("h", "heading", "Results")])[0].metadata.translationInputWarning).toBeUndefined();
     expect(reconcileTranslationWarnings([lead(), block("c", "paragraph", "the sum of squared errors over every tree in the ensemble.")])[0].metadata.translationInputWarning).toBe(TAIL);
+    expect(reconcileTranslationWarnings([lead(), block("w", "paragraph", "where β is the slope index of inequality.")])[0].metadata.translationInputWarning).toBeUndefined();
+    expect(reconcileTranslationWarnings([lead(), block("h", "heading", "TP + TN"), block("c", "paragraph", "recognition performance from two views.")])[0].metadata.translationInputWarning).toBeUndefined();
   });
 
   it("keeps other defects of an introduced lead-in and leaves context warnings and list items alone", () => {

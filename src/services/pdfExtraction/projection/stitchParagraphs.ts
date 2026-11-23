@@ -264,7 +264,10 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     // `defined in Eq. 2:` before an equation); every other check still applies. Only a
     // lower-case paragraph right after it shows that the sentence itself goes on.
     const nextText = blocks.slice(index + 1).find((b) => b.type === "paragraph" && !isEquationDebris(b))?.original?.trim() ?? "";
-    const introduced = /:\s*$/.test(text) && (block.metadata.listRole === "intro" || adjacentDisplay(blocks.slice(index + 1, index + 6), block, true) || !/^\p{Ll}/u.test(nextText));
+    // `… was used:` then `where β is …`: the display between them was not extracted as text (an image);
+    // a heading straight after the colon is a list or display that was read as one.
+    const introduced = /:\s*$/.test(text) && (block.metadata.listRole === "intro" || adjacentDisplay(blocks.slice(index + 1, index + 6), block, true) ||
+      !/^\p{Ll}/u.test(nextText) || /^(?:where|here)\b/.test(nextText) || blocks[index + 1]?.type === "heading");
     // `where θ denotes …` / `and measures …` right after a display equation continues the sentence the equation is part of.
     const afterEquation = /^\p{Ll}/u.test(text) && adjacentDisplay(blocks.slice(Math.max(0, index - 3), index).reverse(), block, false);
     let checked = introduced ? text.replace(/:\s*$/, ".") : text;
