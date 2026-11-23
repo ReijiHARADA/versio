@@ -270,7 +270,9 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
       !/^\p{Ll}/u.test(nextText) || /^(?:where|here)\b/.test(nextText) || blocks[index + 1]?.type === "heading");
     // `where θ denotes …` / `and measures …` right after a display equation continues the sentence the equation is part of.
     const afterEquation = /^\p{Ll}/u.test(text) && adjacentDisplay(blocks.slice(Math.max(0, index - 3), index).reverse(), block, false);
-    let checked = introduced ? text.replace(/:\s*$/, ".") : text;
+    // `… is defined as` / `… is given by` / `… the matrix,` straight before a display equation introduces it like a colon.
+    const introducesDisplay = /(?:\b(?:as|by|follows|is|are|be)|[,;])\s*$/.test(text) && adjacentDisplay(blocks.slice(index + 1, index + 3), block, false);
+    let checked = introduced ? text.replace(/:\s*$/, ".") : introducesDisplay ? `${text.replace(/[,;]\s*$/, "")}.` : text;
     // A list item may close with ";", ",", ":" or "; and" — the list goes on in the next item.
     // (Items used to inherit the warning of the whole flattened list; each item is now checked on its own.)
     if (block.metadata.listRole === "item") checked = checked.replace(/(?:[;,:]|[;,]\s+(?:and|or))\s*$/, ".");
