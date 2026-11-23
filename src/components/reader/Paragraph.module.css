@@ -203,39 +203,39 @@
 
 /* Highlight */
 .highlight {
-  composes: surface from "../../styles/squircle.module.css";
-  position: relative;
-  --sq-bg: #fff59d;
+  /* squircle-exempt: inline mark wraps across lines; a squircle pseudo-element would paint the whole bounding box */
+  background-color: #fff59d;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  border-radius: 3px;
   padding: 0 2px;
-  --sq-fill: var(--sq-fill-2);
-  border-radius: var(--sq-radius-2);
   scroll-margin-top: calc(var(--header-height) + 16px);
   scroll-margin-bottom: 16px;
 }
 
 .highlight[data-search-current] {
-  --sq-bg: #ffb74d;
+  background-color: #ffb74d;
   box-shadow: 0 0 0 2px #f57c00;
 }
 
 [data-theme="dark"] .highlight {
-  --sq-bg: #5d4037;
+  background-color: #5d4037;
   color: #fff59d;
 }
 
 [data-theme="dark"] .highlight[data-search-current] {
-  --sq-bg: #e65100;
+  background-color: #e65100;
   color: #fff8e1;
   box-shadow: 0 0 0 2px #ffb74d;
 }
 
 .annotationMark {
-  composes: surface from "../../styles/squircle.module.css";
-  position: relative;
-  --sq-bg: #fff59d;
+  /* squircle-exempt: inline mark wraps across lines; a squircle pseudo-element would paint the whole bounding box */
+  background-color: #fff59d;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  border-radius: 3px;
   padding: 0 1px;
-  --sq-fill: var(--sq-fill-2);
-  border-radius: var(--sq-radius-2);
   cursor: pointer;
 }
 
@@ -245,16 +245,16 @@
 }
 
 .draftMark {
-  composes: surface from "../../styles/squircle.module.css";
-  position: relative;
-  --sq-bg: #fff59d;
+  /* squircle-exempt: inline mark wraps across lines; a squircle pseudo-element would paint the whole bounding box */
+  background-color: #fff59d;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  border-radius: 3px;
   padding: 0 1px;
-  --sq-fill: var(--sq-fill-2);
-  border-radius: var(--sq-radius-2);
 }
 
 [data-theme="dark"] .annotationMark {
-  --sq-bg: #5d4037;
+  background-color: #5d4037;
   color: #fff59d;
 }
 
@@ -264,7 +264,7 @@
 }
 
 [data-theme="dark"] .draftMark {
-  --sq-bg: #5d4037;
+  background-color: #5d4037;
   color: #fff59d;
 }
 
