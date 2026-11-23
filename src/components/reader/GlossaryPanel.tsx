@@ -33,10 +33,10 @@ export function GlossaryPanel({ entries, onChange }: GlossaryPanelProps) {
   return (
     <>
       <p className={styles.help}>
-        採用した訳は翻訳後の置換と再翻訳に使います。用語と訳を直接直せます。
+        登録した訳語は、この論文の訳文に反映されます。
       </p>
       {entries.length === 0 ? (
-        <p className={styles.empty}>まだ用語がありません。下から追加できます。</p>
+        <p className={styles.empty}>まだ用語がありません</p>
       ) : (
         <ul className={styles.list}>
           {entries.map((entry, index) => (
