@@ -233,6 +233,8 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
  * Warnings that come from a paragraph's neighbours or its layout evidence, not
  * from its own text. They are kept as they are.
  */
+// A list item the projection did not mark (`a. Research related to …`, `• Short-Time Fourier Transform …`).
+const LIST_START = /^(?:[•‣▪∙●◦]\s*|[–-]\s|\(?(?:[a-z]|\d{1,2}|[ivx]{1,4})[.)]\s+\S)/;
 const CONTEXT_WARNINGS = [/^後続ブロックが前段の文を継続/, /^repeated numeric chart label/, /^table-like text/];
 /** A display equation split into pieces leaves short symbol-only paragraphs around it (`1 Xn`, `n i = 1`). */
 const isEquationDebris = (b: PaperBlock) => b.type === "paragraph" && !/\p{L}{4,}/u.test(b.original ?? "") && (b.original ?? "").trim().length <= 40;
@@ -287,11 +289,12 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     // `… was used:` then `where β is …`: the display between them was not extracted as text (an image);
     // a heading straight after the colon is a list or display that was read as one.
     const introduced = /:\s*$/.test(text) && (block.metadata.listRole === "intro" || adjacentDisplay(blocks.slice(index + 1, index + 6), block, true) ||
-      !/^\p{Ll}/u.test(nextText) || /^(?:where|here)\b/.test(nextText) || blocks[index + 1]?.type === "heading");
+      !/^\p{Ll}/u.test(nextText) || /^(?:where|here)\b/.test(nextText) || LIST_START.test(nextText) || blocks[index + 1]?.type === "heading");
     // `where θ denotes …` / `and measures …` right after a display equation continues the sentence the equation is part of.
     const afterEquation = /^\p{Ll}/u.test(text) && adjacentDisplay(blocks.slice(Math.max(0, index - 3), index).reverse(), block, false);
     // `… is defined as` / `… is given by` / `… the matrix,` straight before a display equation introduces it like a colon.
-    const introducesDisplay = /(?:\b(?:as|by|follows|is|are|be)|[,;])\s*$/.test(text) && adjacentDisplay(blocks.slice(index + 1, index + 3), block, false);
+    const introducesDisplay = /(?:\b(?:as|by|follows|is|are|be)|[,;])\s*$/.test(text) &&
+      (adjacentDisplay(blocks.slice(index + 1, index + 3), block, false) || (/\b(?:as|follows)\s*$/.test(text) && LIST_START.test(nextText)));
     let checked = introduced ? text.replace(/:\s*$/, ".") : introducesDisplay ? `${text.replace(/[,;]\s*$/, "")}.` : text;
     // A list item may close with ";", ",", ":" or "; and" — the list goes on in the next item.
     // (Items used to inherit the warning of the whole flattened list; each item is now checked on its own.)
