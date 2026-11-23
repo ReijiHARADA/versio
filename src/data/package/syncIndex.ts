@@ -84,13 +84,21 @@ async function rebuildIndexFromPackage(
   }
 }
 
+/** Bump when `extractAbbreviations` changes so existing libraries re-extract once. */
+export const LIBRARY_TERMS_VERSION = 2;
+const LIBRARY_TERMS_VERSION_KEY = "library_terms_version";
+
 /**
- * Libraries from before schema v11 have no `library_terms`; the stored search
- * text is normalized (lowercase), so read the package Markdown once instead.
+ * (Re)fill `library_terms` for libraries from before schema v11 or an older
+ * extractor. The stored search text is normalized (lowercase), so read the
+ * package Markdown instead.
  */
 async function backfillLibraryTerms(fs: FileSystem, db: SqliteClient): Promise<boolean> {
-  const flag = db.get("SELECT value FROM meta WHERE key = ?", [LIBRARY_TERMS_BACKFILL_KEY]);
-  if (!flag) return false;
+  const stored = db.get("SELECT value FROM meta WHERE key = ?", [LIBRARY_TERMS_VERSION_KEY]);
+  const pending = db.get("SELECT value FROM meta WHERE key = ?", [LIBRARY_TERMS_BACKFILL_KEY]);
+  // v11 libraries without a version row were filled by extractor version 1.
+  const version = stored ? Number(stored.value) : pending ? 0 : 1;
+  if (version >= LIBRARY_TERMS_VERSION) return false;
   for (const index of [...getAllPaperIndexes(db), ...getTrashedPaperIndexes(db)]) {
     try {
       const original = (await fs.readText(`papers/${index.id}/original.md`)) ?? "";
@@ -101,6 +109,10 @@ async function backfillLibraryTerms(fs: FileSystem, db: SqliteClient): Promise<b
     }
   }
   db.exec("DELETE FROM meta WHERE key = ?", [LIBRARY_TERMS_BACKFILL_KEY]);
+  db.exec("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)", [
+    LIBRARY_TERMS_VERSION_KEY,
+    String(LIBRARY_TERMS_VERSION),
+  ]);
   return true;
 }
 

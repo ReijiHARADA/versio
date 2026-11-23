@@ -24,6 +24,8 @@ function matchedLongForm(shortForm: string, candidate: string): string | undefin
   const longForm = trimLongForm(candidate);
   const chars = shortForm.replace(/[^A-Za-z0-9]/g, "").toLowerCase();
   if (longForm.length < shortForm.length || longForm.toLowerCase() === shortForm.toLowerCase()) return;
+  // A clause break or citation inside means the window ran past the definition ("Sheng et al., 2023; …").
+  if (/[;:]|\bet al\b/i.test(longForm)) return;
   if (new RegExp(`(^|[^A-Za-z0-9])${shortForm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=$|[^A-Za-z0-9])`, "i").test(longForm)) return;
 
   let cursor = longForm.length - 1;
@@ -86,7 +88,8 @@ export function extractAbbreviations(text: string): AbbreviationDefinition[] {
     const open = match.index ?? 0;
     for (; scannedTo < open; scannedTo++) if (/[.!?。！？\n]/.test(text[scannedTo])) sentenceStart = scannedTo + 1;
     const japanese = japaneseTermBefore(text, open);
-    if (japanese && japanese.length >= 2 && (isShortForm(inner) || LATIN_PHRASE.test(inner))) {
+    // Digits mark a label or model name (H1-H3, Galaxy S8), not a gloss of the Japanese term.
+    if (japanese && japanese.length >= 2 && !/\d/.test(inner) && (isShortForm(inner) || LATIN_PHRASE.test(inner))) {
       add(inner, japanese);
       continue;
     }
