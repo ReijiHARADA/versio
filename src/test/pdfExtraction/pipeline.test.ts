@@ -918,12 +918,14 @@ describe("canonical extraction pipeline", () => {
       fileHash: "fragmented-review-table-regression",
       metadata: { pageCount: pages.length },
     });
-    const tableRows = result.blocks.filter((block) => block.pageStart === 5 && /^(?:\[18\]|\[19\]|ARIMA model of order \(1,1,0\) for con-)/.test(block.original ?? ""));
-    expect(tableRows.length).toBeGreaterThan(0);
-    expect(tableRows.every((block) => block.type === "table" || block.translationStatus === "skipped")).toBe(true);
-    const numericTableMix = result.blocks.find((block) => block.pageStart === 5 && /R \(Confirmed Case- Italy\)/.test(block.original ?? ""));
-    expect(numericTableMix?.type).toBe("table");
-    expect(numericTableMix?.translationStatus).toBe("skipped");
+    // The region-ordered rows now sit inside the caption-owned Table 2 (pending: its caption is translated).
+    const table = result.blocks.find((block) => block.pageStart === 5 && /^Table 2\. ML for forecasting/.test(block.original ?? ""));
+    expect(table?.type).toBe("table");
+    for (const cell of ["[18]", "[19]", "ARIMA model of order (1,1,0) for con-", "R (Confirmed Case- Italy)"]) {
+      expect(table?.original).toContain(cell);
+    }
+    expect(result.blocks.some((block) => block.pageStart === 5 && block.type === "paragraph" &&
+      /^(?:\[18\]|\[19\]|ARIMA model of order|R \(Confirmed)/.test(block.original ?? ""))).toBe(false);
     expect(result.blocks.some((block) => block.pageStart === 5 && block.type === "paragraph" && block.original?.startsWith("In order to model"))).toBe(true);
   }, 60_000);
 
