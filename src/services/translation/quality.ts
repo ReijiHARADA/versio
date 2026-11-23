@@ -2139,7 +2139,9 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   // scholarly sentences conventionally begin with an uppercase token; reject
   // this high-precision fragment signal before translation rather than asking
   // the model to invent the missing subject.
-  if (!isCompleteFormulaDefinition && /^[a-z][a-z-]{2,}\b/.test(t)) {
+  // A first token with a capital or a digit inside (`mmu-miR-337`, `sEMGCareHCI`, `p53`) is an identifier that starts a sentence.
+  const identifierStart = /^\p{Ll}\S*[\p{Lu}\d]/u.test(t);
+  if (!isCompleteFormulaDefinition && !identifierStart && /^[a-z][a-z-]{2,}\b/.test(t)) {
     return "段落の先頭が前段から続いている可能性があります";
   }
   // A bare lower-case phrase that also lacks sentence-ending punctuation is
@@ -2147,7 +2149,7 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   // marker and are excluded from this rule; common discourse abbreviations
   // remain valid starts.
   // A list marker (`a) Physical state …`, `ii. Controlled …`) or a mixed-case name (`pKa`, `mBrainTrain`) is no continuation.
-  const ownStart = /^(?:[a-z]\)|[ivx]{1,4}[.)])\s/.test(t) || /^\p{Ll}+\p{Lu}/u.test(t);
+  const ownStart = /^(?:[a-z]\)|[ivx]{1,4}[.)])\s/.test(t) || /^\p{Ll}+\p{Lu}/u.test(t) || identifierStart;
   if (
     !ownStart &&
     t.length >= 48 &&
