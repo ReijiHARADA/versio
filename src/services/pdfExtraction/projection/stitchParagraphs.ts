@@ -125,7 +125,12 @@ export function appendContinuation(current: PaperBlock, next: PaperBlock): Paper
     original: joined,
     pageEnd: Math.max(current.pageEnd, next.pageEnd),
     boundingBoxes: [...current.boundingBoxes, ...next.boundingBoxes],
-    metadata: { ...current.metadata, translationInputWarning: warning ?? undefined, stitchedFrom: [...((current.metadata.stitchedFrom as string[] | undefined) ?? []), next.id] },
+    metadata: {
+      ...current.metadata,
+      ...(next.metadata.listRole === "intro" ? { listRole: "intro" } : {}),
+      translationInputWarning: warning ?? undefined,
+      stitchedFrom: [...((current.metadata.stitchedFrom as string[] | undefined) ?? []), next.id],
+    },
   };
 }
 
@@ -154,7 +159,10 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
       for (let j = i + 1; j < out.length && j <= i + 12 && out[j].pageStart <= current.pageEnd + (onlyFloats && j > i + 1 ? 8 : 1); j += 1) {
         const candidate = out[j];
         const candidateText = candidate.original?.trim() ?? "";
-        if (eligible(candidate) && words(candidateText) >= 2 && CONTINUATION_START.test(candidateText)) {
+        // A list's lead-in (`task (“diseased” vs. “no disease”). These modifications are:`) can be the rest of the sentence too.
+        const listIntro = candidate.type === "paragraph" && candidate.metadata.listRole === "intro" && candidate.metadata.role !== "reference" &&
+          !referenceSections.has(candidate.sectionId ?? "");
+        if ((eligible(candidate) || listIntro) && words(candidateText) >= 2 && CONTINUATION_START.test(candidateText)) {
           target = j;
           break;
         }
