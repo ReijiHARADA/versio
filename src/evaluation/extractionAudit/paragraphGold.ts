@@ -33,7 +33,14 @@ export function jatsParagraphs(xml: string): GoldParagraph[] {
       // (`… is defined as:` | formula | `where θ denotes …`).
       for (const piece of p.inner.split(/<disp-formula[\s>][\s\S]*?<\/disp-formula>/)) {
         // Inline formulas carry their LaTeX source next to the MathML; the PDF prints only the formula.
-        const plain = decodeEntities(text(removeElements(piece, "tex-math"))).replace(/\s+/g, " ").trim();
+        // Inline formulas and cross-reference labels are printed in another form than the JATS holds (`yi` against
+        // nothing, `Figure 10` against `Fig. S13`, `[14–16]` against `14, 15, 16`): they become a boundary that no
+        // shingle crosses, so only the prose around them is matched.
+        const marked = piece
+          .replace(/<inline-formula[\s>][\s\S]*?<\/inline-formula>/g, ` ${MARKUP} `)
+          .replace(/<inline-graphic\b[^>]*?(?:\/>|>[\s\S]*?<\/inline-graphic>)/g, ` ${MARKUP} `)
+          .replace(/<xref\b[^>]*?(?:\/>|>[\s\S]*?<\/xref>)/g, ` ${MARKUP} `);
+        const plain = decodeEntities(text(removeElements(marked, "tex-math"))).replace(/\s+/g, " ").trim();
         if (plain) out.push({ index: out.length, part, text: plain, hasDisplayFormula });
       }
     }
@@ -44,9 +51,12 @@ export function jatsParagraphs(xml: string): GoldParagraph[] {
 // Fold accents: LaTeX gold drops math accents (`\\tilde{A}` → `A`) that the PDF text keeps.
 // Letters and digits are separate tokens: a superscript citation is set tight against its word in one source
 // and spaced in the other (`explored in29.` / `articulation 11`), with the same text.
-export const tokens = (s: string): string[] => s.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().match(/\p{L}+|\p{N}+/gu) ?? [];
+export const tokens = (s: string): string[] => s.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().match(/\p{L}+|\p{N}+|\u2063/gu) ?? [];
+/** Stands in the gold text where inline markup (a formula, a cross-reference label) was. */
+export const MARKUP = "\u2063";
 const SHINGLE = 5;
-const shingles = (t: string[]): string[] => (t.length < SHINGLE ? [] : Array.from({ length: t.length - SHINGLE + 1 }, (_, i) => t.slice(i, i + SHINGLE).join(" ")));
+const shingles = (t: string[]): string[] => (t.length < SHINGLE ? [] : Array.from({ length: t.length - SHINGLE + 1 }, (_, i) => t.slice(i, i + SHINGLE)).filter((w) => !w.includes(MARKUP)).map((w) => w.join(" ")));
+const wordCount = (s: string) => tokens(s).filter((t) => t !== MARKUP).length;
 
 export type ExtractedBlock = { id: string; text: string; warning: string | null };
 
@@ -89,7 +99,7 @@ export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[])
     for (const s of new Set(sh)) owners.set(s, [...(owners.get(s) ?? []), block.id]);
   }
   const goldOwner = new Map<string, number | null>();
-  const scorable = gold.filter((p) => tokens(p.text).length >= 25);
+  const scorable = gold.filter((p) => wordCount(p.text) >= 25);
   for (const p of scorable) for (const s of new Set(shingles(tokens(p.text)))) goldOwner.set(s, goldOwner.has(s) && goldOwner.get(s) !== p.index ? null : p.index);
 
   const warnedBlocks = new Set(blocks.filter((b) => b.warning).map((b) => b.id));
