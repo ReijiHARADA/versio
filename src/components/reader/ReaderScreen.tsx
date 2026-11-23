@@ -76,6 +76,7 @@ export function ReaderScreen() {
 
   const [showOutline, setShowOutline] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [rightPanel, setRightPanel] = useState<ReaderRightPanel>("none");
   // Wide windows draw the inspector on the ground beside the card (AppShell slot, present only after the
@@ -364,6 +365,7 @@ export function ReaderScreen() {
             <StickyNote size={iconSize.md} />
           </button>
           <button
+            ref={settingsButtonRef}
             className={`${styles.iconButton} ${showSettings ? styles.active : ""}`}
             onClick={() => setShowSettings(!showSettings)}
             aria-label="表示設定"
@@ -512,7 +514,10 @@ export function ReaderScreen() {
       )}
 
       {showSettings && (
-        <DisplaySettingsPanel onClose={() => setShowSettings(false)} />
+        <DisplaySettingsPanel
+          anchor={settingsButtonRef.current?.getBoundingClientRect() ?? null}
+          onClose={() => setShowSettings(false)}
+        />
       )}
 
       {showSearch && (
