@@ -1678,6 +1678,8 @@ export function isFigureCaption(text: string): boolean {
   const caption = layoutPlain(text);
   // Panel suffix `2a` only when not the start of a glued word (`2lexico…`).
   const figNumber = String.raw`(?:figure|fig\.?|図)\s*(?:[a-z]\.?)?\d+(?:[a-z](?![a-z]))?`;
+  // A panel range (`Figure 8a–d. In each scenario, we …`) is how the text refers to a figure, not how a caption opens.
+  if (/^(?:figure|fig\.?)\s*\d+[a-z]\s*[–—-]\s*[a-z]\b/i.test(caption)) return false;
   // Include `|` for Frontiers-style `FIGURE 1 | Experimental design…`.
   if (new RegExp(`^${figNumber}(?:\\s*,\\s*[a-z]\\b)*(?:\\s*[:.|：–—-]|\\s*$)`, "i").test(caption)) {
     return true;
