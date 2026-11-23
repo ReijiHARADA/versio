@@ -1,73 +1,122 @@
-.help,
-.empty {
+.help {
   margin: 0;
   font-size: 0.8125rem;
   color: var(--color-text-tertiary);
   line-height: 1.5;
 }
 
+.card {
+  composes: surface from "../../styles/squircle.module.css";
+  position: relative;
+  --sq-fill: var(--sq-fill-md);
+  --sq-ring: var(--sq-ring-md);
+  --sq-bg: var(--color-surface-control);
+  --sq-line: var(--color-separator-subtle);
+  border-radius: var(--sq-radius-md);
+  display: flex;
+  flex-direction: column;
+}
+
 .list {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
-.item {
+/* One grid for header, entries and the draft row so the columns line up.
+   minmax(0, …): input intrinsic width would push the button out. */
+.header,
+.row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; /* minmax(0, …): input intrinsic width would push the button out */
-  gap: 6px;
+  grid-template-columns: minmax(0, 1fr) 14px minmax(0, 1fr) 22px;
+  align-items: center;
+  column-gap: 8px;
+  padding: 0 8px 0 12px;
 }
 
-.term,
-.translation,
-.add input {
+.header {
+  min-height: 28px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  border-bottom: 1px solid var(--color-separator-subtle);
+}
+
+.row {
+  min-height: 36px;
+  border-bottom: 1px solid var(--color-separator-subtle);
+}
+
+.list .row:hover,
+.list .row:focus-within {
+  background: color-mix(in srgb, var(--color-accent) 5%, transparent);
+}
+
+.draft {
+  border-bottom: none;
+}
+
+.input {
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
-  padding: 6px 8px;
+  margin: 0;
+  padding: 8px 0;
+  border: none;
+  outline: none;
+  background: transparent;
   color: var(--color-text);
+  font: inherit;
   font-size: 0.8125rem;
+  text-overflow: ellipsis;
+}
+
+.input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.arrow {
+  color: var(--color-text-tertiary);
+  opacity: 0.7;
+}
+
+.remove,
+.addButton {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
 }
 
 .remove {
-  appearance: none;
-  border: none;
   background: transparent;
   color: var(--color-text-tertiary);
-  font-size: 0.75rem;
-  cursor: pointer;
+  opacity: 0;
 }
 
-.field {
-  composes: field from "../../styles/squircle.module.css";
-  --sq-fill: var(--sq-fill-sm);
-  --sq-ring: var(--sq-ring-sm);
-  border-radius: var(--sq-radius-sm);
+.row:hover .remove,
+.row:focus-within .remove,
+.remove:focus-visible {
+  opacity: 1;
 }
 
-.add {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; /* minmax(0, …): input intrinsic width would push the button out */
-  gap: 6px;
-  margin-top: auto;
+.remove:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .addButton {
-  composes: surface from "../../styles/squircle.module.css";
-  position: relative;
-  --sq-fill: var(--sq-fill-sm);
-  --sq-ring: var(--sq-ring-sm);
-  appearance: none;
-  border: 1px solid transparent;
-  --sq-bw: 1px;
-  --sq-line: var(--color-accent);
-  --sq-bg: transparent;
-  color: var(--color-accent);
-  border-radius: var(--sq-radius-sm);
-  cursor: pointer;
-  font-size: 0.75rem;
-  padding: 0 10px;
-  white-space: nowrap;
+  background: var(--color-accent);
+  color: var(--color-selection-fg);
+}
+
+.addButton:disabled {
+  background: var(--color-surface-hover);
+  color: var(--color-text-tertiary);
+  cursor: default;
 }
