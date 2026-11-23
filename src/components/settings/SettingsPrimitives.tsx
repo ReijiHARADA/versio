@@ -47,34 +47,3 @@ export function SettingsRow({
     </div>
   );
 }
-
-type SettingsStatusRowProps = {
-  label: string;
-  detail?: string;
-  state: "checking" | "ok" | "error";
-  stateLabel: string;
-};
-
-export function SettingsStatusRow({
-  label,
-  detail,
-  state,
-  stateLabel,
-}: SettingsStatusRowProps) {
-  return (
-    <div className={styles.statusRow}>
-      <div className={styles.rowText}>
-        <p className={styles.rowLabel}>{label}</p>
-        {detail ? <p className={styles.rowDescription}>{detail}</p> : null}
-      </div>
-      <p
-        className={`${styles.statusValue} ${
-          state === "ok" ? styles.statusOk : state === "error" ? styles.statusError : ""
-        }`}
-      >
-        <span className={styles.statusDot} aria-hidden="true" />
-        {stateLabel}
-      </p>
-    </div>
-  );
-}

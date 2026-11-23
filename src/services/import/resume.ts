@@ -111,7 +111,7 @@ export async function resumeIncompleteTranslation(
       await savePaper(paper);
       return;
     }
-    const { engine: translationEngine, primaryEngine } = createTranslationEngine(cfg);
+    const { engine: translationEngine, primaryEngine } = createTranslationEngine();
     const queue = new TranslationQueue(translationEngine, {
       concurrency: cfg.translationConcurrency,
       retryFailed: true,

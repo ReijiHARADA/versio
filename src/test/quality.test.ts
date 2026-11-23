@@ -1235,12 +1235,9 @@ describe("import translation concurrency", () => {
     expect(resolveImportConfig({ translationConcurrency }).translationConcurrency).toBe(translationConcurrency);
   });
 
-  it("preserves ordered opt-in alternate model candidates", () => {
-    expect(resolveImportConfig({
-      enableSelectiveCascade: true,
-      ollamaModel: "qwen2.5:14b",
-      ollamaModels: ["gemma2:9b", "qwen2.5:14b"],
-    }).ollamaModels).toEqual(["gemma2:9b", "qwen2.5:14b"]);
+  it("drops removed Ollama keys from saved settings", () => {
+    const legacy = { ollamaModel: "qwen2.5:14b", enableSelectiveCascade: true } as Record<string, unknown>;
+    expect(resolveImportConfig(legacy)).not.toHaveProperty("ollamaModel");
   });
 });
 

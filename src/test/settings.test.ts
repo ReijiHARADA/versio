@@ -17,10 +17,7 @@ import {
   rubberBand,
   wheelStep,
 } from "../components/settings/useSettingsElasticPull";
-import {
-  DEFAULT_TRANSLATION_SETTINGS_V2,
-  mergeTranslationSettingsV2,
-} from "../utils/translationSettings";
+import { mergeTranslationSettingsV2 } from "../utils/translationSettings";
 
 describe("settings TOC", () => {
   it("lists settings sections in navigation order with licenses last", () => {
@@ -28,11 +25,10 @@ describe("settings TOC", () => {
       "読書",
       "翻訳",
       "ライブラリとデータ",
-      "詳細",
       "ライセンス",
     ]);
     expect(SETTINGS_SCROLL_SECTIONS.map((section) => section.id)).not.toContain("licenses");
-    expect(isSettingsScrollSection("advanced")).toBe(true);
+    expect(isSettingsScrollSection("data")).toBe(true);
     expect(isSettingsScrollSection("licenses")).toBe(false);
     expect(settingsSectionElementId("reading")).toBe("section-reading");
     expect(settingsSectionElementId("licenses")).toBe("section-licenses");
@@ -100,19 +96,14 @@ describe("mergeTranslationSettingsV2", () => {
     expect(merged).not.toHaveProperty("madladServerUrl");
   });
 
-  it("keeps default concurrency 8 and existing Ollama settings", () => {
+  it("keeps saved values and drops removed Ollama / glossary keys", () => {
     const merged = mergeTranslationSettingsV2({
       ollamaModel: "gemma2:9b",
       generateGlossary: false,
       translationConcurrency: 8,
       useCache: false,
     });
-    expect(merged.generateGlossary).toBe(false);
-    expect(merged.useCache).toBe(false);
-    expect(merged.translationConcurrency).toBe(8);
-    expect(merged.ollamaServerUrl).toBe(
-      DEFAULT_TRANSLATION_SETTINGS_V2.ollamaServerUrl
-    );
+    expect(merged).toEqual({ translationConcurrency: 8, useCache: false });
   });
 
   it("bumps legacy concurrency of 3 or less up to 8", () => {

@@ -1,7 +1,7 @@
 /**
  * Paper Import Service V2
  * 
- * Uses PLaMo for translation and Ollama for LLM analysis.
+ * Uses PLaMo for translation.
  * Implements priority-based translation queue for fast Time to First Read.
  */
 
@@ -10,13 +10,12 @@ import { computeFileHash } from "./pdfService";
 import { classifyPdfOpenError } from "./pdfOpenError";
 import { extractAcademicPdf } from "./pdfExtraction/pipeline/extractAcademicPdf";
 import { applyGlossary, normalizeSourceGroundedTerminology } from "./llm/glossaryService";
-import { assignBlockTranslation, preserveSourceTranslation, reapplyGlossary } from "./glossary/apply";
+import { assignBlockTranslation, preserveSourceTranslation } from "./glossary/apply";
 import {
   savePaper,
   saveSections,
   updateBlock,
   getBlocksByPaper,
-  saveGlossary,
   getGlossary,
   saveBenchmark,
   computeTextHash,
@@ -45,7 +44,6 @@ import {
   localizeNamedFigureCaption,
 } from "./translation/quality";
 import { projectSafeUnitTranslation } from "./translation/partialProjection";
-import { generateGlossary } from "./llm";
 import type { GlossaryEntry } from "./llm/types";
 import { finalizedTranslationStatus } from "./paperStatus";
 import {
@@ -87,7 +85,7 @@ export { retryBlockTranslation } from "./import/retryBlockTranslation";
 // ============================================================
 
 /**
- * Import a PDF with PLaMo translation and Ollama analysis.
+ * Import a PDF with PLaMo translation.
  */
 export async function importPDFV2(
   file: File,
@@ -101,11 +99,10 @@ export async function importPDFV2(
 
   const {
     engine: translationEngine,
-    llmProviders,
     primaryEngine,
     cacheModel,
     cacheModelVersion,
-  } = createTranslationEngine(cfg);
+  } = createTranslationEngine();
 
   let releaseExtraction: (() => void) | undefined;
 
@@ -302,61 +299,9 @@ export async function importPDFV2(
       return { paper, sections, blocks };
     }
 
-    let glossaryEntries: GlossaryEntry[] = await getGlossary(paperId);
+    const glossaryEntries: GlossaryEntry[] = await getGlossary(paperId);
     setEngineGlossary({ primaryEngine }, glossaryEntries);
 
-    // Stage 4: Glossary in the background — never block translation
-    if (cfg.generateGlossary && llmProviders[0]) {
-      void (async () => {
-        try {
-          callbacks.onStageChange("glossary");
-          callbacks.onProgress({
-            stage: "glossary",
-            stageProgress: 0,
-            stageTotal: 1,
-            message: "用語集を生成しています...",
-          });
-
-          const abstractSection = sections.find(
-            (s) => s.normalizedKind === "abstract"
-          );
-          const abstractBlocks = blocks.filter(
-            (b) => b.sectionId === abstractSection?.id && b.type === "paragraph"
-          );
-          const abstractText = abstractBlocks
-            .map((b) => b.original)
-            .filter(Boolean)
-            .join(" ");
-
-          const glossary = await generateGlossary(
-            llmProviders[0],
-            paper.titleOriginal || "",
-            abstractText,
-            []
-          );
-          await saveGlossary(paperId, glossary);
-          glossaryEntries = glossary;
-          setEngineGlossary({ primaryEngine }, glossary);
-          const updated = await reapplyGlossary(paperId);
-          if (updated.paper) {
-            Object.assign(paper, updated.paper);
-            callbacks.onPaperUpdated?.(updated.paper);
-          }
-          for (const section of updated.sections) {
-            const local = sections.find((item) => item.id === section.id);
-            if (local) Object.assign(local, section);
-            callbacks.onSectionTranslated?.(section);
-          }
-          for (const block of updated.blocks) {
-            const local = blocks.find((item) => item.id === block.id);
-            if (local) Object.assign(local, block);
-            if (block.translated) callbacks.onBlockTranslated?.(block);
-          }
-        } catch (e) {
-          console.error("Failed to generate glossary:", e);
-        }
-      })();
-    }
 
     // Stage 5: Translation with priority queue (after model is ready).
     if (callbacks.waitForTranslationEngine) {

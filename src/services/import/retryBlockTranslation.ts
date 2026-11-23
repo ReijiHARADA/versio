@@ -2,7 +2,7 @@
  * Reader paragraph retry — same engine stack and outcome rules as import/resume.
  */
 
-import { getGlossary, getSetting, updateBlock } from "../database";
+import { getGlossary, updateBlock } from "../database";
 import { assignBlockTranslation, preserveSourceTranslation } from "../glossary/apply";
 import { applyGlossary, normalizeSourceGroundedTerminology } from "../llm/glossaryService";
 import {
@@ -16,26 +16,18 @@ import {
 } from "../translation/quality";
 import { isTranslationQualityError } from "../translation/retryPolicy";
 import type { PaperBlock } from "../../types/paper";
-import { resolveImportConfig } from "./helpers";
 import { translationInputForBlock } from "./policy";
-import type { ImportConfig } from "./types";
 
 export async function retryBlockTranslation(
   block: PaperBlock,
   options: {
-    config?: ImportConfig;
     onBlockUpdated?: (block: PaperBlock) => void;
   } = {}
 ): Promise<PaperBlock> {
   const source = translationInputForBlock(block);
   if (!source.trim()) return block;
 
-  const saved =
-    options.config ??
-    (await getSetting<ImportConfig>("translationSettingsV2")) ??
-    {};
-  const cfg = resolveImportConfig(saved);
-  const { engine, primaryEngine } = createTranslationEngine(cfg);
+  const { engine, primaryEngine } = createTranslationEngine();
 
   const glossary = await getGlossary(block.paperId);
   setEngineGlossary({ primaryEngine }, glossary);

@@ -51,7 +51,6 @@
     "audit:summarize-extraction-review": "npx tsx scripts/summarize-extraction-review.ts",
     "diagnose:caption-boundaries": "npx tsx scripts/diagnose-caption-boundaries.ts",
     "diagnose:table-geometry": "vite-node --script scripts/diagnose-table-geometry.ts",
-    "bench:real-paper-translation": "vite-node --script scripts/benchmark-real-paper-translation.ts",
     "bench:library": "npx --yes tsx scripts/bench-library-scale.ts",
     "bench:library-scale": "npm run bench:library",
     "release:acceptance": "bash scripts/run-release-acceptance.sh",

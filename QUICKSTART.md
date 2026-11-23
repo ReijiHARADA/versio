@@ -26,15 +26,6 @@ npm run build:llama-server   # llama.cpp b12110 を静的ビルドして src-tau
 npm install
 ```
 
-### 2. 任意: Ollama（用語集）
-
-```bash
-brew install ollama
-ollama pull gemma2:9b
-```
-
-翻訳と論文表示だけなら Ollama は不要です。
-
 ---
 
 ## 日常の起動
@@ -74,7 +65,7 @@ npm run verify:browser
 ./start.sh
 ```
 
-`npm run dev` を起動します。ブラウザでは翻訳は動きません（PLaMo は `.app` / `tauri:dev` のみ）。Ollama も起動を試みます。
+`npm run dev` を起動します。ブラウザでは翻訳は動きません（PLaMo は `.app` / `tauri:dev` のみ）。
 
 ### リリース用 `.app`
 
@@ -131,7 +122,6 @@ Apple Vision は `.app` または `npm run tauri:dev` だけです。ブラウ�
 | プロセス | 目安 |
 |---|---|
 | PLaMo llama-server（2B Q4_K_M） | 2–3GB |
-| Ollama gemma2:9b（任意） | 6–8GB |
 | UI | 0.5–1GB |
 
 推奨: Apple Silicon / 24GB 以上。
