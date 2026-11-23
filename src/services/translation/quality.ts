@@ -1914,7 +1914,7 @@ export function isExpectedNonProseParagraph(text: string): boolean {
   const operators = t.match(/\s(?:OR|AND)\s/g)?.length ?? 0;
   if (operators >= 3 && operators * 10 >= t.split(/\s+/).length && /\b(?:TS\s*=|TITLE-ABS-KE|TITLE\s*\(|ABS\s*\(|PUBYEAR|ALL\s*\(|\[MeSH|\[tiab)/.test(t)) return true;
   // A numbered algorithm line (`3: Configure Patchwork++ with (ut, dt)`, `5: (Pg, Png) ← …`).
-  if (/^\d{1,2}:\s/.test(t) && /[←∈]|\/\/|\b(?:for|while|if|return|end)\b/.test(t)) return true;
+  if (/^\d{1,2}:\s/.test(t) && (/[←∈]|\/\/|\b(?:for|while|if|return|end)\b/.test(t) || /\s\d{1,2}:\s/.test(t))) return true;
   // Line-numbered algorithm steps (`1 Step 1. Calculate …`, `20 e) Update the number of iterations: 21 t ← t + 1`)
   // and an algorithm's header (`Input: … Output: …`).
   if (/^\d{1,2}\s+(?:Step\s+\d+[.:]|\p{Ll}\)\s)/u.test(t) || /^Input:\s.*\bOutput:/s.test(t)) return true;
