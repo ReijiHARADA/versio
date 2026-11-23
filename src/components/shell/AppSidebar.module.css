@@ -738,6 +738,12 @@
   border-bottom-left-radius: 7px;
 }
 
+/* Rows paint above the guide from the first frame; without this WKWebView drew
+   the line over a freshly selected row until the highlight transition ended. */
+.treeNestedClip > * > .item {
+  z-index: 1;
+}
+
 .treeNestedClip > *:not(:last-child)::after {
   /* Full height, so the rounded elbow branches off an unbroken line. */
   top: -2px;
