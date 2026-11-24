@@ -1804,7 +1804,8 @@ function isCopyright(text: string, fontSize: number, baseFont: number): boolean 
     /^copyright\s*(?:©|\(\s*\d{4}\s*\)|\d{4}\b)/i.test(trimmed);
   const bmjRunningChrome =
     copyrightLead ||
-    /^(?:protected by copyright|downloaded from)\b/i.test(trimmed) ||
+    /^protected by copyright\b/i.test(trimmed) ||
+    (/^downloaded from\b/i.test(trimmed) && (/https?:|www\.|\.(?:org|com|net|edu)\b|by guest|\bon \d{1,2}\b/i.test(trimmed) || trimmed.length <= 40)) ||
     /\bprotected by copyright, including for uses related to text and data mining\b/i.test(text);
   const explicitLicense =
     bmjRunningChrome ||
@@ -3008,7 +3009,9 @@ function roleForLine(
   // HighWire / BMJ running margin stamps on every page.
   if (
     /^protected by copyright\b/i.test(text) ||
-    /^downloaded from\b/i.test(text) ||
+    // (a repository stamp names a site or a date, `Downloaded from https://… on 12 May 2024`; `downloaded from the
+    // Polar Flow web platform, and imported into` is a body line)
+    (/^downloaded from\b/i.test(text) && (/https?:|www\.|\.(?:org|com|net|edu)\b|by guest|\bon \d{1,2}\b/i.test(text) || text.length <= 40)) ||
     /^by guest\.?$/i.test(text)
   ) {
     return "chrome";
