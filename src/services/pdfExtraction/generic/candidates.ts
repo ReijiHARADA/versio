@@ -723,6 +723,11 @@ function captionedDenseTableBand(block: LayoutBlock, blocks: LayoutBlock[], page
  * column alone has no short numeric cells. */
 function captionedNeighborCellRows(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   if (block.role === "table_caption" || block.lines.length < 4 || block.bbox.width > 280) return false;
+  // A column-wide run of sentences is body text beside a table, however few lines layout gave it.
+  const pageWidth = block.lines[0]?.pageWidth ?? 612;
+  const words = block.text.split(/\s+/).filter(Boolean);
+  if (block.bbox.width >= pageWidth * 0.38 && words.length >= 12 && /[a-z]{3,}[.!?](?:\s|$)/.test(block.text) &&
+    words.filter((w) => /^(?:the|of|and|in|to|is|are|was|were|that|with|for|by|this|as)$/i.test(w)).length >= 3) return false;
   const caption = nearbyTableCaptionForRegion(block, blocks, 420);
   if (!caption) return false;
   const repeatedCellOrigins = new Map<number, number>();
