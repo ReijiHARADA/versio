@@ -4669,10 +4669,9 @@ function projectProseNode(context: BodyNodeContext, state: BodyProjectionState, 
       const isChartLabel = node.evidence.some(
         (evidence) => evidence.label === "repeated-numeric-chart-label"
       );
+      // A chart's repeated numeric labels are kept as source text (translation skipped below); nothing in them is broken.
       const translationInputWarning =
-        isChartLabel
-          ? "repeated numeric chart label; kept as source text"
-          : isRef || isExpectedNonProseParagraph(text)
+        isChartLabel || isRef || isExpectedNonProseParagraph(text)
           ? null
           : unsafeParagraphStructureReason(text);
       for (const [partIndex, part] of listParts.entries()) {
