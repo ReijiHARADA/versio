@@ -4032,7 +4032,13 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     const columnLines = (l: LayoutLine) => bodyColumnLines.get(`${l.page}:${l.column}`) ?? [];
     // A one-line B could be a heading or a note: only a lower-case start continues. (A longer B whose first run is
     // one line, the rest in the next column, is measured like any other.)
-    if (head.length < 2 && (columnLines(head[0]).length < 6 || (b.lines.length < 2 && !/^\p{Ll}/u.test(b.text.trim())))) continue;
+    // (A one-line B that fills its column is a line out of the middle of a paragraph, as in double-spaced manuscripts
+    // where every line is a block of its own.)
+    const fillsColumn = (l: LayoutLine) => {
+      const peers = columnLines(l);
+      return peers.length >= 6 && l.width >= Math.max(...peers.map((p) => p.width)) * 0.92;
+    };
+    if (head.length < 2 && (columnLines(head[0]).length < 6 || (b.lines.length < 2 && !/^\p{Ll}/u.test(b.text.trim()) && !fillsColumn(head[0])))) continue;
     if (tail.length < 2 && (head[0].column !== last.column || head[0].page !== last.page) && columnLines(last).length < 6) continue;
     // A sentence cut mid-way (`Supplementary` / `Table 8)`, `record` / `(EHR)`) is no list or caption start.
     const midSentence = /[\p{L}\p{N},]$/u.test(a.text.trim());
