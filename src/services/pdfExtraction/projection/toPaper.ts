@@ -1480,7 +1480,10 @@ function isReferenceText(text: string, currentKind: NormalizedSectionKind | null
     // A long sentence containing an inline year is usually body prose with a
     // citation, not a bibliography record.  Keep it visible for translation.
     if (!numberedEntry && !referenceContinuation && !authorYearEntry && !embeddedAuthorYear &&
-        trimmed.length > 180 && /[.!?]\s*$/.test(trimmed) && hasYear) return false;
+        trimmed.length > 180 && /[.!?]\s*$/.test(trimmed) &&
+        // (Without a year, DOI or URL it is no record at all: `All claims expressed in this article are solely those of
+        // the authors … endorsed by the publisher.`)
+        (hasYear || !/\b(?:doi\s*:|https?:\/\/|10\.\d{4,}\/)/i.test(trimmed))) return false;
     return hasBibliographicShape;
   }
   // A numbered list item is not a bibliography entry. Outside an explicit
