@@ -143,6 +143,36 @@
   text-decoration: underline;
 }
 
+/* 「ライブラリに追加」: quiet until the entry is hovered or focused. */
+.referenceImport {
+  margin-left: var(--spacing-sm);
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: var(--font-size-small);
+  color: var(--color-accent);
+  text-indent: 0;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.reference:hover .referenceImport,
+.referenceImport:focus-visible,
+.referenceImport:disabled {
+  opacity: 1;
+}
+
+.referenceImport:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.referenceImport:disabled {
+  color: var(--color-text-secondary);
+  cursor: default;
+}
+
 .processingBanner {
   composes: surface from "../../styles/squircle.module.css";
   position: relative;

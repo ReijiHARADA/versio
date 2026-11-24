@@ -1,4 +1,4 @@
-import { memo, type ReactNode } from "react";
+import { memo, useMemo, type ReactNode } from "react";
 import type { Annotation } from "../../types/annotation";
 import type { GlossaryEntry } from "../../services/llm/types";
 import type { PaperBlock, FigureMetadata, EquationMetadata, TableMetadata } from "../../types/paper";
@@ -15,7 +15,15 @@ import { Figure } from "./Figure";
 import { Equation } from "./Equation";
 import { Table } from "./Table";
 import { Footnote } from "./Footnote";
+import { ReferenceImportAction } from "./citations/ReferenceImportAction";
+import { referenceIdentifiers } from "../../services/import/referenceIdentifier";
 import styles from "./PaperContent.module.css";
+
+function ReferenceEntryImport({ text }: { text: string }) {
+  const identifiers = useMemo(() => referenceIdentifiers(text), [text]);
+  if (identifiers.length === 0) return null;
+  return <ReferenceImportAction identifiers={identifiers} className={styles.referenceImport} />;
+}
 
 function renderReferenceText(text: string): ReactNode {
   const links = parseReferenceLinks(text);
@@ -143,6 +151,7 @@ export const PaperBlockView = memo(function PaperBlockView({
       content = (
         <p id={referenceId} className={styles.reference}>
           {renderReferenceText(block.original || "")}
+          <ReferenceEntryImport text={block.original || ""} />
         </p>
       );
       break;
