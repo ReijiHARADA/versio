@@ -28,7 +28,8 @@ const ABBREVIATION_END = /\b(?:et al|e\.g|i\.e|cf|vs)\.$/i;
 // A keyword list glued to an abstract (`…, Feature fusion, Computer-aided diagnosis`) ends without a full stop but is finished.
 const KEYWORD_TAIL = /(?:,\s*\p{Lu}[\p{L}-]*(?:\s+[\p{L}-]+){0,3}){3,}$/u;
 const TERM_START = /^(?:\p{Lu}{2,}|\p{Lu}[\p{L}\d]*[\d+(\-]|\p{Lu}\p{Ll}+\p{Lu})/u;
-const isOpenEnded = (text: string) => (!TERMINAL.test(text) || ABBREVIATION_END.test(text)) && !/:\s*$/.test(text);
+// (A colon inside an unclosed parenthesis, `(β = −0.247: M = 2.856:`, ends no lead-in.)
+const isOpenEnded = (text: string) => (!TERMINAL.test(text) || ABBREVIATION_END.test(text)) && (!/:\s*$/.test(text) || hasOpenParenthesis(text));
 const CONTINUATION_START = /^(?:[a-z]|(?:which|that|and|or|but|where|while|whereas|because|although|including|with|for|of|to|in)\b)/;
 /**
  * A paragraph that cannot end where it does: after a comma, a function word or
@@ -237,8 +238,13 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           break;
         }
         if (!listItem && (j === i + 1 || (sawFloat && !skippedParagraph && !skippedFragment && hardOpen)) &&
-          (hardOpen || (/\s\p{Ll}{3,}$/u.test(currentText) && words(currentText) >= 20)) && !/,$/.test(currentText) && eligible(candidate) &&
+          (hardOpen || (/\s\p{Ll}{3,}$/u.test(currentText) && words(currentText) >= 20)) && !/,$/.test(currentText) && (eligible(candidate) || listIntro) &&
           TERM_START.test(candidateText) && looseContinuation(currentText, candidateText, true)) {
+          target = j;
+          break;
+        }
+        // Right after it, an open paragraph goes on in an operator (`… input resolution of 224` + `× 224 × 3 to …`).
+        if (!listItem && j === i + 1 && eligible(candidate) && /^[×=+−≤≥<>±·∼≈]\s*\S/u.test(candidateText) && words(candidateText) >= 4) {
           target = j;
           break;
         }
