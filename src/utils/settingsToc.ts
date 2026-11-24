@@ -2,6 +2,7 @@ export const SETTINGS_SCROLL_SECTIONS = [
   { id: "reading", label: "読書" },
   { id: "translation", label: "翻訳" },
   { id: "data", label: "ライブラリとデータ" },
+  { id: "about", label: "このアプリについて" },
 ] as const;
 
 export const SETTINGS_LICENSE_SECTION = {

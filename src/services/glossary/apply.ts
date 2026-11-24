@@ -1,8 +1,8 @@
 import { applyGlossary, normalizeSourceGroundedTerminology } from "../llm/glossaryService";
+import { getTranslationGlossary } from "./global";
 import type { GlossaryEntry } from "../llm/types";
 import {
   getBlocksByPaper,
-  getGlossary,
   getPaper,
   getSectionsByPaper,
   saveBlocks,
@@ -42,7 +42,7 @@ export async function reapplyGlossary(paperId: string): Promise<{
   sections: Section[];
   blocks: PaperBlock[];
 }> {
-  const glossary: GlossaryEntry[] = await getGlossary(paperId);
+  const glossary: GlossaryEntry[] = await getTranslationGlossary(paperId);
   const paper = await getPaper(paperId);
   const sections = await getSectionsByPaper(paperId);
   const blocks = await getBlocksByPaper(paperId);

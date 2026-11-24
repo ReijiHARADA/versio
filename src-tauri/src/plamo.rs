@@ -19,7 +19,7 @@ pub const MODEL_SHA256: &str = "1ffd9073afcc70e35ccc942428aa2b73d7aa2b9ea779bf50
 /// Preferred port; a free port is used when it is taken (stale sidecar, other program).
 pub const PORT: u16 = 8766;
 const START_TIMEOUT: Duration = Duration::from_secs(60);
-const LOG_FILE: &str = "plamo-server.log";
+pub(crate) const LOG_FILE: &str = "plamo-server.log";
 const PREV_LOG_FILE: &str = "plamo-server.prev.log";
 
 #[derive(Default)]

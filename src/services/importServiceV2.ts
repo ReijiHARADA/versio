@@ -5,6 +5,7 @@
  * Implements priority-based translation queue for fast Time to First Read.
  */
 
+import { getTranslationGlossary } from "./glossary/global";
 import { v4 as uuidv4 } from "uuid";
 import { computeFileHash } from "./pdfService";
 import { classifyPdfOpenError } from "./pdfOpenError";
@@ -16,7 +17,6 @@ import {
   saveSections,
   updateBlock,
   getBlocksByPaper,
-  getGlossary,
   saveBenchmark,
   computeTextHash,
   getCachedTranslation,
@@ -299,7 +299,7 @@ export async function importPDFV2(
       return { paper, sections, blocks };
     }
 
-    const glossaryEntries: GlossaryEntry[] = await getGlossary(paperId);
+    const glossaryEntries: GlossaryEntry[] = await getTranslationGlossary(paperId);
     setEngineGlossary({ primaryEngine }, glossaryEntries);
 
 

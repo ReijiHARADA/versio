@@ -24,7 +24,7 @@ fn resolve(app: &AppHandle, relative: &str) -> Result<PathBuf, String> {
     Ok(path)
 }
 
-fn e2e_app_data_root(app: &AppHandle) -> Result<PathBuf, String> {
+pub(crate) fn e2e_app_data_root(app: &AppHandle) -> Result<PathBuf, String> {
     if matches!(std::env::var("VERSIO_ACCEPTANCE"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true"))
     {
         if let Ok(path) = std::env::var("VERSIO_ACCEPTANCE_HOME") {

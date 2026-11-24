@@ -2,7 +2,8 @@
  * Reader paragraph retry — same engine stack and outcome rules as import/resume.
  */
 
-import { getGlossary, updateBlock } from "../database";
+import { updateBlock } from "../database";
+import { getTranslationGlossary } from "../glossary/global";
 import { assignBlockTranslation, preserveSourceTranslation } from "../glossary/apply";
 import { applyGlossary, normalizeSourceGroundedTerminology } from "../llm/glossaryService";
 import {
@@ -29,7 +30,7 @@ export async function retryBlockTranslation(
 
   const { engine, primaryEngine } = createTranslationEngine();
 
-  const glossary = await getGlossary(block.paperId);
+  const glossary = await getTranslationGlossary(block.paperId);
   setEngineGlossary({ primaryEngine }, glossary);
 
   try {

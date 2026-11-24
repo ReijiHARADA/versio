@@ -1,3 +1,4 @@
+mod app_info;
 mod bibliography;
 #[cfg(target_os = "macos")]
 mod legacy_data;
@@ -94,6 +95,9 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             updater::check_for_update,
+            app_info::app_storage_usage,
+            app_info::reveal_app_data_dir,
+            app_info::reveal_translation_log,
             updater::install_update,
             plamo::plamo_model_status,
             plamo::download_plamo_model,
