@@ -3801,6 +3801,48 @@ function rejoinCaptionTails(blocks: LayoutBlock[]): LayoutBlock[] {
     result.splice(i + 1, 1);
     i -= 1;
   }
+  // A centred caption at the foot of a page goes on at the top of the next one in centred lines
+  // (`Figure 8. A semantic network analysis of the top 2…` | `four restoration dimensions. (a) Network …`).
+  const pageBody = new Map<number, { x: number; r: number }>();
+  for (const b of blocks) {
+    if (b.role !== "paragraph") continue;
+    for (const l of b.lines) {
+      const cur = pageBody.get(l.page);
+      pageBody.set(l.page, { x: Math.min(cur?.x ?? Infinity, l.x), r: Math.max(cur?.r ?? -Infinity, l.x + l.width) });
+    }
+  }
+  const centred = (l: LayoutLine) => {
+    const m = pageBody.get(l.page);
+    if (!m || m.r - m.x < 200) return false;
+    const left = l.x - m.x, right = m.r - (l.x + l.width);
+    return left >= 4 && right >= 4 && Math.abs(left - right) <= Math.max(12, (left + right) * 0.15);
+  };
+  for (let i = 0; i < result.length - 1; i += 1) {
+    const caption = result[i];
+    if ((caption.role !== "figure_caption" && caption.role !== "table_caption") || caption.column !== "single") continue;
+    const last = caption.lines[caption.lines.length - 1];
+    if (!last || !centred(last)) continue;
+    const capFont = median(caption.lines.map((l) => l.fontSize));
+    let k = i + 1;
+    while (k < result.length && (result[k].role === "header" || result[k].role === "footer" || result[k].role === "chrome")) k += 1;
+    const next = result[k];
+    const first = next?.lines[0];
+    if (!next || next.role !== "paragraph" || !first || first.page !== last.page + 1 || !/^(?:\p{Ll}|\([a-zA-Z]\)\s)/u.test(next.text.trim())) continue;
+    if (result.some((b) => b.role === "paragraph" && b !== next && b.lines.some((l) => l.page === first.page && l.y < first.y))) continue;
+    const moved: LayoutLine[] = [];
+    let end = k;
+    for (; end < result.length; end += 1) {
+      const b = result[end];
+      if (b.role !== "paragraph" || !b.lines.every((l) => l.page === first.page && centred(l) && Math.abs(l.fontSize - capFont) <= 0.4)) break;
+      const prev = moved[moved.length - 1];
+      if (prev && b.lines[0].y - prev.y > capFont * 3) break;
+      moved.push(...b.lines);
+    }
+    if (moved.length === 0) continue;
+    const lines = [...caption.lines, ...moved];
+    result[i] = { ...caption, lines, text: joinLines(lines), pageEnd: first.page, bbox: blockBbox(lines) };
+    result.splice(k, end - k);
+  }
   // The same caption lines can be carried off by a body paragraph that runs on from the previous page
   // (`… By leveraging these libraries,` + the caption's 7 pt lines under `FIGURE 2 …`): move them back.
   for (let i = 0; i < result.length; i += 1) {
