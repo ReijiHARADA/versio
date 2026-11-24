@@ -268,7 +268,7 @@ export function AppSidebar({
           {/* Title bar controls, portaled above the drag band and outside the rail stacking context. */}
           {createPortal(
             <>
-              <div className={styles.titleControls}>
+              <div className={styles.titleControls} data-titlebar-left>
               {!narrow && (
                 <button
                   type="button"
@@ -303,7 +303,7 @@ export function AppSidebar({
                   <ChevronRight size={18} />
                 </button>
               </div>
-              <label className={`${styles.search} ${styles.titleSearch}`} title={`${searchScope}を検索 (${searchShortcut})`}>
+              <label data-titlebar-right className={`${styles.search} ${styles.titleSearch}`} title={`${searchScope}を検索 (${searchShortcut})`}>
                 <input
                   id="library-search"
                   type="search"

@@ -4,7 +4,9 @@
 use tauri::menu::{AboutMetadata, Menu, MenuItemBuilder, SubmenuBuilder};
 use tauri::{AppHandle, Emitter, Runtime};
 
-pub const ACTIONS: [&str; 9] = [
+pub const ACTIONS: [&str; 11] = [
+    "close-tab",
+    "close-window",
     "settings",
     "add-paper",
     "new-folder",
@@ -42,7 +44,8 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .item(&item("add-paper", "論文を追加…", "CmdOrCtrl+O")?)
         .item(&item("new-folder", "新規フォルダ", "CmdOrCtrl+Shift+N")?)
         .separator()
-        .close_window_with_text("ウインドウを閉じる")
+        .item(&item("close-tab", "タブを閉じる", "CmdOrCtrl+W")?)
+        .item(&item("close-window", "ウインドウを閉じる", "CmdOrCtrl+Shift+W")?)
         .build()?;
 
     let edit = SubmenuBuilder::new(app, "編集")

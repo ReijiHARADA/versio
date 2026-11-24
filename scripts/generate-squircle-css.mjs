@@ -13,7 +13,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const K = 1.52866483;
+export const K = 1.52866483;
 // SVG masks are rasterized at intrinsic size; draw them 4x so the 9-slice stays crisp on Retina.
 const SCALE = 4;
 const TRANSITION = 0.6;
