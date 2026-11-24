@@ -3867,10 +3867,16 @@ function rejoinCaptionTails(blocks: LayoutBlock[]): LayoutBlock[] {
       if (at <= 0) continue;
       // The host's own type size: its lines before the carried ones.
       const hostFont = median(host.lines.slice(0, at).map((l) => l.fontSize));
-      if (host.lines[at].fontSize >= hostFont * 0.88) continue;
+      // A legend in body type: an open title line, its rest right under it at line pitch and flush with it, carried
+      // off by a paragraph from an earlier page (`Fig. 2: PCA visualization of the … princ` | `throughout the generation …`).
+      const atLine = host.lines[at];
+      const sameSizeTail = capOpen && host.lines[at - 1].page < capLast.page && atLine.column === capLast.column &&
+        atLine.y - capLast.y <= capLast.fontSize * 1.6 && Math.abs(atLine.x - capLast.x) <= 3;
+      if (atLine.fontSize >= hostFont * 0.88 && !sameSizeTail) continue;
       let end = at;
-      while (end + 1 < host.lines.length && host.lines[end + 1].page === capLast.page && host.lines[end + 1].fontSize < hostFont * 0.88 &&
-        host.lines[end + 1].y - host.lines[end].y <= host.lines[end].fontSize * 2) end += 1;
+      while (end + 1 < host.lines.length && host.lines[end + 1].page === capLast.page &&
+        (sameSizeTail ? host.lines[end + 1].column === capLast.column : host.lines[end + 1].fontSize < hostFont * 0.88) &&
+        host.lines[end + 1].y - host.lines[end].y <= host.lines[end].fontSize * (sameSizeTail ? 1.6 : 2)) end += 1;
       const moved = host.lines.slice(at, end + 1);
       const kept = [...host.lines.slice(0, at), ...host.lines.slice(end + 1)];
       const lines = [...caption.lines, ...moved];
