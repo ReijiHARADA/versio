@@ -1926,6 +1926,9 @@ export function isExpectedNonProseParagraph(text: string): boolean {
   if (t.length <= 200 && /^\(?[a-h]\)\s/i.test(t) && (t.match(/(?:^|\s)\(?[a-h]\)\s/gi)?.length ?? 0) >= 2 && !/[.!?]\s+\p{Lu}\p{Ll}+\s+\p{Ll}/u.test(t)) return true;
   // Pieces of an open-access license footer split across columns (`… No use, distribution or reproduction is permitted`).
   if (/\b(?:no use, distribution or reproduction is permitted|the original publication in this journal is cited|copyright owner\(s\) are credited|in accordance with accepted academic practice)\b/i.test(t)) return true;
+  // Front-matter stamps: the open-access license line and the editor / dates / copyright labels.
+  if (/\bopen access article distributed under the terms of\b|^(?:Published|Copyright|Editor|Academic Editor|Edited by|Reviewed by|Received|Accepted)\s*:/i.test(t) &&
+    t.length <= 400) return true;
   // Consortium member and affiliation lists in the back matter (`… Thomas Tegos , 42,43,44 , Jordi Pérez-Tur ,`,
   // `… University of Eastern Finland, Kuopio, Finland. Institute of …`): institutions or affiliation numbers packed
   // densely, which a sentence about an institution never does.
