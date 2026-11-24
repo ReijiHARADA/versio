@@ -15,14 +15,18 @@ pub struct StorageUsage {
 }
 
 fn dir_size(path: &Path) -> u64 {
-    let Ok(meta) = std::fs::symlink_metadata(path) else { return 0 };
+    let Ok(meta) = std::fs::symlink_metadata(path) else {
+        return 0;
+    };
     if meta.is_file() {
         return meta.len();
     }
     if !meta.is_dir() {
         return 0;
     }
-    let Ok(entries) = std::fs::read_dir(path) else { return 0 };
+    let Ok(entries) = std::fs::read_dir(path) else {
+        return 0;
+    };
     entries.flatten().map(|entry| dir_size(&entry.path())).sum()
 }
 
