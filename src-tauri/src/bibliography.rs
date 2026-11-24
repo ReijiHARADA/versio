@@ -241,10 +241,14 @@ pub async fn download_open_access_pdf(kind: String, id: String) -> Result<Vec<u8
 mod tests {
     #[test]
     fn search_endpoint_encodes_query_and_fixes_host() {
-        let url = super::search_endpoint("crossref", "Vaswani A. Attention is all you need & more").unwrap();
-        assert!(url.starts_with("https://api.crossref.org/works?query.bibliographic=Vaswani%20A.%20Attention"));
+        let url = super::search_endpoint("crossref", "Vaswani A. Attention is all you need & more")
+            .unwrap();
+        assert!(url.starts_with(
+            "https://api.crossref.org/works?query.bibliographic=Vaswani%20A.%20Attention"
+        ));
         assert!(url.contains("%26%20more&rows=5"));
-        let url = super::search_endpoint("openalex", "Visual prompting: pixel space, again").unwrap();
+        let url =
+            super::search_endpoint("openalex", "Visual prompting: pixel space, again").unwrap();
         assert!(url.starts_with("https://api.openalex.org/works?filter=title.search:Visual%20prompting%20%20pixel%20space%20%20again&"));
         assert!(super::search_endpoint("evil.example", "long enough query").is_err());
         assert!(super::search_endpoint("crossref", "short").is_err());
