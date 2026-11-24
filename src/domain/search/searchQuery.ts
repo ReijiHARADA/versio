@@ -1,4 +1,5 @@
 import { normalizeSearchText } from "./normalizeSearchText";
+import { isSingleCharTerm } from "./singleCharWords";
 import type { SynonymLookup } from "./synonymDictionary";
 
 /** How a variant relates to the typed term; the dictionary fills these in later. */
@@ -110,8 +111,12 @@ export function variantNeedles(variant: Pick<SearchVariant, "term" | "relation">
   return [term];
 }
 
-/** Index text (`normalizeIndexText`) of one field and how much a hit in it counts. */
-export type ScoredField = { text: string; weight: number };
+/**
+ * Index text (`normalizeIndexText`) of one field and how much a hit in it
+ * counts. A `words` field holds `singleCharWords` output instead: the only place
+ * a one-character Japanese term is looked for.
+ */
+export type ScoredField = { text: string; weight: number; words?: boolean };
 
 /**
  * Sum over groups of the best field weight × variant weight that hits; 0 when
@@ -122,8 +127,10 @@ export function scoreFields(fields: readonly ScoredField[], query: SearchQuery):
   for (const group of query.groups) {
     let best = 0;
     for (const variant of group.variants) {
-      const needles = variantNeedles(variant);
+      const single = isSingleCharTerm(variant.term);
+      const needles = single ? [` ${variant.term} `] : variantNeedles(variant);
       for (const field of fields) {
+        if (Boolean(field.words) !== single) continue;
         const value = field.weight * variant.weight;
         if (value > best && field.text && needles.some((needle) => field.text.includes(needle))) best = value;
       }

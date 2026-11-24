@@ -1,6 +1,7 @@
 import type { Database } from "sql.js";
 import type { SqliteClient } from "./client";
 import { normalizeIndexText } from "../../domain/search/normalizeSearchText";
+import { singleCharWords } from "../../domain/search/singleCharWords";
 import { buildSearchQuery, scoreFields, type SearchQuery } from "../../domain/search/searchQuery";
 
 /**
@@ -19,6 +20,10 @@ export function rebuildPaperFts(
   }
 ): void {
   db.exec("DELETE FROM papers_fts WHERE paper_id = ?", [paperId]);
+  db.exec("INSERT OR REPLACE INTO paper_words (paper_id, words) VALUES (?, ?)", [
+    paperId,
+    singleCharWords([input.title, input.authors, input.original, input.translation, input.annotation].join("\n")),
+  ]);
   db.exec(
     "INSERT INTO papers_fts (paper_id, title, authors, original, translation, annotation) VALUES (?, ?, ?, ?, ?, ?)",
     [
@@ -48,7 +53,15 @@ export function registerSearchFunctions(db: Database): void {
   let cached: SearchQuery = { groups: [] };
   db.create_function(
     SCORE_FUNCTION,
-    (title: unknown, authors: unknown, annotation: unknown, original: unknown, translation: unknown, queryJson: unknown) => {
+    (
+      title: unknown,
+      authors: unknown,
+      annotation: unknown,
+      original: unknown,
+      translation: unknown,
+      words: unknown,
+      queryJson: unknown
+    ) => {
       if (queryJson !== cachedJson) {
         cachedJson = String(queryJson);
         cached = JSON.parse(cachedJson) as SearchQuery;
@@ -60,6 +73,7 @@ export function registerSearchFunctions(db: Database): void {
           { text: String(annotation ?? ""), weight: FIELD_WEIGHTS.annotation },
           { text: String(original ?? ""), weight: FIELD_WEIGHTS.original },
           { text: String(translation ?? ""), weight: FIELD_WEIGHTS.translation },
+          { text: String(words ?? ""), weight: 1, words: true },
         ],
         cached
       );
@@ -88,8 +102,9 @@ export function searchPapersFts(db: SqliteClient, query: string | SearchQuery): 
   // `LIMIT -1` keeps SQLite from flattening the subquery and scoring every row twice.
   const sql = `SELECT paper_id FROM (
       SELECT f.paper_id AS paper_id,
-        ${SCORE_FUNCTION}(f.title, f.authors, f.annotation, f.original, f.translation, ?) AS score
+        ${SCORE_FUNCTION}(f.title, f.authors, f.annotation, f.original, f.translation, w.words, ?) AS score
       FROM papers_fts f JOIN papers p ON p.id = f.paper_id
+      LEFT JOIN paper_words w ON w.paper_id = f.paper_id
       WHERE p.trashed_at IS NULL
       LIMIT -1
     )
