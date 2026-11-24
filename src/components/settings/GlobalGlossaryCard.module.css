@@ -1,0 +1,32 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.columns {
+  composes: entry;
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.input {
+  composes: input from "./SettingsScreen.module.css";
+  font-family: inherit;
+}

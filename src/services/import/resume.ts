@@ -1,6 +1,6 @@
+import { getTranslationGlossary } from "../glossary/global";
 import {
   getBlocksByPaper,
-  getGlossary,
   getPaper,
   getSectionsByPaper,
   savePaper,
@@ -126,7 +126,7 @@ export async function resumeIncompleteTranslation(
     await savePaper(paper);
     callbacks.onPaperUpdated?.(paper);
 
-    const glossaryEntries = await getGlossary(paperId);
+    const glossaryEntries = await getTranslationGlossary(paperId);
     setEngineGlossary({ primaryEngine }, glossaryEntries);
 
     let outstanding = 0;

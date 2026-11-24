@@ -1,4 +1,5 @@
 import type { TranslationSettingsV2 } from "../../utils/translationSettings";
+import { GlobalGlossaryCard } from "./GlobalGlossaryCard";
 import { SettingsCard, SettingsRow } from "./SettingsPrimitives";
 import { usePlamoModel } from "./usePlamoModel";
 import styles from "./SettingsScreen.module.css";
@@ -78,6 +79,7 @@ export function TranslationSettingsSection({
           </SettingsRow>
         </SettingsCard>
 
+        <GlobalGlossaryCard />
       </div>
     </div>
   );

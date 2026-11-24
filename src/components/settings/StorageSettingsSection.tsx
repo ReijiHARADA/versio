@@ -22,6 +22,14 @@ import {
   clearEpubSyncFolder,
   getEpubSyncFolder,
 } from "../../services/epubSync";
+import {
+  formatBytes,
+  getAppVersion,
+  getStorageUsage,
+  revealAppDataFolder,
+  type StorageUsage,
+} from "../../services/appInfo";
+import { showToast } from "../../stores/toastStore";
 import { SettingsCard, SettingsRow } from "./SettingsPrimitives";
 import { SettingsSelect } from "./SettingsSelect";
 import styles from "./SettingsScreen.module.css";
@@ -31,7 +39,8 @@ type StorageSettingsSectionProps = {
   onClearCache: () => void;
 };
 
-const APP_VERSION = "0.1.0";
+/** Written into backup metadata when the bundle version is unavailable (browser dev). */
+const FALLBACK_APP_VERSION = "0.1.0";
 
 export function StorageSettingsSection({
   busy,
@@ -45,12 +54,25 @@ export function StorageSettingsSection({
   const [retentionDays, setRetentionDays] = useState<TrashRetentionDays>(3);
   const [epubSyncFolder, setEpubSyncFolder] = useState<string | null>(null);
   const [epubSyncBusy, setEpubSyncBusy] = useState(false);
+  const [usage, setUsage] = useState<StorageUsage | null>(null);
 
   useEffect(() => {
     void getLibraryBackupMeta().then(setMeta);
     void getTrashRetentionDays().then(setRetentionDays);
     void getEpubSyncFolder().then(setEpubSyncFolder);
+    void getStorageUsage()
+      .then(setUsage)
+      .catch((error) => console.warn("Storage usage failed:", error));
   }, []);
+
+  const handleRevealDataFolder = async () => {
+    try {
+      await revealAppDataFolder();
+    } catch (error) {
+      console.error("Reveal data folder failed:", error);
+      showToast({ kind: "error", message: "データフォルダを開けませんでした" });
+    }
+  };
 
   const refreshLibraryCaches = async () => {
     const papers = await getAllPapers();
@@ -76,7 +98,7 @@ export function StorageSettingsSection({
     setBackupBusy(true);
     setBackupMessage(null);
     try {
-      const result = await runLibraryBackup(APP_VERSION);
+      const result = await runLibraryBackup((await getAppVersion()) ?? FALLBACK_APP_VERSION);
       const next = await getLibraryBackupMeta();
       setMeta(next);
       const skipNote =
@@ -159,6 +181,29 @@ export function StorageSettingsSection({
       <h2 className={styles.pageTitle}>ライブラリとデータ</h2>
 
       <div className={styles.cardStack}>
+        {usage ? (
+          <SettingsCard title="保存場所">
+            <SettingsRow
+              label="データフォルダ"
+              description={usage.path}
+              align="start"
+            >
+              <button
+                type="button"
+                className={styles.button}
+                onClick={() => void handleRevealDataFolder()}
+              >
+                Finder で表示
+              </button>
+            </SettingsRow>
+            <SettingsRow label="使用容量">
+              <span className={styles.statusText}>
+                {`合計 ${formatBytes(usage.totalBytes)}（論文 ${formatBytes(usage.papersBytes)}・翻訳モデル ${formatBytes(usage.modelsBytes)}）`}
+              </span>
+            </SettingsRow>
+          </SettingsCard>
+        ) : null}
+
         <SettingsCard title="バックアップ">
           <SettingsRow label="最終バックアップ">
             <span className={styles.statusText}>{lastBackupLabel}</span>

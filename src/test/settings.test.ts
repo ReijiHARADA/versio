@@ -25,6 +25,7 @@ describe("settings TOC", () => {
       "読書",
       "翻訳",
       "ライブラリとデータ",
+      "このアプリについて",
       "ライセンス",
     ]);
     expect(SETTINGS_SCROLL_SECTIONS.map((section) => section.id)).not.toContain("licenses");

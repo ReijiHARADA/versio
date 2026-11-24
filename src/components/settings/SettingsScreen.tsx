@@ -18,6 +18,7 @@ import { TranslationSettingsSection } from "./TranslationSettingsSection";
 import { ReadingSettingsSection } from "./ReadingSettingsSection";
 import { StorageSettingsSection } from "./StorageSettingsSection";
 import { LicensesSettingsSection } from "./LicensesSettingsSection";
+import { AboutSettingsSection } from "./AboutSettingsSection";
 import {
   useSettingsPanelTransition,
   type SettingsPanelPage,
@@ -321,6 +322,9 @@ export function SettingsScreen() {
                   busy={clearingCache}
                   onClearCache={() => void handleClearCache()}
                 />
+              </section>
+              <section id={settingsSectionElementId("about")} className={styles.section}>
+                <AboutSettingsSection />
               </section>
             </main>
             <main
