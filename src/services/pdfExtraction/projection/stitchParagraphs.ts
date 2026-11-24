@@ -213,7 +213,14 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // A comma-cut list of terms goes on in a paragraph that opens with the next term and a comma
         // (`… occipital cortex, including FT7,` | `FC5, FC3, FC1, …`).
         if (!listItem && (j === i + 1 || (sawFloat && !skippedParagraph && !skippedFragment)) && /,$/.test(currentText) && eligible(candidate) &&
-          /^\p{Lu}[\p{L}\d+-]*,\s/u.test(candidateText) && TERM_START.test(candidateText)) {
+          // (Or a statistic of a fit-index list: `… NFI = 0.917,` | `RFI = 0.900, IFI = 0.935, …`.)
+          (/^\p{Lu}[\p{L}\d+-]*,\s/u.test(candidateText) || /^\p{Lu}[\p{Lu}\d]{1,6}\s*=\s*[\d.]/u.test(candidateText)) && TERM_START.test(candidateText)) {
+          target = j;
+          break;
+        }
+        // A word broken at the line end (`… 88.40 macro-` | `F1 (88.40%) with …`) goes on in the very next paragraph.
+        if (!listItem && j === i + 1 && /\p{L}{2,}-$/u.test(currentText) && candidate.type === "paragraph" && eligible(candidate) &&
+          words(candidateText) >= 3 && /^[\p{L}\d(]/u.test(candidateText)) {
           target = j;
           break;
         }
