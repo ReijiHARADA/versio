@@ -30,30 +30,22 @@ export function HowToScreen({ page, total, title, body, video, poster, still, pr
         スキップ
       </button>
       <div className={styles.column}>
-        {/* a generic laptop drawn in CSS: bezel with camera, screen, base */}
-        <div className={styles.device} data-bezel aria-hidden>
-          <div className={styles.bezel}>
-            <span className={styles.camera} />
-            <div className={styles.frame}>
-            {still || failed ? (
-              <img className={styles.media} src={poster} alt="" />
-            ) : (
-              <video
-                className={styles.media}
-                src={video}
-                poster={poster}
-                muted
-                autoPlay
-                loop
-                playsInline
-                onError={() => setFailed(true)}
-              />
-            )}
-            </div>
-          </div>
-          <div className={styles.base}>
-            <span className={styles.notch} />
-          </div>
+        {/* Rotato render of a MacBook (transparent HEVC), see `npm run record:howto` */}
+        <div className={styles.mockup} data-mockup aria-hidden>
+          {still || failed ? (
+            <img className={styles.media} src={poster} alt="" />
+          ) : (
+            <video
+              className={styles.media}
+              src={video}
+              poster={poster}
+              muted
+              autoPlay
+              loop
+              playsInline
+              onError={() => setFailed(true)}
+            />
+          )}
         </div>
 
         <div className={styles.text}>

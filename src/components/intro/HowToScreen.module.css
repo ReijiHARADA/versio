@@ -16,86 +16,25 @@
 
 .text,
 .actions {
-  width: min(820px, 100%);
+  width: min(720px, 100%);
   margin-inline: auto;
 }
 
-.device {
-  width: min(820px, 100%);
+.mockup {
+  width: min(880px, 100%);
   margin: 0 auto;
-  filter: drop-shadow(0 22px 40px rgb(0 0 0 / 0.18)) drop-shadow(0 2px 4px rgb(0 0 0 / 0.08));
-}
-
-/* Bezel stays dark in both themes, like the hardware. */
-.bezel {
-  composes: surface from "../../styles/squircle.module.css";
-  position: relative;
-  padding: 14px 14px 18px;
-  --sq-fill: var(--sq-fill-16);
-  border-radius: var(--sq-radius-16);
-  --sq-bg: #161618;
-  border: 1px solid transparent;
-  --sq-bw: 1px;
-  --sq-line: rgb(255 255 255 / 0.12);
-}
-
-.camera {
-  position: absolute;
-  top: 5px;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  margin-left: -2.5px;
-  border-radius: 50%;
-  background: #2c2c30;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
-}
-
-.frame {
-  composes: clip from "../../styles/squircle.module.css";
-  position: relative;
-  --sq-fill: var(--sq-fill-4);
-  aspect-ratio: 1280 / 800;
-  overflow: hidden;
-  background: #fff;
-}
-
-/* Aluminium base, slightly wider than the lid, with the opening groove. */
-.base {
-  composes: surface from "../../styles/squircle.module.css";
-  position: relative;
-  height: 14px;
-  margin: 0 -6%;
-  --sq-fill: var(--sq-fill-6);
-  border-radius: var(--sq-radius-6);
-  --sq-bg: #cfcfd4;
-  border: 1px solid transparent;
-  --sq-bw: 1px;
-  --sq-line: #b4b4ba;
-}
-
-.notch {
-  composes: surface from "../../styles/squircle.module.css";
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 16%;
-  height: 6px;
-  transform: translateX(-50%);
-  --sq-fill: var(--sq-fill-4);
-  border-radius: var(--sq-radius-4);
-  --sq-bg: #a3a3aa;
+  aspect-ratio: 16 / 9;
 }
 
 .media {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .text {
-  margin-top: var(--spacing-xl);
+  margin-top: var(--spacing-sm);
   margin-bottom: var(--spacing-lg);
 }
 

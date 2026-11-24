@@ -80,7 +80,7 @@ export function AppShell() {
         if (isPresentationDemo) {
           // Capture-only, in-memory state: never read or write the user's library.
           const seed = createPresentationCaptureSeed();
-          useAppStore.getState().setDisplaySettings({ sidebarMode: "expanded" });
+          useAppStore.getState().setDisplaySettings({ sidebarMode: "expanded", ...(import.meta.env.VITE_VERSIO_DEMO_SEED === "howto" ? { libraryView: "grid" as const } : {}) });
           useProjectStore.getState().setWorkspaceNodes(seed.workspaceNodes);
           setMemberships(seed.memberships);
           setPapers(seed.papers);

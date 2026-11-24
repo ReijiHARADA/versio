@@ -4,15 +4,16 @@
 // at the timestamps the script logs, so the read clip starts from the
 // library the collect clip produced.
 import { spawn, execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromium } from "playwright";
 
 const PORT = 5232;
 const BASE = `http://localhost:${PORT}/`;
-const OUT = "src/assets/intro";
-const VIEW = { width: 1280, height: 800 };
+// A 14" MacBook Pro at its default scale, minus the menu bar the page draws.
+const VIEW = { width: 1512, height: 958 };
+const MENU_H = 24;
 const DROPS = [
   ["wearability.pdf", "test-fixtures/generated-pdfs/basic-two-column.pdf"],
   ["interactive-jewellery.pdf", "test-fixtures/generated-pdfs/ACM-style-two-column.pdf"],
@@ -50,7 +51,11 @@ await ctx.addInitScript(() => {
     const k = document.createElement("div");
     k.id = "howto-keys";
     k.style.cssText = "position:fixed;left:50%;bottom:44px;transform:translateX(-50%);display:flex;gap:6px;pointer-events:none;z-index:2147483646;opacity:0;transition:opacity .15s";
-    document.body.append(g, k, c);
+    // Window controls: the Tauri window draws real ones over the sidebar.
+    const tl = document.createElement("div");
+    tl.style.cssText = "position:fixed;left:18px;top:18px;display:flex;gap:8px;pointer-events:none;z-index:2147483645";
+    tl.innerHTML = ["#ff5f57", "#febc2e", "#28c840"].map((c) => `<span style="width:12px;height:12px;border-radius:50%;background:${c};box-shadow:inset 0 0 0 .5px rgba(0,0,0,.12)"></span>`).join("");
+    document.body.append(tl, g, k, c);
     addEventListener("mousemove", (e) => {
       for (const el of [c, g]) { el.style.left = e.clientX + "px"; el.style.top = e.clientY + "px"; }
     }, true);
@@ -185,17 +190,25 @@ await wait(2000);
 const readEnd = mark();
 
 await ctx.close();
+// The macOS menu bar sits above the app window on the device's screen.
+const SRC = ".cache/howto-src";
+mkdirSync(SRC, { recursive: true });
+const bar = await b.newPage({ viewport: { width: VIEW.width, height: MENU_H } });
+await bar.setContent(`<body style="margin:0;height:${MENU_H}px;display:flex;align-items:center;gap:20px;padding:0 16px;box-sizing:border-box;background:rgba(236,236,240,1);color:#1d1d1f;font:13px -apple-system,'Hiragino Sans',system-ui,sans-serif;white-space:nowrap">
+  <b style="font-weight:700">Versio</b><span>ファイル</span><span>編集</span><span>表示</span><span>ウインドウ</span><span>ヘルプ</span>
+  <span style="margin-left:auto">11月24日(火) 9:41</span></body>`);
+await bar.screenshot({ path: `${SRC}/menubar.png` });
 await b.close();
 vite.kill();
 
 const raw = join(dir, readdirSync(dir).find((f) => f.endsWith(".webm")));
+// Full device screen (menu bar + app), high quality: the input for the Rotato render.
 function cut(name, from, to) {
-  const mp4 = `${OUT}/howto-${name}.mp4`;
-  execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-ss", from.toFixed(2), "-to", to.toFixed(2), "-i", raw,
-    "-vf", "scale=1280:-2,fps=30", "-c:v", "libx265", "-tag:v", "hvc1", "-crf", "30", "-preset", "slow", "-pix_fmt", "yuv420p",
-    "-an", "-movflags", "+faststart", mp4]);
-  execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-sseof", "-0.1", "-i", mp4, "-frames:v", "1", "-q:v", "4", `${OUT}/howto-${name}.jpg`]);
-  console.log(`${mp4} ${(to - from).toFixed(1)}s ${(statSync(mp4).size / 1024).toFixed(0)} KB`);
+  const out = `${SRC}/howto-${name}-screen.mp4`;
+  execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-ss", from.toFixed(2), "-to", to.toFixed(2), "-i", raw, "-i", `${SRC}/menubar.png`,
+    "-filter_complex", `[0:v]fps=30,pad=${VIEW.width}:${VIEW.height + MENU_H}:0:${MENU_H}[app];[app][1:v]overlay=0:0`,
+    "-c:v", "libx264", "-crf", "14", "-preset", "slow", "-pix_fmt", "yuv420p", "-an", "-movflags", "+faststart", out]);
+  console.log(`${out} ${(to - from).toFixed(1)}s`);
 }
 cut("collect", collectStart, collectEnd);
 cut("read", readStart, readEnd);

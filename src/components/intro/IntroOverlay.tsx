@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import introMp4 from "../../assets/intro/intro.mp4";
 import finalPng from "../../assets/intro/final.png";
-import howtoCollectMp4 from "../../assets/intro/howto-collect.mp4";
-import howtoCollectJpg from "../../assets/intro/howto-collect.jpg";
-import howtoReadMp4 from "../../assets/intro/howto-read.mp4";
-import howtoReadJpg from "../../assets/intro/howto-read.jpg";
+import howtoCollectMov from "../../assets/intro/howto-collect.mov";
+import howtoCollectWebp from "../../assets/intro/howto-collect.webp";
+import howtoReadMov from "../../assets/intro/howto-read.mov";
+import howtoReadWebp from "../../assets/intro/howto-read.webp";
 import { usePlamoModel } from "../settings/usePlamoModel";
 import { HowToScreen } from "./HowToScreen";
 import { PlamoSetupScreen } from "./PlamoSetupScreen";
@@ -19,22 +19,22 @@ const SOUND_START_S = 26 / 30 - STAPLE_FIRST_CLICK_S;
 const CTA_TIME_S = 84 / 30; // a beat after the base leaves the frame (GONE = 78)
 const CTA_LABEL = "Versioを使い始める";
 
-// Clips come from `npm run record:howto` (filming-only demo build).
+// Screen clips come from `npm run record:howto` (filming-only demo build), rendered on a MacBook in Rotato.
 const HOWTO_PAGES = {
   "howto-collect": {
     page: 1,
     title: "PDF を落として、集める",
     body: "ウィンドウに PDF をドロップすると、読める状態になります。⌘ クリックでまとめて選び、プロジェクトへドラッグして整理します。",
-    video: howtoCollectMp4,
-    poster: howtoCollectJpg,
+    video: howtoCollectMov,
+    poster: howtoCollectWebp,
     primaryLabel: "次へ",
   },
   "howto-read": {
     page: 2,
     title: "日本語で読み、原文で確かめる",
     body: "気になる段落は原文を開いて確かめ、メモを残せます。⌘K でライブラリ全体を探せます。",
-    video: howtoReadMp4,
-    poster: howtoReadJpg,
+    video: howtoReadMov,
+    poster: howtoReadWebp,
     primaryLabel: "はじめる",
   },
 } as const;

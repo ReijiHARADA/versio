@@ -52,7 +52,7 @@ describe("HowToScreen", () => {
     expect(html.indexOf("戻る")).toBeLessThan(html.indexOf("次へ"));
   });
 
-  it("frames the clip in a device bezel", () => {
-    expect(render({})).toMatch(/data-bezel/);
+  it("shows the clip inside the device mockup", () => {
+    expect(render({})).toMatch(/data-mockup/);
   });
 });
