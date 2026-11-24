@@ -3642,6 +3642,13 @@ function groupLinesIntoBlocks(
           line.y - current[current.length - 1].y <= current[current.length - 1].fontSize * 1.6 &&
           current.slice(1).every((part) => Math.abs(part.fontSize - line.fontSize) <= 0.6) &&
           !/[.!?:]\s*$/.test(current[current.length - 1].text.trim()))) &&
+      // A blank line's worth of space after a caption of two or more lines ends it (`… oversampled -GAN` | gap |
+      // `Finally, the performance of four ML models …`).
+      // (Only when the new line is wider than the caption on both sides: running text under a centred legend.)
+      !(current.length >= 2 && line.y - current[current.length - 1].y >
+        median(current.slice(1).map((part, k) => part.y - current[k].y)) * 1.4 &&
+        line.x < Math.min(...current.map((part) => part.x)) - 3 &&
+        line.x + line.width > Math.max(...current.map((part) => part.x + part.width)) + 3) &&
       captionShouldContinue(joinLines(current), line, baseFont);
 
     const footnoteContinue =
