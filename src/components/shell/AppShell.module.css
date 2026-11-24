@@ -49,6 +49,11 @@
   box-shadow: var(--shadow-card);
 }
 
+/* Paper fill (grain + dot grid). Doubled class beats .surface::before regardless of load order. */
+.main.main::before {
+  background: var(--paper-surface);
+}
+
 /* Clips page content. Its circle radius sits inside the card's clothoid, so the
    card's own fill covers the sliver between them; the card stays unmasked so
    scrolling never repaints a mask. */
