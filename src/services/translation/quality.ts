@@ -1922,6 +1922,9 @@ export function isExpectedNonProseParagraph(text: string): boolean {
   // several different lower-to-upper joins, densely, which prose with a product name (`DirectContacts2`) does not make.
   const glued = new Set(t.match(/\p{Ll}{3,}\p{Lu}\p{Ll}{2,}/gu) ?? []).size;
   if (glued >= 4 && glued * 20 >= t.split(/\s+/).length) return true;
+  // A table header read as a run (`count rank count rank count rank …`): a few words over and over.
+  const runWords = t.toLowerCase().match(/\p{L}+/gu) ?? [];
+  if (runWords.length >= 12 && runWords.length <= 60 && new Set(runWords).size < runWords.length * 0.4) return true;
   // A row of panel labels under a figure (`(a) Folder management options (b) File operation options`).
   if (t.length <= 200 && /^\(?[a-h]\)\s/i.test(t) && (t.match(/(?:^|\s)\(?[a-h]\)\s/gi)?.length ?? 0) >= 2 && !/[.!?]\s+\p{Lu}\p{Ll}+\s+\p{Ll}/u.test(t)) return true;
   // Pieces of an open-access license footer split across columns (`… No use, distribution or reproduction is permitted`).

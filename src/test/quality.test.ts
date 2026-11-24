@@ -1485,6 +1485,7 @@ describe("unsafe extracted translation input", () => {
     expect(isExpectedNonProseParagraph("We measured three outcomes; anxiety fell; depression stayed stable; sleep quality improved for most participants over the year.")).toBe(false);
     expect(isExpectedNonProseParagraph("Published: Copyright: © 2026 Islam et al. This is an open access article distributed under the terms of")).toBe(true);
     expect(isExpectedNonProseParagraph("Editor: Milit Patel, The University of Texas at")).toBe(true);
+    expect(isExpectedNonProseParagraph("count rank count rank count rank count rank count rank count rank count rank count rank Graz")).toBe(true);
     expect(isExpectedNonProseParagraph("12 patients completed the study and 3 withdrew before the second visit because of scheduling conflicts and")).toBe(false);
     expect(isExpectedNonProseParagraph("Participants were recruited at the University Hospital and the Department of Neurology, and all of them gave written consent before the study began in")).toBe(false);
   });
