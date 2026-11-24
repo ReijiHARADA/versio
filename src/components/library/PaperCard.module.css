@@ -543,7 +543,6 @@
   max-width: 100%;
 }
 
-.readBadge,
 .tagChip,
 .tagMore {
   flex: none;
@@ -556,18 +555,6 @@
 .tagMore {
   composes: pill from "../../styles/squircle.module.css";
   border-radius: 999px;
-}
-
-.readBadge {
-  composes: pill from "../../styles/squircle.module.css";
-  border-radius: 999px;
-  color: var(--color-text-secondary);
-  --sq-bg: color-mix(in srgb, var(--color-text) 7%, transparent);
-}
-
-.readBadge[data-status="read"] {
-  color: var(--color-success);
-  --sq-bg: color-mix(in srgb, var(--color-success) 12%, transparent);
 }
 
 .tagChip {

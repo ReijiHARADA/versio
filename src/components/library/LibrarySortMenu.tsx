@@ -2,8 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpDown, Check } from "lucide-react";
 import { useAppStore, type LibraryFilter, type LibrarySort, type LibrarySortKey } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
-import { READ_STATUS_LABELS } from "../../services/paperLibraryState";
-import type { PaperReadStatus } from "../../types/paper";
 import { findDuplicatePaperIds } from "../../domain/duplicatePapers";
 import { displayPaperTitle } from "../../services/translation/quality";
 import type { Paper } from "../../types/paper";
@@ -45,10 +43,9 @@ export function filterPapers(
   filter: LibraryFilter,
   duplicateIds: Map<string, string> = new Map()
 ): Paper[] {
-  if (!filter.status && !filter.tag && !filter.duplicates) return papers;
+  if (!filter.tag && !filter.duplicates) return papers;
   return papers.filter(
     (paper) =>
-      (!filter.status || (paper.readStatus ?? "unread") === filter.status) &&
       (!filter.tag || (paper.tags ?? []).includes(filter.tag)) &&
       (!filter.duplicates || duplicateIds.has(paper.id))
   );
@@ -82,7 +79,6 @@ export function useSortedPapers(papers: Paper[]): Paper[] {
   );
 }
 
-const STATUSES: PaperReadStatus[] = ["unread", "reading", "read"];
 
 export function LibrarySortMenu() {
   const sort = useLibrarySort();
@@ -101,9 +97,8 @@ export function LibrarySortMenu() {
     [papers]
   );
   const duplicateIds = useDuplicatePaperIds();
-  const filtering = filter.status != null || filter.tag != null || filter.duplicates;
+  const filtering = filter.tag != null || filter.duplicates;
   const filterLabel = [
-    filter.status ? READ_STATUS_LABELS[filter.status] : null,
     filter.tag ? `#${filter.tag}` : null,
     filter.duplicates ? "重複の可能性" : null,
   ]
@@ -175,21 +170,6 @@ export function LibrarySortMenu() {
             >
               <Check size={14} className={sort.dir === dir ? "" : styles.hidden} />
               {dir === "asc" ? "昇順" : "降順"}
-            </button>
-          ))}
-          <div className={menuStyles.menuSep} />
-          <p className={styles.sectionLabel}>読書ステータス</p>
-          {[null, ...STATUSES].map((status) => (
-            <button
-              key={status ?? "all"}
-              type="button"
-              role="menuitemradio"
-              aria-checked={filter.status === status}
-              className={menuStyles.menuItem}
-              onClick={() => setLibraryFilter({ status })}
-            >
-              <Check size={14} className={filter.status === status ? "" : styles.hidden} />
-              {status ? READ_STATUS_LABELS[status] : "すべて"}
             </button>
           ))}
           {(duplicateIds.size > 0 || filter.duplicates) && (
