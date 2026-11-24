@@ -9,6 +9,7 @@ import { addPaperToWorkspace, createWorkspaceNode, listWorkspace, movePaperInWor
 import { tryStartPdfImport } from "../../services/pdfImport";
 import type { WorkspaceNode } from "../../types/project";
 import { AppSidebar } from "./AppSidebar";
+import { PaperTabBar } from "./PaperTabBar";
 import { PaperMarquee } from "./PaperMarquee";
 import { INSPECTOR_SLOT_ID } from "./inspectorSlot";
 import { Presence } from "../ui/Presence";
@@ -155,6 +156,12 @@ export function AppShell() {
       setDisplaySettings({ fontSize: Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, next)) });
     }
     else if (id === "shortcuts") setShortcutsOpen(true);
+    else if (id === "close-tab") {
+      // The tab bar handles it on a reader route; anywhere else ⌘W closes the window as before.
+      const event = new Event("versio:close-tab", { cancelable: true });
+      if (window.dispatchEvent(event)) void import("@tauri-apps/api/window").then(({ getCurrentWindow }) => getCurrentWindow().close());
+    }
+    else if (id === "close-window") void import("@tauri-apps/api/window").then(({ getCurrentWindow }) => getCurrentWindow().close());
   };
   useEffect(() => {
     if (isTauriApp() && import.meta.env.PROD) void checkForAppUpdate({ quiet: true });
@@ -213,7 +220,7 @@ export function AppShell() {
     <div className={styles.titlebarDrag} data-tauri-drag-region />
     <PdfFileInput inputRef={fileInputRef} onFile={(file) => { void tryStartPdfImport(file, fileNodeId ? { workspaceNodeId: fileNodeId } : undefined); setFileNodeId(null); }} />
     <AppSidebar workspaceNodes={workspaceNodes} searchQuery={searchQuery} onSearchChange={setSearchQuery} onNewWorkspace={() => setCreateParentId(null)} onNewChild={(node) => setCreateParentId(node.id)} onDeleteNode={deleteNode} onAddPaperToWorkspace={addPaperFile} activeNodeId={routeNodeId} inboxCount={inboxCount} />
-    <div className={styles.main}><div ref={mainBodyRef} className={styles.mainBody} data-paper-marquee>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><div className={styles.mainRim} aria-hidden /></div><div id={INSPECTOR_SLOT_ID} className={styles.inspectorSlot} /><PaperDragPreview /><PaperMarquee />
+    <div className={styles.mainColumn}><PaperTabBar /><div className={styles.main}><div ref={mainBodyRef} className={styles.mainBody} data-paper-marquee>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><div className={styles.mainRim} aria-hidden /></div></div><div id={INSPECTOR_SLOT_ID} className={styles.inspectorSlot} /><PaperDragPreview /><PaperMarquee />
     <PlamoDownloadToast raised={Boolean(toast)} />
     {toast && <div ref={toastRef} className={`${styles.toast} ${toast.kind === "error" ? styles.toastError : toast.kind === "info" ? styles.toastInfo : styles.toastOk}`} role="status"><span className={styles.toastMessage}>{toast.message}</span>{toast.actionLabel && toast.onAction && <button type="button" className={styles.toastAction} onClick={() => { toast.onAction?.(); clearToast(); }}>{toast.actionLabel}</button>}</div>}
     <Presence>{shortcutsOpen && <ShortcutsSheet onClose={() => setShortcutsOpen(false)} />}</Presence>
