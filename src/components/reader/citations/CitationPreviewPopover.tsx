@@ -38,7 +38,9 @@ export function CitationPreviewPopover({
           </button>
           <ReferenceImportAction
             identifiers={model.identifiers}
+            rawText={model.rawText}
             className={styles.action}
+            inline
             onDone={onClose}
           />
           {model.doiUrl ? (

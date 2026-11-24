@@ -21,8 +21,7 @@ import styles from "./PaperContent.module.css";
 
 function ReferenceEntryImport({ text }: { text: string }) {
   const identifiers = useMemo(() => referenceIdentifiers(text), [text]);
-  if (identifiers.length === 0) return null;
-  return <ReferenceImportAction identifiers={identifiers} className={styles.referenceImport} />;
+  return <ReferenceImportAction identifiers={identifiers} rawText={text} className={styles.referenceImport} />;
 }
 
 function renderReferenceText(text: string): ReactNode {
