@@ -520,7 +520,7 @@
   position: fixed;
   transform-origin: top left;
   z-index: var(--z-sidebar-menu);
-  width: 190px;
+  width: 220px; /* keep in sync with MENU_WIDTH in WorkspaceTree.tsx */
   padding: var(--spacing-xs-plus);
   border: 1px solid transparent;
   --sq-line: var(--color-border-light);
@@ -536,7 +536,6 @@
   composes: surface from "../../styles/squircle.module.css";
   position: relative;
   --sq-fill: var(--sq-fill-sm);
-  width: 100%;
   width: 100%;
   display: flex;
   align-items: center;
