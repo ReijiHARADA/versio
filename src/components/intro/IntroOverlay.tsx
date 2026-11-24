@@ -24,7 +24,7 @@ const HOWTO_PAGES = {
   "howto-collect": {
     page: 1,
     title: "PDF を落として、集める",
-    body: "ウィンドウに PDF をドロップすると、読める状態になります。プロジェクトへドラッグして整理します。",
+    body: "ウィンドウに PDF をドロップすると、読める状態になります。⌘ クリックでまとめて選び、プロジェクトへドラッグして整理します。",
     video: howtoCollectMp4,
     poster: howtoCollectJpg,
     primaryLabel: "次へ",
@@ -123,7 +123,7 @@ export function IntroOverlay() {
           onClose={advance}
         />
       ) : null}
-      {howto ? <HowToScreen key={step} {...howto} total={2} still={still} onNext={advance} onSkip={close} /> : null}
+      {howto ? <HowToScreen key={step} {...howto} total={2} still={still} onNext={advance} onSkip={close} onBack={step === "howto-read" ? () => setStep("howto-collect") : undefined} /> : null}
     </div>
   );
 }

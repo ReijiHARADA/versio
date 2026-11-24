@@ -13,10 +13,12 @@ type Props = {
   primaryLabel: string;
   onNext: () => void;
   onSkip: () => void;
+  /** omitted on the first page */
+  onBack?: () => void;
 };
 
 /** One how-to page after the intro: a looping clip of a practiced user, one heading, one line. */
-export function HowToScreen({ page, total, title, body, video, poster, still, primaryLabel, onNext, onSkip }: Props) {
+export function HowToScreen({ page, total, title, body, video, poster, still, primaryLabel, onNext, onSkip, onBack }: Props) {
   const primary = useRef<HTMLButtonElement>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => primary.current?.focus(), []);
@@ -25,8 +27,11 @@ export function HowToScreen({ page, total, title, body, video, poster, still, pr
   return (
     <section className={styles.screen} aria-labelledby={titleId} data-tauri-drag-region>
       <div className={styles.column}>
-        <div className={styles.frameShadow}>
-          <div className={styles.frame}>
+        {/* a generic laptop drawn in CSS: bezel with camera, screen, base */}
+        <div className={styles.device} data-bezel aria-hidden>
+          <div className={styles.bezel}>
+            <span className={styles.camera} />
+            <div className={styles.frame}>
             {still || failed ? (
               <img className={styles.media} src={poster} alt="" />
             ) : (
@@ -41,6 +46,10 @@ export function HowToScreen({ page, total, title, body, video, poster, still, pr
                 onError={() => setFailed(true)}
               />
             )}
+            </div>
+          </div>
+          <div className={styles.base}>
+            <span className={styles.notch} />
           </div>
         </div>
 
@@ -55,6 +64,11 @@ export function HowToScreen({ page, total, title, body, video, poster, still, pr
           <span className={styles.count} aria-label={`${total} ページ中 ${page} ページ目`}>
             {page} / {total}
           </span>
+          {onBack ? (
+            <button type="button" className={styles.secondary} onClick={onBack}>
+              戻る
+            </button>
+          ) : null}
           <button type="button" className={styles.secondary} onClick={onSkip}>
             スキップ
           </button>

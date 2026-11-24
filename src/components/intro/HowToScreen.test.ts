@@ -40,4 +40,13 @@ describe("HowToScreen", () => {
     expect(html).toContain("スキップ");
     expect(html).toContain("PDF を落として、集める");
   });
+
+  it("offers 戻る only when there is a page to go back to", () => {
+    expect(render({ still: true })).not.toContain("戻る");
+    expect(render({ page: 2, still: true, onBack: () => {} })).toContain("戻る");
+  });
+
+  it("frames the clip in a device bezel", () => {
+    expect(render({})).toMatch(/data-bezel/);
+  });
 });
