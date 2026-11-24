@@ -1,3 +1,4 @@
+import type { LabelColor } from "../../domain/labelColors";
 export type WorkspaceNode = {
   id: string;
   parentId: string | null;
@@ -6,6 +7,8 @@ export type WorkspaceNode = {
   description?: string;
   researchQuestion?: string;
   keywords?: string[];
+  /** Finder-style label color key (see labelColors.ts). */
+  color?: LabelColor | null;
   /** ISO timestamp when moved to Trash; null/undefined means active. */
   trashedAt?: string | null;
   /** Top-level folder id for a trash operation (shared by subtree). */

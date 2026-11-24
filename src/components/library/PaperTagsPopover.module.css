@@ -22,6 +22,40 @@
   line-height: 1.4;
 }
 
+.chip[data-colored] {
+  --sq-bg: color-mix(in srgb, var(--tag-color) 16%, transparent);
+  color: color-mix(in srgb, var(--tag-color) 72%, var(--color-text));
+}
+
+.chip[data-selected] {
+  box-shadow: inset 0 0 0 1.5px var(--tag-color, var(--color-accent));
+}
+
+.chipLabel {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.colorLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+}
+
 .remove {
   display: inline-flex;
   padding: var(--spacing-2xs);
@@ -33,7 +67,7 @@
 }
 
 .remove:hover {
-  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  background: color-mix(in srgb, var(--tag-color, var(--color-accent)) 18%, transparent);
 }
 
 .input {

@@ -6,17 +6,25 @@ import type { AnchorBox } from "../reader/memo/popoverPosition";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { applyPaperTags } from "../../services/paperLibraryState";
 import { isImeComposing } from "../../utils/ime";
+import { useTagColors } from "../../stores/tagColors";
+import { applyTagColor } from "../../services/tagColorService";
+import { tagColorStyle } from "../../domain/labelColors";
+import { LabelColorPicker } from "../ui/LabelColorPicker";
 import styles from "./PaperTagsPopover.module.css";
 
 const NO_TAGS: string[] = [];
 
 type Props = { paper: Paper; anchor: AnchorBox; onClose: () => void };
 
-/** Local tag edit (Popover per UI principles); every change saves immediately. */
+/** Local tag edit (Popover per UI principles); every change saves immediately. Click a tag to set its color. */
 export function PaperTagsPopover({ paper, anchor, onClose }: Props) {
   const tags = useLibraryCache((state) => state.papers.find((p) => p.id === paper.id)?.tags) ?? NO_TAGS;
   const papers = useLibraryCache((state) => state.papers);
   const [draft, setDraft] = useState("");
+  const tagColors = useTagColors((state) => state.colors);
+  // Tag whose color row is open; clicking a chip toggles it.
+  const [coloring, setColoring] = useState<string | null>(null);
+  const coloringTag = coloring && tags.includes(coloring) ? coloring : null;
   const inputRef = useRef<HTMLInputElement>(null);
   // InfoPopover focuses its panel in a layout effect; take focus back for typing.
   useEffect(() => {
@@ -44,8 +52,22 @@ export function PaperTagsPopover({ paper, anchor, onClose }: Props) {
       <div className={styles.chips}>
         {tags.length === 0 ? <span className={styles.empty}>タグはありません</span> : null}
         {tags.map((tag) => (
-          <span key={tag} className={styles.chip}>
-            {tag}
+          <span
+            key={tag}
+            className={styles.chip}
+            style={tagColorStyle(tagColors[tag.toLocaleLowerCase()])}
+            data-colored={tagColors[tag.toLocaleLowerCase()] ? "" : undefined}
+            data-selected={coloringTag === tag || undefined}
+          >
+            <button
+              type="button"
+              className={styles.chipLabel}
+              aria-expanded={coloringTag === tag}
+              title={`「${tag}」の色を変える`}
+              onClick={() => setColoring(coloringTag === tag ? null : tag)}
+            >
+              {tag}
+            </button>
             <button
               type="button"
               className={styles.remove}
@@ -57,6 +79,16 @@ export function PaperTagsPopover({ paper, anchor, onClose }: Props) {
           </span>
         ))}
       </div>
+      {coloringTag ? (
+        <div className={styles.colorRow}>
+          <span className={styles.colorLabel}>「{coloringTag}」の色</span>
+          <LabelColorPicker
+            label={`タグ「${coloringTag}」の色`}
+            value={tagColors[coloringTag.toLocaleLowerCase()]}
+            onChange={(color) => void applyTagColor(coloringTag, color)}
+          />
+        </div>
+      ) : null}
       <input
         className={styles.input}
         value={draft}

@@ -52,6 +52,15 @@
   --color-selection-bg: var(--color-accent);
   --color-selection-fg: #ffffff;
 
+  /* Finder-style labels for folders and tags (see src/domain/labelColors.ts) */
+  --label-red: #e5484d;
+  --label-orange: #f76b15;
+  --label-yellow: #e2a400;
+  --label-green: #30a46c;
+  --label-blue: #0090ff;
+  --label-purple: #8e4ec6;
+  --label-gray: #8b8d98;
+
   /* Status / content */
   --color-danger: #c5221f;
   --color-success: #16803c;
@@ -199,6 +208,13 @@
 }
 
 [data-theme="dark"] {
+  --label-red: #ff6369;
+  --label-orange: #ff8b3e;
+  --label-yellow: #ffca16;
+  --label-green: #3dd68c;
+  --label-blue: #70b8ff;
+  --label-purple: #bf7af0;
+  --label-gray: #b0b4ba;
   /* Neutrals (dark) */
   --color-bg: var(--gray-950);
   --color-bg-secondary: var(--gray-900);
