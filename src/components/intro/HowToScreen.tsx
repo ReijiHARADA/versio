@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./HowToScreen.module.css";
 
+/** Rest on the last frame before replaying, so the result reads before the loop restarts. */
+const END_HOLD_MS = 2000;
+
 type Props = {
   page: 1 | 2;
   total: 2;
@@ -21,7 +24,9 @@ type Props = {
 export function HowToScreen({ page, total, title, body, video, poster, still, primaryLabel, onNext, onSkip, onBack }: Props) {
   const primary = useRef<HTMLButtonElement>(null);
   const [failed, setFailed] = useState(false);
+  const replay = useRef<number>();
   useEffect(() => primary.current?.focus(), []);
+  useEffect(() => () => window.clearTimeout(replay.current), []);
   const titleId = `howto-title-${page}`;
 
   return (
@@ -41,8 +46,14 @@ export function HowToScreen({ page, total, title, body, video, poster, still, pr
               poster={poster}
               muted
               autoPlay
-              loop
               playsInline
+              onEnded={(e) => {
+                const clip = e.currentTarget;
+                replay.current = window.setTimeout(() => {
+                  clip.currentTime = 0;
+                  void clip.play().catch(() => {});
+                }, END_HOLD_MS);
+              }}
               onError={() => setFailed(true)}
             />
           )}

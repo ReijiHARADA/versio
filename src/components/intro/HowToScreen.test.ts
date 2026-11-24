@@ -19,10 +19,10 @@ const base = {
 };
 
 describe("HowToScreen", () => {
-  it("loops the muted clip with its poster", () => {
+  it("plays the muted clip with its poster, holding the end instead of a native loop", () => {
     const html = render({});
     expect(html).toContain("<video");
-    expect(html).toMatch(/loop/);
+    expect(html).not.toMatch(/\bloop\b/);
     expect(html).toMatch(/muted/);
     expect(html).toContain('poster="/clip.jpg"');
   });
