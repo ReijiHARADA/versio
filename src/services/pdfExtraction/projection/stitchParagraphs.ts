@@ -266,7 +266,13 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         if (finished && !interruptionAllowed(candidate)) passedFinished += 1;
         if (candidate.type === "figure" || candidate.type === "table") sawFloat = true;
         // A running head or a table cell (short, no sentence end) does not count as a skipped paragraph.
-        if (candidate.type === "paragraph" && (TERMINAL.test(candidateText) || words(candidateText) > 12)) skippedParagraph = true;
+        // (Nor does a short note right under a table, `Bold values indicate the best performance.`, or a running head,
+        // `Peng et al. BMC Med Inform Decis Mak 2020, 20(Suppl 11):322`.)
+        const transparentNote = candidate.type === "paragraph" &&
+          ((out[j - 1]?.type === "table" && words(candidateText) <= 15) ||
+            (words(candidateText) <= 20 && /^\p{Lu}[\p{L}'’-]+ et al\.?\s/u.test(candidateText) && /\b(?:19|20)\d{2}\b/.test(candidateText) && !TERMINAL.test(candidateText)));
+        if (transparentNote) { /* skipped like a float's own text */ }
+        else if (candidate.type === "paragraph" && (TERMINAL.test(candidateText) || words(candidateText) > 12)) skippedParagraph = true;
         else if (candidate.type === "paragraph") skippedFragment = true;
         // A page number (`10 / 23`) between the pages does not stop the look past full-page floats.
         // (Nor does a table's own footnote or note.)
