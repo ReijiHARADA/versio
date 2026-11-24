@@ -30,6 +30,9 @@ export function repairLineBreakHyphens(blocks: PaperBlock[]): PaperBlock[] {
     if (b.type !== "paragraph" || !b.original || !b.original.includes("-")) return b;
     const repaired = b.original.replace(HYPHENATED, (whole, head: string, tail: string) => {
       const joined = `${head}${tail}`.toLowerCase();
+      // A prefix compound (`pre-processing`, `multi-modal`, `over-sampling`) is spelled both ways, often within one
+      // paper; the hyphen the line break kept is as likely the author's as not, so it stays.
+      if (/^(?:anti|co|counter|cross|inter|intra|micro|macro|multi|non|over|post|pre|re|self|semi|sub|super|under)$/i.test(head)) return whole;
       // "co-occurrence" written with its hyphen as often as without is a real compound.
       if (head.length >= 2 && (vocabulary.get(joined) ?? 0) >= Math.max(1, hyphenated.get(joined) ?? 0)) return `${head}${tail}`;
       if (head.length >= 3 && SUFFIX_FRAGMENT.test(tail) && !vocabulary.has(tail)) return `${head}${tail}`;
