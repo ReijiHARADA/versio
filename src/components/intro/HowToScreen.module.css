@@ -99,7 +99,6 @@
   position: absolute;
   top: var(--spacing-lg);
   right: var(--spacing-lg);
-  z-index: 1;
 }
 
 .secondary:hover {
