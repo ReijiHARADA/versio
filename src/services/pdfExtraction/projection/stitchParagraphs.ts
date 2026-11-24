@@ -165,7 +165,7 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
       // Full-page figures and tables (a long table runs over several pages) can push the rest of a paragraph several pages on.
       let onlyFloats = true;
       let sawFloat = false;
-      for (let j = i + 1; j < out.length && j <= i + 12 && out[j].pageStart <= current.pageEnd + (onlyFloats && j > i + 1 ? 8 : 1); j += 1) {
+      for (let j = i + 1; j < out.length && j <= i + 20 && out[j].pageStart <= current.pageEnd + (onlyFloats && j > i + 1 ? 8 : 1); j += 1) {
         const candidate = out[j];
         const candidateText = candidate.original?.trim() ?? "";
         // A list's lead-in (`task (“diseased” vs. “no disease”). These modifications are:`) can be the rest of the sentence too.
