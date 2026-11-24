@@ -45,8 +45,7 @@ await ctx.addInitScript(() => {
     c.style.cssText = "position:fixed;left:-40px;top:0;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:rgba(30,30,30,.35);border:2px solid rgba(255,255,255,.9);box-shadow:0 1px 4px rgba(0,0,0,.35);pointer-events:none;z-index:2147483647;transition:transform .12s";
     const g = document.createElement("div");
     g.id = "howto-drag-badge";
-    g.textContent = "PDF × 3";
-    g.style.cssText = "position:fixed;left:-200px;top:0;margin:14px 0 0 14px;padding:6px 12px;border-radius:9px;background:rgba(255,255,255,.95);box-shadow:0 6px 20px rgba(0,0,0,.18);font:600 13px -apple-system,system-ui,sans-serif;color:#1d1d1f;pointer-events:none;z-index:2147483646;display:none";
+        g.style.cssText = "position:fixed;left:-200px;top:0;margin:14px 0 0 14px;padding:6px 12px;border-radius:9px;background:rgba(255,255,255,.95);box-shadow:0 6px 20px rgba(0,0,0,.18);font:600 13px -apple-system,system-ui,sans-serif;color:#1d1d1f;pointer-events:none;z-index:2147483646;display:none";
     document.body.append(g, c);
     addEventListener("mousemove", (e) => {
       for (const el of [c, g]) { el.style.left = e.clientX + "px"; el.style.top = e.clientY + "px"; }

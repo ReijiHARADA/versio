@@ -480,17 +480,6 @@ const HOWTO_DROP_CARDS: Record<string, Partial<Paper>> = {
     pageCount: 9,
     favorite: false,
   },
-  "power-over-skin.pdf": {
-    titleOriginal: "Power-over-Skin: Full-Body Wearables Powered By Intra-Body RF Energy",
-    titleTranslated: "Power-over-Skin：体内を伝わるRFエネルギーで給電する全身ウェアラブル",
-    authors: ["Andy Kong", "Daehwa Kim", "Chris Harrison"],
-    authorsStructured: [],
-    affiliations: [],
-    publication: "UIST '24",
-    year: 2024,
-    pageCount: 13,
-    favorite: false,
-  },
 };
 
 /** First-launch look for the how-to clips: two empty projects, no papers. */
