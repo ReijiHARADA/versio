@@ -189,6 +189,7 @@ export function listResumeCandidatePaperIds(db: SqliteClient): string[] {
 export function deletePaperIndex(db: SqliteClient, id: string): void {
   db.exec("DELETE FROM papers_fts WHERE paper_id = ?", [id]);
   db.exec("DELETE FROM library_terms WHERE paper_id = ?", [id]);
+  db.exec("DELETE FROM paper_words WHERE paper_id = ?", [id]);
   db.exec("DELETE FROM papers WHERE id = ?", [id]);
   db.exec("DELETE FROM workspace_papers WHERE paper_id = ?", [id]);
   db.exec("DELETE FROM annotations WHERE paper_id = ?", [id]);

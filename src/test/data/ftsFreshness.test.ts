@@ -195,3 +195,18 @@ describe("library terms backfill", () => {
     expect(listLibraryTerms(db)).toEqual([]);
   });
 });
+
+describe("one-character word search", () => {
+  it("finds a paper that uses 数 as a word and skips one that only has 関数", async () => {
+    const db = await openSqlite(createMemoryFileSystem());
+    const word = { ...paper(), id: "word", sourceFileHash: "h-word", titleOriginal: "A" };
+    const inside = { ...paper(), id: "inside", sourceFileHash: "h-inside", titleOriginal: "B" };
+    upsertPaperIndex(db, word);
+    upsertPaperIndex(db, inside);
+    indexPaperText(db, word, "", "参加者の数が多い。");
+    indexPaperText(db, inside, "", "関数を定義する。");
+    expect(searchPapersFts(db, "数")).toEqual(["word"]);
+    refreshPaperAnnotationFts(db, word.id);
+    expect(searchPapersFts(db, "数")).toEqual(["word"]);
+  });
+});

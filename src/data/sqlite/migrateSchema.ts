@@ -2,6 +2,7 @@ import type { Database } from "sql.js";
 import { SQLITE_SCHEMA_VERSION } from "../schemaVersion";
 import { sqliteSchemaVersionSql } from "./schema";
 import { normalizeIndexText } from "../../domain/search/normalizeSearchText";
+import { singleCharWords } from "../../domain/search/singleCharWords";
 
 type SchemaMigration = {
   from: number;
@@ -370,6 +371,26 @@ function migrateV10ToV11(db: Database): void {
   db.run("INSERT OR REPLACE INTO meta (key, value) VALUES (?, 'pending')", [LIBRARY_TERMS_BACKFILL_KEY]);
 }
 
+/** One-character word index for search, filled from the stored search text. */
+function migrateV11ToV12(db: Database): void {
+  db.run(`CREATE TABLE IF NOT EXISTS paper_words (
+    paper_id TEXT PRIMARY KEY,
+    words TEXT NOT NULL,
+    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE
+  )`);
+  const exists = db.exec("SELECT 1 FROM sqlite_master WHERE name = 'papers_fts' LIMIT 1");
+  if (!exists[0]?.values.length) return;
+  const rows = db.exec("SELECT paper_id, title, authors, original, translation, annotation FROM papers_fts")[0]?.values ?? [];
+  const insert = db.prepare("INSERT OR REPLACE INTO paper_words (paper_id, words) VALUES (?, ?)");
+  try {
+    for (const [paperId, ...fields] of rows) {
+      insert.run([paperId, singleCharWords(fields.map((value) => String(value ?? "")).join("\n"))]);
+    }
+  } finally {
+    insert.free();
+  }
+}
+
 const MIGRATIONS: SchemaMigration[] = [
   { from: 1, to: 2, run: migrateV1ToV2 },
   { from: 2, to: 3, run: migrateV2ToV3 },
@@ -381,6 +402,7 @@ const MIGRATIONS: SchemaMigration[] = [
   { from: 8, to: 9, run: migrateV8ToV9 },
   { from: 9, to: 10, run: migrateV9ToV10 },
   { from: 10, to: 11, run: migrateV10ToV11 },
+  { from: 11, to: 12, run: migrateV11ToV12 },
 ];
 
 export function applySqliteSchemaMigrations(db: Database): number {

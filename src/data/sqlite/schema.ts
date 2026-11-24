@@ -96,6 +96,14 @@ CREATE TABLE IF NOT EXISTS reading_positions (
   FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE
 );
 
+-- One-character Japanese words a paper uses as words (singleCharWords), so 蚊 / 数 / め
+-- can be searched without matching inside 関数 or ため. Rebuilt with papers_fts.
+CREATE TABLE IF NOT EXISTS paper_words (
+  paper_id TEXT PRIMARY KEY,
+  words TEXT NOT NULL,
+  FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE
+);
+
 -- Abbreviation / term pairs defined in paper text ("Human-Computer Interaction (HCI)"),
 -- used to expand library search. Rebuilt with the search index.
 CREATE TABLE IF NOT EXISTS library_terms (
