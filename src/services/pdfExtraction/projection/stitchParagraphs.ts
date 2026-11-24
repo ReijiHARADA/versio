@@ -262,7 +262,12 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // (`Model adjusted for age, … CI 95% confidence interval`); `… across all of the wards in` is open prose.
         const tableNote = candidate.type === "paragraph" && out[j - 1]?.type === "table" && !CONTINUATION_START.test(candidateText) &&
           !isHardOpen(candidateText);
-        if (!interruptionAllowed(candidate) && !tableNote && !(finished && (sawFloat || (words(currentText) >= 20 && !KEYWORD_TAIL.test(currentText) && passedFinished < 2)))) break;
+        // A word cut at its line-end hyphen (`… including stop-` | display | `ping when …`) goes on past a display set
+        // in between.
+        // (An unnumbered one only: a numbered display belongs where it is printed.)
+        const pastDisplay = candidate.type === "equation" && /\p{L}{2,}-$/u.test(currentText) && !/\(\s*\d{1,3}[a-z]?\s*\)\s*$/.test(candidateText);
+        if (!interruptionAllowed(candidate) && !tableNote && !pastDisplay &&
+          !(finished && (sawFloat || (words(currentText) >= 20 && !KEYWORD_TAIL.test(currentText) && passedFinished < 2)))) break;
         if (finished && !interruptionAllowed(candidate)) passedFinished += 1;
         if (candidate.type === "figure" || candidate.type === "table") sawFloat = true;
         // A running head or a table cell (short, no sentence end) does not count as a skipped paragraph.
