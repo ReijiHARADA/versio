@@ -60,6 +60,17 @@ const SHINGLE = 5;
 const shingles = (t: string[]): string[] => (t.length < SHINGLE ? [] : Array.from({ length: t.length - SHINGLE + 1 }, (_, i) => t.slice(i, i + SHINGLE)).filter((w) => !w.includes(MARKUP)).map((w) => w.join(" ")));
 const wordCount = (s: string) => tokens(s).filter((t) => t !== MARKUP).length;
 
+/** The raw PDF text's shingles (line-end hyphens joined), to ask how much of a gold paragraph the PDF prints word for word. */
+export function rawShingleSet(raw: string): Set<string> {
+  return new Set(shingles(tokens(raw.replace(/(\p{Ll})-\s+(?=\p{Ll})/gu, "$1"))));
+}
+
+/** Share of a gold paragraph's shingles the PDF prints word for word. */
+export function printedShingleShare(goldText: string, raw: Set<string>): number {
+  const sh = [...new Set(shingles(tokens(goldText)))];
+  return sh.length ? sh.filter((s) => raw.has(s)).length / sh.length : 1;
+}
+
 export type ExtractedBlock = { id: string; text: string; warning: string | null; indent?: boolean; shortEnd?: boolean; spaced?: boolean; page?: number };
 
 export type ParagraphOutcome = {
