@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Paper, PaperBlock, Section } from "../../../types/paper";
 import { getPaperWithPackageMetadata } from "../../../services/database";
 import { openExternalUrl } from "../../../services/openExternalUrl";
-import { READ_STATUS_LABELS } from "../../../services/paperLibraryState";
 import { copyBibTeX } from "../../../services/bibliography/copyBibTeX";
 import { PaperMetadataSheet } from "../../library/PaperMetadataSheet";
 import {
@@ -123,7 +122,6 @@ export function PaperInfoPanel({ paper, blocks, sections, workspaceNames, annota
 
       <Section title="ライブラリ">
         <dl className={styles.rows}>
-          <Row label="読書状態">{READ_STATUS_LABELS[p.readStatus ?? "unread"]}</Row>
           <Row label="お気に入り">{p.favorite ? "★ 登録済み" : null}</Row>
           <Row label="タグ">{(p.tags?.length ?? 0) > 0 && <Chips items={p.tags!} />}</Row>
           <Row label="フォルダ">{workspaceNames.length > 0 && <Chips items={workspaceNames} />}</Row>

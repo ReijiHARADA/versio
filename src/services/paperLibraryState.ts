@@ -2,12 +2,6 @@ import type { PaperReadStatus } from "../types/paper";
 import { setPaperLibraryState } from "./database";
 import { useLibraryCache } from "../stores/libraryCache";
 
-export const READ_STATUS_LABELS: Record<PaperReadStatus, string> = {
-  unread: "未読",
-  reading: "読書中",
-  read: "読了",
-};
-
 /** Trim, drop empties and case-insensitive duplicates, keep the first spelling. */
 export function normalizeTags(tags: string[]): string[] {
   const seen = new Set<string>();

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BookText, Check, FolderPlus, MoreHorizontal, Quote, Tag, Pause, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
+import { BookText, FolderPlus, MoreHorizontal, Quote, Tag, Pause, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
 import type { Paper } from "../../types/paper";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { usePaperSelectionStore } from "../../stores/paperSelectionStore";
@@ -18,7 +18,6 @@ import {
 import { PaperEpubSyncControl } from "./PaperEpubSyncControl";
 import { PaperMetadataSheet } from "./PaperMetadataSheet";
 import { PaperTagsPopover } from "./PaperTagsPopover";
-import { applyPaperReadStatus, READ_STATUS_LABELS } from "../../services/paperLibraryState";
 import type { AnchorBox } from "../reader/memo/popoverPosition";
 import { copyBibTeX } from "../../services/bibliography/copyBibTeX";
 import styles from "./PaperCard.module.css";
@@ -193,29 +192,6 @@ export function PaperMenu({
             {bulkPapers.every((item) => item.favorite) ? "お気に入りを外す" : "お気に入り"}
           </button>
           <div className={styles.menuSep} />
-          {(["unread", "reading", "read"] as const).map((status) => {
-            const checked = bulkPapers.every((item) => (item.readStatus ?? "unread") === status);
-            return (
-              <button
-                key={status}
-                type="button"
-                className={styles.menuItem}
-                role="menuitemradio"
-                aria-checked={checked}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setOpen(false);
-                  for (const item of bulkPapers) {
-                    if ((item.readStatus ?? "unread") !== status) void applyPaperReadStatus(item.id, status);
-                  }
-                }}
-              >
-                <Check size={14} style={checked ? undefined : { visibility: "hidden" }} />
-                {READ_STATUS_LABELS[status]}
-              </button>
-            );
-          })}
-          <div className={styles.menuSep} />
           {variant === "library" && (
             <button
               type="button"
@@ -287,27 +263,6 @@ export function PaperMenu({
             variant="menu"
             onFinished={() => setOpen(false)}
           />
-          <div className={styles.menuSep} />
-          {(["unread", "reading", "read"] as const).map((status) => {
-            const checked = (paper.readStatus ?? "unread") === status;
-            return (
-              <button
-                key={status}
-                type="button"
-                className={styles.menuItem}
-                role="menuitemradio"
-                aria-checked={checked}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setOpen(false);
-                  if (!checked) void applyPaperReadStatus(paper.id, status);
-                }}
-              >
-                <Check size={14} style={checked ? undefined : { visibility: "hidden" }} />
-                {READ_STATUS_LABELS[status]}
-              </button>
-            );
-          })}
           <button
             type="button"
             className={styles.menuItem}
