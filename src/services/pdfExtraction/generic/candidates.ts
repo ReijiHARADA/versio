@@ -1363,6 +1363,15 @@ function pageGridEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
       !/[.!?;:]/.test(block.text.trim())) {
     return 0.97;
   }
+  // A sideways text table (a literature-review matrix) on an upright page: nearly every native item on the page is
+  // rotated, but its cells are words, so the numeric test above misses it. The line grouper reads the rotated cells
+  // across as glued runs (`InterventionVirtual Realitybespoke …`); none of that is body prose.
+  const pageItems = rotatedPage.flatMap((candidate) => candidate.lines.flatMap((line) => line.items));
+  if (rotatedItems.length >= 60 && rotatedItems.length >= pageItems.length * 0.85 &&
+      block.role === "paragraph" &&
+      block.lines.every((line) => line.items.every((item) => Math.abs(item.rotation ?? 0) >= 45))) {
+    return 0.97;
+  }
   // Some proceedings PDFs emit every borderless matrix cell as its own one-
   // span block. There is then no multi-item row for the ordinary grid test to
   // see. Recover only a compact local matrix with repeated x columns and
