@@ -400,7 +400,12 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     checked = checked.replace(/(\bS\d{1,3}\s+)(?:Fig|Table)\.$/, "$1item.");
     // A short piece between two parts of one table on its page is a table cell read as a paragraph.
     const betweenTables = words(text) < 40 && [blocks[index - 1], blocks[index + 1]].every((b) => b?.type === "table" && b.pageStart <= block.pageStart && b.pageEnd >= block.pageStart);
-    const warning = isExpectedNonProseParagraph(text) || betweenTables ? null : unsafeParagraphStructureReason(checked);
+    // A short run without the small words a sentence is made of (`Trinidad and Tobago Susanta Kumar Ghosh,`, a cell, a
+    // label) is no sentence that could be cut: its structure is not checked.
+    const shortLabel = words(text) < 15 &&
+      (text.match(/\b(?:the|of|and|to|in|is|are|was|were|with|for|that|this|we|by|on|as|be|from)\b/gi)?.length ?? 0) <= 2;
+    const structural = isExpectedNonProseParagraph(text) || betweenTables ? null : unsafeParagraphStructureReason(checked);
+    const warning = shortLabel && structural && /末尾が欠け|先頭が前段|語が途中で切れ|括弧/.test(structural) ? null : structural;
     if ((warning ?? undefined) === current) return block;
     return { ...block, metadata: { ...block.metadata, translationInputWarning: warning ?? undefined } };
   });
