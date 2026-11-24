@@ -364,6 +364,8 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     }
     // A supporting-information entry ends with its file type after the last sentence (`… policy. (ZIP)`).
     checked = checked.replace(/([.!?])\s*\((?:[A-Z][A-Z0-9]{1,4}(?:\s*\/\s*[A-Z][A-Z0-9]{1,4})?)\)$/, "$1");
+    // A supporting-information reference puts its number first (`… as in S7 Fig.`): the reference is complete, not cut after `Fig.`.
+    checked = checked.replace(/(\bS\d{1,3}\s+)(?:Fig|Table)\.$/, "$1item.");
     // A short piece between two parts of one table on its page is a table cell read as a paragraph.
     const betweenTables = words(text) < 40 && [blocks[index - 1], blocks[index + 1]].every((b) => b?.type === "table" && b.pageStart <= block.pageStart && b.pageEnd >= block.pageStart);
     const warning = isExpectedNonProseParagraph(text) || betweenTables ? null : unsafeParagraphStructureReason(checked);
