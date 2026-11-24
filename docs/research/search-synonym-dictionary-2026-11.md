@@ -107,3 +107,18 @@ concept_term(concept_id, term_id, relation, weight, source_id, confidence, revie
   - 専門語は一般辞書にほぼ無い（認知負荷・HCI・視線追跡・cognitive load はどちらの WordNet にも無い）ので `scripts/synonyms/curated.txt`（LLM 下書き）で補う。
   - 重み 0.65 以上を既定オン、それ未満は検索欄の「+N」Popover で候補として出す。2 文字の略語（AR・MR・SD）は長い形からの展開先にしない（`Mr.` などに当たるため）。展開で足した英単語は語頭一致（`load` が download に当たらない）。
   - 速度: 1 語ごとに SQL の `LIKE` / `instr` を並べると本文を語の数だけ読み直し、13 語で 0.6〜0.9 s。採点を SQL 関数 `versio_search_score`（JS）にまとめて本文を 1 行 1 回だけ読むようにし、語数に関係なく 150〜200 ms（300 本・約 40 MB、node）。
+- P2（2026-11-24、#398 / #400）: ライブラリ辞書と PLaMo の訳語。
+  - 取り込んだ論文の本文から `Long Form (ABBR)`（Schwartz & Hearst 2003）と `日本語（English）` の組を `extractAbbreviations` で抜き、SQLite `library_terms`（schema v11、論文ごとに最大 200 組）に置く。既存の論文は起動時の同期で `original.md` / `ja.md` から埋める。抽出規則を変えたら `LIBRARY_TERMS_VERSION` を上げると一度だけ抽出し直す。実データで、引用をまたぐ組（`; ` `et al`）と、数字の入った括弧（H1-H3）が誤りになったので除外した。
+  - 同梱辞書にもライブラリ辞書にも無い語は、PLaMo のサイドカーが既に起動していれば日英どちらかに訳して 0.7 で足す（`plamo_server_if_running`。検索のためにモデルを読み込まない）。英語へ訳すときに `form: "plain"` を渡すと chat template が失敗する。
+  - Wikidata のラベルは見送った。専門語の略語と訳語はライブラリ辞書と PLaMo で拾える。
+- P3（2026-11-24、#399）: 検証と評価。
+  - `scripts/synonyms/validate-curated.ts`: 独自用語（英日の組がある 214 概念）を PLaMo で、単体・定型文・手元の論文の文の 3 通りに訳して確かめる。185 概念が双方向で確認、10 概念が英→日だけ、19 概念が未確認（レビュー: `scripts/synonyms/review/curated-validation.tsv`）。PLaMo が使う正しい訳語 35 語を足し、誤訳（個人捏造・XR → 拡張現実・実施形態・紙）は足さない。
+  - `scripts/synonyms/eval-search.ts` + `eval-queries.tsv`（40 クエリ、正解語は辞書とは別に書いた）、本番の `scoreFields` で照合:
+
+    | コーパス | 正規化のみ R / P | 辞書あり R / P |
+    | --- | --- | --- |
+    | `test-data/real-papers` 113 本（英語のみ） | 0.24 / 0.97 | 0.97 / 0.98 |
+    | 手元のライブラリ 9 本（原文と訳文） | 0.75 / 1.00 | 1.00 / 1.00 |
+
+  - 初回は英語のみで適合率 0.76。上位語を `~` で類義語に並べていた（没入感 ~ presence、半構造化インタビュー ~ interview、文献レビュー ~ survey、参加者 ~ subject）のが原因で、行を分けて 0.98 に戻した。評価クエリは独自用語の分野と重なるので、ほかの分野の再現率はこれより低い。
+- 1 文字語（2026-11-25、#442 / #448）: 蚊・数・め のような 1 文字の日本語は、部分一致だと 関数・ため などほぼ全文に当たる。`Intl.Segmenter("ja", { granularity: "word" })`（WKWebView と Node にある辞書ベースの単語分割。「関数|の|数|が」と分ける）で、索引時に 1 文字の単語だけを集めて `paper_words`（schema v12）に置く。1 文字の検索語は、そこで当たれば重み 1。熟語の中にだけ出てくる場合（目鼻の 目、木の実の 実）も取りこぼさないよう 0.2 倍で当て、単語として使う論文の下に並べる（題名で当たっても 4 × 0.2 = 0.8 で、単語の一致 1 を超えない）。分割は 10 万字で約 20 ms。

@@ -113,10 +113,17 @@ export function variantNeedles(variant: Pick<SearchVariant, "term" | "relation">
 
 /**
  * Index text (`normalizeIndexText`) of one field and how much a hit in it
- * counts. A `words` field holds `singleCharWords` output instead: the only place
- * a one-character Japanese term is looked for.
+ * counts. A `words` field holds `singleCharWords` output instead: where a
+ * one-character Japanese term is found as a word.
  */
 export type ScoredField = { text: string; weight: number; words?: boolean };
+
+/**
+ * A one-character Japanese term found only inside longer words (目 in 目鼻, 数 in
+ * 関数) still matches, but scaled so it ranks below every paper that uses it as a
+ * word: the strongest such hit (title, 4 × 0.2) stays under a word hit (1).
+ */
+export const INSIDE_WORD_FACTOR = 0.2;
 
 /**
  * Sum over groups of the best field weight × variant weight that hits; 0 when
@@ -128,11 +135,13 @@ export function scoreFields(fields: readonly ScoredField[], query: SearchQuery):
     let best = 0;
     for (const variant of group.variants) {
       const single = isSingleCharTerm(variant.term);
-      const needles = single ? [` ${variant.term} `] : variantNeedles(variant);
+      const needles = single ? [variant.term] : variantNeedles(variant);
       for (const field of fields) {
-        if (Boolean(field.words) !== single) continue;
-        const value = field.weight * variant.weight;
-        if (value > best && field.text && needles.some((needle) => field.text.includes(needle))) best = value;
+        if (field.words && !single) continue;
+        let value = field.weight * variant.weight;
+        if (single && !field.words) value *= INSIDE_WORD_FACTOR;
+        const fieldNeedles = field.words ? [` ${variant.term} `] : needles;
+        if (value > best && field.text && fieldNeedles.some((needle) => field.text.includes(needle))) best = value;
       }
     }
     if (best === 0) return 0;
