@@ -4039,7 +4039,14 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     const ref = tail.length >= 2 ? tail.slice(1) : head.length >= 2 ? head : columnLines(last);
     // The last printed line may be several pieces on one baseline: measure it whole.
     const lastWidth = right(last) - Math.min(...tail.filter((l) => Math.abs(l.y - last.y) <= font * 0.6).map((l) => l.x));
-    const full = right(last) >= Math.max(...ref.map(right)) - font * 0.6 && lastWidth >= Math.max(...ref.map((l) => l.width)) * 0.92;
+    // (A line at 97% of the width is full though justified a little short of the margin.)
+    // A display read as text lines (`= kVIP · P1C1V + P1C2V + …`) is no running line.
+    const mathLine = (l: LayoutLine) => ((l.text.match(/[=+−·∑∫∂×]/g)?.length ?? 0) >= 3 && (l.text.match(/\p{Ll}{4,}/gu)?.length ?? 0) < 3) ||
+      // (or bracket rows of a matrix: `[ ] ([ ] [ ] [ ] [ ])`)
+      (l.text.match(/\p{L}/gu)?.length ?? 0) < l.text.replace(/\s/g, "").length * 0.5;
+    const full = (right(last) >= Math.max(...ref.map(right)) - font * 0.6 && lastWidth >= Math.max(...ref.map((l) => l.width)) * 0.92) ||
+      (right(last) >= Math.max(...ref.map(right)) - font * 1.2 && lastWidth >= Math.max(...ref.map((l) => l.width)) * 0.97 &&
+        !mathLine(first) && !mathLine(last));
     const left = head.length >= 2 ? Math.min(...head.slice(1).map((l) => l.x)) : median(columnLines(first).map((l) => l.x));
     const unindented = Math.abs(first.x - left) <= font * 0.4;
     // A physical break: another page or column, or the text resumes after skipped floats.
