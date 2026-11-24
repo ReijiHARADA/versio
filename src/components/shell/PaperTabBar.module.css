@@ -19,7 +19,8 @@
   position: relative;
   flex: 0 1 220px;
   min-width: 44px;
-  height: 30px;
+  /* Top sits card-gap below the window edge, like the card's side and bottom insets. */
+  height: calc(var(--titlebar-h) - var(--card-gap) - var(--spacing-xs));
   margin-bottom: var(--spacing-xs);
   display: flex;
   align-items: center;
@@ -83,7 +84,7 @@
 
 .active {
   /* Same height as the strip bottom band; sits on the card's top edge, covering its ring. */
-  height: 36px;
+  height: calc(var(--titlebar-h) - var(--card-gap) + 1px); /* = TAB_HEIGHT in paperTabShape.ts */
   margin-bottom: -1px; /* spacing-literal-ok: covers the card's 1px top ring */
   padding-bottom: 1px; /* spacing-literal-ok: re-centres the label after the 1px overlap */
   min-width: 96px;
