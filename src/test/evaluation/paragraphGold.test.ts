@@ -55,6 +55,13 @@ describe("hosted paragraphs", () => {
   });
 });
 
+describe("lists inside a paragraph", () => {
+  it("splits the paragraph at the list, as the Reader shows it", () => {
+    const xml = doc(`<p>The contributions are as follows:<list><list-item><p>A new model.</p></list-item></list>These results open a new line of work.</p>`);
+    expect(jatsParagraphs(xml).map((p) => p.text)).toEqual(["The contributions are as follows:", "These results open a new line of work.", "A new model."]);
+  });
+});
+
 describe("tokens", () => {
   it("separates a citation number from the word whether it is spaced or not", () => {
     expect(tokens("explored in29.")).toEqual(tokens("explored in 29."));

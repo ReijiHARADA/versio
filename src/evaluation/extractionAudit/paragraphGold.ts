@@ -26,7 +26,9 @@ export function jatsParagraphs(xml: string): GoldParagraph[] {
     for (const tag of ["fig", "table-wrap", "fn-group", "supplementary-material"]) scope = removeElements(scope, tag);
     // List items and boxed text are printed prose too; nested <p> are reached through their containers.
     const containers = [scope, ...elements(scope, "list-item").map((x) => x.inner), ...elements(scope, "boxed-text").map((x) => x.inner)];
-    for (const p of containers.flatMap((c) => elements(removeElements(removeElements(c, "list"), "boxed-text"), "p"))) {
+    // A list inside a paragraph is its own blocks in the Reader too: split the paragraph there, as at a display formula.
+    const withListBreaks = (c: string) => c.replace(/(<p[\s>](?:(?!<\/p>)[\s\S])*?)<list[\s>][\s\S]*?<\/list>/g, "$1<disp-formula>list</disp-formula>");
+    for (const p of containers.flatMap((c) => elements(removeElements(removeElements(withListBreaks(c), "list"), "boxed-text"), "p"))) {
       if (/<p[\s>]/.test(p.inner)) continue;
       const hasDisplayFormula = /<disp-formula/.test(p.inner);
       // A display formula is its own block in the Reader, so the text around it forms separate paragraphs
