@@ -46,6 +46,12 @@ describe("HowToScreen", () => {
     expect(render({ page: 2, still: true, onBack: () => {} })).toContain("戻る");
   });
 
+  it("puts スキップ apart from the page actions", () => {
+    const html = render({ page: 2, still: true, onBack: () => {} });
+    expect(html).toMatch(/data-skip[^>]*>スキップ/);
+    expect(html.indexOf("戻る")).toBeLessThan(html.indexOf("次へ"));
+  });
+
   it("frames the clip in a device bezel", () => {
     expect(render({})).toMatch(/data-bezel/);
   });

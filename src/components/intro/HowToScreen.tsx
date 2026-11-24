@@ -26,6 +26,9 @@ export function HowToScreen({ page, total, title, body, video, poster, still, pr
 
   return (
     <section className={styles.screen} aria-labelledby={titleId} data-tauri-drag-region>
+      <button type="button" className={`${styles.secondary} ${styles.skip}`} data-skip onClick={onSkip}>
+        スキップ
+      </button>
       <div className={styles.column}>
         {/* a generic laptop drawn in CSS: bezel with camera, screen, base */}
         <div className={styles.device} data-bezel aria-hidden>
@@ -69,9 +72,6 @@ export function HowToScreen({ page, total, title, body, video, poster, still, pr
               戻る
             </button>
           ) : null}
-          <button type="button" className={styles.secondary} onClick={onSkip}>
-            スキップ
-          </button>
           <button ref={primary} type="button" className={styles.primary} onClick={onNext}>
             {primaryLabel}
           </button>
