@@ -102,7 +102,7 @@
   z-index: var(--z-reader-popover);
   width: max-content;
   max-width: min(18rem, calc(100vw - var(--spacing-lg)));
-  padding: 5px var(--spacing-sm); /* spacing-snap-candidate */
+  padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--color-text);
   /* Clothoid tooltip; the mask also hides box-shadow, so it relies on contrast. */
   -webkit-mask-box-image: var(--sq-fill-sm);

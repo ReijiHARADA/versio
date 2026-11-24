@@ -140,7 +140,7 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 5px; /* spacing-snap-candidate */
+  gap: var(--spacing-xs);
   height: 28px;
   margin: 0;
   padding: 0 var(--spacing-sm);
@@ -313,7 +313,7 @@
   gap: var(--spacing-sm);
   width: 100%;
   /* ~26px rows, close to a native macOS menu. */
-  padding: 5px 10px; /* spacing-snap-candidate */
+  padding: var(--spacing-xs-plus) var(--spacing-sm-mid);
   border: none;
   --sq-bg: transparent;
   color: var(--color-text);
@@ -335,7 +335,7 @@
 
 .menuSep {
   height: 1px;
-  margin: 3px var(--spacing-xs-plus); /* spacing-snap-candidate */
+  margin: var(--spacing-xs) var(--spacing-xs-plus);
   background: var(--color-border-light);
 }
 
@@ -350,7 +350,7 @@
 
 .menuEmpty {
   margin: 0;
-  padding: var(--spacing-sm) 10px; /* spacing-snap-candidate */
+  padding: var(--spacing-sm) var(--spacing-sm-mid);
   font-size: var(--font-size-small);
   color: var(--color-text-secondary);
 }
@@ -427,7 +427,7 @@
   flex-direction: column;
   gap: var(--spacing-sm);
   min-width: 0;
-  padding: 10px; /* spacing-snap-candidate */
+  padding: var(--spacing-sm-mid);
   --sq-fill: var(--sq-fill-16);
   --sq-ring: var(--sq-ring2-16);
   border-radius: var(--sq-radius-16);
@@ -547,7 +547,7 @@
 .tagChip,
 .tagMore {
   flex: none;
-  padding: 1px 7px; /* spacing-snap-candidate */
+  padding: 1px var(--spacing-sm); /* spacing-literal-ok: 1px keeps the chip compact */
   font-size: var(--font-size-micro);
   line-height: 1.5;
   white-space: nowrap;

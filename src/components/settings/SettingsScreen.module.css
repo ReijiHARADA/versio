@@ -287,7 +287,7 @@
   color: var(--color-text-tertiary);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
-  padding: 0 10px; /* spacing-snap-candidate */
+  padding: 0 var(--spacing-sm-mid);
   min-height: calc(var(--control-height) - 4px);
   cursor: pointer;
 }

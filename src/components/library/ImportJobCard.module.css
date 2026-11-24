@@ -132,7 +132,7 @@
 .cancelAction {
   width: auto;
   min-width: max-content;
-  gap: 5px; /* spacing-snap-candidate */
+  gap: var(--spacing-xs);
   padding: 0 var(--spacing-sm);
   white-space: nowrap;
 }

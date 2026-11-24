@@ -6,12 +6,11 @@ import { describe, expect, it } from "vitest";
  * gap / padding / margin come from --spacing-* tokens in variables.css.
  * Allowed without a token: 0, auto, var(), calc() geometry, em and % (relative sizes).
  * A deliberate nudge carries `spacing-literal-ok: <reason>` on the same line.
- * `spacing-snap-candidate` marks values still waiting for the snap-to-scale review.
  * Positioning (top / left / inset) is out of scope: those are mostly optical offsets.
  */
 const DECL = /(?<![\w-])(gap|row-gap|column-gap|padding(?:-[a-z-]+)?|margin(?:-[a-z-]+)?)\s*:\s*([^;}]+)/g;
 const LITERAL = /(?<![\w.-])-?\d*\.?\d+(?:px|rem)\b/;
-const EXEMPT = /spacing-literal-ok:|spacing-snap-candidate/;
+const EXEMPT = /spacing-literal-ok:/;
 
 function cssFiles(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

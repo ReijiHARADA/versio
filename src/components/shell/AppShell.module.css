@@ -101,7 +101,7 @@
   align-items: center;
   gap: var(--spacing-sm-plus);
   max-width: min(640px, calc(100vw - 32px));
-  padding: 10px var(--spacing-md); /* spacing-snap-candidate */
+  padding: var(--spacing-sm-mid) var(--spacing-md);
   --sq-fill: var(--sq-fill-md);
   border-radius: var(--sq-radius-md);
   font-size: var(--font-size-body);
@@ -154,7 +154,7 @@
   align-items: center;
   gap: var(--spacing-sm);
   max-width: 280px;
-  padding: var(--spacing-xs-plus) 10px; /* spacing-snap-candidate */
+  padding: var(--spacing-xs-plus) var(--spacing-sm-mid);
   --sq-fill: var(--sq-fill-8);
   --sq-ring: var(--sq-ring-8);
   border-radius: var(--sq-radius-8);

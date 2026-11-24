@@ -91,7 +91,7 @@
   align-items: center;
   gap: var(--spacing-2xs);
   min-width: 0;
-  padding: 10px 10px var(--spacing-sm); /* spacing-snap-candidate */
+  padding: var(--spacing-sm-mid) var(--spacing-sm-mid) var(--spacing-sm);
   --sq-fill: var(--sq-fill-16);
   --sq-ring: var(--sq-ring2-16);
   border-radius: var(--sq-radius-16);
