@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FileText, X } from "lucide-react";
+import { FileText, Folder, X } from "lucide-react";
 import { useLibraryCache } from "../../stores/libraryCache";
-import { readerPaperId, usePaperTabs } from "../../stores/paperTabsStore";
+import { useProjectStore } from "../../stores/projectStore";
+import { releasePaperBody } from "../../services/paperBodyRelease";
+import { parseTab, tabForPath, tabPath, usePaperTabs, type TabKey } from "../../stores/paperTabsStore";
 import { displayPaperTitle } from "../../services/translation/quality";
 import type { Paper } from "../../types/paper";
 import {
@@ -26,14 +28,16 @@ const EDGE_PAD = 24;
 const isTranslating = (paper: Paper) =>
   paper.processingStatus === "translating" || paper.processingStatus === "glossary";
 
-/** Chrome-style paper tabs in the title bar strip above the main card. */
+/** Chrome-style paper / folder tabs in the title bar strip above the main card. */
 export function PaperTabBar() {
   const location = useLocation();
   const navigate = useNavigate();
   const tabs = usePaperTabs((state) => state.tabs);
   const papers = useLibraryCache((state) => state.papers);
-  const activeId = readerPaperId(location.pathname);
-  const lastActiveRef = useRef<string | null>(null);
+  const workspaceNodes = useProjectStore((state) => state.workspaceNodes);
+  const workspaceLoaded = useProjectStore((state) => state.loaded);
+  const activeId = tabForPath(location.pathname);
+  const lastActiveRef = useRef<TabKey | null>(null);
   const lastPagePathRef = useRef("/");
   const barRef = useRef<HTMLDivElement>(null);
   const [inset, setInset] = useState({ left: 0, right: 0 });
@@ -41,13 +45,13 @@ export function PaperTabBar() {
   const settledRef = useRef<Set<string> | null>(null);
   if (settledRef.current === null) settledRef.current = new Set(tabs);
   const [, setSettledVersion] = useState(0);
-  const settle = (paperId: string) => {
-    if (settledRef.current?.has(paperId)) return;
-    settledRef.current?.add(paperId);
+  const settle = (key: TabKey) => {
+    if (settledRef.current?.has(key)) return;
+    settledRef.current?.add(key);
     setSettledVersion((v) => v + 1);
   };
 
-  // The route decides the active tab; opening a paper anywhere opens (or focuses) its tab.
+  // The route decides the active tab; opening a paper or folder anywhere opens (or focuses) its tab.
   useEffect(() => {
     if (activeId) {
       usePaperTabs.getState().openTab(activeId, lastActiveRef.current);
@@ -57,12 +61,23 @@ export function PaperTabBar() {
     }
   }, [activeId, location.pathname, location.search]);
 
-  // Drop tabs of trashed or deleted papers once the library has loaded.
+  // Drop tabs of trashed or deleted papers / folders once each list has loaded.
   useEffect(() => {
-    if (papers.length === 0) return;
-    const live = new Set(papers.filter((paper) => !paper.trashedAt).map((paper) => paper.id));
-    usePaperTabs.getState().retainTabs((id) => live.has(id) || id === activeId);
-  }, [papers, activeId]);
+    const livePapers = papers.length > 0 ? new Set(papers.filter((paper) => !paper.trashedAt).map((paper) => paper.id)) : null;
+    const liveFolders = workspaceLoaded ? new Set(workspaceNodes.map((node) => node.id)) : null;
+    const before = usePaperTabs.getState().tabs;
+    usePaperTabs.getState().retainTabs((key) => {
+      if (key === activeId) return true;
+      const { kind, id } = parseTab(key);
+      const live = kind === "paper" ? livePapers : liveFolders;
+      return !live || live.has(id);
+    });
+    const after = new Set(usePaperTabs.getState().tabs);
+    for (const key of before) {
+      const { kind, id } = parseTab(key);
+      if (kind === "paper" && !after.has(key)) releasePaperBody(id);
+    }
+  }, [papers, workspaceNodes, workspaceLoaded, activeId]);
 
   // Keep clear of the fixed title bar controls (back/forward) and the search field.
   useLayoutEffect(() => {
@@ -87,18 +102,21 @@ export function PaperTabBar() {
   }, []);
 
   const closeTab = useCallback(
-    (paperId: string) => {
-      const next = usePaperTabs.getState().closeTab(paperId);
-      if (paperId !== activeId) return;
+    (key: TabKey) => {
+      const next = usePaperTabs.getState().closeTab(key);
+      // A closed paper no longer needs its body kept warm (see useReaderDocument).
+      const { kind, id } = parseTab(key);
+      if (kind === "paper" && key !== activeId) releasePaperBody(id);
+      if (key !== activeId) return;
       lastActiveRef.current = null;
-      navigate(next ? `/reader/${encodeURIComponent(next)}` : lastPagePathRef.current);
+      navigate(next ? tabPath(next) : lastPagePathRef.current);
     },
     [activeId, navigate]
   );
 
   const openTab = useCallback(
-    (paperId: string) => {
-      if (paperId !== activeId) navigate(`/reader/${encodeURIComponent(paperId)}`);
+    (key: TabKey) => {
+      if (key !== activeId) navigate(tabPath(key));
     },
     [activeId, navigate]
   );
@@ -138,11 +156,11 @@ export function PaperTabBar() {
   }, [activeId, closeTab]);
 
   // Pointer reordering (HTML5 drag-and-drop is unreliable in WKWebView).
-  const dragRef = useRef<{ id: string; startX: number; moved: boolean } | null>(null);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const onPointerDown = (event: React.PointerEvent, paperId: string) => {
+  const dragRef = useRef<{ id: TabKey; startX: number; moved: boolean } | null>(null);
+  const [draggingId, setDraggingId] = useState<TabKey | null>(null);
+  const onPointerDown = (event: React.PointerEvent, key: TabKey) => {
     if (event.button !== 0) return;
-    dragRef.current = { id: paperId, startX: event.clientX, moved: false };
+    dragRef.current = { id: key, startX: event.clientX, moved: false };
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   };
   const onPointerMove = (event: React.PointerEvent) => {
@@ -164,15 +182,25 @@ export function PaperTabBar() {
     if (to > from) to -= 1;
     if (to !== from) usePaperTabs.getState().moveTab(drag.id, to);
   };
-  const onPointerUp = (paperId: string) => {
+  const onPointerUp = (key: TabKey) => {
     const drag = dragRef.current;
     dragRef.current = null;
     setDraggingId(null);
-    if (drag && !drag.moved) openTab(paperId);
+    if (drag && !drag.moved) openTab(key);
   };
 
   const byId = new Map(papers.map((paper) => [paper.id, paper]));
-  const visible = tabs.filter((id) => byId.has(id));
+  const nodeById = new Map(workspaceNodes.map((node) => [node.id, node]));
+  type VisibleTab = { key: TabKey; kind: "paper" | "folder"; title: string; translating: boolean };
+  const visible = tabs.flatMap((key): VisibleTab[] => {
+    const { kind, id } = parseTab(key);
+    if (kind === "paper") {
+      const paper = byId.get(id);
+      return paper ? [{ key, kind, title: displayPaperTitle(paper), translating: isTranslating(paper) }] : [];
+    }
+    const node = nodeById.get(id);
+    return node ? [{ key, kind, title: node.name || "名称未設定", translating: false }] : [];
+  });
   // Tabs start on the card's left edge (one vertical line) unless the title bar controls are in
   // the way; then they move right far enough for the flare to clear the card's corner.
   const paddingLeft = inset.left > 0 ? Math.max(EDGE_PAD, inset.left) : 0;
@@ -183,13 +211,12 @@ export function PaperTabBar() {
       className={styles.bar}
       data-tauri-drag-region
       role="tablist"
-      aria-label="開いている論文"
+      aria-label="開いている論文とフォルダ"
       style={{ paddingLeft, paddingRight: Math.max(EDGE_PAD + 10, inset.right) }}
     >
-      {visible.map((id, index) => {
-        const paper = byId.get(id)!;
-        const title = displayPaperTitle(paper);
+      {visible.map(({ key: id, kind, title, translating }, index) => {
         const active = id === activeId;
+        const Icon = kind === "folder" ? Folder : FileText;
         return (
           <div
             key={id}
@@ -208,9 +235,9 @@ export function PaperTabBar() {
             onKeyDown={(event) => { if (event.key === "Enter") openTab(id); }}
           >
             {active && <ActiveTabShape flushLeft={index === 0 && paddingLeft === 0} />}
-            <FileText className={styles.icon} size={14} strokeWidth={1.6} aria-hidden />
+            <Icon className={styles.icon} size={14} strokeWidth={1.6} aria-hidden />
             <span className={styles.title}>{title}</span>
-            {isTranslating(paper) && <span className={styles.status}>翻訳中</span>}
+            {translating && <span className={styles.status}>翻訳中</span>}
             <button
               type="button"
               className={styles.close}

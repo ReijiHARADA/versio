@@ -7,6 +7,7 @@ import {
   markPaperOpened,
 } from "../../../services/database";
 import { sourcePdfExists } from "../../../services/sourcePdf";
+import { releasePaperBody } from "../../../services/paperBodyRelease";
 import {
   mergePreferTranslated,
   mergePreferTranslatedSections,
@@ -16,7 +17,11 @@ export function useReaderDocument(paperId: string | undefined) {
   const setSectionsInStore = useLibraryCache((s) => s.setSections);
   const setBlocksInStore = useLibraryCache((s) => s.setBlocks);
 
-  const [isLoading, setIsLoading] = useState(true);
+  // A paper whose body is still in memory (open tab) renders at once; the reload below
+  // only refreshes it.
+  const [isLoading, setIsLoading] = useState(
+    () => !paperId || (useLibraryCache.getState().blocks[paperId]?.length ?? 0) === 0
+  );
   const [hasSourcePdf, setHasSourcePdf] = useState(false);
 
   useEffect(() => {
@@ -86,25 +91,10 @@ export function useReaderDocument(paperId: string | undefined) {
     };
   }, [paperId, setSectionsInStore, setBlocksInStore, updatePaper]);
 
-  // Release previous paper body when navigating away (keep metadata + active imports).
+  // Release the previous paper body when navigating away, unless its tab stays open.
   useEffect(() => {
     return () => {
-      if (!paperId) return;
-      if (import.meta.env.VITE_VERSIO_DEMO === "1") return;
-      const cache = useLibraryCache.getState();
-      const paper = cache.papers.find((item) => item.id === paperId);
-      const busy =
-        paper?.processingStatus === "translating" ||
-        paper?.processingStatus === "glossary" ||
-        paper?.processingStatus === "queued";
-      if (busy) return;
-      cache.clearPaperBody(paperId);
-      void import("../../../data/repositories/documentRepository").then(({ forgetDocument }) => {
-        forgetDocument(paperId);
-      });
-      void import("../../../hooks/usePaperAssetUrl").then(({ revokePaperAssetUrls }) => {
-        revokePaperAssetUrls(paperId);
-      });
+      if (paperId) releasePaperBody(paperId);
     };
   }, [paperId]);
 
