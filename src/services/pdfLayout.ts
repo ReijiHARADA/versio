@@ -4005,7 +4005,10 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
   const repeated = new Set<string>();
   for (let i = 0; i < result.length; i += 1) {
     const a = result[i];
-    if (!isBody(a) || a.text.trim().length < 80) continue;
+    // Text in another size than the body (an abstract set larger) breaks the same way: A and B in one size.
+    const sizeOf = (x: LayoutBlock) => median(x.lines.map(textSize));
+    const otherSize = !isBody(a) && a.role === "paragraph" && a.lines.length > 0 && sizeOf(a) >= font * 0.92;
+    if ((!isBody(a) && !otherSize) || a.text.trim().length < 80) continue;
     // A display equation ending in its number (`RMSE = …, (5)`, `ð5Þ` in some fonts) runs on into no paragraph.
     if (/=/.test(a.text) && /(?:\(\d{1,3}[a-z]?\)|ð\d{1,3}[a-z]?Þ)\s*$/.test(a.text.trim())) continue;
     let j = i + 1;
@@ -4016,7 +4019,7 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
       // Figure-internal labels (`PC2`, `0.6 0.6`) read in as tiny paragraphs.
       (result[j].role === "paragraph" && result[j].lines.length <= 2 && (result[j].text.match(/\p{L}{3,}/gu) ?? []).length < 2 && !/[.!?:]$/.test(result[j].text.trim())))) j += 1;
     const b = result[j];
-    if (!b || !isBody(b)) continue;
+    if (!b || (otherSize ? b.role !== "paragraph" || b.lines.length === 0 || Math.abs(sizeOf(b) - sizeOf(a)) > Math.max(0.3, sizeOf(a) * 0.04) : !isBody(b))) continue;
     // One line of small type skipped right beside B on its page is a figure label (`Decision-making
     // Information search` beside `Linda is 31 years old, …`), not a caption running on: B is inside the figure.
     if (result.slice(i + 1, j).some((t) => t.role === "paragraph" && t.lines.length === 1 && t.lines[0]?.page === b.lines[0]?.page &&
