@@ -3,7 +3,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  padding: var(--spacing-2xl) var(--spacing-md);
+  padding: var(--spacing-2xl) var(--spacing-md) var(--intro-actions-space);
   overflow-y: auto;
   background: var(--color-bg);
   color: var(--color-text);
@@ -68,9 +68,14 @@
   color: var(--color-text-tertiary);
 }
 
+/* Same line as the intro's start button: bottom centre of the window. */
 .actions {
+  position: absolute;
+  left: 50%;
+  bottom: var(--intro-actions-bottom);
+  transform: translateX(-50%);
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: var(--spacing-sm);
 }
 

@@ -3,7 +3,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  padding: var(--spacing-2xl) var(--spacing-md);
+  padding: var(--spacing-xl) var(--spacing-md) var(--intro-actions-space);
   overflow-y: auto;
   background: var(--color-bg);
   color: var(--color-text);
@@ -14,14 +14,27 @@
   width: min(880px, 100%);
 }
 
-.text,
-.actions {
+.text {
   width: min(720px, 100%);
   margin-inline: auto;
+  text-align: center;
+}
+
+/* Same line as the intro's start button: bottom centre of the window. */
+.actions {
+  position: absolute;
+  left: 50%;
+  bottom: var(--intro-actions-bottom);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
 }
 
 .mockup {
-  width: min(880px, 100%);
+  /* Shrinks with short windows so the text never runs into the buttons. */
+  width: min(880px, 100%, calc((100vh - var(--intro-actions-space) - 200px) * 16 / 9));
   margin: 0 auto;
   aspect-ratio: 16 / 9;
 }
@@ -35,7 +48,6 @@
 
 .text {
   margin-top: var(--spacing-sm);
-  margin-bottom: var(--spacing-lg);
 }
 
 .title {
@@ -53,14 +65,9 @@
   color: var(--color-text-secondary);
 }
 
-.actions {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
 
 .count {
-  margin-right: auto;
+  margin: 0 0 var(--spacing-xs);
   font-size: var(--font-size-small);
   font-variant-numeric: tabular-nums;
   color: var(--color-text-tertiary);
