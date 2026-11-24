@@ -2654,6 +2654,15 @@ function orderWithRegions(
     const region = deduped.find((candidate) => lineInRegion(line, candidate));
     if (region) members.get(region)?.push(line);
   }
+  // A figure region that takes in running text (an over-large image box behind both columns) keeps none of it:
+  // most of its lines are body-size, column-wide prose (`eight commercial ASR systems, including Microsoft, …`).
+  const pageFont = median(lines.map((line) => line.fontSize));
+  for (const [region, memberLines] of members) {
+    if (region.kind !== "figure") continue;
+    const prose = memberLines.filter((line) => line.fontSize >= pageFont * 0.92 && line.width >= 150 &&
+      /\p{Ll}{3,}[,;]?\s+\p{Ll}{2,}\s+\p{Ll}{3,}/u.test(line.text));
+    if (prose.length >= 6 && prose.length >= memberLines.length * 0.5) members.set(region, []);
+  }
   const ordered = orderPageLines(lines.filter((line) => ![...members.values()].some((memberLines) => memberLines.includes(line))), layout);
   const insertedAt = new Map<LayoutLine | undefined, number>();
   for (const [regionIndex, region] of deduped.entries()) {
