@@ -12,7 +12,7 @@ import { chromium } from "playwright";
 const PORT = 5232;
 const BASE = `http://localhost:${PORT}/`;
 const OUT = "src/assets/intro";
-const VIEW = { width: 1440, height: 900 };
+const VIEW = { width: 1280, height: 800 };
 const DROPS = [
   ["wearability.pdf", "test-fixtures/generated-pdfs/basic-two-column.pdf"],
   ["interactive-jewellery.pdf", "test-fixtures/generated-pdfs/ACM-style-two-column.pdf"],
@@ -59,7 +59,6 @@ const p = await ctx.newPage();
 globalThis.__page = p;
 p.on("pageerror", (e) => console.error("pageerror:", e.message));
 const wait = (ms) => p.waitForTimeout(ms);
-const snap = (n) => process.env.HOWTO_DEBUG && p.screenshot({ path: join(tmpdir(), `versio-howto-${n}.png`) });
 async function center(loc) {
   await loc.scrollIntoViewIfNeeded();
   const box = await loc.boundingBox();
@@ -102,12 +101,12 @@ async function dropPdf(name, path, from, to) {
   await p.evaluate(() => (document.getElementById("howto-drag-badge").style.display = "none"));
 }
 const visibleText = (t) => p.getByText(t, { exact: true }).locator("visible=true").first();
-await dropPdf(...DROPS[0], { x: VIEW.width + 20, y: 420 }, { x: 820, y: 430 });
+await dropPdf(...DROPS[0], { x: VIEW.width + 20, y: 420 }, { x: 760, y: 400 });
 await p.mouse.move(VIEW.width - 60, 600, { steps: 24 });
 await visibleText("ウェアラビリティのためのデザイン").waitFor();
 await wait(500);
-await dropPdf(...DROPS[1], { x: VIEW.width + 20, y: 600 }, { x: 860, y: 470 });
-await p.mouse.move(980, 560, { steps: 15 });
+await dropPdf(...DROPS[1], { x: VIEW.width + 20, y: 600 }, { x: 800, y: 440 });
+await p.mouse.move(900, 520, { steps: 15 });
 await p.getByText("インタラクティブ・ジュエリー").locator("visible=true").first().waitFor();
 await wait(2600);
 // Drag the paper onto a project in the sidebar (pointer tracking, not HTML5 DnD).
@@ -120,9 +119,7 @@ await p.mouse.move(row.x - 40, row.y + 4, { steps: 6 });
 await p.mouse.move(target.x, target.y, { steps: 36 });
 await wait(350);
 await p.mouse.up();
-await wait(900);
-await click(visibleText("ウェアラブル研究"));
-await wait(2000);
+await wait(2400);
 const collectEnd = mark();
 
 // ── Clip 2: read ────────────────────────────────────────────────
@@ -130,7 +127,7 @@ const readStart = mark();
 await wait(500);
 await click(visibleText("ウェアラビリティのためのデザイン"), 500);
 await wait(2600);
-await p.mouse.move(1000, 560, { steps: 20 });
+await p.mouse.move(880, 520, { steps: 20 });
 for (let s = 0; s < 6; s++) { await p.mouse.wheel(0, 60); await wait(30); }
 await wait(900);
 const orig = p.getByRole("button", { name: "原文を表示" }).first();
@@ -140,10 +137,12 @@ await p.mouse.down(); await wait(90); await p.mouse.up();
 await wait(900);
 // Highlight: drag-select part of a paragraph.
 const para = p.locator("[data-paper-block-id]").filter({ hasText: "コンピューティング・ツール" }).locator("visible=true").first();
+await para.scrollIntoViewIfNeeded();
+await wait(400);
 const pb = await para.boundingBox();
 await p.mouse.move(pb.x + 30, pb.y + 12, { steps: 20 });
 await p.mouse.down();
-await p.mouse.move(pb.x + Math.min(pb.width - 40, 420), pb.y + 12, { steps: 30 });
+await p.mouse.move(pb.x + Math.min(pb.width - 40, 360), pb.y + 12, { steps: 30 });
 await p.mouse.up();
 await wait(700);
 await p.keyboard.type("配置の基準 → 図1と比べる", { delay: 90 });
