@@ -1,4 +1,6 @@
-import { FileText } from "lucide-react";
+import {
+  FileTextIcon as FileText,
+} from "@solar-icons/react/linear";
 import { usePaperDragStore } from "../../stores/paperDragStore";
 import styles from "./AppShell.module.css";
 

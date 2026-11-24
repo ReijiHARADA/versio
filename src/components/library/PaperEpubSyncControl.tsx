@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Loader2, Smartphone } from "lucide-react";
+import {
+  CheckIcon as Check,
+  RefreshIcon as Loader2,
+  SmartphoneIcon as Smartphone,
+} from "@solar-icons/react/linear";
 import {
   getEpubSyncFolder,
   hydrateEpubSyncStatus,

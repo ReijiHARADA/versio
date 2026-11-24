@@ -1,5 +1,9 @@
 import { useState, type FormEvent } from "react";
-import { ArrowRight, Plus, X } from "lucide-react";
+import {
+  ArrowRightIcon as ArrowRight,
+  AddIcon as Plus,
+  CloseIcon as X,
+} from "@solar-icons/react/linear";
 import type { GlossaryEntry } from "../../services/llm/types";
 import styles from "./GlossaryPanel.module.css";
 

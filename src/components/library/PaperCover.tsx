@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { FileText } from "lucide-react";
+import {
+  FileTextIcon as FileText,
+} from "@solar-icons/react/linear";
 import { getPaperCover } from "../../services/paperCover";
 import styles from "./PaperCover.module.css";
 

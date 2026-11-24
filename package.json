@@ -88,10 +88,10 @@
     "eval:crf-citation-parity": "vite-node --script scripts/crf-citation-parity.ts"
   },
   "dependencies": {
+    "@solar-icons/react": "2.7.0",
     "@tauri-apps/api": "^2.11.1",
     "fflate": "^0.8.3",
     "idb": "^8.0.3",
-    "lucide-react": "^1.39.0",
     "pdfjs-dist": "^3.11.174",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

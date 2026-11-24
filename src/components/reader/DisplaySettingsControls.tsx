@@ -1,4 +1,8 @@
-import { Sun, Moon, Monitor } from "lucide-react";
+import {
+  SunIcon as Sun,
+  MoonIcon as Moon,
+  MonitorIcon as Monitor,
+} from "@solar-icons/react/linear";
 import { MAX_FONT_SIZE, MIN_FONT_SIZE, useAppStore, type Theme } from "../../stores/appStore";
 import styles from "./DisplaySettingsControls.module.css";
 

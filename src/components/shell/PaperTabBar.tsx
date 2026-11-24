@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FileText, Folder, X } from "lucide-react";
+import {
+  FileTextIcon as FileText,
+  FolderIcon as Folder,
+  CloseIcon as X,
+} from "@solar-icons/react/linear";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
 import { releasePaperBody } from "../../services/paperBodyRelease";

@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Folder, FileText, Trash2 } from "lucide-react";
+import {
+  FolderIcon as Folder,
+  FileTextIcon as FileText,
+  TrashBinMinimalisticIcon as Trash2,
+} from "@solar-icons/react/linear";
 import {
   emptyTrash,
   listTrashItems,

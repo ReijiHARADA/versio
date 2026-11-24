@@ -1,5 +1,10 @@
 import { useEffect, useRef } from "react";
-import { HardDriveDownload, Languages, Settings, WifiOff } from "lucide-react";
+import {
+  DownloadIcon as HardDriveDownload,
+  TranslationIcon as Languages,
+  SettingsIcon as Settings,
+  WiFiOffIcon as WifiOff,
+} from "@solar-icons/react/linear";
 import styles from "./PlamoSetupScreen.module.css";
 
 type Props = {
