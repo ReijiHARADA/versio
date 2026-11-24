@@ -124,6 +124,13 @@ export function isLikelyNarrativeText(text: string): boolean {
  * defeat the digit-ratio test of looksLikeRunningProse. Header rows open with
  * capitalised labels, so a sentence must show a lower-case word early.
  */
+/** A finished sentence carried by function words (`… were observed for … when predicting …`): running text, not cells. */
+export function readsAsNarrative(text: string): boolean {
+  const t = text.trim();
+  const functionWords = t.match(/\b(?:the|of|and|in|to|for|with|was|were|is|are|by|that|from|on|as|when|which)\b/g)?.length ?? 0;
+  return /^\p{Lu}\p{Ll}*\s+\p{Ll}/u.test(t) && /[.!?][)\]”"’]*$/.test(t) && functionWords >= 6 && t.split(/\s+/).length >= 30;
+}
+
 export function looksLikeCitedProse(text: string): boolean {
   const trimmed = text.trim();
   if (/[•▪]/.test(trimmed) || /^(?:table|fig(?:ure)?\.?|表|図)\s*\d*/i.test(trimmed)) return false;

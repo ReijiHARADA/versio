@@ -47,6 +47,7 @@ import {
   looksLikeCaptionedTableCellFragment,
   looksLikeProseMistakenForTable,
   looksLikeCitedProse,
+  readsAsNarrative,
   looksLikeRunningProse,
 } from "./tablePredicates";
 
@@ -4058,8 +4059,9 @@ function projectTableNode(context: BodyNodeContext, state: BodyProjectionState, 
     ) && proseGridClusterPeerCount >= 3;
     // Only a role score says "table" (no row, grid or region evidence), and
     // the text reads as a sentence with citations: a body paragraph.
+    // (Or a long run of sentences in ordinary words: `No significant main effects of childhood trauma and no …`.)
     const scoreOnlyCitedProse = node.evidence.every((entry) => entry.label === "table" || entry.label === "role-scores") &&
-      looksLikeCitedProse(node.text ?? "");
+      (looksLikeCitedProse(node.text ?? "") || readsAsNarrative(node.text ?? ""));
     if (node.role === "table" && node.text && !layout?.tablePageText &&
         (!hasStrongTableMatrixEvidence(node) || wrappedSingleSpanNarrative || scoreOnlyCitedProse) &&
         !multiBoxNativeGrid &&
