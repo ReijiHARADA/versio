@@ -1291,7 +1291,18 @@ function clusterItemsIntoLines(
         right = Math.max(right, item.x + item.width);
       }
       if (segment.length > 0) segments.push(segment);
-      if (segments.length >= 3) return segments.map((part) => ({ part, isGridRow: true }));
+      // A justified line of running text spreads its words wide (`such  as  stride  length  and  cadence;  pressure`):
+      // many one- or two-word pieces at near-even gaps across the full column, with a sentence's small words, are no
+      // table cells.
+      const wordsOf = (part: ExtractedTextItem[]) => part.map((item) => item.text).join(" ").trim().split(/\s+/).filter(Boolean).length;
+      const gaps = segments.slice(1).map((part, k) => part[0].x - Math.max(...segments[k].map((item) => item.x + item.width)));
+      const span = Math.max(...ordered.map((item) => item.x + item.width)) - ordered[0].x;
+      const widest = Math.max(...groups.map((g) => Math.max(...g.map((item) => item.x + item.width)) - Math.min(...g.map((item) => item.x))));
+      const lineText = ordered.map((item) => item.text).join(" ");
+      const justifiedProse = segments.length >= 5 && segments.every((part) => wordsOf(part) <= 2) &&
+        Math.max(...gaps) <= Math.min(...gaps) * 1.7 && span >= widest * 0.85 &&
+        /\b(?:the|of|and|to|in|is|are|was|were|with|for|that|this|by|on|as|from|such)\b/i.test(lineText);
+      if (segments.length >= 3 && !justifiedProse) return segments.map((part) => ({ part, isGridRow: true }));
     }
     // Rotated tables are sometimes emitted on the same baseline as a
     // horizontal footnote. Keep those native items as separate lines so the
