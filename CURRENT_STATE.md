@@ -56,7 +56,8 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 - 太字のキャプション番号（`Figure 6.`）が、ページ幅のキャプションから左の段に取り残されないようにする。図 arXiv dev 63.6% → 68.2%、Europe PMC 106 本 86.3% → 87.2%。
 - レイアウト領域化で分かれた表キャプションと隣接する native grid を、キャプションの block ID を保った 1 つの Reader 表へ再結合する。要素正解 dev で Europe PMC 106 本の表セル 10.8% → 52.8%、表 92.7% → 95.5%（他の採点指標は低下なし）。
 - 要素正解の採点で、図・表のキャプションは空白・記号・アクセントの違いを無視しても照合する（LaTeX 由来の `Δ 0`・`μ m` と PDF の `Δ0`・`μm`）。dev の図 ACL 89.1% → 92.2%、arXiv 68.2% → 83.3%、Europe PMC 106 本 87.2% → 88.6%（採点の変更のみ）。
-- 翻訳: fresh audit（113 本 / 954 units）で ordinary-body fallback 30.8%、目標 5% は未達。自動受理は品質達成とは扱わない。→ [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)、[docs/PDF_EXTRACTION_TRANSLATION_QUALITY_EVALUATION.md](./docs/PDF_EXTRACTION_TRANSLATION_QUALITY_EVALUATION.md)
+- 翻訳（PLaMo 3 Translate 2B）: 40 段落の盲検 MQM で原文 100 語あたり 0.62（MADLAD-400 3B は 10.46）、major 以上を含む段落 2/40、critical 0、数値・引用の保持 100%、論文 1 本あたり約 1〜1.5 分。40 段落の評価で、論文全体の品質を表す値ではない。PLaMo でのアプリ内の原文表示（fallback）率は未計測。→ [docs/research/local-llm-translation-bench-2026-11.md](./docs/research/local-llm-translation-bench-2026-11.md)
+- 旧エンジン MADLAD-400 の fresh audit（113 本 / 954 units、ordinary-body fallback 30.8%）は廃止済みエンジンの値で、現在の品質には使わない。→ [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)
 - CAT-Translate / Gemma / Qwen は監査比較のみで本番 routing 未統合。
 
 ## 既知の制限・未解決
