@@ -406,7 +406,7 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     const shortLabel = (text.match(/\b(?:the|of|and|to|in|is|are|was|were|with|for|that|this|we|by|on|as|be|from)\b/gi)?.length ?? 0) <=
       Math.max(2, words(text) * 0.06);
     const structural = isExpectedNonProseParagraph(text) || betweenTables ? null : unsafeParagraphStructureReason(checked);
-    const warning = shortLabel && structural && /末尾が欠け|先頭が前段|語が途中で切れ|括弧/.test(structural) ? null : structural;
+    const warning = shortLabel && structural && /末尾が欠け|先頭が前段|語が途中で切れ|括弧|集合記法/.test(structural) ? null : structural;
     if ((warning ?? undefined) === current) return block;
     return { ...block, metadata: { ...block.metadata, translationInputWarning: warning ?? undefined } };
   });
