@@ -1,0 +1,119 @@
+.screen {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--spacing-2xl) var(--spacing-md);
+  overflow-y: auto;
+  background: var(--color-bg);
+  color: var(--color-text);
+  animation: enter 0.45s ease;
+}
+
+.column {
+  width: min(880px, 100%);
+}
+
+/* The mask clips box-shadow, so the shadow lives on a wrapper. */
+.frameShadow {
+  border-radius: var(--sq-radius-16);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 18px 48px rgb(0 0 0 / 0.14);
+}
+
+.frame {
+  composes: clip from "../../styles/squircle.module.css";
+  --sq-fill: var(--sq-fill-16);
+  aspect-ratio: 1280 / 800;
+  background: var(--color-bg-secondary);
+}
+
+.media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.text {
+  margin: var(--spacing-xl) 0 var(--spacing-lg);
+}
+
+.title {
+  margin: 0 0 var(--spacing-sm);
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.01em;
+}
+
+.body {
+  margin: 0;
+  font-size: var(--font-size-body);
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.count {
+  margin-right: auto;
+  font-size: var(--font-size-small);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary);
+}
+
+.primary,
+.secondary {
+  height: 36px;
+  padding: 0 var(--spacing-md);
+  border: none;
+  font: inherit;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.primary {
+  composes: pill from "../../styles/squircle.module.css";
+  border-radius: 999px;
+  --sq-bg: var(--color-accent);
+  color: var(--color-selection-fg);
+}
+
+.primary:hover {
+  --sq-bg: var(--color-accent-hover);
+}
+
+.secondary {
+  composes: pill from "../../styles/squircle.module.css";
+  border-radius: 999px;
+  --sq-bg: transparent;
+  color: var(--color-text-secondary);
+}
+
+.secondary:hover {
+  --sq-bg: var(--color-surface-hover);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen {
+    animation: none;
+  }
+}

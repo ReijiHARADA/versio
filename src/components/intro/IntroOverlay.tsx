@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import introMp4 from "../../assets/intro/intro.mp4";
 import finalPng from "../../assets/intro/final.png";
+import howtoCollectMp4 from "../../assets/intro/howto-collect.mp4";
+import howtoCollectJpg from "../../assets/intro/howto-collect.jpg";
+import howtoReadMp4 from "../../assets/intro/howto-read.mp4";
+import howtoReadJpg from "../../assets/intro/howto-read.jpg";
 import { usePlamoModel } from "../settings/usePlamoModel";
+import { HowToScreen } from "./HowToScreen";
 import { PlamoSetupScreen } from "./PlamoSetupScreen";
-import { introStepAfterCta } from "./introSteps";
+import { introStepAfterCta, nextIntroStep, type IntroStep } from "./introSteps";
 import { hasSeenIntro, markIntroSeen } from "./introSeen";
 import { playStapleSound, primeStapleSound, STAPLE_FIRST_CLICK_S } from "./stapleSound";
 import styles from "./IntroOverlay.module.css";
@@ -13,6 +18,26 @@ import styles from "./IntroOverlay.module.css";
 const SOUND_START_S = 26 / 30 - STAPLE_FIRST_CLICK_S;
 const CTA_TIME_S = 84 / 30; // a beat after the base leaves the frame (GONE = 78)
 const CTA_LABEL = "Versioを使い始める";
+
+// Clips come from `npm run record:howto` (filming-only demo build).
+const HOWTO_PAGES = {
+  "howto-collect": {
+    page: 1,
+    title: "PDF を落として、集める",
+    body: "ウィンドウに PDF をドロップすると、読める状態になります。プロジェクトへドラッグして整理します。",
+    video: howtoCollectMp4,
+    poster: howtoCollectJpg,
+    primaryLabel: "次へ",
+  },
+  "howto-read": {
+    page: 2,
+    title: "日本語で読み、原文で確かめる",
+    body: "気になる段落は原文を開いて確かめ、メモを残せます。⌘K でライブラリ全体を探せます。",
+    video: howtoReadMp4,
+    poster: howtoReadJpg,
+    primaryLabel: "はじめる",
+  },
+} as const;
 
 export function IntroOverlay() {
   // Automated browsers (Playwright verify scripts) are kept out of the intro.
@@ -25,7 +50,7 @@ export function IntroOverlay() {
   const [videoFailed, setVideoFailed] = useState(false);
   const [ctaShown, setCtaShown] = useState(still);
   const [leaving, setLeaving] = useState(false);
-  const [step, setStep] = useState<"intro" | "plamo">("intro");
+  const [step, setStep] = useState<IntroStep>("intro");
   const plamo = usePlamoModel();
   const timers = useRef<number[]>([]);
 
@@ -46,10 +71,13 @@ export function IntroOverlay() {
     window.setTimeout(() => setOpen(false), 400);
   };
 
-  const onCta = () => {
-    if (introStepAfterCta(plamo.state) === "plamo") setStep("plamo");
-    else close();
+  const onCta = () => setStep(introStepAfterCta(plamo.state));
+  const advance = () => {
+    const next = nextIntroStep(step);
+    if (next === "close") close();
+    else setStep(next);
   };
+  const howto = step === "howto-collect" || step === "howto-read" ? HOWTO_PAGES[step] : null;
 
   return (
     <div className={styles.overlay} data-leaving={leaving} data-tauri-drag-region role="dialog" aria-label="Versio へようこそ">
@@ -88,13 +116,14 @@ export function IntroOverlay() {
       {step === "plamo" ? (
         <PlamoSetupScreen
           onDownload={() => {
-            // installs in the background; the shell shows progress at the bottom
+            // installs in the background while the how-to pages play; the shell shows progress at the bottom
             void plamo.download();
-            close();
+            advance();
           }}
-          onClose={close}
+          onClose={advance}
         />
       ) : null}
+      {howto ? <HowToScreen key={step} {...howto} total={2} still={still} onNext={advance} onSkip={close} /> : null}
     </div>
   );
 }
