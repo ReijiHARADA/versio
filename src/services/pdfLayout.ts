@@ -3801,6 +3801,35 @@ function rejoinCaptionTails(blocks: LayoutBlock[]): LayoutBlock[] {
     result.splice(i + 1, 1);
     i -= 1;
   }
+  // The same caption lines can be carried off by a body paragraph that runs on from the previous page
+  // (`… By leveraging these libraries,` + the caption's 7 pt lines under `FIGURE 2 …`): move them back.
+  for (let i = 0; i < result.length; i += 1) {
+    const caption = result[i];
+    if (caption.role !== "figure_caption" && caption.role !== "table_caption") continue;
+    const capLast = caption.lines[caption.lines.length - 1];
+    if (!capLast) continue;
+    const capFont = median(caption.lines.map((l) => l.fontSize));
+    for (let k = 0; k < result.length; k += 1) {
+      const host = result[k];
+      if (k === i || host.role !== "paragraph" || host.lines.length < 2) continue;
+      // The host's own type size: its lines before it reaches the caption's page.
+      const own = host.lines.filter((l) => l.page !== capLast.page || l.y < capLast.y);
+      if (own.length === 0) continue;
+      const hostFont = median(own.map((l) => l.fontSize));
+      const at = host.lines.findIndex((l) => l.page === capLast.page && l.y > capLast.y && l.y - capLast.y <= Math.max(capFont, l.fontSize) * 3 &&
+        Math.abs(l.fontSize - capFont) <= 1 && l.fontSize < hostFont * 0.88);
+      if (at <= 0) continue;
+      let end = at;
+      while (end + 1 < host.lines.length && host.lines[end + 1].page === capLast.page && host.lines[end + 1].fontSize < hostFont * 0.88 &&
+        host.lines[end + 1].y - host.lines[end].y <= host.lines[end].fontSize * 2) end += 1;
+      const moved = host.lines.slice(at, end + 1);
+      const kept = [...host.lines.slice(0, at), ...host.lines.slice(end + 1)];
+      const lines = [...caption.lines, ...moved];
+      result[i] = { ...caption, lines, text: joinLines(lines), pageEnd: Math.max(caption.pageEnd, capLast.page), bbox: blockBbox(lines) };
+      result[k] = { ...host, lines: kept, text: joinLines(kept), pageEnd: kept[kept.length - 1].page, bbox: blockBbox(kept) };
+      break;
+    }
+  }
   // A small-type paragraph right under a table is its note (`Values are expressed as means (SD). …`).
   for (let i = 0; i < result.length - 1; i += 1) {
     const table = result[i];
