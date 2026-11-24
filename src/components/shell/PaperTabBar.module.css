@@ -2,6 +2,9 @@
    stay clickable; the strip's own empty area is a drag region (data-tauri-drag-region). */
 .bar {
   --tab-hover-gap: calc(var(--spacing-xs) / 2);
+  /* The card's 1px ring reads lighter than a crisp SVG stroke of the same colour
+     (it is masked and anti-aliased), so the tab outline uses a softened border colour. */
+  --tab-outline: color-mix(in srgb, var(--color-border) 60%, transparent);
   position: relative;
   z-index: var(--z-titlebar-controls);
   flex: none;
@@ -145,9 +148,11 @@
   fill: var(--color-bg);
 }
 
-/* No outline: the tab is edged by its shadow, like the card. */
+/* Outline matching the main card's ring, softened (see --tab-outline). */
 .capStroke {
-  display: none;
+  fill: none;
+  stroke: var(--tab-outline);
+  stroke-width: 1px;
 }
 
 .shapeMid {
@@ -156,6 +161,7 @@
   /* Tuck 1px under each cap: butted edges at fractional x leave a hairline seam. */
   margin: 0 -1px; /* spacing-literal-ok: seam overlap */
   background: var(--color-bg);
+  box-shadow: inset 0 1px 0 var(--tab-outline);
 }
 
 .icon {
