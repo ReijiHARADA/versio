@@ -265,7 +265,10 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // A word cut at its line-end hyphen (`… including stop-` | display | `ping when …`) goes on past a display set
         // in between.
         // (An unnumbered one only: a numbered display belongs where it is printed.)
-        const pastDisplay = candidate.type === "equation" && /\p{L}{2,}-$/u.test(currentText) && !/\(\s*\d{1,3}[a-z]?\s*\)\s*$/.test(candidateText);
+        const pastDisplay = candidate.type === "equation" && /\p{L}{2,}-$/u.test(currentText) && !/\(\s*\d{1,3}[a-z]?\s*\)\s*$/.test(candidateText) ||
+          // (Also past running text typed as an equation, `(0) = 0.00. A likelihood ratio test comparing the …`: it is
+          // a float's text or another column's, not a display of this sentence.)
+          candidate.type === "equation" && (candidateText.match(/\b\p{Ll}{4,}\b/gu)?.length ?? 0) >= 4 && words(candidateText) >= 8;
         if (!interruptionAllowed(candidate) && !tableNote && !pastDisplay &&
           !(finished && (sawFloat || (words(currentText) >= 20 && !KEYWORD_TAIL.test(currentText) && passedFinished < 2)))) break;
         if (finished && !interruptionAllowed(candidate)) passedFinished += 1;
