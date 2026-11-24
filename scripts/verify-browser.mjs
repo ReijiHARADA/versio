@@ -245,7 +245,11 @@ try {
     await folderCard
       .getByRole("heading", { name: childFolderName, exact: true })
       .waitFor({ timeout: 10_000 });
-    await folderCard.getByText("フォルダ").waitFor({ timeout: 5_000 });
+    // Both list and item (grid) layouts mark folder cards as drop targets.
+    await page
+      .locator("article[data-project-drop-id]")
+      .filter({ hasText: childFolderName })
+      .waitFor({ timeout: 5_000 });
     await page.getByRole("link", { name: childFolderName, exact: true }).waitFor({
       timeout: 10_000,
     });

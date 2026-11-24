@@ -72,7 +72,7 @@ const defaultDisplaySettings: DisplaySettings = {
   originalDisplay: "on-demand",
   sidebarMode: "expanded",
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-  libraryView: "list",
+  libraryView: "grid",
   librarySort: { key: "added", dir: "desc" },
 };
 

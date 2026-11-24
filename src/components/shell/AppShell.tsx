@@ -89,7 +89,7 @@ export function AppShell() {
             cache.setSections(document.paperId, document.sections);
             cache.setBlocks(document.paperId, document.blocks);
           }
-          useImportJobStore.getState().upsertJob(seed.importJob);
+          if (seed.importJob) useImportJobStore.getState().upsertJob(seed.importJob);
           // Capture-only: let a scripted screenshot open e.g. the Reader directly.
           const startPath = import.meta.env.VITE_VERSIO_DEMO_START_PATH;
           if (!cancelled && typeof startPath === "string" && startPath.startsWith("/")) {
@@ -207,7 +207,7 @@ export function AppShell() {
       },
     });
   };
-  const handleDropPaper = useCallback(async (targetId: string, droppedPaperId: string, sourceNodeId: string | null) => { if (targetId === INBOX_DROP_ID) { const removed = await removePaperFromAllWorkspaces(droppedPaperId); removeMembershipsForPaper(droppedPaperId); showDragToast({ kind: removed ? "added" : "duplicate", message: removed ? "インボックスに戻しました" : "すでにインボックスにあります" }); return; } try { const link = sourceNodeId ? await movePaperInWorkspace(droppedPaperId, sourceNodeId, targetId) : await addPaperToWorkspace(targetId, droppedPaperId); if (sourceNodeId) useProjectStore.getState().removeMembershipLocal(sourceNodeId, droppedPaperId); upsertMembership(link); showDragToast({ kind: "added", message: "論文の配置を更新しました" }); } catch (error) { showDragToast({ kind: error instanceof Error && error.message.includes("すでに") ? "duplicate" : "error", message: error instanceof Error ? error.message : "論文の配置に失敗しました" }); } }, [removeMembershipsForPaper, showDragToast, upsertMembership]);
+  const handleDropPaper = useCallback(async (targetId: string, droppedPaperId: string, sourceNodeId: string | null) => { if (targetId === INBOX_DROP_ID) { const removed = await removePaperFromAllWorkspaces(droppedPaperId); removeMembershipsForPaper(droppedPaperId); showDragToast({ kind: removed ? "added" : "duplicate", message: removed ? "インボックスに戻しました" : "すでにインボックスにあります" }); return; } if (isPresentationDemo) { /* capture-only nodes live in memory, not SQLite */ const now = new Date().toISOString(); if (sourceNodeId) useProjectStore.getState().removeMembershipLocal(sourceNodeId, droppedPaperId); upsertMembership({ nodeId: targetId, paperId: droppedPaperId, order: 0, status: "unread", createdAt: now, updatedAt: now }); showDragToast({ kind: "added", message: "論文の配置を更新しました" }); return; } try { const link = sourceNodeId ? await movePaperInWorkspace(droppedPaperId, sourceNodeId, targetId) : await addPaperToWorkspace(targetId, droppedPaperId); if (sourceNodeId) useProjectStore.getState().removeMembershipLocal(sourceNodeId, droppedPaperId); upsertMembership(link); showDragToast({ kind: "added", message: "論文の配置を更新しました" }); } catch (error) { showDragToast({ kind: error instanceof Error && error.message.includes("すでに") ? "duplicate" : "error", message: error instanceof Error ? error.message : "論文の配置に失敗しました" }); } }, [isPresentationDemo, removeMembershipsForPaper, showDragToast, upsertMembership]);
   useEffect(() => { setPaperDropHandler(handleDropPaper); return () => setPaperDropHandler(null); }, [handleDropPaper]);
 
   useEffect(() => {

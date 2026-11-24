@@ -1,0 +1,124 @@
+.screen {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--spacing-2xl) var(--spacing-md);
+  overflow-y: auto;
+  background: var(--color-bg);
+  color: var(--color-text);
+  animation: enter 0.45s ease;
+}
+
+.column {
+  width: min(880px, 100%);
+}
+
+.text,
+.actions {
+  width: min(720px, 100%);
+  margin-inline: auto;
+}
+
+.mockup {
+  width: min(880px, 100%);
+  margin: 0 auto;
+  aspect-ratio: 16 / 9;
+}
+
+.media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.text {
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.title {
+  margin: 0 0 var(--spacing-sm-mid);
+  font-size: var(--font-size-display);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+}
+
+.body {
+  margin: 0;
+  font-size: var(--font-size-body);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.count {
+  margin-right: auto;
+  font-size: var(--font-size-small);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary);
+}
+
+.primary,
+.secondary {
+  height: 36px;
+  padding: 0 var(--spacing-md);
+  border: none;
+  font: inherit;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.primary {
+  composes: pill from "../../styles/squircle.module.css";
+  border-radius: 999px;
+  --sq-bg: var(--color-accent);
+  color: var(--color-selection-fg);
+}
+
+.primary:hover {
+  --sq-bg: var(--color-accent-hover);
+}
+
+.secondary {
+  composes: pill from "../../styles/squircle.module.css";
+  border-radius: 999px;
+  --sq-bg: transparent;
+  color: var(--color-text-secondary);
+}
+
+.screen > .skip {
+  position: absolute;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+}
+
+.secondary:hover {
+  --sq-bg: var(--color-surface-hover);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen {
+    animation: none;
+  }
+}
