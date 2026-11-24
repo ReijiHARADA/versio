@@ -383,9 +383,12 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     if (own && (label(blocks[index - 1]) === String.fromCharCode(own.charCodeAt(0) - 1) || label(blocks[index + 1]) === String.fromCharCode(own.charCodeAt(0) + 1))) {
       checked = checked.replace(/^\([a-z]\)\s+/, "");
     }
-    // Right before a heading, a sentence that ends in its citation without the full stop (`… text classification [23]`)
-    // is finished: a heading never runs on in mid-sentence.
-    if (blocks[index + 1]?.type === "heading" && /(?:\[\s*\d+(?:\s*[,–-]\s*\d+)*\s*\]|\((?:[^()]*\d{4}[a-z]?|\d{1,3}(?:\s*[,–-]\s*\d{1,3})*)\))$/.test(checked)) checked = `${checked}.`;
+    // Right before a heading, a sentence that ends in its citation or a parenthesis without the full stop
+    // (`… text classification [23]`, `… website. (The DHS Program - Access Instructions)`) is finished: a heading never
+    // runs on in mid-sentence.
+    if (blocks[index + 1]?.type === "heading" && /[\])]$/.test(checked)) checked = `${checked}.`;
+    // A stray backslash after the full stop (`… searches (e.g. Google).\`) is a typesetting leftover.
+    checked = checked.replace(/([.!?][)\]”"’]*)\\$/, "$1");
     // A supporting-information entry ends with its file type after the last sentence (`… policy. (ZIP)`).
     checked = checked.replace(/([.!?])\s*\((?:[A-Z][A-Z0-9]{1,4}(?:\s*\/\s*[A-Z][A-Z0-9]{1,4})?)\)$/, "$1");
     // A supporting-information reference puts its number first (`… as in S7 Fig.`): the reference is complete, not cut after `Fig.`.
