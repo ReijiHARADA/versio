@@ -3643,6 +3643,9 @@ function groupLinesIntoBlocks(
           !/[.!?]\s*$/.test(joinLines(current)) &&
           line.y - current[current.length - 1].y < baseFont * 2.4)) &&
       line.y - current[current.length - 1].y < baseFont * 2.4 &&
+      // A caption goes on downwards: a line back up at the top of the next column (`FIGURE 1` at the page foot, then
+      // `The authors emphasized …` at the top of the right column) is body text.
+      line.y >= current[current.length - 1].y - 2 &&
       (/^(?:figure|fig\.?|図)\s*\d+[a-z]?(?:\s*,\s*[a-z]\b)*$/i.test(layoutPlain(joinLines(current))) ||
         line.fontSize <= (current.find((part) =>
           !/^(?:figure|fig\.?|図)\s*\d+[a-z]?(?:\s*,\s*[a-z]\b)*$/i.test(layoutPlain(part.text))
