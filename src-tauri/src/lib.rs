@@ -103,6 +103,7 @@ pub fn run() {
             ocr::ocr_image,
             bibliography::fetch_bibliographic_record,
             bibliography::download_open_access_pdf,
+            bibliography::search_bibliographic_records,
             source_pdf::save_source_pdf,
             source_pdf::copy_source_pdf,
             source_pdf::open_source_pdf,

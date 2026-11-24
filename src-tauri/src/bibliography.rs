@@ -1,5 +1,5 @@
-//! Fetches bibliographic records from fixed public endpoints (Crossref, arXiv).
-//! Only identifiers are accepted, never URLs, so the frontend cannot use this
+//! Fetches bibliographic records from fixed public endpoints (Crossref, arXiv, OpenAlex).
+//! Only identifiers or search text are accepted, never URLs, so the frontend cannot use this
 //! command to reach arbitrary hosts.
 
 use std::process::Command;
@@ -133,6 +133,54 @@ pub async fn fetch_bibliographic_record(kind: String, id: String) -> Result<Stri
     .map_err(|e| e.to_string())?
 }
 
+/// Percent-encode free text for a query-string value (everything but unreserved).
+fn percent_encode_query(value: &str) -> String {
+    value
+        .bytes()
+        .map(|b| match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'.' | b'_' | b'~' => {
+                (b as char).to_string()
+            }
+            _ => format!("%{b:02X}"),
+        })
+        .collect()
+}
+
+fn search_endpoint(source: &str, query: &str) -> Result<String, String> {
+    let query: String = query.split_whitespace().collect::<Vec<_>>().join(" ");
+    let query: String = query.chars().take(400).collect();
+    if query.chars().count() < 8 {
+        return Err("参考文献の文字列が短すぎます".into());
+    }
+    let q = percent_encode_query(&query);
+    match source {
+        "crossref" => Ok(format!(
+            "https://api.crossref.org/works?query.bibliographic={q}&rows=5&select=DOI,title,issued,published,author,container-title"
+        )),
+        // Title search: `,` / `:` / `|` are filter syntax, so they become spaces.
+        "openalex" => Ok(format!(
+            "https://api.openalex.org/works?filter=title.search:{}&per-page=5",
+            percent_encode_query(&query.replace([',', ':', '|'], " "))
+        )),
+        _ => Err("未対応の検索先です".into()),
+    }
+}
+
+/// Searches Crossref (whole reference string) / OpenAlex (title) for works and
+/// returns the raw JSON. The host is fixed per source; the frontend decides
+/// which hit (if any) is the cited work.
+#[tauri::command]
+pub async fn search_bibliographic_records(source: String, query: String) -> Result<String, String> {
+    let url = search_endpoint(&source, &query)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let (body, status) = curl_get(&url, "20", 20_000_000)?;
+        expect_ok(&status)?;
+        Ok(String::from_utf8_lossy(&body).into_owned())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 const MAX_PDF_BYTES: u64 = 100 * 1024 * 1024;
 
 /// Open-access PDF location for a DOI, from OpenAlex (no account or email needed).
@@ -191,6 +239,17 @@ pub async fn download_open_access_pdf(kind: String, id: String) -> Result<Vec<u8
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn search_endpoint_encodes_query_and_fixes_host() {
+        let url = super::search_endpoint("crossref", "Vaswani A. Attention is all you need & more").unwrap();
+        assert!(url.starts_with("https://api.crossref.org/works?query.bibliographic=Vaswani%20A.%20Attention"));
+        assert!(url.contains("%26%20more&rows=5"));
+        let url = super::search_endpoint("openalex", "Visual prompting: pixel space, again").unwrap();
+        assert!(url.starts_with("https://api.openalex.org/works?filter=title.search:Visual%20prompting%20%20pixel%20space%20%20again&"));
+        assert!(super::search_endpoint("evil.example", "long enough query").is_err());
+        assert!(super::search_endpoint("crossref", "short").is_err());
+    }
+
     use super::*;
 
     #[test]
