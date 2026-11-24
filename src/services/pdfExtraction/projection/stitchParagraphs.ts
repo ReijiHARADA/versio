@@ -411,3 +411,39 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     return { ...block, metadata: { ...block.metadata, translationInputWarning: warning ?? undefined } };
   });
 }
+
+/**
+ * A figure legend cut at a page or column break goes on in a lower-case paragraph a few blocks on
+ * (`… Green boxes represent` | `important variables identified by the model, while red boxes indicate …`): when the
+ * caption stops mid-sentence and the paragraph reads as legend text (a panel label, or a colour or line style it
+ * explains), the paragraph is the caption's rest.
+ */
+export function rejoinLegendTails(blocks: PaperBlock[]): PaperBlock[] {
+  const out = [...blocks];
+  for (let i = 0; i < out.length; i += 1) {
+    const block = out[i];
+    const text = (block.original ?? "").trim();
+    if (block.type !== "paragraph" || !/^\p{Ll}/u.test(text)) continue;
+    const legend = /\(\s*[A-H]\s*\)|[.;]\s[A-H]\s\p{Lu}\p{Ll}/u.test(text) ||
+      (/\b(?:red|blue|green|black|grey|gray|orange|purple|yellow|dashed|dotted|light-blue|colou?rs?)\b/.test(text) &&
+        /\b(?:indicat|show|represent|denot)/.test(text));
+    if (!legend) continue;
+    let k = i - 1;
+    while (k >= 0 && k >= i - 3 && out[k].type !== "figure") k -= 1;
+    const figure = out[k];
+    if (!figure || figure.type !== "figure") continue;
+    const caption = (figure.original ?? "").trim();
+    if (!caption || /[.!?][)\]”"’]*$/.test(caption)) continue;
+    const joined = joinTexts(caption, text);
+    out[k] = {
+      ...figure,
+      original: joined,
+      pageEnd: Math.max(figure.pageEnd, block.pageEnd),
+      boundingBoxes: [...figure.boundingBoxes, ...block.boundingBoxes],
+      metadata: { ...figure.metadata, ...("captionOriginal" in figure.metadata ? { captionOriginal: joined } : {}) },
+    };
+    out.splice(i, 1);
+    i -= 1;
+  }
+  return out;
+}
