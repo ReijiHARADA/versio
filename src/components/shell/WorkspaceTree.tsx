@@ -44,7 +44,7 @@ async function exportFolderCitations(node: WorkspaceNode, format: "bibtex" | "ri
   }
 }
 
-const MENU_WIDTH = 190;
+const MENU_WIDTH = 220;
 const MENU_GAP = 4;
 
 type MenuAnchor = { top: number; left: number };
