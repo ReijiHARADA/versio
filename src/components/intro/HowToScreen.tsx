@@ -24,7 +24,7 @@ type Props = {
 export function HowToScreen({ page, total, title, body, video, poster, still, primaryLabel, onNext, onSkip, onBack }: Props) {
   const primary = useRef<HTMLButtonElement>(null);
   const [failed, setFailed] = useState(false);
-  const replay = useRef<number>();
+  const replay = useRef<number | undefined>(undefined);
   useEffect(() => primary.current?.focus(), []);
   useEffect(() => () => window.clearTimeout(replay.current), []);
   const titleId = `howto-title-${page}`;
