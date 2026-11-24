@@ -107,3 +107,4 @@ concept_term(concept_id, term_id, relation, weight, source_id, confidence, revie
   - 専門語は一般辞書にほぼ無い（認知負荷・HCI・視線追跡・cognitive load はどちらの WordNet にも無い）ので `scripts/synonyms/curated.txt`（LLM 下書き）で補う。
   - 重み 0.65 以上を既定オン、それ未満は検索欄の「+N」Popover で候補として出す。2 文字の略語（AR・MR・SD）は長い形からの展開先にしない（`Mr.` などに当たるため）。展開で足した英単語は語頭一致（`load` が download に当たらない）。
   - 速度: 1 語ごとに SQL の `LIKE` / `instr` を並べると本文を語の数だけ読み直し、13 語で 0.6〜0.9 s。採点を SQL 関数 `versio_search_score`（JS）にまとめて本文を 1 行 1 回だけ読むようにし、語数に関係なく 150〜200 ms（300 本・約 40 MB、node）。
+- 1 文字語（2026-11-25、#442 / #448）: 蚊・数・め のような 1 文字の日本語は、部分一致だと 関数・ため などほぼ全文に当たる。`Intl.Segmenter("ja", { granularity: "word" })`（WKWebView と Node にある辞書ベースの単語分割。「関数|の|数|が」と分ける）で、索引時に 1 文字の単語だけを集めて `paper_words`（schema v12）に置く。1 文字の検索語は、そこで当たれば重み 1。熟語の中にだけ出てくる場合（目鼻の 目、木の実の 実）も取りこぼさないよう 0.2 倍で当て、単語として使う論文の下に並べる（題名で当たっても 4 × 0.2 = 0.8 で、単語の一致 1 を超えない）。分割は 10 万字で約 20 ms。
