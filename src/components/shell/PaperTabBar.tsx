@@ -254,6 +254,9 @@ export function PaperTabBar() {
   );
 }
 
+const SHADOW_ROOM = 32;
+const flushClip = `polygon(${-SHADOW_ROOM}px ${-SHADOW_ROOM}px, calc(100% + ${SHADOW_ROOM}px) ${-SHADOW_ROOM}px, calc(100% + ${SHADOW_ROOM}px) 100%, ${TAB_FLUSH_CAP_WIDTH}px 100%, ${TAB_FLUSH_CAP_WIDTH}px calc(100% + ${TAB_FLUSH_DROP}px), ${-SHADOW_ROOM}px calc(100% + ${TAB_FLUSH_DROP}px))`;
+
 /** Card-coloured tab body whose flared base runs into the main card below. */
 function ActiveTabShape({ flushLeft }: { flushLeft: boolean }) {
   const cap = (fill: string, stroke: string, width = TAB_CAP_WIDTH, height = TAB_HEIGHT) => (
@@ -263,7 +266,18 @@ function ActiveTabShape({ flushLeft }: { flushLeft: boolean }) {
     </svg>
   );
   return (
-    <span className={styles.shape} style={{ left: flushLeft ? 0 : -TAB_FLARE, right: -TAB_FLARE, height: TAB_HEIGHT }} aria-hidden>
+    <span
+      className={styles.shape}
+      style={{
+        left: flushLeft ? 0 : -TAB_FLARE,
+        right: -TAB_FLARE,
+        height: TAB_HEIGHT,
+        // The flush cap drops below the tab to square off the card's corner; keep that drop
+        // when cutting the shadow at the card's top edge.
+        ...(flushLeft ? { clipPath: flushClip } : {}),
+      }}
+      aria-hidden
+    >
       {flushLeft
         ? cap(TAB_FLUSH_LEFT_FILL, TAB_FLUSH_LEFT_STROKE, TAB_FLUSH_CAP_WIDTH, TAB_HEIGHT + TAB_FLUSH_DROP)
         : cap(TAB_CAP_LEFT_FILL, TAB_CAP_LEFT_STROKE)}

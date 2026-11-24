@@ -153,6 +153,8 @@
 .shapeMid {
   flex: 1;
   align-self: stretch;
+  /* Tuck 1px under each cap: butted edges at fractional x leave a hairline seam. */
+  margin: 0 -1px; /* spacing-literal-ok: seam overlap */
   background: var(--color-bg);
 }
 
