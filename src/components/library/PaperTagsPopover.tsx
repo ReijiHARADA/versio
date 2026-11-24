@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X } from "lucide-react";
+import {
+  CloseIcon as X,
+} from "@solar-icons/react/linear";
 import type { Paper } from "../../types/paper";
 import { InfoPopover } from "../reader/InfoPopover";
 import type { AnchorBox } from "../reader/memo/popoverPosition";

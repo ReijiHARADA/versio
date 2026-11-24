@@ -1,5 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { BookText, FolderPlus, MoreHorizontal, Quote, Tag, Pause, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
+import {
+  NotebookIcon as BookText,
+  AddFolderIcon as FolderPlus,
+  MenuDotsIcon as MoreHorizontal,
+  QuoteIcon as Quote,
+  TagIcon as Tag,
+  PauseIcon as Pause,
+  RefreshIcon as RefreshCw,
+  RestartIcon as RotateCcw,
+  StarIcon as Star,
+  TrashBinMinimalisticIcon as Trash2,
+  UserMinusIcon as UserMinus,
+} from "@solar-icons/react/linear";
 import type { Paper } from "../../types/paper";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { usePaperSelectionStore } from "../../stores/paperSelectionStore";

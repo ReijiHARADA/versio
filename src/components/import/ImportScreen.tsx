@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
-  FileText,
-  CheckCircle,
-  AlertCircle,
-  Loader2,
-  BookOpen,
-} from "lucide-react";
+  ArrowLeftIcon as ArrowLeft,
+  FileTextIcon as FileText,
+  CheckCircleIcon as CheckCircle,
+  DangerCircleIcon as AlertCircle,
+  RefreshIcon as Loader2,
+  BookBookmarkIcon as BookOpen,
+} from "@solar-icons/react/linear";
 import type { ImportStage } from "../../services/importServiceV2";
 import { takePendingImport } from "../../services/pendingImport";
 import { startBackgroundImport } from "../../services/import/startBackgroundImport";

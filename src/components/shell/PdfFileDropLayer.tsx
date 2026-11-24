@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Upload } from "lucide-react";
+import {
+  UploadIcon as Upload,
+} from "@solar-icons/react/linear";
 import {
   fileFromDroppedPath,
   firstPdfPath,

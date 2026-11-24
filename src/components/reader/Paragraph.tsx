@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, Eye, EyeOff, RefreshCw } from "lucide-react";
+import {
+  DangerTriangleIcon as AlertTriangle,
+  EyeIcon as Eye,
+  EyeClosedIcon as EyeOff,
+  RefreshIcon as RefreshCw,
+} from "@solar-icons/react/linear";
 import type { PaperBlock } from "../../types/paper";
 import type { Annotation } from "../../types/annotation";
 import type { GlossaryEntry } from "../../services/llm/types";

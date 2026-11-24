@@ -1,4 +1,8 @@
-import { Sun, Moon, Monitor } from "lucide-react";
+import {
+  SunIcon as Sun,
+  MoonIcon as Moon,
+  MonitorIcon as Monitor,
+} from "@solar-icons/react/linear";
 import {
   useAppStore,
   type DisplaySettings,

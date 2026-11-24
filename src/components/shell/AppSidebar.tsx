@@ -4,20 +4,20 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { createPortal } from "react-dom";
 import { NavLink, useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Inbox,
-  Library,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Plus,
-  Search,
-  Settings,
-  Star,
-  Tag,
-  Trash2,
-  X,
-} from "lucide-react";
+  AltArrowLeftIcon as ChevronLeft,
+  AltArrowRightIcon as ChevronRight,
+  InboxIcon as Inbox,
+  LibraryIcon as Library,
+  PanelLeftCloseIcon as PanelLeftClose,
+  PanelLeftOpenIcon as PanelLeftOpen,
+  AddIcon as Plus,
+  MagnifierIcon as Search,
+  SettingsIcon as Settings,
+  StarIcon as Star,
+  TagIcon as Tag,
+  TrashBinMinimalisticIcon as Trash2,
+  CloseIcon as X,
+} from "@solar-icons/react/linear";
 import type { WorkspaceNode } from "../../types/project";
 import {
   clampSidebarWidth,

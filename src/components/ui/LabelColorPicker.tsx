@@ -1,4 +1,7 @@
-import { Check, X } from "lucide-react";
+import {
+  CheckIcon as Check,
+  CloseIcon as X,
+} from "@solar-icons/react/linear";
 import { LABEL_COLORS, LABEL_COLOR_NAMES, labelColorVar, type LabelColor } from "../../domain/labelColors";
 import styles from "./LabelColorPicker.module.css";
 

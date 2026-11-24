@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Check } from "lucide-react";
+import {
+  CheckIcon as Check,
+} from "@solar-icons/react/linear";
 import { currentPlamoDownload, usePlamoDownloadStore } from "../settings/plamoDownload";
 import { describePlamoError } from "../../services/translation/plamoReadiness";
 import { useGenie } from "./useGenie";

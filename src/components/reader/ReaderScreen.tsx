@@ -4,13 +4,13 @@ import type { ReactNode } from "react";
 import { INSPECTOR_ON_GROUND_QUERY, INSPECTOR_SLOT_ID } from "../shell/inspectorSlot";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
-  ArrowLeft,
-  Settings2,
-  ExternalLink,
-  FileUp,
-  PanelLeft,
-  PanelRight,
-} from "lucide-react";
+  ArrowLeftIcon as ArrowLeft,
+  Tuning2Icon as Settings2,
+  SquareShareLineIcon as ExternalLink,
+  FileSendIcon as FileUp,
+  PanelLeftIcon as PanelLeft,
+  PanelRightIcon as PanelRight,
+} from "@solar-icons/react/linear";
 import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import {

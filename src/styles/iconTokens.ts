@@ -1,5 +1,5 @@
 /**
- * Pixel mirrors of `--icon-size*` in `variables.css` for Lucide `size` props.
+ * Pixel mirrors of `--icon-size*` in `variables.css` for icon `size` props (Solar Icons).
  * Prefer CSS `width`/`height: var(--icon-size)` on chrome icon buttons when
  * possible; use these when a component API requires a number.
  */

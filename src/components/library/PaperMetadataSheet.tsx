@@ -1,6 +1,8 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import {
+  CloseIcon as X,
+} from "@solar-icons/react/linear";
 import type { Paper } from "../../types/paper";
 import { getPaperWithPackageMetadata, updatePaperMetadata } from "../../services/database";
 import { parseBibliographicIdentifier } from "../../services/bibliography/identifiers";

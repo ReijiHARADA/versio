@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FileText, FolderX, Loader2, Upload } from "lucide-react";
+import {
+  FileTextIcon as FileText,
+  RemoveFolderIcon as FolderX,
+  RefreshIcon as Loader2,
+  UploadIcon as Upload,
+} from "@solar-icons/react/linear";
 import { useNavigate, useParams } from "react-router-dom";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
