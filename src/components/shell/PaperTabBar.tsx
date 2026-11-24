@@ -37,6 +37,15 @@ export function PaperTabBar() {
   const lastPagePathRef = useRef("/");
   const barRef = useRef<HTMLDivElement>(null);
   const [inset, setInset] = useState({ left: 0, right: 0 });
+  // Tabs restored at launch appear in place; tabs opened later grow in (see .entering).
+  const settledRef = useRef<Set<string> | null>(null);
+  if (settledRef.current === null) settledRef.current = new Set(tabs);
+  const [, setSettledVersion] = useState(0);
+  const settle = (paperId: string) => {
+    if (settledRef.current?.has(paperId)) return;
+    settledRef.current?.add(paperId);
+    setSettledVersion((v) => v + 1);
+  };
 
   // The route decides the active tab; opening a paper anywhere opens (or focuses) its tab.
   useEffect(() => {
@@ -189,7 +198,8 @@ export function PaperTabBar() {
             aria-selected={active}
             tabIndex={active ? 0 : -1}
             title={title}
-            className={`${styles.tab} ${active ? styles.active : ""} ${draggingId === id ? styles.dragging : ""}`}
+            className={`${styles.tab} ${active ? styles.active : ""} ${draggingId === id ? styles.dragging : ""} ${settledRef.current?.has(id) ? "" : styles.entering}`}
+            onAnimationEnd={(event) => { if (event.target === event.currentTarget) settle(id); }}
             onPointerDown={(event) => onPointerDown(event, id)}
             onPointerMove={onPointerMove}
             onPointerUp={() => onPointerUp(id)}
