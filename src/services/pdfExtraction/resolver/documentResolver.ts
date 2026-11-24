@@ -5000,7 +5000,9 @@ export function resolveCanonicalDocument(input: {
       return node;
     }
     if (
-      /\b(?:illustrates?|summarizes?|maps?|shows?|presents?|depicts?|further\s+ranks?|reports?)\b/i.test(t)
+      /\b(?:illustrates?|summarizes?|maps?|shows?|presents?|depicts?|further\s+ranks?|reports?)\b/i.test(t) ||
+      // Any lower-case word right after the number is the sentence's verb (`Figure 7 provided an illustration …`).
+      /^(?:figure|fig\.?|table|表)\s*\d+[a-z]?\s+\p{Ll}{3,}/iu.test(t) && !/^(?:figure|fig\.?|table)\s*\d+[a-z]?\s+\p{Lu}/u.test(t)
     ) {
       return node;
     }
