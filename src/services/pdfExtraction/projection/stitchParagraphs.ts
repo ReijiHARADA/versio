@@ -337,6 +337,12 @@ function adjacentDisplay(neighbours: PaperBlock[], block: PaperBlock, leadIn: bo
  * content.
  */
 export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[] {
+  // A lower-case name (`vcfsim`, `scikit-learn`) that the paper itself puts after a full stop starts sentences.
+  const allText = blocks.map((b) => b.original ?? "").join("\u0000");
+  const sentenceStartName = (text: string) => {
+    const word = /^(\p{Ll}[\p{L}\d-]{2,})\s/u.exec(text)?.[1];
+    return word !== undefined && new RegExp(`[.!?]\\s+${word}\\b`, "u").test(allText);
+  };
   return blocks.map((block, index) => {
     if (block.type !== "paragraph" || block.metadata.role === "reference") return block;
     const current = block.metadata.translationInputWarning;
@@ -362,7 +368,7 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     // A list item may close with ";", ",", ":" or "; and" — the list goes on in the next item.
     // (Items used to inherit the warning of the whole flattened list; each item is now checked on its own.)
     if (block.metadata.listRole === "item") checked = checked.replace(/(?:[;,:]|[;,]\s+(?:and|or))\s*$/, ".");
-    if (afterEquation) checked = checked.charAt(0).toUpperCase() + checked.slice(1);
+    if (afterEquation || sentenceStartName(checked)) checked = checked.charAt(0).toUpperCase() + checked.slice(1);
     // `d. The mechanisms by which …`: a lower-case item letter before a capitalised sentence is a list marker, not a continuation.
     if (/^[a-z][.)]\s+\p{Lu}/u.test(checked)) checked = checked.replace(/^[a-z][.)]\s+/, "");
     // `(a) …` `(b) …` `(c) …` in a row is an enumeration in the text, not a figure's sub-panel legend.
