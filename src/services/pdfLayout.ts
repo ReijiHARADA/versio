@@ -1297,11 +1297,12 @@ function clusterItemsIntoLines(
       const wordsOf = (part: ExtractedTextItem[]) => part.map((item) => item.text).join(" ").trim().split(/\s+/).filter(Boolean).length;
       const gaps = segments.slice(1).map((part, k) => part[0].x - Math.max(...segments[k].map((item) => item.x + item.width)));
       const span = Math.max(...ordered.map((item) => item.x + item.width)) - ordered[0].x;
-      const widest = Math.max(...groups.map((g) => Math.max(...g.map((item) => item.x + item.width)) - Math.min(...g.map((item) => item.x))));
+      // The usual line width (a two-column page can also hold a full-width abstract or caption line).
+      const widest = median(groups.map((g) => Math.max(...g.map((item) => item.x + item.width)) - Math.min(...g.map((item) => item.x))));
       const lineText = ordered.map((item) => item.text).join(" ");
       // (PDF.js often hands the line's last words over as one run: allow two longer pieces and one wider gap.)
       const evenGaps = [...gaps].sort((a, b) => a - b).slice(0, -1);
-      const justifiedProse = segments.length >= 5 && segments.filter((part) => wordsOf(part) > 2).length <= 2 &&
+      const justifiedProse = segments.length >= 5 && segments.filter((part) => wordsOf(part) > 3).length <= 2 &&
         evenGaps.length > 0 && Math.max(...evenGaps) <= Math.min(...evenGaps) * 1.7 && span >= widest * 0.85 &&
         /\b(?:the|of|and|to|in|is|are|was|were|with|for|that|this|by|on|as|from|such)\b/i.test(lineText);
       if (segments.length >= 3 && !justifiedProse) return segments.map((part) => ({ part, isGridRow: true }));
