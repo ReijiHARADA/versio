@@ -170,7 +170,9 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // A list's lead-in (`task (“diseased” vs. “no disease”). These modifications are:`) can be the rest of the sentence too.
         const listIntro = candidate.type === "paragraph" && candidate.metadata.listRole === "intro" && candidate.metadata.role !== "reference" &&
           !referenceSections.has(candidate.sectionId ?? "");
-        if (!listItem && (eligible(candidate) || listIntro) && words(candidateText) >= 2 && CONTINUATION_START.test(candidateText)) {
+        // (A list item cut at a page foot goes on past the floats in a lower-case paragraph too: `• Element-wise
+        // Addition: … is computationally` | tables | `lightweight and does not change …`.)
+        if ((!listItem || (sawFloat && /^\p{Ll}/u.test(candidateText) && /\p{Ll}$/u.test(currentText))) && (eligible(candidate) || listIntro) && words(candidateText) >= 2 && CONTINUATION_START.test(candidateText)) {
           target = j;
           break;
         }
