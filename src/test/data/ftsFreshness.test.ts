@@ -197,7 +197,7 @@ describe("library terms backfill", () => {
 });
 
 describe("one-character word search", () => {
-  it("finds a paper that uses 数 as a word and skips one that only has 関数", async () => {
+  it("ranks a paper that uses 数 as a word above one that only has 関数", async () => {
     const db = await openSqlite(createMemoryFileSystem());
     const word = { ...paper(), id: "word", sourceFileHash: "h-word", titleOriginal: "A" };
     const inside = { ...paper(), id: "inside", sourceFileHash: "h-inside", titleOriginal: "B" };
@@ -205,8 +205,8 @@ describe("one-character word search", () => {
     upsertPaperIndex(db, inside);
     indexPaperText(db, word, "", "参加者の数が多い。");
     indexPaperText(db, inside, "", "関数を定義する。");
-    expect(searchPapersFts(db, "数")).toEqual(["word"]);
+    expect(searchPapersFts(db, "数")).toEqual(["word", "inside"]);
     refreshPaperAnnotationFts(db, word.id);
-    expect(searchPapersFts(db, "数")).toEqual(["word"]);
+    expect(searchPapersFts(db, "数")).toEqual(["word", "inside"]);
   });
 });

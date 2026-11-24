@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { normalizeIndexText } from "../../../domain/search/normalizeSearchText";
-import { buildSearchQuery, scoreFields } from "../../../domain/search/searchQuery";
+import { INSIDE_WORD_FACTOR, buildSearchQuery, scoreFields } from "../../../domain/search/searchQuery";
 import { isSingleCharTerm, singleCharWords } from "../../../domain/search/singleCharWords";
 
 function score(text: string, query: string): number {
@@ -19,11 +19,12 @@ describe("one-character Japanese words", () => {
     expect(singleCharWords("Deep learning")).toBe("");
   });
 
-  it("matches a one-character word, not the same character inside a longer word", () => {
-    expect(score("数が多い", "数")).toBeGreaterThan(0);
-    expect(score("関数と数値", "数")).toBe(0);
-    expect(score("蚊の生態", "蚊")).toBeGreaterThan(0);
-    expect(score("蚊帳の外", "蚊")).toBe(0);
+  it("ranks a one-character word above the same character inside a longer word", () => {
+    expect(score("数が多い", "数")).toBe(1);
+    expect(score("関数と数値", "数")).toBe(INSIDE_WORD_FACTOR);
+    expect(score("目鼻立ち", "目")).toBeGreaterThan(0);
+    expect(score("目鼻立ち", "目")).toBeLessThan(score("目が痛い", "目"));
+    expect(score("鼻の形", "目")).toBe(0);
   });
 
   it("still requires every term", () => {
