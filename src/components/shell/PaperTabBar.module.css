@@ -1,6 +1,7 @@
 /* Tab strip in the title bar band above the main card. Above the window drag layer so tabs
    stay clickable; the strip's own empty area is a drag region (data-tauri-drag-region). */
 .bar {
+  --tab-hover-gap: calc(var(--spacing-xs) / 2);
   position: relative;
   z-index: var(--z-titlebar-controls);
   flex: none;
@@ -25,9 +26,10 @@
   gap: var(--spacing-xs-plus);
   padding: 0 var(--spacing-xs-plus) 0 var(--spacing-sm-mid);
   box-sizing: border-box;
-  border-radius: var(--sq-radius-md);
-  --sq-fill: var(--sq-fill-md);
-  --sq-ring: var(--sq-ring-md);
+  /* Same clothoid radius as the active tab's top corners and the main card. */
+  border-radius: var(--sq-radius-card);
+  --sq-fill: var(--sq-fill-card);
+  --sq-ring: var(--sq-ring-card);
   --sq-bg: transparent;
   color: var(--color-text-secondary);
   font-size: var(--font-size-small);
@@ -58,6 +60,25 @@
 
 .tab:not(.active):hover {
   --sq-bg: var(--color-bg-tertiary);
+}
+
+/* Hover fill keeps the same gap to the active tab's outline as to the card below it
+   (the tab's bottom margin). The first tab's fill stays on the card's left edge. */
+.bar .tab::before {
+  left: var(--tab-hover-gap);
+  right: var(--tab-hover-gap);
+}
+
+.bar .tab:first-child::before {
+  left: 0;
+}
+
+.bar .tab:has(+ .active)::before {
+  right: calc(var(--tab-hover-gap) * 2);
+}
+
+.bar .active + .tab::before {
+  left: calc(var(--tab-hover-gap) * 2);
 }
 
 .active {
