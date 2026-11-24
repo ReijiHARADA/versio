@@ -4015,7 +4015,9 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     const right = (l: LayoutLine) => l.x + l.width;
     // The column's right margin and line width, from A's last run or, when that is one line, from B's first.
     const ref = tail.length >= 2 ? tail.slice(1) : head.length >= 2 ? head : columnLines(last);
-    const full = right(last) >= Math.max(...ref.map(right)) - font * 0.6 && last.width >= Math.max(...ref.map((l) => l.width)) * 0.92;
+    // The last printed line may be several pieces on one baseline: measure it whole.
+    const lastWidth = right(last) - Math.min(...tail.filter((l) => Math.abs(l.y - last.y) <= font * 0.6).map((l) => l.x));
+    const full = right(last) >= Math.max(...ref.map(right)) - font * 0.6 && lastWidth >= Math.max(...ref.map((l) => l.width)) * 0.92;
     const left = head.length >= 2 ? Math.min(...head.slice(1).map((l) => l.x)) : median(columnLines(first).map((l) => l.x));
     const unindented = Math.abs(first.x - left) <= font * 0.4;
     // A physical break: another page or column, or the text resumes after skipped floats.
@@ -4023,15 +4025,19 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     // In an indent-marked journal an unindented line after a break is the same paragraph even when the last
     // line falls a little short (ragged right, a trailing superscript), as long as the sentence runs on; a short
     // last line, or a finished sentence before a capital, still ends it.
-    const nearlyFull = last.width >= Math.max(...ref.map((l) => l.width)) * 0.8;
+    const nearlyFull = lastWidth >= Math.max(...ref.map((l) => l.width)) * 0.8;
     const runsOn = !/[.!?][”"’')\]]*$/.test(a.text.trim()) || /^\p{Ll}/u.test(b.text.trim());
     // At 90% the line is justified short of the margin by a trailing word, not a paragraph end: the
     // unindented resumption alone decides.
-    const almostFull = last.width >= Math.max(...ref.map((l) => l.width)) * 0.9;
-    if (!unindented || (!full && !(indentStyle && broken && (almostFull || (nearlyFull && runsOn))))) continue;
+    const almostFull = lastWidth >= Math.max(...ref.map((l) => l.width)) * 0.9;
+    // B goes on along A's last printed line (`… adult populations.3,4,23–25` | `Population-based studies …` on one
+    // baseline, split at the superscript): the same line, whatever its length.
+    const sameLine = last.page === first.page && last.column === first.column && Math.abs(first.y - last.y) <= font * 0.6 &&
+      first.x >= right(last) - 1 && first.x - right(last) <= font * 2;
+    if (!sameLine && (!unindented || (!full && !(indentStyle && broken && (almostFull || (nearlyFull && runsOn)))))) continue;
     // Same place: an indent-marked journal needs no more; otherwise B must follow at the ordinary line pitch.
     const pitch = median(head.slice(1).map((l, k) => l.y - head[k].y));
-    if (!broken && !indentStyle && first.y - last.y > pitch * 1.2) continue;
+    if (!sameLine && !broken && !indentStyle && first.y - last.y > pitch * 1.2) continue;
     a.text = joinHyphenated(a.text, b.text).replace(/\s+/g, " ").trim();
     a.lines = [...a.lines, ...b.lines];
     a.pageEnd = Math.max(a.pageEnd, b.pageEnd);
