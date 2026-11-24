@@ -34,6 +34,7 @@ export function createPresentationDemoProjection(paperId: string, fileHash: stri
   blocks: PaperBlock[];
 } {
   const now = new Date().toISOString();
+  const card = HOWTO_DROP_CARDS[fileName];
   const paper: Paper = {
     id: paperId,
     sourceFilePath: fileName,
@@ -56,6 +57,7 @@ export function createPresentationDemoProjection(paperId: string, fileHash: stri
     year: 1998,
     pageCount: 7,
     favorite: true,
+    ...card,
     processingStatus: "ready",
     lastReadBlockId: null,
     lastReadOffset: null,
@@ -297,8 +299,9 @@ export function createPresentationCaptureSeed(): {
   documents: Array<{ paperId: string; sections: Section[]; blocks: PaperBlock[] }>;
   workspaceNodes: WorkspaceNode[];
   memberships: WorkspacePaper[];
-  importJob: ImportJob;
+  importJob: ImportJob | null;
 } {
+  if (import.meta.env.VITE_VERSIO_DEMO_SEED === "howto") return createHowToCaptureSeed();
   const now = "2026-11-05T00:00:00.000Z";
   const opened = (hoursAgo: number) => new Date(Date.parse(now) - hoursAgo * 3_600_000).toISOString();
   const primaryDocument = createPresentationDemoProjection(
@@ -456,5 +459,51 @@ export function createPresentationCaptureSeed(): {
       stageTotal: 100,
       message: "本文と図表を抽出しています…",
     },
+  };
+}
+
+/**
+ * How-to clips (`npm run record:howto`) drop these file names onto an almost
+ * empty library. Each becomes its own card; every one opens the Wearability
+ * body, and the clip only ever reads that paper.
+ */
+const HOWTO_DROP_CARDS: Record<string, Partial<Paper>> = {
+  "wearability.pdf": { favorite: false },
+  "interactive-jewellery.pdf": {
+    titleOriginal: "Interactive Jewellery: a design exploration",
+    titleTranslated: "インタラクティブ・ジュエリー：デザイン探究",
+    authors: ["Maarten Versteeg", "Elise van den Hoven", "Caroline Hummels"],
+    authorsStructured: [],
+    affiliations: [],
+    publication: "TEI '16",
+    year: 2016,
+    pageCount: 9,
+    favorite: false,
+  },
+  "power-over-skin.pdf": {
+    titleOriginal: "Power-over-Skin: Full-Body Wearables Powered By Intra-Body RF Energy",
+    titleTranslated: "Power-over-Skin：体内を伝わるRFエネルギーで給電する全身ウェアラブル",
+    authors: ["Andy Kong", "Daehwa Kim", "Chris Harrison"],
+    authorsStructured: [],
+    affiliations: [],
+    publication: "UIST '24",
+    year: 2024,
+    pageCount: 13,
+    favorite: false,
+  },
+};
+
+/** First-launch look for the how-to clips: two empty projects, no papers. */
+function createHowToCaptureSeed(): ReturnType<typeof createPresentationCaptureSeed> {
+  const now = "2026-11-05T00:00:00.000Z";
+  const node = (id: string, name: string, order: number): WorkspaceNode => ({
+    id, name, parentId: null, order, createdAt: now, updatedAt: now,
+  });
+  return {
+    papers: [],
+    documents: [],
+    workspaceNodes: [node("howto-wearables", "ウェアラブル研究", 0), node("howto-seminar", "ゼミ発表", 1)],
+    memberships: [],
+    importJob: null,
   };
 }
