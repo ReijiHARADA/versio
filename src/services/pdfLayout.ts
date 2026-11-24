@@ -3794,7 +3794,10 @@ function rejoinCaptionTails(blocks: LayoutBlock[]): LayoutBlock[] {
     if (!last || !first || first.page !== last.page || first.y <= last.y || first.y - last.y > last.fontSize * 3) continue;
     const captionFont = median(caption.lines.map((l) => l.fontSize));
     const nextFont = median(next.lines.map((l) => l.fontSize));
-    if (Math.abs(nextFont - captionFont) > 0.4 || nextFont > body * 0.9) continue;
+    // A legend body opening with its first panel letter (`Fig. 3 | Encoding …` + `a The size of the memory trace …`)
+    // can be set a point larger than the title line.
+    const panelBody = caption.role === "figure_caption" && /^(?:[a-h]|\([a-h]\))\s+\p{Lu}\p{Ll}/u.test(next.text.trim());
+    if (Math.abs(nextFont - captionFont) > (panelBody ? 1.2 : 0.4) || nextFont > body * 0.9) continue;
     if (Math.min(first.x + first.width, last.x + last.width) - Math.max(first.x, last.x) < Math.min(first.width, last.width) * 0.5) continue;
     const lines = [...caption.lines, ...next.lines];
     result[i] = { ...caption, lines, text: joinLines(lines), pageEnd: Math.max(caption.pageEnd, next.pageEnd), bbox: blockBbox(lines) };
@@ -3854,13 +3857,17 @@ function rejoinCaptionTails(blocks: LayoutBlock[]): LayoutBlock[] {
     for (let k = 0; k < result.length; k += 1) {
       const host = result[k];
       if (k === i || host.role !== "paragraph" || host.lines.length < 2) continue;
-      // The host's own type size: its lines before it reaches the caption's page.
-      const own = host.lines.filter((l) => l.page !== capLast.page || l.y < capLast.y);
-      if (own.length === 0) continue;
-      const hostFont = median(own.map((l) => l.fontSize));
-      const at = host.lines.findIndex((l) => l.page === capLast.page && l.y > capLast.y && l.y - capLast.y <= Math.max(capFont, l.fontSize) * 3 &&
-        Math.abs(l.fontSize - capFont) <= 1 && l.fontSize < hostFont * 0.88);
+      // (Or at the top of the next column, when the legend stops mid-sentence at the foot of its own column.)
+      const capOpen = !/[.!?][)\]”"’]*$/.test(caption.text.trim());
+      const nextColumn = (l: LayoutLine, k: number) => capOpen && capLast.column === "left" && l.column === "right" && l.x >= capLast.x + capLast.width - 4 &&
+        !(k > 0 && host.lines[k - 1].page === l.page && host.lines[k - 1].x >= capLast.x + capLast.width - 4);
+      const near = (l: LayoutLine, k: number) => l.page === capLast.page &&
+        ((l.y > capLast.y && l.y - capLast.y <= Math.max(capFont, l.fontSize) * 3) || nextColumn(l, k)) && Math.abs(l.fontSize - capFont) <= 1;
+      const at = host.lines.findIndex(near);
       if (at <= 0) continue;
+      // The host's own type size: its lines before the carried ones.
+      const hostFont = median(host.lines.slice(0, at).map((l) => l.fontSize));
+      if (host.lines[at].fontSize >= hostFont * 0.88) continue;
       let end = at;
       while (end + 1 < host.lines.length && host.lines[end + 1].page === capLast.page && host.lines[end + 1].fontSize < hostFont * 0.88 &&
         host.lines[end + 1].y - host.lines[end].y <= host.lines[end].fontSize * 2) end += 1;
