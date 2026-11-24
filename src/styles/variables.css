@@ -176,6 +176,7 @@
   /* Layering */
   --z-base: 0;
   --z-raised: 1;
+  --z-tab-drag: 2; /* dragged tab above the active one */
   --z-sidebar: 2;
   --z-main: 3;
   --z-sidebar-resize: 6;
@@ -194,6 +195,7 @@
   --z-project-modal: 400;
   --z-overlay: 1000;
   --z-titlebar-controls: 1001;
+  --z-drag-ghost: 1002;
   --z-sidebar-menu: 1200;
   --z-error-overlay: 9999;
   --z-intro-overlay: 10000;

@@ -11,6 +11,8 @@ import { tryStartPdfImport } from "../../services/pdfImport";
 import type { WorkspaceNode } from "../../types/project";
 import { AppSidebar } from "./AppSidebar";
 import { PaperTabBar } from "./PaperTabBar";
+import { SplitReaderPane } from "./SplitReaderPane";
+import { useSplitView } from "../../stores/splitViewStore";
 import { PaperMarquee } from "./PaperMarquee";
 import { INSPECTOR_SLOT_ID } from "./inspectorSlot";
 import { Presence } from "../ui/Presence";
@@ -45,6 +47,7 @@ export function AppShell() {
   useEffect(() => setSearchQuery(""), [location.pathname, setSearchQuery]);
   // Route change: fade the new screen in (opacity only, so fixed-position descendants are unaffected).
   const mainBodyRef = useRef<HTMLDivElement>(null);
+  const splitPaperId = useSplitView((state) => state.paperId);
   const routeMounted = useRef(false);
   useEffect(() => {
     if (!routeMounted.current) {
@@ -224,7 +227,7 @@ export function AppShell() {
     <div className={styles.titlebarDrag} data-tauri-drag-region />
     <PdfFileInput inputRef={fileInputRef} onFile={(file) => { void tryStartPdfImport(file, fileNodeId ? { workspaceNodeId: fileNodeId } : undefined); setFileNodeId(null); }} />
     <AppSidebar workspaceNodes={workspaceNodes} searchQuery={searchQuery} onSearchChange={setSearchQuery} onNewWorkspace={() => setCreateParentId(null)} onNewChild={(node) => setCreateParentId(node.id)} onDeleteNode={deleteNode} onAddPaperToWorkspace={addPaperFile} activeNodeId={routeNodeId} inboxCount={inboxCount} />
-    <div className={styles.mainColumn}><PaperTabBar /><div className={styles.main}><div ref={mainBodyRef} className={styles.mainBody} data-paper-marquee>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><div className={styles.mainRim} aria-hidden /></div></div><div id={INSPECTOR_SLOT_ID} className={styles.inspectorSlot} /><PaperDragPreview /><PaperMarquee />
+    <div className={styles.mainColumn}><PaperTabBar /><div className={`${styles.main} ${splitPaperId ? styles.split : ""}`} data-main-pane>{splitPaperId && <SplitReaderPane paperId={splitPaperId} />}<div ref={mainBodyRef} className={styles.mainBody} data-paper-marquee>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><div className={styles.mainRim} aria-hidden /></div></div><div id={INSPECTOR_SLOT_ID} className={styles.inspectorSlot} /><PaperDragPreview /><PaperMarquee />
     <PlamoDownloadToast raised={Boolean(toast)} />
     {toast && <div ref={toastRef} className={`${styles.toast} ${toast.kind === "error" ? styles.toastError : toast.kind === "info" ? styles.toastInfo : styles.toastOk}`} role="status"><span className={styles.toastMessage}>{toast.message}</span>{toast.actionLabel && toast.onAction && <button type="button" className={styles.toastAction} onClick={() => { toast.onAction?.(); clearToast(); }}>{toast.actionLabel}</button>}</div>}
     <Presence>{shortcutsOpen && <ShortcutsSheet onClose={() => setShortcutsOpen(false)} />}</Presence>

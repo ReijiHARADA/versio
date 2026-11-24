@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useSplitView } from "./splitViewStore";
 
 /**
  * Open tabs above the main card (UI state only, like a browser's tab strip).
@@ -98,7 +99,7 @@ export function readerPaperId(pathname: string): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-/** True while the paper has an open tab (its body stays in memory for instant switching). */
+/** True while the paper has an open tab or sits in the split pane (its body stays in memory for instant switching). */
 export function isPaperTabOpen(paperId: string): boolean {
-  return usePaperTabs.getState().tabs.includes(paperTab(paperId));
+  return usePaperTabs.getState().tabs.includes(paperTab(paperId)) || useSplitView.getState().paperId === paperId;
 }
