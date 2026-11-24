@@ -1,3 +1,5 @@
+import { useTagColors } from "../../stores/tagColors";
+import { tagColorStyle } from "../../domain/labelColors";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   AlertCircle,
@@ -132,6 +134,7 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
   const label = displayPaperTitle(paper);
   const tags = paper.tags ?? [];
   const tagFilter = useAppStore((state) => state.libraryFilter.tag);
+  const tagColors = useTagColors((state) => state.colors);
   const setLibraryFilter = useAppStore((state) => state.setLibraryFilter);
   // Narrow grid tiles fit one tag beside the badge; the rest collapse into "+N".
   const tagLimit = layout === "grid" ? 1 : 3;
@@ -144,7 +147,8 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
             type="button"
             className={styles.tagChip}
             // Long tags give up width first so short ones stay readable.
-            style={{ flexShrink: tag.length }}
+            style={{ flexShrink: tag.length, ...tagColorStyle(tagColors[tag.toLocaleLowerCase()]) }}
+            data-colored={tagColors[tag.toLocaleLowerCase()] ? "" : undefined}
             data-active={tagFilter === tag || undefined}
             title={tagFilter === tag ? `#${tag} の絞り込みを解除` : `#${tag} で絞り込む`}
             onClick={(event) => {

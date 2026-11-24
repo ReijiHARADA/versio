@@ -1,3 +1,4 @@
+import { labelColorVar } from "../../domain/labelColors";
 import { useState } from "react";
 import { Folder } from "lucide-react";
 import type { WorkspaceNode } from "../../types/project";
@@ -63,10 +64,12 @@ export function WorkspaceFolderCard({
     },
   } as const;
 
+  const tint = node.color ? ({ "--folder-tint": labelColorVar(node.color) } as React.CSSProperties) : undefined;
+
   if (layout === "grid") {
     return (
       <article className={`${styles.tile} ${dropTarget ? styles.dropTarget : ""} ${opening ? styles.opening : ""}`} {...open}>
-        <div className={styles.folderArt} aria-hidden="true">
+        <div className={styles.folderArt} aria-hidden="true" style={tint}>
           <svg className={styles.folderBack} viewBox="0 0 130 100">
             <path d={FOLDER_BACK_PATH} />
           </svg>
@@ -92,7 +95,7 @@ export function WorkspaceFolderCard({
       className={`${styles.card} ${dropTarget ? styles.dropTarget : ""}`}
       {...open}
     >
-      <div className={styles.icon}>
+      <div className={styles.icon} style={node.color ? { color: labelColorVar(node.color) } : undefined}>
         <Folder size={22} strokeWidth={1.5} />
       </div>
       <div className={styles.info}>

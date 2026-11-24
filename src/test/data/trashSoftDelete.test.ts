@@ -216,7 +216,7 @@ describe("trash / soft-delete", () => {
       VALUES ('n1', NULL, 'Folder', 0, 't', 't');
     `);
     const version = applySqliteSchemaMigrations(raw);
-    expect(version).toBe(12);
+    expect(version).toBe(13);
     const paperCols = raw.exec("PRAGMA table_info(papers)")[0].values.map((row) => String(row[1]));
     const nodeCols = raw.exec("PRAGMA table_info(workspace_nodes)")[0].values.map((row) => String(row[1]));
     expect(paperCols).toContain("trashed_at");

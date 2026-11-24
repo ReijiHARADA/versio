@@ -391,6 +391,16 @@ function migrateV11ToV12(db: Database): void {
   }
 }
 
+/** Finder-style label colors: one per folder, one per tag name. */
+function migrateV12ToV13(db: Database): void {
+  const nodes = db.exec("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'workspace_nodes'");
+  if (nodes[0]?.values.length) db.run("ALTER TABLE workspace_nodes ADD COLUMN color TEXT");
+  db.run(`CREATE TABLE IF NOT EXISTS tag_colors (
+    tag TEXT PRIMARY KEY COLLATE NOCASE,
+    color TEXT NOT NULL
+  )`);
+}
+
 const MIGRATIONS: SchemaMigration[] = [
   { from: 1, to: 2, run: migrateV1ToV2 },
   { from: 2, to: 3, run: migrateV2ToV3 },
@@ -403,6 +413,7 @@ const MIGRATIONS: SchemaMigration[] = [
   { from: 9, to: 10, run: migrateV9ToV10 },
   { from: 10, to: 11, run: migrateV10ToV11 },
   { from: 11, to: 12, run: migrateV11ToV12 },
+  { from: 12, to: 13, run: migrateV12ToV13 },
 ];
 
 export function applySqliteSchemaMigrations(db: Database): number {

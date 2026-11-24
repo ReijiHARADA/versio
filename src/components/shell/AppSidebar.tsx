@@ -1,3 +1,5 @@
+import { useTagColors } from "../../stores/tagColors";
+import { tagColorStyle } from "../../domain/labelColors";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { NavLink, useLocation, useNavigate, useNavigationType } from "react-router-dom";
@@ -93,6 +95,7 @@ export function AppSidebar({
   const navigate = useNavigate();
   const location = useLocation();
   const tagFilter = useAppStore((state) => state.libraryFilter.tag);
+  const tagColors = useTagColors((state) => state.colors);
   const setLibraryFilter = useAppStore((state) => state.setLibraryFilter);
   const papers = useLibraryCache((state) => state.papers);
   const allTags = useMemo(
@@ -417,6 +420,8 @@ export function AppSidebar({
                         to="/"
                         end
                         className={`${styles.tagChip} ${selected ? styles.tagChipActive : ""}`}
+                        style={tagColorStyle(tagColors[tag.toLocaleLowerCase()])}
+                        data-colored={tagColors[tag.toLocaleLowerCase()] ? "" : undefined}
                         aria-current={selected ? "page" : false}
                         title={tag}
                         onClick={(event) => {

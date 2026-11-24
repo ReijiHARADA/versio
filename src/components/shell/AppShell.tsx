@@ -1,3 +1,4 @@
+import { loadTagColors } from "../../services/tagColorService";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useLibraryCache } from "../../stores/libraryCache";
@@ -108,6 +109,9 @@ export function AppShell() {
         mergeWorkspaceNodes(dbNodes);
         setMemberships(dbLinks);
         setPapers(dbPapers);
+        void loadTagColors().catch((error) => {
+          console.warn("Failed to load tag colors:", error);
+        });
         void seedIntroductionPaper(dbPapers.length).catch((error) => {
           console.warn("Failed to seed the Introduction paper:", error);
         });

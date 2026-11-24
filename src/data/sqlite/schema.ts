@@ -42,12 +42,18 @@ CREATE TABLE IF NOT EXISTS workspace_nodes (
   description TEXT,
   research_question TEXT,
   keywords_json TEXT,
+  color TEXT,
   trashed_at TEXT,
   trash_root_id TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS workspace_nodes_parent ON workspace_nodes(parent_id, sort_order);
+
+CREATE TABLE IF NOT EXISTS tag_colors (
+  tag TEXT PRIMARY KEY COLLATE NOCASE,
+  color TEXT NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS workspace_papers (
   node_id TEXT NOT NULL,

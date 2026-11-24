@@ -573,10 +573,20 @@
   cursor: pointer;
 }
 
+.tagChip[data-colored] {
+  color: color-mix(in srgb, var(--tag-color) 72%, var(--color-text));
+  --sq-bg: color-mix(in srgb, var(--tag-color) 16%, transparent);
+}
+
 .tagChip:hover,
 .tagChip[data-active] {
   color: var(--color-selection-fg);
   --sq-bg: var(--color-accent);
+}
+
+.tagChip[data-colored]:hover,
+.tagChip[data-colored][data-active] {
+  --sq-bg: var(--tag-color);
 }
 
 
