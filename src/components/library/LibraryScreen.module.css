@@ -33,7 +33,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: var(--color-bg);
+  /* Same paper as the card so the sticky header hides scrolled rows without a seam.
+     -1px: the card's fill starts under its 1px ring. */
+  background: var(--paper-surface);
+  background-position: -1px -1px;
   position: sticky;
   top: 0;
   z-index: var(--z-page-header);

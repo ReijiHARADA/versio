@@ -205,9 +205,23 @@
   --scrollbar-size: 8px;
   --scrollbar-thumb: rgba(0, 0, 0, 0.14);
   --scrollbar-thumb-hover: rgba(0, 0, 0, 0.28);
+
+  /* Main pane paper: faint fibre grain + an 18px dot grid over the page colour.
+     --paper-surface is a full background shorthand; an opaque layer inside the card
+     (a sticky header) paints it too, offset by the card's 1px ring so the grid lines up. */
+  --paper-dot: rgba(0, 0, 0, 0.07);
+  --paper-dot-gap: 18px;
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.45 0 0 0 0 0.45 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --paper-surface:
+    radial-gradient(circle at center, var(--paper-dot) 0.9px, transparent 1.4px) 0 0 /
+      var(--paper-dot-gap) var(--paper-dot-gap),
+    var(--paper-grain) 0 0 / 300px 300px,
+    var(--color-bg);
 }
 
 [data-theme="dark"] {
+  --paper-dot: rgba(255, 255, 255, 0.07);
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.9 0 0 0 0 0.9 0 0 0 0 0.9 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --label-red: #ff6369;
   --label-orange: #ff8b3e;
   --label-yellow: #ffca16;
