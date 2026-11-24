@@ -1310,6 +1310,9 @@ function proseCellGridEvidence(block: LayoutBlock, blocks: LayoutBlock[], pageWi
   const touchesCore = block.lines.some((line) =>
     line.y + line.height >= coreTop - 20 && line.y <= coreBottom + 28
   );
+  // Column-wide narrative prose beside a table shares its bands by position only; table cells are narrower.
+  const sentences = block.text.split(/(?<=[.!?])\s+/).filter((sentence) => sentence.split(/\s+/).length >= 8).length;
+  if (block.lines.length >= 3 && block.bbox.width >= pageWidth * 0.38 && block.text.split(/\s+/).length >= 30 && sentences >= 2) return 0;
   return usesGridColumn && touchesCore ? 0.96 : 0;
 }
 
