@@ -12,8 +12,9 @@ import { chromium } from "playwright";
 const PORT = 5232;
 const BASE = `http://localhost:${PORT}/`;
 // A 14" MacBook Pro at its default scale, minus the menu bar the page draws.
-const VIEW = { width: 1512, height: 958 };
-const MENU_H = 24;
+// Menu bar height matches the 14" notch (32 of 982 points).
+const VIEW = { width: 1512, height: 950 };
+const MENU_H = 32;
 const DROPS = [
   ["wearability.pdf", "test-fixtures/generated-pdfs/basic-two-column.pdf"],
   ["interactive-jewellery.pdf", "test-fixtures/generated-pdfs/ACM-style-two-column.pdf"],
@@ -194,7 +195,7 @@ await ctx.close();
 const SRC = ".cache/howto-src";
 mkdirSync(SRC, { recursive: true });
 const bar = await b.newPage({ viewport: { width: VIEW.width, height: MENU_H } });
-await bar.setContent(`<body style="margin:0;height:${MENU_H}px;display:flex;align-items:center;gap:20px;padding:0 16px;box-sizing:border-box;background:rgba(236,236,240,1);color:#1d1d1f;font:13px -apple-system,'Hiragino Sans',system-ui,sans-serif;white-space:nowrap">
+await bar.setContent(`<body style="margin:0;height:${MENU_H}px;display:flex;align-items:center;gap:20px;padding:0 16px;box-sizing:border-box;background:#000;color:#fff;font:13px -apple-system,'Hiragino Sans',system-ui,sans-serif;white-space:nowrap">
   <b style="font-weight:700">Versio</b><span>ファイル</span><span>編集</span><span>表示</span><span>ウインドウ</span><span>ヘルプ</span>
   <span style="margin-left:auto">11月24日(火) 9:41</span></body>`);
 await bar.screenshot({ path: `${SRC}/menubar.png` });
