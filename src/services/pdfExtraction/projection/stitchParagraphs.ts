@@ -210,6 +210,13 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // the next paragraph is its rest when it opens with a term (an acronym or a mixed-case name), not a sentence word.
         // (Also after any unpunctuated lower-case word of a long paragraph: `… Given its proven stability, we selected` + `MAPPO under …`.)
         // (Past floats only, too: `… HCT116 cells and` | table | `HEK293T, and perform …`.)
+        // A comma-cut list of terms goes on in a paragraph that opens with the next term and a comma
+        // (`… occipital cortex, including FT7,` | `FC5, FC3, FC1, …`).
+        if (!listItem && (j === i + 1 || (sawFloat && !skippedParagraph && !skippedFragment)) && /,$/.test(currentText) && eligible(candidate) &&
+          /^\p{Lu}[\p{L}\d+-]*,\s/u.test(candidateText) && TERM_START.test(candidateText)) {
+          target = j;
+          break;
+        }
         // A paragraph cannot end on a determiner or preposition (`… XGBoost retained the highest AUC, and its` |
         // `Brier score was …`): the very next paragraph is its rest, whatever its first letter.
         if (!listItem && (j === i + 1 || (sawFloat && !skippedParagraph && !skippedFragment)) &&
