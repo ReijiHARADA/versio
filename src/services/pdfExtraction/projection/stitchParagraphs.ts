@@ -264,7 +264,9 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // A page number (`10 / 23`) between the pages does not stop the look past full-page floats.
         // (Nor does a table's own footnote or note.)
         if (candidate.type !== "figure" && candidate.type !== "table" && !PAGE_NUMBER.test(candidateText) && !CONTINUED_FLOAT.test(candidateText) &&
-          !(candidate.type === "footnote" && out[j - 1]?.type === "table") && !tableNote) onlyFloats = false;
+          !(candidate.type === "footnote" && out[j - 1]?.type === "table") && !tableNote &&
+          // Nor does a float's text read out as an equation or a non-prose paragraph (`Ctrl(16): μ = 137.64, …`).
+          !(sawFloat && (candidate.type === "equation" || (candidate.type === "paragraph" && isExpectedNonProseParagraph(candidateText))))) onlyFloats = false;
       }
       if (target < 0) break;
       const next = out[target];
