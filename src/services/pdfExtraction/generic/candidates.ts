@@ -737,7 +737,10 @@ function captionedNeighborCellRows(block: LayoutBlock, blocks: LayoutBlock[]): b
       if (peer === block || peer.pageStart !== block.pageStart) return [];
       // The other reading column's prose shares baselines with this one; its words are no table cells.
       const otherColumn = (peer.column === "left" && block.column === "right") || (peer.column === "right" && block.column === "left");
-      const prose = (b: LayoutBlock) => b.role === "paragraph" && b.lines.length >= 3 && b.text.split(/\s+/).length >= 25 && /[a-z]{3,}[.!?]\s+[A-Z]/.test(b.text);
+      // (One long finished sentence counts too: `Self-reported adherence means and standard deviations for each …`.)
+      const prose = (b: LayoutBlock) => b.role === "paragraph" && b.lines.length >= 3 && b.text.split(/\s+/).length >= 25 &&
+        (/[a-z]{3,}[.!?]\s+[A-Z]/.test(b.text) || (/[a-z)][.!?]$/.test(b.text.trim()) &&
+          (b.text.match(/\b(?:the|of|and|in|to|for|with|was|were|is|are|by|that|from|on|as|when|which)\b/g)?.length ?? 0) >= 6));
       if ((otherColumn && prose(peer)) || prose(block)) return [];
       return peer.lines
         .filter((peerLine) => Math.abs(peerLine.y - line.y) <= Math.max(2, line.fontSize * 0.4))
