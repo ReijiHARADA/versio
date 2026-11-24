@@ -1,5 +1,7 @@
 import type { PaperBlock } from "../../../types/paper";
 import { parseReferenceLinks } from "../../../services/citations";
+import type { BibliographicIdentifier } from "../../../services/bibliography/identifiers";
+import { referenceIdentifiers } from "../../../services/import/referenceIdentifier";
 
 export type CitationPreviewModel = {
   key: string;
@@ -10,6 +12,8 @@ export type CitationPreviewModel = {
   year?: string;
   doiUrl?: string;
   externalUrl?: string;
+  /** arXiv id / DOI the entry names, in download order. */
+  identifiers: BibliographicIdentifier[];
 };
 
 /**
@@ -62,6 +66,7 @@ export function buildCitationPreview(
     year,
     doiUrl,
     externalUrl,
+    identifiers: referenceIdentifiers(cleaned),
   };
 }
 
@@ -92,6 +97,7 @@ export function citationPreviewFromIndex(
       key,
       targetId,
       rawText: `[${key}]`,
+      identifiers: [],
     };
   }
   return buildCitationPreview(key, targetId, block.original || "");

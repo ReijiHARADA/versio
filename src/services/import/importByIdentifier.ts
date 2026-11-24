@@ -22,3 +22,23 @@ export async function importByIdentifier(
   const name = `${identifier.id.replace(/[\\/:*?"<>|]+/g, "_")}.pdf`;
   return startBackgroundImport(new File([data], name, { type: "application/pdf" }), options);
 }
+
+/**
+ * Import a cited paper: try each identifier in order (arXiv before DOI) and
+ * stop at the first open-access PDF. Throws the last error if none downloads.
+ */
+export async function importFirstAvailable(
+  identifiers: Array<{ kind: "doi" | "arxiv"; id: string }>,
+  options?: { workspaceNodeId?: string }
+): Promise<boolean> {
+  let lastError: unknown = new Error("arXiv ID か DOI が見つかりません");
+  for (const identifier of identifiers) {
+    const input = identifier.kind === "arxiv" ? `arXiv:${identifier.id}` : identifier.id;
+    try {
+      return await importByIdentifier(input, options);
+    } catch (cause) {
+      lastError = cause;
+    }
+  }
+  throw lastError;
+}

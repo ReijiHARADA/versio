@@ -3,6 +3,7 @@ import styles from "../InfoPopover.module.css";
 import type { CitationPreviewModel } from "./citationPreview";
 import type { AnchorBox } from "../memo/popoverPosition";
 import { openExternalUrl } from "../../../services/openExternalUrl";
+import { ReferenceImportAction } from "./ReferenceImportAction";
 
 type CitationPreviewPopoverProps = {
   model: CitationPreviewModel;
@@ -35,6 +36,11 @@ export function CitationPreviewPopover({
           >
             参考文献へ移動
           </button>
+          <ReferenceImportAction
+            identifiers={model.identifiers}
+            className={styles.action}
+            onDone={onClose}
+          />
           {model.doiUrl ? (
             <button
               type="button"
