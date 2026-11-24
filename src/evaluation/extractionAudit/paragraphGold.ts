@@ -140,7 +140,7 @@ export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[],
       const at = share.map((b) => blockIndex.get(b.id)!).sort((a, b) => a - b);
       // A few paragraph blocks between the pieces (figure text, a sidebar) do not change where the print breaks.
       return at.every((k, n) => n === 0 || ((k - at[n - 1] <= 4 || (blocks[k].page ?? 0) - (blocks[at[n - 1]].page ?? 0) >= 2) &&
-        /[.!?][”"’')\]]*$/.test(blocks[at[n - 1]].text.trim()) && (blocks[k].indent === true || blocks[k].spaced === true || blocks[at[n - 1]].shortEnd === true ||
+        /[.!?:][”"’')\]]*$/.test(blocks[at[n - 1]].text.trim()) && (blocks[k].indent === true || blocks[k].spaced === true || blocks[at[n - 1]].shortEnd === true ||
           // Two or more pages apart, a finished sentence and a capitalised start are separate printed paragraphs.
           (blocks[k].page !== undefined && blocks[at[n - 1]].page !== undefined && blocks[k].page! - blocks[at[n - 1]].page! >= 2)) && /^\p{Lu}/u.test(blocks[k].text.trim())));
     })();
