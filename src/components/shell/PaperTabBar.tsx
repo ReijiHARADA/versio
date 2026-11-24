@@ -12,6 +12,10 @@ import {
   TAB_CAP_RIGHT_STROKE,
   TAB_CAP_WIDTH,
   TAB_FLARE,
+  TAB_FLUSH_CAP_WIDTH,
+  TAB_FLUSH_DROP,
+  TAB_FLUSH_LEFT_FILL,
+  TAB_FLUSH_LEFT_STROKE,
   TAB_HEIGHT,
 } from "./paperTabShape";
 import styles from "./PaperTabBar.module.css";
@@ -160,6 +164,9 @@ export function PaperTabBar() {
 
   const byId = new Map(papers.map((paper) => [paper.id, paper]));
   const visible = tabs.filter((id) => byId.has(id));
+  // Tabs start on the card's left edge (one vertical line) unless the title bar controls are in
+  // the way; then they move right far enough for the flare to clear the card's corner.
+  const paddingLeft = inset.left > 0 ? Math.max(EDGE_PAD, inset.left) : 0;
 
   return (
     <div
@@ -168,9 +175,9 @@ export function PaperTabBar() {
       data-tauri-drag-region
       role="tablist"
       aria-label="開いている論文"
-      style={{ paddingLeft: Math.max(EDGE_PAD, inset.left), paddingRight: Math.max(EDGE_PAD + 10, inset.right) }}
+      style={{ paddingLeft, paddingRight: Math.max(EDGE_PAD + 10, inset.right) }}
     >
-      {visible.map((id) => {
+      {visible.map((id, index) => {
         const paper = byId.get(id)!;
         const title = displayPaperTitle(paper);
         const active = id === activeId;
@@ -190,7 +197,7 @@ export function PaperTabBar() {
             onAuxClick={(event) => { if (event.button === 1) closeTab(id); }}
             onKeyDown={(event) => { if (event.key === "Enter") openTab(id); }}
           >
-            {active && <ActiveTabShape />}
+            {active && <ActiveTabShape flushLeft={index === 0 && paddingLeft === 0} />}
             <FileText className={styles.icon} size={14} strokeWidth={1.6} aria-hidden />
             <span className={styles.title}>{title}</span>
             {isTranslating(paper) && <span className={styles.status}>翻訳中</span>}
@@ -211,24 +218,20 @@ export function PaperTabBar() {
 }
 
 /** Card-coloured tab body whose flared base runs into the main card below. */
-function ActiveTabShape() {
-  const cap = (fill: string, stroke: string, side: "left" | "right") => (
-    <svg
-      className={`${styles.cap} ${side === "left" ? styles.capLeft : styles.capRight}`}
-      width={TAB_CAP_WIDTH}
-      height={TAB_HEIGHT}
-      viewBox={`0 0 ${TAB_CAP_WIDTH} ${TAB_HEIGHT}`}
-      aria-hidden
-    >
+function ActiveTabShape({ flushLeft }: { flushLeft: boolean }) {
+  const cap = (fill: string, stroke: string, width = TAB_CAP_WIDTH, height = TAB_HEIGHT) => (
+    <svg className={styles.cap} width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden>
       <path d={fill} className={styles.capFill} />
       <path d={stroke} className={styles.capStroke} />
     </svg>
   );
   return (
-    <span className={styles.shape} style={{ left: -TAB_FLARE, right: -TAB_FLARE, height: TAB_HEIGHT }} aria-hidden>
-      {cap(TAB_CAP_LEFT_FILL, TAB_CAP_LEFT_STROKE, "left")}
+    <span className={styles.shape} style={{ left: flushLeft ? 0 : -TAB_FLARE, right: -TAB_FLARE, height: TAB_HEIGHT }} aria-hidden>
+      {flushLeft
+        ? cap(TAB_FLUSH_LEFT_FILL, TAB_FLUSH_LEFT_STROKE, TAB_FLUSH_CAP_WIDTH, TAB_HEIGHT + TAB_FLUSH_DROP)
+        : cap(TAB_CAP_LEFT_FILL, TAB_CAP_LEFT_STROKE)}
       <span className={styles.shapeMid} />
-      {cap(TAB_CAP_RIGHT_FILL, TAB_CAP_RIGHT_STROKE, "right")}
+      {cap(TAB_CAP_RIGHT_FILL, TAB_CAP_RIGHT_STROKE)}
     </span>
   );
 }
