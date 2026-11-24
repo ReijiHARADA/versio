@@ -143,27 +143,22 @@
   text-decoration: underline;
 }
 
-/* 「ライブラリに追加」: quiet until the entry is hovered or focused. */
+/* 「ライブラリに追加」/「ライブラリで開く」: always present but quiet, accent on hover. */
 .referenceImport {
   margin-left: var(--spacing-sm);
   padding: 0;
   border: none;
   background: transparent;
   font-size: var(--font-size-small);
-  color: var(--color-accent);
+  color: var(--color-text-tertiary);
   text-indent: 0;
+  white-space: nowrap;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 120ms ease;
 }
 
-.reference:hover .referenceImport,
-.referenceImport:focus-visible,
-.referenceImport:disabled {
-  opacity: 1;
-}
-
-.referenceImport:hover {
+.referenceImport:hover,
+.referenceImport:focus-visible {
+  color: var(--color-accent);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
