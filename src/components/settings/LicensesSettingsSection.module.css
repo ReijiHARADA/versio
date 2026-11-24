@@ -22,7 +22,7 @@
   color: var(--color-text-tertiary);
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-medium);
-  padding: 0 10px; /* spacing-snap-candidate */
+  padding: 0 var(--spacing-sm-mid);
   min-height: 28px;
   cursor: pointer;
 }

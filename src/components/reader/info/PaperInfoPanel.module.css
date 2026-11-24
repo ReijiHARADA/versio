@@ -1,7 +1,7 @@
 .info {
   display: flex;
   flex-direction: column;
-  gap: 20px; /* spacing-snap-candidate */
+  gap: var(--spacing-md);
 }
 
 .head {
@@ -65,7 +65,7 @@
   flex-direction: column;
   align-items: stretch;
   gap: var(--spacing-sm);
-  padding-top: 14px; /* spacing-snap-candidate */
+  padding-top: var(--spacing-sm-plus);
   border-top: 1px solid var(--color-border-light);
 }
 
@@ -151,7 +151,7 @@
 
 .actions {
   display: flex;
-  gap: 14px; /* spacing-snap-candidate */
+  gap: var(--spacing-sm-plus);
 }
 
 .textButton {

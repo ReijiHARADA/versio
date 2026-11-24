@@ -521,7 +521,7 @@
   transform-origin: top left;
   z-index: var(--z-sidebar-menu);
   width: 190px;
-  padding: 5px; /* spacing-snap-candidate */
+  padding: var(--spacing-xs-plus);
   border: 1px solid transparent;
   --sq-line: var(--color-border-light);
   --sq-bw: 1px;
@@ -541,7 +541,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: 7px var(--spacing-sm); /* spacing-snap-candidate */
+  padding: var(--spacing-xs-plus) var(--spacing-sm-mid);
   border: none;
   border-radius: var(--sq-radius-sm);
   --sq-bg: transparent;
@@ -903,7 +903,7 @@
   gap: 1px; /* spacing-literal-ok: 1px tight icon and label gap */
   max-width: 100%;
   height: 24px;
-  padding: 0 9px; /* spacing-snap-candidate */
+  padding: 0 var(--spacing-sm);
   box-sizing: border-box;
   --sq-bg: var(--color-bg-tertiary);
   color: var(--color-text-secondary);
