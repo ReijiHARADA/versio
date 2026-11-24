@@ -4993,6 +4993,10 @@ function finalizeBodyBlocks(rawBlocks: PaperBlock[], layoutBlocks: LayoutBlock[]
       /[.!?。！？:]\s*$/.test((current.original ?? "").trim()) ||
       // A math fragment (`∣ϑα –`) beside more math is no sentence that runs on.
       (currentText.match(/[A-Za-z]{3,}/g) ?? []).length < 3 ||
+      // Nor is a label or a table cell (`Check for updates`, `Australia efficient operating theatre`): it carries almost
+      // none of a sentence's small words.
+      (currentText.match(/\b(?:the|of|and|to|in|is|are|was|were|with|for|that|this|we|by|on|as|be|from)\b/gi)?.length ?? 0) <=
+        Math.max(2, (currentText.match(/[\p{L}\p{N}]+/gu)?.length ?? 0) * 0.06) ||
       !/^(?:which|that|and|or|but|where|while|because|although|including)\b/i.test((next.original ?? "").trim()) &&
       !/^[a-z]/.test((next.original ?? "").trim())
     ) continue;
