@@ -96,10 +96,9 @@ describe("filterPapers", () => {
     makePaper("b", { readStatus: "reading", tags: ["HCI", "ML"] }),
     makePaper("c"),
   ];
-  it("filters by status (missing status counts as unread) and tag", () => {
+  it("filters by tag and ignores the retired read-status filter", () => {
     expect(filterPapers(papers, { status: null, tag: null, duplicates: false })).toBe(papers);
-    expect(filterPapers(papers, { status: "unread", tag: null, duplicates: false }).map((p) => p.id)).toEqual(["c"]);
+    expect(filterPapers(papers, { status: "unread", tag: null, duplicates: false })).toBe(papers);
     expect(filterPapers(papers, { status: null, tag: "HCI", duplicates: false }).map((p) => p.id)).toEqual(["a", "b"]);
-    expect(filterPapers(papers, { status: "reading", tag: "HCI", duplicates: false }).map((p) => p.id)).toEqual(["b"]);
   });
 });

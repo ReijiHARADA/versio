@@ -20,7 +20,6 @@ import { displayPaperTitle } from "../../services/translation/quality";
 import { DraggablePaperArticle } from "./DraggablePaperArticle";
 import { PaperEpubSyncControl } from "./PaperEpubSyncControl";
 import { PaperCover } from "./PaperCover";
-import { READ_STATUS_LABELS } from "../../services/paperLibraryState";
 import styles from "./PaperCard.module.css";
 
 type PaperCardProps = {
@@ -136,15 +135,9 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
   const setLibraryFilter = useAppStore((state) => state.setLibraryFilter);
   // Narrow grid tiles fit one tag beside the badge; the rest collapse into "+N".
   const tagLimit = layout === "grid" ? 1 : 3;
-  // Unread is the default and stays unmarked; only reading / read get a badge.
   const libraryMeta =
-    paper.readStatus === "reading" || paper.readStatus === "read" || tags.length > 0 ? (
+    tags.length > 0 ? (
       <span className={styles.libraryMeta}>
-        {paper.readStatus === "reading" || paper.readStatus === "read" ? (
-          <span className={styles.readBadge} data-status={paper.readStatus}>
-            {READ_STATUS_LABELS[paper.readStatus]}
-          </span>
-        ) : null}
         {tags.slice(0, tagLimit).map((tag) => (
           <button
             key={tag}
