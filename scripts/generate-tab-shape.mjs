@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { clothoidCorner, K } from "./generate-squircle-css.mjs";
 
-const HEIGHT = 36; // tab height (px)
+const HEIGHT = 41; // titlebar-h (50) - card-gap (10) + the 1px overlap onto the card
 const CORNER_R = 10; // top corners, same as --sq-radius-card
 const FLARE_R = 7; // concave joint to the card
 
