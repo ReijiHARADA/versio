@@ -75,11 +75,12 @@
 
 .primary,
 .secondary {
-  height: 36px;
-  padding: 0 var(--spacing-md);
+  /* Same size as the intro's start button, which sits on the same line. */
+  height: 44px;
+  padding: 0 var(--spacing-xl);
   border: none;
   font: inherit;
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-heading);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
 }
@@ -106,6 +107,9 @@
   position: absolute;
   top: var(--spacing-lg);
   right: var(--spacing-lg);
+  height: 32px;
+  padding: 0 var(--spacing-md);
+  font-size: var(--font-size-small);
 }
 
 .secondary:hover {
