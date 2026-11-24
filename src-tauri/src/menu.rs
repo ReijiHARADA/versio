@@ -45,7 +45,11 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .item(&item("new-folder", "新規フォルダ", "CmdOrCtrl+Shift+N")?)
         .separator()
         .item(&item("close-tab", "タブを閉じる", "CmdOrCtrl+W")?)
-        .item(&item("close-window", "ウインドウを閉じる", "CmdOrCtrl+Shift+W")?)
+        .item(&item(
+            "close-window",
+            "ウインドウを閉じる",
+            "CmdOrCtrl+Shift+W",
+        )?)
         .build()?;
 
     let edit = SubmenuBuilder::new(app, "編集")
