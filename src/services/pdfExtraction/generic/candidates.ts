@@ -1096,6 +1096,10 @@ function captionedCompactRowCluster(block: LayoutBlock, blocks: LayoutBlock[]): 
   }
   const words = block.text.trim().split(/\s+/).filter(Boolean);
   if (words.length > 55 || /[.!?。！？]\s*$/.test(block.text.trim())) return false;
+  // Running text beside a table, cut before its full stop (`Following self-assessment approaches, observational
+  // methods were the second …`): a sentence's small words come every few words; table cells hardly carry any.
+  if ((block.text.match(/\b(?:the|of|and|to|in|is|are|was|were|with|for|that|this|by|on|as|from)\b/gi)?.length ?? 0) >=
+    Math.max(4, words.length * 0.15)) return false;
   const lineTexts = block.lines.map((line) => line.text.trim());
   if (lineTexts.some((text) => text.length > 100 || text.split(/\s+/).length > 14 || /[.!?。！？]\s*$/.test(text))) {
     return false;
