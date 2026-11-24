@@ -357,7 +357,12 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     // A colon closes a lead-in like a full stop (`A student shared:` before a quotation,
     // `defined in Eq. 2:` before an equation); every other check still applies. Only a
     // lower-case paragraph right after it shows that the sentence itself goes on.
-    const nextText = blocks.slice(index + 1).find((b) => b.type === "paragraph" && !isEquationDebris(b))?.original?.trim() ?? "";
+    // (Nor pieces of a display read as paragraphs: `{ }`, `d mXPer1`.)
+    const displayPiece = (b: PaperBlock) => {
+      const t = (b.original ?? "").trim();
+      return words(t) <= 3 || (t.match(/\p{L}/gu)?.length ?? 0) < t.replace(/\s/g, "").length * 0.5;
+    };
+    const nextText = blocks.slice(index + 1).find((b) => b.type === "paragraph" && !isEquationDebris(b) && !displayPiece(b))?.original?.trim() ?? "";
     // `… was used:` then `where β is …`: the display between them was not extracted as text (an image);
     // a heading straight after the colon is a list or display that was read as one.
     const introduced = /:\s*$/.test(text) && (block.metadata.listRole === "intro" || adjacentDisplay(blocks.slice(index + 1, index + 6), block, true) ||
