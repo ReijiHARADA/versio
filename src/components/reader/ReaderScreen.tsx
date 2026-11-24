@@ -6,7 +6,6 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeftIcon as ArrowLeft,
   Tuning2Icon as Settings2,
-  SquareShareLineIcon as ExternalLink,
   FileSendIcon as FileUp,
   PanelLeftIcon as PanelLeft,
   PanelRightIcon as PanelRight,
@@ -407,15 +406,6 @@ export function ReaderScreen() {
             <FileUp size={iconSize.md} />
           </button>
           <button
-            className={styles.iconButton}
-            aria-label={hasSourcePdf ? "元PDFを開く" : "保存された元PDFがありません"}
-            data-tooltip={hasSourcePdf ? "元PDFを開く" : "保存された元PDFがありません"}
-            disabled={!hasSourcePdf}
-            onClick={() => void handleOpenSourcePdf()}
-          >
-            <ExternalLink size={iconSize.md} />
-          </button>
-          <button
             className={`${styles.iconButton} ${inspectorVisible ? styles.active : ""}`}
             onClick={() => {
               setSearchView(false);
@@ -493,6 +483,7 @@ export function ReaderScreen() {
                   workspaceNames={workspaceNames}
                   annotationCount={annotations.length}
                   glossaryCount={glossary.length}
+                  onOpenSourcePdf={hasSourcePdf ? () => void handleOpenSourcePdf() : undefined}
                 />
               )}
               {inspectorView === "glossary" && <GlossaryPanel entries={glossary} onChange={setGlossary} />}

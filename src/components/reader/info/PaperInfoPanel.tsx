@@ -20,6 +20,8 @@ type Props = {
   workspaceNames: string[];
   annotationCount: number;
   glossaryCount: number;
+  /** Opens the saved source.pdf; absent when the package has none. */
+  onOpenSourcePdf?: () => void;
 };
 
 /**
@@ -27,7 +29,7 @@ type Props = {
  * header, abstract, citation fields, library state, and what this paper contains.
  * Read-only; editing reuses the library's metadata sheet.
  */
-export function PaperInfoPanel({ paper, blocks, sections, workspaceNames, annotationCount, glossaryCount }: Props) {
+export function PaperInfoPanel({ paper, blocks, sections, workspaceNames, annotationCount, glossaryCount, onOpenSourcePdf }: Props) {
   // The library index lacks package-only fields (DOI, bibliography, structured authors); the package has them.
   const [full, setFull] = useState<Paper | null>(null);
   const [editing, setEditing] = useState(false);
@@ -140,7 +142,15 @@ export function PaperInfoPanel({ paper, blocks, sections, workspaceNames, annota
           <Row label="参考文献">{stats.references > 0 ? `${stats.references} 件` : null}</Row>
           <Row label="メモ">{annotationCount > 0 ? `${annotationCount} 件` : null}</Row>
           <Row label="用語">{glossaryCount > 0 ? `${glossaryCount} 件` : null}</Row>
-          <Row label="元ファイル">{p.sourceFileName}</Row>
+          <Row label="元ファイル">
+            {onOpenSourcePdf ? (
+              <button type="button" className={styles.link} onClick={onOpenSourcePdf} title="元PDFを開く">
+                {p.sourceFileName || "元PDFを開く"}
+              </button>
+            ) : (
+              p.sourceFileName
+            )}
+          </Row>
         </dl>
       </Section>
 
