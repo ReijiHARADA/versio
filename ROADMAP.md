@@ -42,7 +42,10 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 **Done when**
 
 - 設定画面の情報設計が揃っている
-- 公証付き配布の手順（または CI）が再現できる
+- Apple Developer Program に加入し、Developer ID Application 証明書と公証用の認証情報を GitHub Secrets（`docs/MACOS_RELEASE.md` の名前）に登録済み
+- 公証付き配布の手順（または CI）が再現できる（Release workflow は ad-hoc 署名では動作確認済み。Developer ID での実行は未確認）
+
+**Timing** — 機能追加・リファクタリングが落ち着き、安定版として 2 版目を出す前。それまでは v0.1.0（ad-hoc 署名）のまま新しい版は出さない。
 
 ### A4. ライブラリの見分けやすさ（必要になったら）
 
