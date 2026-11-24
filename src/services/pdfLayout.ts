@@ -6142,7 +6142,11 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         (canContinueAcrossColumns && isSentenceContinuation(target.text, block.text)) ||
         crossesPageBoundaryAfterFigureBand || crossesPageBoundaryProperName ||
         wrapsAcrossColumnAfterFloat) &&
-      !(hasRotatedNativeLine(target) !== hasRotatedNativeLine(block))
+      !(hasRotatedNativeLine(target) !== hasRotatedNativeLine(block)) &&
+      // Across columns the text runs on in its own type size: 7 pt reference entries at the foot of the left column
+      // do not go on in a 9 pt note at the top of the right one.
+      !(target.column !== block.column &&
+        Math.abs(median(target.lines.slice(-3).map((line) => line.fontSize)) - median(block.lines.slice(0, 3).map((line) => line.fontSize))) > 1.2)
     ) {
       if (debugFlag === "1" && target.pageStart === block.pageStart && target.column !== block.column) {
         console.warn(`[PDF_LAYOUT_MERGE] page=${block.pageStart} ${target.column}->${block.column} targetY=${target.lines[0]?.y?.toFixed(1)} blockY=${block.lines[0]?.y?.toFixed(1)} left=${target.text.slice(-100)} right=${block.text.slice(0, 100)}`);
