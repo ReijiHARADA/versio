@@ -367,7 +367,7 @@ export function PaperTabBar() {
             onAuxClick={(event) => { if (event.button === 1) closeTab(id); }}
             onKeyDown={(event) => { if (event.key === "Enter") openTab(id); }}
           >
-            {active && <ActiveTabShape flushLeft={index === 0 && paddingLeft === 0} />}
+            {active && <ActiveTabShape flushLeft={index === 0 && paddingLeft === 0} textured={kind === "folder"} />}
             <Icon className={styles.icon} size={14} strokeWidth={1.6} aria-hidden />
             <span className={styles.title}>{title}</span>
             {translating && <span className={styles.status}>翻訳中</span>}
@@ -429,8 +429,9 @@ function capMaskUrl(d: string, width: number, height: number): string {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
-/** Card-coloured tab body whose flared base runs into the main card below. */
-function ActiveTabShape({ flushLeft }: { flushLeft: boolean }) {
+/** Card-coloured tab body whose flared base runs into the main card below. `textured` paints the
+ *  card's paper texture too: folder pages show it, Reader covers the card with a plain fill. */
+function ActiveTabShape({ flushLeft, textured }: { flushLeft: boolean; textured: boolean }) {
   const cap = (fill: string, stroke: string, width = TAB_CAP_WIDTH, height = TAB_HEIGHT) => (
     <svg className={styles.cap} width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden>
       <path d={fill} className={styles.capFill} />
@@ -488,11 +489,13 @@ function ActiveTabShape({ flushLeft }: { flushLeft: boolean }) {
         : cap(TAB_CAP_LEFT_FILL, TAB_CAP_LEFT_STROKE)}
       <span className={styles.shapeMid} />
       {cap(TAB_CAP_RIGHT_FILL, TAB_CAP_RIGHT_STROKE)}
-      <span
-        ref={textureRef}
-        className={styles.texture}
-        style={{ height: leftHeight, mask, WebkitMask: mask }}
-      />
+      {textured && (
+        <span
+          ref={textureRef}
+          className={styles.texture}
+          style={{ height: leftHeight, mask, WebkitMask: mask }}
+        />
+      )}
     </span>
   );
 }
