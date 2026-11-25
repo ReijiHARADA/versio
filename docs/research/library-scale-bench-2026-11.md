@@ -58,7 +58,7 @@ generated: 2026-11-26
 
 ## 直す順番
 
-1. **IPC をバイナリで渡す**: `write_app_file` / `read_app_file` を Tauri v2 の raw body（`tauri::ipc::Request` / `Response`）にする。小さい変更で 1000 本の壁を外せる。
+1. **IPC をバイナリで渡す**（済: `write_app_file` / `read_app_file` / `read_dropped_pdf` / `download_open_access_pdf` を Tauri v2 の raw body / `tauri::ipc::Response` にした）。小さい変更で 1000 本の壁を外せる。
 2. **一覧を仮想化する**: 見えている行だけ描画する。検索の入力は deferred にする。
 3. **SQLite をネイティブにする**: Rust の rusqlite でファイルへ差分を書き込み、sql.js の全体 export と起動時の全体読み込みをやめる。10000 本にはこれが必須。
 4. **検索の候補を先に絞る**: FTS5 `MATCH`（trigram など）で候補を絞ってから `versio_search_score` をかける。3 を入れると FTS5 / trigram が確実に使える。
