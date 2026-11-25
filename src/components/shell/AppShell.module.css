@@ -74,8 +74,8 @@
   margin: var(--titlebar-h) 0 var(--card-gap);
 }
 
-/* Empty slot that opens beside the main card while a tab is held over the right split target
-   with no inspector open: the card shrinks to show where the paper will go. */
+/* Empty slots that open beside the main card while a tab is pulled down onto it: the card shrinks
+   from each side that accepts the tab, and the slot is the drop target (never the card itself). */
 .splitPeek {
   flex-shrink: 0;
   width: 0;
@@ -87,8 +87,22 @@
   width: min(280px, 22vw); /* spacing-literal-ok: split preview slot */
 }
 
+/* Left slot: inside the cards row, so its gap to the card is a right margin. */
+.splitPeekLeft {
+  flex-shrink: 0;
+  width: 0;
+  margin-right: 0;
+  transition: width 220ms var(--pane-ease), margin-right 220ms var(--pane-ease);
+}
+
+.splitPeekLeft[data-open] {
+  width: min(280px, 22vw); /* spacing-literal-ok: split preview slot */
+  margin-right: var(--card-gap);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .splitPeek {
+  .splitPeek,
+  .splitPeekLeft {
     transition: none;
   }
 }
