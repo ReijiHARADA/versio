@@ -6,6 +6,7 @@ import {
 import type { WorkspaceNode } from "../../types/project";
 import { PaperCover } from "../library/PaperCover";
 import styles from "./WorkspaceFolderCard.module.css";
+import { openWorkspaceMenu } from "../shell/workspaceMenuEvent";
 
 // Folder back with clothoid corners (r=6, clothoidCorner() in scripts/generate-squircle-css.mjs); the tab notch keeps its curves.
 const FOLDER_BACK_PATH =
@@ -58,6 +59,11 @@ export function WorkspaceFolderCard({
     role: "button",
     tabIndex: 0,
     onClick: activate,
+    // Right-click opens the same folder menu as the sidebar (color, rename, export, delete).
+    onContextMenu: (event: React.MouseEvent) => {
+      event.preventDefault();
+      openWorkspaceMenu(node.id, event.clientX, event.clientY);
+    },
     onKeyDown: (event: React.KeyboardEvent) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();

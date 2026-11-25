@@ -26,6 +26,7 @@ import { hoverExpandId, WORKSPACE_HOVER_EXPAND_MS } from "./workspaceHoverExpand
 import { isWorkspaceRenameDoubleClick } from "./workspaceRenameGesture";
 import { listPapersForWorkspace, renameWorkspaceItem, updateWorkspaceNodeItem } from "../../services/projectService";
 import { LabelColorPicker } from "../ui/LabelColorPicker";
+import { onOpenWorkspaceMenu } from "./workspaceMenuEvent";
 import { labelColorVar, type LabelColor } from "../../domain/labelColors";
 import { isImeComposing } from "../../utils/ime";
 import styles from "./AppSidebar.module.css";
@@ -154,6 +155,24 @@ export function WorkspaceTree({
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [openMenuId]);
+
+  // A folder card right-clicked in item view opens this same menu; unfold its ancestors so rename has a row to edit in.
+  useEffect(
+    () =>
+      onOpenWorkspaceMenu(({ nodeId, x, y }) => {
+        const byId = new Map(nodes.map((node) => [node.id, node]));
+        if (!byId.has(nodeId)) return;
+        setCollapsed((current) => {
+          const next = { ...current };
+          for (let id = byId.get(nodeId)?.parentId; id; id = byId.get(id)?.parentId) next[id] = false;
+          return next;
+        });
+        setEditingId(null);
+        setMenuAnchor(clampMenuPosition(x, y));
+        setOpenMenuId(nodeId);
+      }),
+    [nodes],
+  );
 
   const openNode = openMenuId ? nodes.find((node) => node.id === openMenuId) : null;
 
