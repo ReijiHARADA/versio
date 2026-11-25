@@ -33,8 +33,10 @@ const DRAG_THRESHOLD = 4;
 /** How far below the strip a paper tab must be pulled before it becomes a split-view drop. */
 const SPLIT_PULL = 24;
 const SETTLE_MS = 180;
-/** How far inside the cards' left / right edge the split drop targets still reach. */
-const SPLIT_EDGE_IN = 24;
+/** How far inside the cards' left / right edge the split drop targets reach (px, or a share of the width). */
+const SPLIT_EDGE_IN = 80;
+const SPLIT_EDGE_SHARE = 0.15;
+const splitBand = (cardWidth: number) => Math.max(SPLIT_EDGE_IN, cardWidth * SPLIT_EDGE_SHARE);
 
 type TabDrag = {
   id: TabKey;
@@ -267,8 +269,10 @@ export function PaperTabBar() {
       d.canRight = routed != null ? routed !== id : left != null && left !== id;
       // Drop targets sit beside the cards, not on them: left of the cards' left edge (over the
       // sidebar) or right of their right edge, plus a thin band just inside each edge.
-      const level = card != null && event.clientY >= card.top && event.clientY <= card.bottom;
-      const side: SplitSide | null = !level || !card ? null : event.clientX < card.left + SPLIT_EDGE_IN ? "left" : event.clientX > card.right - SPLIT_EDGE_IN ? "right" : null;
+      // Already pulled below the strip, so any height counts; only the side matters.
+      const level = card != null;
+      const band = card ? splitBand(card.width) : 0;
+      const side: SplitSide | null = !level || !card ? null : event.clientX < card.left + band ? "left" : event.clientX > card.right - band ? "right" : null;
       d.overSplit = side === "right" && !d.canRight ? null : side;
       d.dx = 0;
       d.to = d.from;
@@ -451,13 +455,14 @@ const snapGap = (gap: number) => (gap < 0.5 ? 0 : gap >= TAB_MORPH_GAP - 0.5 ? I
 function SplitDropPreview({ drag, title }: { drag: DragView; title: string }) {
   const card = document.querySelector("[data-main-pane]")?.getBoundingClientRect();
   const half = card ? card.width / 2 : 0;
-  // A grip beside each edge marks where to drop; over one, the half the paper will open in lights up.
+  const band = card ? splitBand(card.width) : 0;
+  // A faint band along each edge marks where to drop; over one, the half the paper will open in lights up.
   const edge = (side: SplitSide) =>
     card && (
       <>
         <div
           className={`${styles.splitEdge} ${drag.overSplit === side ? styles.splitEdgeActive : ""}`}
-          style={{ left: side === "left" ? card.left - 7 : card.right + 2, top: card.top + card.height * 0.3, height: card.height * 0.4 }}
+          style={{ left: side === "left" ? card.left : card.right - band, top: card.top, width: band, height: card.height }}
           aria-hidden
         />
         <div
