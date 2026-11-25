@@ -270,6 +270,13 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j;
           break;
         }
+        // A database search string goes on in a paragraph opening with its next operator
+        // (`… OR LIMIT-TO (DOCTYPE, “re”))` + `AND (LIMIT-TO (LANGUAGE, “English”)). Records …`).
+        if (!listItem && j === i + 1 && eligible(candidate) && /^(?:AND|OR|NOT)\s+[(“"]/.test(candidateText) &&
+          /\b(?:AND|OR)\b/.test(currentText.slice(-300)) && /[)”"]$/.test(currentText)) {
+          target = j;
+          break;
+        }
         // A word broken at the line end (`… 88.40 macro-` | `F1 (88.40%) with …`) goes on in the very next paragraph.
         if (!listItem && j === i + 1 && /\p{L}{2,}-$/u.test(currentText) && candidate.type === "paragraph" && eligible(candidate) &&
           words(candidateText) >= 3 && /^[\p{L}\d(]/u.test(candidateText)) {
