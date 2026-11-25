@@ -254,6 +254,14 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j;
           break;
         }
+        // A sentence adverb and its comma (`… technology. Briefly,` + `CleanBoxTM is a hygiene …`) cannot end a paragraph:
+        // the very next one is its rest, whatever its first letter.
+        if (!listItem && (j === i + 1 || onlyRunningHeads) && eligible(candidate) && words(candidateText) >= 3 &&
+          /(?:^|[.!?]\s+)(?:Briefly|However|Moreover|Furthermore|Additionally|Thus|Therefore|Hence|Specifically|Similarly|Finally|Notably|Importantly|Consequently|Conversely|Meanwhile|Nevertheless|Overall|In addition|In contrast|In particular|For example|For instance|In this study|In summary|In conclusion),$/.test(currentText) &&
+          !/^(?:Table|Figure|Fig\.|Abbreviations?|Note|Notes|Keywords?)\b/.test(candidateText)) {
+          target = j;
+          break;
+        }
         // A word broken at the line end (`… 88.40 macro-` | `F1 (88.40%) with …`) goes on in the very next paragraph.
         if (!listItem && j === i + 1 && /\p{L}{2,}-$/u.test(currentText) && candidate.type === "paragraph" && eligible(candidate) &&
           words(candidateText) >= 3 && /^[\p{L}\d(]/u.test(candidateText)) {
