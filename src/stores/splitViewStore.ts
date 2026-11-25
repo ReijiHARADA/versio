@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 
 /**
  * Split view (UI state only): a second paper shown on the left of the main card, beside the
- * routed page on the right. Opened by dragging a paper tab onto the card's left half.
+ * routed page on the right. Opened by dragging a paper tab onto either half of the card (the right half moves the routed paper to the left).
  */
 type SplitViewState = {
   /** Paper in the left pane, or null when the card is not split. */

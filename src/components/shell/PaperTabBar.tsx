@@ -9,7 +9,7 @@ import {
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
 import { releasePaperBody } from "../../services/paperBodyRelease";
-import { parseTab, tabForPath, tabPath, usePaperTabs, type TabKey } from "../../stores/paperTabsStore";
+import { parseTab, readerPaperId, tabForPath, tabPath, usePaperTabs, type TabKey } from "../../stores/paperTabsStore";
 import { useSplitView } from "../../stores/splitViewStore";
 import { displayPaperTitle } from "../../services/translation/quality";
 import type { Paper } from "../../types/paper";
@@ -46,9 +46,13 @@ type TabDrag = {
   dx: number;
   shift: number;
   mode: "reorder" | "split";
-  overSplit: boolean;
+  /** Half of the card the pulled tab will open in, or null when it is not over one. */
+  overSplit: SplitSide | null;
+  /** Whether the right half accepts the tab (the paper that is there now can move left). */
+  canRight: boolean;
 };
-type DragView = Pick<TabDrag, "id" | "from" | "to" | "dx" | "shift" | "keys" | "mode" | "overSplit"> & { x: number; y: number };
+type SplitSide = "left" | "right";
+type DragView = Pick<TabDrag, "id" | "from" | "to" | "dx" | "shift" | "keys" | "mode" | "overSplit" | "canRight"> & { x: number; y: number };
 /** Keeps the outer flares on the card's straight top edge, clear of its rounded corners. */
 const EDGE_PAD = 24;
 const isTranslating = (paper: Paper) =>
@@ -188,14 +192,14 @@ export function PaperTabBar() {
 
   // Chrome-style pointer drag (HTML5 drag-and-drop is unreliable in WKWebView). The dragged tab
   // follows the pointer while its neighbours glide aside; the order is committed on release, then
-  // the tab settles into its slot. Pulled down onto the card's left half, a paper tab opens there
+  // the tab settles into its slot. Pulled down onto either half of the card, a paper tab opens there
   // as a split pane.
   const dragRef = useRef<TabDrag | null>(null);
   const [drag, setDrag] = useState<DragView | null>(null);
   const settleRef = useRef<{ id: TabKey; offset: number } | null>(null);
   const onPointerDown = (event: React.PointerEvent, key: TabKey) => {
     if (event.button !== 0) return;
-    dragRef.current = { id: key, startX: event.clientX, startY: event.clientY, moved: false, from: -1, keys: [], slots: [], shift: 0, to: -1, dx: 0, mode: "reorder", overSplit: false };
+    dragRef.current = { id: key, startX: event.clientX, startY: event.clientY, moved: false, from: -1, keys: [], slots: [], shift: 0, to: -1, dx: 0, mode: "reorder", overSplit: null, canRight: false };
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   };
   const onPointerMove = (event: React.PointerEvent) => {
@@ -225,12 +229,18 @@ export function PaperTabBar() {
     if (pulledDown) {
       const card = document.querySelector("[data-main-pane]")?.getBoundingClientRect();
       d.mode = "split";
-      d.overSplit = card != null && event.clientX >= card.left && event.clientX < card.left + card.width / 2 && event.clientY >= card.top && event.clientY <= card.bottom;
+      const { id } = parseTab(d.id);
+      const routed = readerPaperId(location.pathname);
+      const left = useSplitView.getState().paperId;
+      d.canRight = routed != null ? routed !== id : left != null && left !== id;
+      const inCard = card != null && event.clientX >= card.left && event.clientX < card.right && event.clientY >= card.top && event.clientY <= card.bottom;
+      const side: SplitSide | null = !inCard ? null : event.clientX < card.left + card.width / 2 ? "left" : "right";
+      d.overSplit = side === "right" && !d.canRight ? null : side;
       d.dx = 0;
       d.to = d.from;
     } else {
       d.mode = "reorder";
-      d.overSplit = false;
+      d.overSplit = null;
       const own = d.slots[d.from];
       const first = d.slots[0];
       const last = d.slots[d.slots.length - 1];
@@ -242,7 +252,7 @@ export function PaperTabBar() {
       for (let i = d.from - 1; i >= 0; i--) if (center < d.slots[i].left + d.slots[i].width / 2) to = i;
       d.to = to;
     }
-    setDrag({ id: d.id, from: d.from, to: d.to, dx: d.dx, shift: d.shift, keys: d.keys, mode: d.mode, overSplit: d.overSplit, x: event.clientX, y: event.clientY });
+    setDrag({ id: d.id, from: d.from, to: d.to, dx: d.dx, shift: d.shift, keys: d.keys, mode: d.mode, overSplit: d.overSplit, canRight: d.canRight, x: event.clientX, y: event.clientY });
   };
   const endDrag = (key: TabKey, commit: boolean) => {
     const d = dragRef.current;
@@ -254,7 +264,8 @@ export function PaperTabBar() {
       return;
     }
     if (commit && d.mode === "split" && d.overSplit) {
-      openSplitFromTab(d.id);
+      if (d.overSplit === "left") openSplitFromTab(d.id);
+      else openRightFromTab(d.id);
       return;
     }
     const to = commit && d.mode === "reorder" ? d.to : d.from;
@@ -290,6 +301,14 @@ export function PaperTabBar() {
     const next = rest[index] ?? rest[index - 1] ?? null;
     lastActiveRef.current = null;
     navigate(next ? tabPath(next) : lastPagePathRef.current);
+  };
+
+  // Dropped on the card's right half: the paper opens there and the paper that was there moves
+  // to the left pane (swapping places when the dropped tab came from the left pane).
+  const openRightFromTab = (key: TabKey) => {
+    const routed = readerPaperId(location.pathname);
+    if (routed) useSplitView.getState().openSplit(routed);
+    navigate(tabPath(key));
   };
 
   const tabTransform = (key: TabKey): string | undefined => {
@@ -370,18 +389,27 @@ export function PaperTabBar() {
 }
 
 /** While a paper tab is pulled onto the card: a ghost under the pointer and, over the card's
- *  left half, the half it will open in. */
+ *  left or right half, the half it will open in. */
 function SplitDropPreview({ drag, title }: { drag: DragView; title: string }) {
   const card = document.querySelector("[data-main-pane]")?.getBoundingClientRect();
   return (
     <>
       {card && (
         <div
-          className={`${styles.splitZone} ${drag.overSplit ? styles.splitZoneActive : ""}`}
+          className={`${styles.splitZone} ${drag.overSplit === "left" ? styles.splitZoneActive : ""}`}
           style={{ left: card.left, top: card.top, width: card.width / 2, height: card.height }}
           aria-hidden
         >
           <span className={styles.splitZoneLabel}>左に並べて開く</span>
+        </div>
+      )}
+      {card && drag.canRight && (
+        <div
+          className={`${styles.splitZone} ${drag.overSplit === "right" ? styles.splitZoneActive : ""}`}
+          style={{ left: card.left + card.width / 2, top: card.top, width: card.width / 2, height: card.height }}
+          aria-hidden
+        >
+          <span className={styles.splitZoneLabel}>右に並べて開く</span>
         </div>
       )}
       <div className={styles.ghost} style={{ transform: `translate(${drag.x + 12}px, ${drag.y + 10}px)` }} aria-hidden>
