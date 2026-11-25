@@ -398,13 +398,14 @@
   cursor: col-resize;
 }
 
+/* A vertical capsule: the pill mask caps left/right only, so a tall grip draws its own round ends. */
 .splitGrip {
-  composes: pill from "../../styles/squircle.module.css";
   width: 4px;
   height: 36px;
-  --sq-bg: var(--color-border);
+  border-radius: 2px; /* squircle-exempt: 4px-wide capsule ends; a clothoid is indistinguishable at this size */
+  background: var(--color-border);
   opacity: 0;
-  transition: opacity 120ms ease, --sq-bg 120ms ease;
+  transition: opacity 120ms ease, background-color 120ms ease;
 }
 
 .splitGroove:hover .splitGrip,
@@ -413,5 +414,5 @@
 }
 
 .splitGroove:active .splitGrip {
-  --sq-bg: var(--color-accent);
+  background: var(--color-accent);
 }
