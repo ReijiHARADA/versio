@@ -7,7 +7,8 @@ import styles from "./AppShell.module.css";
 
 const ReaderScreen = lazy(() => import("../reader/ReaderScreen").then((m) => ({ default: m.ReaderScreen })));
 
-/** Left half of a split card: a second Reader beside the routed page, with a resizable divider. */
+/** Split view: a second card with its own Reader left of the main card, and the groove between
+ *  them (drag to resize, double-click for half and half). */
 export function SplitReaderPane({ paperId }: { paperId: string }) {
   const location = useLocation();
   const ratio = useSplitView((state) => state.ratio);
@@ -28,11 +29,12 @@ export function SplitReaderPane({ paperId }: { paperId: string }) {
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (event.button !== 0) return;
-    const card = dividerRef.current?.parentElement;
-    if (!card) return;
+    const row = dividerRef.current?.parentElement;
+    if (!row) return;
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
-    const rect = card.getBoundingClientRect();
+    const rect = row.getBoundingClientRect();
+    // The groove's centre follows the pointer.
     const move = (e: PointerEvent) => useSplitView.getState().setRatio((e.clientX - rect.left) / rect.width);
     const up = () => {
       window.removeEventListener("pointermove", move);
@@ -46,20 +48,28 @@ export function SplitReaderPane({ paperId }: { paperId: string }) {
 
   return (
     <>
-      <div className={styles.splitPane} style={{ flexBasis: `${clampSplitRatio(ratio) * 100}%` }} data-split-pane>
-        <Suspense fallback={null}>
-          <ReaderScreen key={paperId} paperId={paperId} onClosePane={closeSplit} />
-        </Suspense>
+      <div
+        className={`${styles.main} ${styles.splitCard}`}
+        style={{ flexBasis: `calc(${clampSplitRatio(ratio) * 100}% - var(--card-gap) / 2)` }}
+      >
+        <div className={styles.splitPane} data-split-pane>
+          <Suspense fallback={null}>
+            <ReaderScreen key={paperId} paperId={paperId} onClosePane={closeSplit} />
+          </Suspense>
+        </div>
+        <div className={styles.mainRim} aria-hidden />
       </div>
       <div
         ref={dividerRef}
-        className={styles.splitDivider}
+        className={styles.splitGroove}
         role="separator"
         aria-orientation="vertical"
         aria-label="分割表示の幅を変更"
         onPointerDown={onPointerDown}
         onDoubleClick={() => useSplitView.getState().setRatio(0.5)}
-      />
+      >
+        <span className={styles.splitGrip} />
+      </div>
     </>
   );
 }
