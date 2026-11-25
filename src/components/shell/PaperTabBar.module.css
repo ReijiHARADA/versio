@@ -324,6 +324,12 @@
   overflow-y: visible;
 }
 
+/* A tab dragged out of the left group must stay on top of the right card's tabs, not be cut at
+   the group's edge. */
+.reordering .lead {
+  overflow-x: visible;
+}
+
 /* すべての論文 / インボックス: icon-only, fixed width, never shrinks with the strip. */
 .pinned,
 .pinned.active {
