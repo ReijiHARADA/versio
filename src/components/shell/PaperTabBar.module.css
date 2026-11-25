@@ -306,6 +306,12 @@
   background: var(--color-bg-tertiary);
 }
 
+/* Split view: the current pinned page (it opens in the right card, away from the icon). */
+.tab.pinnedCurrent {
+  --sq-bg: var(--color-bg-tertiary);
+  color: var(--color-text);
+}
+
 /* Split view: the tabs before the routed one, kept over the left card. */
 .lead {
   flex: none;
