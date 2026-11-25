@@ -152,33 +152,35 @@
 }
 
 .splitZone {
-  composes: surface from "../../styles/squircle.module.css";
   position: fixed;
   z-index: var(--z-overlay);
   display: grid;
-  /* Label near the top: the dragged tab usually sits over the middle. */
-  place-items: start center;
-  padding-top: var(--spacing-2xl);
+  place-items: center;
   box-sizing: border-box;
-  border-radius: var(--sq-radius-card);
-  --sq-fill: var(--sq-fill-card);
-  --sq-ring: var(--sq-ring-card);
-  --sq-bg: transparent;
+  color: var(--color-accent);
   pointer-events: none;
-  transition: --sq-bg 120ms ease;
 }
 
-.splitZoneIdle {
-  --sq-bg: color-mix(in srgb, var(--color-accent) 6%, transparent);
+/* Dashed clothoid outline instead of a fill: the card under it stays readable. */
+.splitZoneOutline {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-dasharray: 6 5;
+  opacity: 0.45;
+  transition: opacity 120ms ease;
 }
 
-.splitZoneActive {
-  --sq-bg: color-mix(in srgb, var(--color-accent) 14%, transparent);
+.splitZoneActive .splitZoneOutline {
+  opacity: 1;
 }
 
 .splitZoneLabel {
+  position: relative;
   font-size: var(--font-size-small);
-  color: var(--color-accent);
   opacity: 0;
   transition: opacity 120ms ease;
 }

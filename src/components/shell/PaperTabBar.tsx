@@ -27,7 +27,9 @@ import {
   TAB_FLUSH_DROP,
   TAB_FLUSH_LEFT_FILL,
   TAB_FLUSH_LEFT_STROKE,
+  TAB_CORNER_UNIT,
   TAB_HEIGHT,
+  TAB_K,
 } from "./paperTabShape";
 import { morphLeftCap, TAB_MORPH_GAP } from "./paperTabCap";
 import { INSPECTOR_SLOT_ID } from "./inspectorSlot";
@@ -400,10 +402,9 @@ export function PaperTabBar() {
     const pulledDown = barRect != null && event.clientY > barRect.bottom + SPLIT_PULL;
     if (pulledDown) {
       const left = useSplitView.getState().tab;
-      // On a pinned page the page moves to the left pane, so any tab can open on the right.
-      d.canRight = activeId != null ? activeId !== d.id : left != null ? left !== d.id : pageTabForPath(location.pathname) != null;
-      // The right side keeps at least one tab, so its only tab cannot move left.
-      if (d.mode !== "split") d.canLeft = d.id !== activeId || rightNeighbour(d.id) != null;
+      // Either side can take any tab: with nothing else to show, the other side shows all papers.
+      d.canRight = left == null || left !== d.id;
+      if (d.mode !== "split") d.canLeft = true;
       d.mode = "split";
       d.lastX = event.clientX;
       aimSplit(d);
@@ -480,14 +481,9 @@ export function PaperTabBar() {
         } else if (d.id !== activeId) {
           useSplitView.getState().addLeftTab(d.id);
         } else {
-          // The right pane's paper moves left: the right shows its next tab, or, with none left,
-          // the split ends.
-          const next = rightNeighbour(d.id);
+          // The right pane's paper moves left: the right shows its next tab, or all papers.
           useSplitView.getState().addLeftTab(d.id);
-          if (next) {
-            lastActiveRef.current = null;
-            navigate(tabPath(next));
-          } else collapseSplit();
+          refillRight(d.id);
         }
       }
     }
@@ -511,16 +507,19 @@ export function PaperTabBar() {
     el?.animate([{ transform: `translateX(${settle.offset}px)` }, { transform: "translateX(0)" }], { duration: SETTLE_MS, easing: "cubic-bezier(0.2, 0, 0, 1)" });
   });
 
-  // Dropped on the card's left half: the paper opens there; if it was the page on the right,
-  // the right side moves on to a neighbouring tab (or back to the last page).
-  const openSplitFromTab = (key: TabKey) => {
-    // The right side keeps at least one tab; the only tab there cannot leave it.
-    const next = key === activeId ? rightNeighbour(key) : null;
-    if (key === activeId && !next) return;
-    useSplitView.getState().openSplit(key);
-    if (!next) return;
+  // The right side lost its paper / folder to the left: it moves on to a neighbouring tab, or
+  // with none left shows all papers.
+  const refillRight = (key: TabKey) => {
+    const next = rightNeighbour(key);
     lastActiveRef.current = null;
-    navigate(tabPath(next));
+    navigate(next ? tabPath(next) : "/");
+  };
+
+  // Dropped on the card's left half: the paper opens there; if it was the page on the right,
+  // the right side moves on to a neighbouring tab (or all papers).
+  const openSplitFromTab = (key: TabKey) => {
+    useSplitView.getState().openSplit(key);
+    if (key === activeId) refillRight(key);
   };
 
   // Dropped on the card's right half: the paper opens there and the paper that was there moves
@@ -538,28 +537,27 @@ export function PaperTabBar() {
       useSplitView.getState().openSplit(key);
       return;
     }
-    // The right pane's paper moves left: the right shows its next tab, or the split ends.
-    const next = rightNeighbour(key);
+    // The right pane's paper moves left: the right shows its next tab, or all papers.
     useSplitView.getState().openSplit(key);
-    if (next) {
-      lastActiveRef.current = null;
-      navigate(tabPath(next));
-    } else collapseSplit();
+    refillRight(key);
   };
 
+  // The card's own paper / folder dropped on its right half stays there; the left shows all papers.
   const openRightFromTab = (key: TabKey) => {
     const page = pageTabForPath(location.pathname);
-    if (activeId) useSplitView.getState().openSplit(activeId);
-    else if (page) useSplitView.getState().showPage(page);
-    navigate(tabPath(key));
+    if (activeId && activeId !== key) useSplitView.getState().openSplit(activeId);
+    else useSplitView.getState().showPage(activeId ? "page:/" : page ?? "page:/");
+    if (key !== activeId) navigate(tabPath(key));
   };
 
-  // Every tab moved or closed out of the right side: the split ends.
+  // Every tab moved or closed out of the right side: the split ends, unless the right card shows
+  // a pinned page (all papers / inbox) of its own.
   useEffect(() => {
     if (!splitTab || drag || papers.length === 0) return;
+    if (pageTabForPath(location.pathname)) return;
     const list = usePaperTabs.getState().tabs;
     if (list.length > 0 && !list.some((key) => !isLeftTab(key))) collapseSplit();
-  }, [splitTab, drag, papers.length, tabs, isLeftTab, collapseSplit]);
+  }, [splitTab, drag, papers.length, tabs, isLeftTab, collapseSplit, location.pathname]);
 
   const tabTransform = (key: TabKey): string | undefined => {
     if (!drag) return undefined;
@@ -728,6 +726,38 @@ const MORPH_TAIL_MS = SETTLE_MS + 120;
  *  drop into a card that is not there. */
 const snapGap = (gap: number) => (gap < -1.5 ? Infinity : gap < 0.5 ? 0 :gap >= TAB_MORPH_GAP - 0.5 ? Infinity : Math.round(gap * 4) / 4);
 
+/** Side margin of a split target's outline inside its drop range (the range itself stays full width). */
+const ZONE_MARGIN_X = 12;
+
+/** Card-radius clothoid rectangle (corner extent = 10 × K, as --sq-radius-card), inset by half the
+ *  stroke and by ZONE_MARGIN_X on the left and right. */
+function zoneOutlinePath(width: number, height: number, inset = 0.75): string {
+  const x0 = inset + ZONE_MARGIN_X;
+  const y0 = inset;
+  const x1 = width - inset - ZONE_MARGIN_X;
+  const y1 = height - inset;
+  const s = Math.max(0, Math.min(10 * TAB_K - inset, (x1 - x0) / 2, (y1 - y0) / 2));
+  const pts: string[] = [];
+  const add = (x: number, y: number) => pts.push(`${x.toFixed(2)} ${y.toFixed(2)}`);
+  add(x1 - s, y0);
+  for (const [u, v] of TAB_CORNER_UNIT) add(x1 + u * s, y0 + v * s);
+  add(x1, y1 - s);
+  for (const [u, v] of TAB_CORNER_UNIT) add(x1 - v * s, y1 + u * s);
+  add(x0 + s, y1);
+  for (const [u, v] of TAB_CORNER_UNIT) add(x0 - u * s, y1 - v * s);
+  add(x0, y0 + s);
+  for (const [u, v] of TAB_CORNER_UNIT) add(x0 + v * s, y0 - u * s);
+  return `M${pts.join("L")}Z`;
+}
+
+function ZoneOutline({ width, height }: { width: number; height: number }) {
+  return (
+    <svg className={styles.splitZoneOutline} width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden>
+      <path d={zoneOutlinePath(width, height)} />
+    </svg>
+  );
+}
+
 /** While a paper tab is pulled onto the card (the tab itself follows the pointer): over the
  *  card's left or right half, the half it will open in. */
 function SplitDropPreview({ drag }: { drag: DragView }) {
@@ -739,10 +769,11 @@ function SplitDropPreview({ drag }: { drag: DragView }) {
       range &&
       zones && (
         <div
-          className={`${styles.splitZone} ${drag.overSplit === side ? styles.splitZoneActive : styles.splitZoneIdle}`}
+          className={`${styles.splitZone} ${drag.overSplit === side ? styles.splitZoneActive : ""}`}
           style={{ left: range[0], top: zones.top, width: range[1] - range[0], height: zones.height }}
           aria-hidden
         >
+          <ZoneOutline width={range[1] - range[0]} height={zones.height} />
           <span className={styles.splitZoneLabel}>{side === "left" ? "左に並べて開く" : "右に並べて開く"}</span>
         </div>
       )
@@ -761,6 +792,7 @@ function SplitDropPreview({ drag }: { drag: DragView }) {
           style={{ left: target.left, top: target.top, width: target.width, height: target.height }}
           aria-hidden
         >
+          <ZoneOutline width={target.width} height={target.height} />
           <span className={styles.splitZoneLabel}>{drag.moveSide === "left" ? "左で開く" : "右で開く"}</span>
         </div>
       )}
