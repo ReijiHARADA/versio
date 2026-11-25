@@ -358,7 +358,8 @@ export function PaperTabBar() {
     }
     const card = rectOf("[data-main-card]");
     const half: SplitSide | null = !card ? null : d.lastX < card.left + card.width / 2 ? "left" : "right";
-    const side = half === "left" ? (d.canLeft ? "left" : null) : half === "right" && d.canRight ? "right" : null;
+    // With only one side open to it, the tab aims there from anywhere on the card.
+    const side = !half ? null : !d.canLeft ? (d.canRight ? "right" : null) : half === "left" ? "left" : d.canRight ? "right" : null;
     if (side !== d.peekSide) {
       d.peekSide = side;
       setSplitPeek(side === "left", side === "right");
@@ -404,7 +405,8 @@ export function PaperTabBar() {
       const left = useSplitView.getState().tab;
       // Either side can take any tab: with nothing else to show, the other side shows all papers.
       d.canRight = left == null || left !== d.id;
-      if (d.mode !== "split") d.canLeft = true;
+      // The only paper / folder tab opens on the right only: all papers stay on the left.
+      if (d.mode !== "split") d.canLeft = usePaperTabs.getState().tabs.length > 1;
       d.mode = "split";
       d.lastX = event.clientX;
       aimSplit(d);
