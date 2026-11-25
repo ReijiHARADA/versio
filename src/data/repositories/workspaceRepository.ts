@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import type { WorkspacePaper } from "../../types/project";
 import type { SqliteClient } from "../sqlite/client";
 import type { WorkspaceNode } from "../types/workspace";
+import { toLabelColor } from "../../domain/labelColors";
 import { assertMoveAllowed, nextSiblingOrder, reorderSiblings } from "../workspace/tree";
 
 const nowIso = () => new Date().toISOString();
@@ -19,6 +20,7 @@ function rowToNode(row: Record<string, unknown>): WorkspaceNode {
     description: row.description == null ? undefined : String(row.description),
     researchQuestion: row.research_question == null ? undefined : String(row.research_question),
     keywords: json<string[]>(row.keywords_json),
+    color: toLabelColor(row.color),
     trashedAt: row.trashed_at == null ? null : String(row.trashed_at),
     trashRootId: row.trash_root_id == null ? null : String(row.trash_root_id),
     createdAt: String(row.created_at),
@@ -51,10 +53,10 @@ export const getWorkspaceNode = (db: SqliteClient, id: string) => {
 
 function writeNode(db: SqliteClient, node: WorkspaceNode): void {
   db.exec(
-    `INSERT INTO workspace_nodes (id, parent_id, name, sort_order, description, research_question, keywords_json, trashed_at, trash_root_id, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET parent_id=excluded.parent_id, name=excluded.name,
+    `INSERT INTO workspace_nodes (id, parent_id, name, sort_order, description, research_question, keywords_json, color, trashed_at, trash_root_id, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET parent_id=excluded.parent_id, name=excluded.name,
     sort_order=excluded.sort_order, description=excluded.description, research_question=excluded.research_question,
-    keywords_json=excluded.keywords_json, trashed_at=excluded.trashed_at, trash_root_id=excluded.trash_root_id, updated_at=excluded.updated_at`,
+    keywords_json=excluded.keywords_json, color=excluded.color, trashed_at=excluded.trashed_at, trash_root_id=excluded.trash_root_id, updated_at=excluded.updated_at`,
     [
       node.id,
       node.parentId,
@@ -63,6 +65,7 @@ function writeNode(db: SqliteClient, node: WorkspaceNode): void {
       node.description ?? null,
       node.researchQuestion ?? null,
       node.keywords ? JSON.stringify(node.keywords) : null,
+      node.color ?? null,
       node.trashedAt ?? null,
       node.trashRootId ?? null,
       node.createdAt,

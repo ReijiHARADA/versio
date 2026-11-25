@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import {
+  EyeIcon as Eye,
+  EyeClosedIcon as EyeOff,
+} from "@solar-icons/react/linear";
 import styles from "./Figure.module.css";
 import { Presence, MotionP } from "../ui/Presence";
 import motion from "../../styles/motion.module.css";

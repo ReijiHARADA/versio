@@ -117,9 +117,9 @@
 
 .folderArt {
   /* Finder-like folder tinted from the accent so it follows light/dark themes. */
-  --folder-back: color-mix(in srgb, var(--color-accent) 62%, white);
-  --folder-front-top: color-mix(in srgb, var(--color-accent) 42%, white);
-  --folder-front-bottom: color-mix(in srgb, var(--color-accent) 58%, white);
+  --folder-back: color-mix(in srgb, var(--folder-tint, var(--color-accent)) 62%, white);
+  --folder-front-top: color-mix(in srgb, var(--folder-tint, var(--color-accent)) 42%, white);
+  --folder-front-bottom: color-mix(in srgb, var(--folder-tint, var(--color-accent)) 58%, white);
   position: relative;
   width: 82%;
   aspect-ratio: 130 / 100;
@@ -130,9 +130,9 @@
 }
 
 [data-theme="dark"] .folderArt {
-  --folder-back: color-mix(in srgb, var(--color-accent) 55%, var(--color-folder-dark));
-  --folder-front-top: color-mix(in srgb, var(--color-accent) 78%, var(--color-folder-dark));
-  --folder-front-bottom: color-mix(in srgb, var(--color-accent) 62%, var(--color-folder-dark));
+  --folder-back: color-mix(in srgb, var(--folder-tint, var(--color-accent)) 55%, var(--color-folder-dark));
+  --folder-front-top: color-mix(in srgb, var(--folder-tint, var(--color-accent)) 78%, var(--color-folder-dark));
+  --folder-front-bottom: color-mix(in srgb, var(--folder-tint, var(--color-accent)) 62%, var(--color-folder-dark));
 }
 
 .folderBack {

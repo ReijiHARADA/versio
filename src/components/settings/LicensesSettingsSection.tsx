@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronRight, Search } from "lucide-react";
+import {
+  AltArrowRightIcon as ChevronRight,
+  MagnifierIcon as Search,
+} from "@solar-icons/react/linear";
 import {
   ECOSYSTEM_LABELS,
   STATUS_LABELS,

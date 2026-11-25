@@ -4,14 +4,15 @@ import type { ReactNode } from "react";
 import { INSPECTOR_ON_GROUND_QUERY, INSPECTOR_SLOT_ID } from "../shell/inspectorSlot";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
-  ArrowLeft,
-  Settings2,
-  ExternalLink,
-  FileUp,
-  PanelLeft,
-  PanelRight,
-} from "lucide-react";
+  ArrowLeftIcon as ArrowLeft,
+  Tuning2Icon as Settings2,
+  FileSendIcon as FileUp,
+  PanelLeftIcon as PanelLeft,
+  PanelRightIcon as PanelRight,
+  CloseIcon as X,
+} from "@solar-icons/react/linear";
 import { useAppStore } from "../../stores/appStore";
+import { useSplitView } from "../../stores/splitViewStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import {
   createBlockUpdateBatcher,
@@ -59,9 +60,18 @@ function placeInspector(panel: ReactNode, slot: HTMLElement | null): ReactNode {
   return slot ? createPortal(panel, slot) : panel;
 }
 
-export function ReaderScreen() {
+type ReaderScreenProps = {
+  /** Set by the split pane; the routed Reader reads `:paperId` from the URL. */
+  paperId?: string;
+  /** Present in the split pane: closes it (replaces the back button). */
+  onClosePane?: () => void;
+};
+
+export function ReaderScreen({ paperId: paneId, onClosePane }: ReaderScreenProps = {}) {
   const navigate = useNavigate();
-  const { paperId } = useParams<{ paperId: string }>();
+  const params = useParams<{ paperId: string }>();
+  const inPane = paneId !== undefined;
+  const paperId = inPane ? paneId : params.paperId;
   const [searchParams] = useSearchParams();
   const papers = useLibraryCache((s) => s.papers);
   const workspaceNodes = useProjectStore((state) => state.workspaceNodes);
@@ -78,32 +88,47 @@ export function ReaderScreen() {
     paperId ? s.blocks[paperId] ?? EMPTY_BLOCKS : EMPTY_BLOCKS
   );
 
-  const [showOutline, setShowOutline] = useState(true);
+  // The split pane is half a card wide, so it starts with the outline hidden.
+  const [showOutline, setShowOutline] = useState(!inPane);
+  // Each half of a split card is narrow: the main pane folds its outline when a split opens.
+  const splitOpen = useSplitView((state) => state.paperId != null);
+  useEffect(() => {
+    if (splitOpen && !inPane) setShowOutline(false);
+  }, [splitOpen, inPane]);
   const [showSettings, setShowSettings] = useState(false);
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   // Wide windows draw the inspector on the ground beside the card (AppShell slot, present only after the
   // first commit); narrow ones keep it inside the card as an overlay so it never covers the toolbar.
+  // The split pane keeps its inspector inside its own half; only the main pane uses the ground.
   const [inspectorSlot, setInspectorSlot] = useState<HTMLElement | null>(() =>
-    window.matchMedia(INSPECTOR_ON_GROUND_QUERY).matches ? document.getElementById(INSPECTOR_SLOT_ID) : null
+    !inPane && window.matchMedia(INSPECTOR_ON_GROUND_QUERY).matches ? document.getElementById(INSPECTOR_SLOT_ID) : null
   );
   const [wideAtMount] = useState(() => window.matchMedia(INSPECTOR_ON_GROUND_QUERY).matches);
   const setDisplaySettings = useAppStore((s) => s.setDisplaySettings);
-  const inspector = resolveReaderInspector(displaySettings.readerInspector, wideAtMount);
+  // The split pane's inspector is its own (starts closed) so it never toggles the main pane's.
+  const [paneInspector, setPaneInspector] = useState<ReaderInspectorState>(() => ({
+    ...resolveReaderInspector(displaySettings.readerInspector, false),
+    open: false,
+  }));
+  const inspector = inPane ? paneInspector : resolveReaderInspector(displaySettings.readerInspector, wideAtMount);
   const inspectorRef = useRef(inspector);
   inspectorRef.current = inspector;
   const setInspector = useCallback(
-    (update: (current: ReaderInspectorState) => ReaderInspectorState) =>
-      setDisplaySettings({ readerInspector: update(inspectorRef.current) }),
-    [setDisplaySettings]
+    (update: (current: ReaderInspectorState) => ReaderInspectorState) => {
+      if (inPane) setPaneInspector(update(inspectorRef.current));
+      else setDisplaySettings({ readerInspector: update(inspectorRef.current) });
+    },
+    [inPane, setDisplaySettings]
   );
   useEffect(() => {
+    if (inPane) return;
     const wide = window.matchMedia(INSPECTOR_ON_GROUND_QUERY);
     const sync = () => setInspectorSlot(wide.matches ? document.getElementById(INSPECTOR_SLOT_ID) : null);
     sync();
     wide.addEventListener("change", sync);
     return () => wide.removeEventListener("change", sync);
-  }, []);
+  }, [inPane]);
 
   const contentRef = useRef<HTMLDivElement>(null);
   const paperContentRef = useRef<ReaderContentHandle>(null);
@@ -191,7 +216,7 @@ export function ReaderScreen() {
     applySearchHits,
     handleSearchResultClick,
     handleSearchClose,
-  } = useReaderSearch({ contentRef, paperContentRef, storeBlocks });
+  } = useReaderSearch({ contentRef, paperContentRef, storeBlocks, enabled: !inPane });
 
   const {
     annotations,
@@ -259,9 +284,10 @@ export function ReaderScreen() {
 
   useEffect(() => {
     if (!paper && paperId && !isLoading) {
-      navigate("/");
+      if (onClosePane) onClosePane();
+      else navigate("/");
     }
-  }, [paper, paperId, navigate, isLoading]);
+  }, [paper, paperId, navigate, isLoading, onClosePane]);
 
   const handleOpenSourcePdf = useCallback(
     async (page?: number) => {
@@ -358,14 +384,25 @@ export function ReaderScreen() {
     <div className={styles.container} data-testid="reader-screen" aria-label="リーダー">
       <header className={styles.header} data-tauri-drag-region>
         <div className={styles.headerLeft}>
-          <button
-            className={styles.iconButton}
-            onClick={handleBackClick}
-            title={activeWorkspace ? "フォルダに戻る" : "ライブラリに戻る"}
-            aria-label={activeWorkspace ? "フォルダに戻る" : "ライブラリに戻る"}
-          >
-            <ArrowLeft size={iconSize.md} />
-          </button>
+          {onClosePane ? (
+            <button
+              className={styles.iconButton}
+              onClick={onClosePane}
+              aria-label="分割表示を閉じる"
+              data-tooltip="分割表示を閉じる"
+            >
+              <X size={iconSize.md} />
+            </button>
+          ) : (
+            <button
+              className={styles.iconButton}
+              onClick={handleBackClick}
+              title={activeWorkspace ? "フォルダに戻る" : "ライブラリに戻る"}
+              aria-label={activeWorkspace ? "フォルダに戻る" : "ライブラリに戻る"}
+            >
+              <ArrowLeft size={iconSize.md} />
+            </button>
+          )}
           <div className={styles.titleArea}>
             {workspacePath.length > 0 && (
               <WorkspacePathTrail folders={workspacePath} prefix />
@@ -405,15 +442,6 @@ export function ReaderScreen() {
             }}
           >
             <FileUp size={iconSize.md} />
-          </button>
-          <button
-            className={styles.iconButton}
-            aria-label={hasSourcePdf ? "元PDFを開く" : "保存された元PDFがありません"}
-            data-tooltip={hasSourcePdf ? "元PDFを開く" : "保存された元PDFがありません"}
-            disabled={!hasSourcePdf}
-            onClick={() => void handleOpenSourcePdf()}
-          >
-            <ExternalLink size={iconSize.md} />
           </button>
           <button
             className={`${styles.iconButton} ${inspectorVisible ? styles.active : ""}`}
@@ -493,6 +521,7 @@ export function ReaderScreen() {
                   workspaceNames={workspaceNames}
                   annotationCount={annotations.length}
                   glossaryCount={glossary.length}
+                  onOpenSourcePdf={hasSourcePdf ? () => void handleOpenSourcePdf() : undefined}
                 />
               )}
               {inspectorView === "glossary" && <GlossaryPanel entries={glossary} onChange={setGlossary} />}

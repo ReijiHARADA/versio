@@ -2,16 +2,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
 import {
-  Upload,
-  FilePlus2,
-  FileText,
-  Folder,
-  FolderOpen,
-  FolderPlus,
-  Pencil,
-  Quote,
-  Trash2,
-} from "lucide-react";
+  UploadIcon as Upload,
+  FileAddIcon as FilePlus2,
+  FileTextIcon as FileText,
+  FolderIcon as Folder,
+  FolderOpenIcon as FolderOpen,
+  AddFolderIcon as FolderPlus,
+  PenIcon as Pencil,
+  QuoteIcon as Quote,
+  TrashBinMinimalisticIcon as Trash2,
+} from "@solar-icons/react/linear";
 import type { WorkspaceNode, WorkspacePaper } from "../../types/project";
 import type { Paper } from "../../types/paper";
 import { buildWorkspaceTree, collectDescendantIds } from "../../data/workspace/tree";
@@ -24,7 +24,9 @@ import { ExportDialog } from "../reader/ExportDialog";
 import { useWorkspaceDrag } from "./useWorkspaceDrag";
 import { hoverExpandId, WORKSPACE_HOVER_EXPAND_MS } from "./workspaceHoverExpand";
 import { isWorkspaceRenameDoubleClick } from "./workspaceRenameGesture";
-import { listPapersForWorkspace, renameWorkspaceItem } from "../../services/projectService";
+import { listPapersForWorkspace, renameWorkspaceItem, updateWorkspaceNodeItem } from "../../services/projectService";
+import { LabelColorPicker } from "../ui/LabelColorPicker";
+import { labelColorVar, type LabelColor } from "../../domain/labelColors";
 import { isImeComposing } from "../../utils/ime";
 import styles from "./AppSidebar.module.css";
 import { Presence, MotionDiv, MOTION_EXIT_PANE_MS } from "../ui/Presence";
@@ -166,6 +168,10 @@ export function WorkspaceTree({
         style={{ top: menuAnchor.top, left: menuAnchor.left }}
       >
         <>
+            <div className={styles.projectMenuColors}>
+              <LabelColorPicker label="フォルダの色" value={node.color} onChange={(color) => void setFolderColor(node, color)} />
+            </div>
+            <div className={styles.projectMenuSeparator} role="separator" />
             <button
               type="button"
               className={styles.projectMenuItem}
@@ -288,7 +294,7 @@ export function WorkspaceTree({
         >
           {editingId === node.id ? (
             <div className={`${styles.item} ${styles.treeLabel}`} data-workspace-editing>
-              <span className={styles.icon}>
+              <span className={styles.icon} style={folderIconStyle(node)}>
                 {isOpen ? <FolderOpen size={16} /> : <Folder size={16} />}
               </span>
               <InlineName node={node} onClose={() => setEditingId(null)} />
@@ -316,7 +322,7 @@ export function WorkspaceTree({
                 if (rename) setEditingId(node.id);
               }}
             >
-              <span className={styles.icon}>
+              <span className={styles.icon} style={folderIconStyle(node)}>
                 {isOpen ? <FolderOpen size={16} /> : <Folder size={16} />}
               </span>
               <span className={styles.itemLabel}>{node.name}</span>
@@ -425,6 +431,18 @@ function PaperItem({
       </NavLink>
     </div>
   );
+}
+
+const folderIconStyle = (node: WorkspaceNode): React.CSSProperties | undefined =>
+  node.color ? { color: labelColorVar(node.color) } : undefined;
+
+async function setFolderColor(node: WorkspaceNode, color: LabelColor | null) {
+  try {
+    const next = await updateWorkspaceNodeItem(node.id, { color });
+    useProjectStore.getState().upsertWorkspaceNode(next);
+  } catch (error) {
+    showToast({ kind: "error", message: error instanceof Error ? error.message : "変更に失敗しました" });
+  }
 }
 
 function InlineName({ node, onClose }: { node: WorkspaceNode; onClose: () => void }) {

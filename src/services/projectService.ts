@@ -15,7 +15,7 @@ import { moveWorkspaceFolderToTrash } from "./trashService";
 
 export type CreateWorkspaceNodeInput = Pick<WorkspaceNode, "name" | "parentId" | "description" | "researchQuestion" | "keywords">;
 export async function createWorkspaceNode(input: CreateWorkspaceNodeInput): Promise<WorkspaceNode> { const { db } = await getStorage(); return createNodeRow(db, input); }
-export async function updateWorkspaceNodeItem(id: string, updates: Partial<Pick<WorkspaceNode, "name" | "description" | "researchQuestion" | "keywords">>): Promise<WorkspaceNode> { const { db } = await getStorage(); return updateWorkspaceNode(db, id, updates); }
+export async function updateWorkspaceNodeItem(id: string, updates: Partial<Pick<WorkspaceNode, "name" | "description" | "researchQuestion" | "keywords" | "color">>): Promise<WorkspaceNode> { const { db } = await getStorage(); return updateWorkspaceNode(db, id, updates); }
 export async function renameWorkspaceItem(id: string, name: string): Promise<WorkspaceNode> { const { db } = await getStorage(); return renameWorkspaceNode(db, id, name); }
 export async function moveWorkspaceItem(id: string, parentId: string | null, order?: number): Promise<WorkspaceNode> { const { db } = await getStorage(); return moveWorkspaceNode(db, id, parentId, order); }
 export async function reorderWorkspaceItems(parentId: string | null, orderedIds: string[]): Promise<void> { const { db } = await getStorage(); reorderWorkspaceSiblings(db, parentId, orderedIds); }

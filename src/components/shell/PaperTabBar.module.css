@@ -123,8 +123,89 @@
   }
 }
 
-.dragging {
-  opacity: 0.85;
+/* While a tab is dragged its neighbours glide aside; the dragged one tracks the pointer. */
+.reordering .tab {
+  transition: transform 180ms cubic-bezier(0.2, 0, 0, 1), --sq-bg 120ms ease;
+}
+
+.reordering .dragging {
+  z-index: var(--z-tab-drag);
+  transition: --sq-bg 120ms ease;
+}
+
+/* Pulled down towards the card: the tab waits in its slot while the ghost travels. */
+.pulled {
+  opacity: 0.45;
+}
+
+/* The paper shown in the split pane. */
+.inSplit:not(.active) {
+  --sq-bg: var(--color-bg-tertiary);
+  color: var(--color-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reordering .tab {
+    transition: none;
+  }
+}
+
+.splitZone {
+  composes: surface from "../../styles/squircle.module.css";
+  position: fixed;
+  z-index: var(--z-overlay);
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  border-radius: var(--sq-radius-card);
+  --sq-fill: var(--sq-fill-card);
+  --sq-ring: var(--sq-ring-card);
+  --sq-bg: transparent;
+  pointer-events: none;
+  transition: --sq-bg 120ms ease;
+}
+
+.splitZoneActive {
+  --sq-bg: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.splitZoneLabel {
+  font-size: var(--font-size-small);
+  color: var(--color-accent);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.splitZoneActive .splitZoneLabel {
+  opacity: 1;
+}
+
+.ghost {
+  composes: surface from "../../styles/squircle.module.css";
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: var(--z-drag-ghost);
+  max-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs-plus);
+  padding: var(--spacing-xs) var(--spacing-sm-mid);
+  border-radius: var(--sq-radius-md);
+  --sq-fill: var(--sq-fill-md);
+  --sq-ring: var(--sq-ring-md);
+  --sq-bg: var(--color-bg);
+  box-shadow: var(--shadow-card);
+  color: var(--color-text);
+  font-size: var(--font-size-small);
+  pointer-events: none;
+}
+
+.ghostTitle {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .shape {

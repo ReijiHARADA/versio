@@ -554,6 +554,10 @@
   --sq-bg: var(--color-bg-secondary);
 }
 
+.projectMenuColors {
+  padding: var(--spacing-xs-plus) var(--spacing-sm-mid);
+}
+
 .projectMenuSeparator {
   height: 1px;
   margin: var(--spacing-xs);
@@ -928,14 +932,30 @@
   color: var(--color-text-tertiary);
 }
 
+.tagChip[data-colored] {
+  --sq-bg: color-mix(in srgb, var(--tag-color) 16%, transparent);
+  color: color-mix(in srgb, var(--tag-color) 72%, var(--color-text));
+}
+
+.tagChip[data-colored] .tagChipHash {
+  color: var(--tag-color);
+}
+
+.tagChip[data-colored]:hover {
+  --sq-bg: color-mix(in srgb, var(--tag-color) 26%, transparent);
+}
+
 .tagChipActive,
-.tagChipActive:hover {
-  --sq-bg: var(--color-selection-bg);
+.tagChipActive:hover,
+.tagChip[data-colored].tagChipActive,
+.tagChip[data-colored].tagChipActive:hover {
+  --sq-bg: var(--tag-color, var(--color-selection-bg));
   color: var(--color-selection-fg);
   font-weight: 500;
 }
 
-.tagChipActive .tagChipHash {
+.tagChipActive .tagChipHash,
+.tagChip[data-colored].tagChipActive .tagChipHash {
   color: inherit;
   opacity: 0.7;
 }

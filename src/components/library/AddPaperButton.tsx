@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { FileUp, Plus } from "lucide-react";
+import {
+  FileSendIcon as FileUp,
+  AddIcon as Plus,
+} from "@solar-icons/react/linear";
 import { InfoPopover } from "../reader/InfoPopover";
 import type { AnchorBox } from "../reader/memo/popoverPosition";
 import { importByIdentifier } from "../../services/import/importByIdentifier";

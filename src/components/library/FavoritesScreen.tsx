@@ -1,5 +1,7 @@
 import { useMemo } from "react";
-import { Star } from "lucide-react";
+import {
+  StarIcon as Star,
+} from "@solar-icons/react/linear";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
 import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";

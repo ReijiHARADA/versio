@@ -11,7 +11,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { alignParagraphs, goldOwnerOf, jatsParagraphs, paragraphCause, type BlockOutcome, type Cause, type DocBlock, type ParagraphOutcome } from "../src/evaluation/extractionAudit/paragraphGold";
+import { alignParagraphs, goldOwnerOf, jatsParagraphs, paragraphCause, printedShingleShare, rawShingleSet, type BlockOutcome, type Cause, type DocBlock, type ParagraphOutcome } from "../src/evaluation/extractionAudit/paragraphGold";
 import type { AuditSplit } from "../src/evaluation/extractionAudit/split";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -64,12 +64,23 @@ for (const doc of docs) {
   const owner = goldOwnerOf(gold);
   const coverageFile = path.join(coverageDir, `${doc.id.slice(5)}.json`);
   const coverage = fs.existsSync(coverageFile) ? (JSON.parse(fs.readFileSync(coverageFile, "utf8")) as number[]) : undefined;
+  const rawFile = path.join(root, "test-data/field-gold/_cache/pdftext", `${doc.id}.txt`);
+  const raw = fs.existsSync(rawFile) ? rawShingleSet(fs.readFileSync(rawFile, "utf8")) : undefined;
   for (const p of result.paragraphs) {
     // Not printed in this PDF (another version, JATS-only text): no extractor can make it intact,
     // so it is left out of the score.
     if (coverage && p.verdict !== "intact" && (coverage[p.index] ?? 1) < PRINTED) {
       printed.unprinted += 1;
       continue;
+    }
+    // Reworded between the versions: the PDF prints under 90% of the paragraph's five-word runs, and the
+    // extraction found every one of those it prints (`The ToolsPage interface provides an intuitive …`).
+    if (raw && p.verdict === "partial" && p.blocks.length <= 1) {
+      const rawShare = printedShingleShare(gold[p.index].text, raw);
+      if (rawShare < PRINTED && p.found >= rawShare - 0.03) {
+        printed.unprinted += 1;
+        continue;
+      }
     }
     para[p.verdict] += 1;
     if (p.verdict !== "intact") {

@@ -60,6 +60,9 @@ export function HowToScreen({ page, total, title, body, video, poster, still, pr
         </div>
 
         <div className={styles.text}>
+          <p className={styles.count} aria-label={`${total} ページ中 ${page} ページ目`}>
+            {page} / {total}
+          </p>
           <h1 id={titleId} className={styles.title}>
             {title}
           </h1>
@@ -67,9 +70,6 @@ export function HowToScreen({ page, total, title, body, video, poster, still, pr
         </div>
 
         <div className={styles.actions}>
-          <span className={styles.count} aria-label={`${total} ページ中 ${page} ページ目`}>
-            {page} / {total}
-          </span>
           {onBack ? (
             <button type="button" className={styles.secondary} onClick={onBack}>
               戻る

@@ -1,5 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import {
+  PenIcon as Pencil,
+  TrashBinMinimalisticIcon as Trash2,
+} from "@solar-icons/react/linear";
 import type { Annotation } from "../../../types/annotation";
 import {
   clampPopoverPosition,

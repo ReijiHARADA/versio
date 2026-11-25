@@ -60,6 +60,17 @@ const SHINGLE = 5;
 const shingles = (t: string[]): string[] => (t.length < SHINGLE ? [] : Array.from({ length: t.length - SHINGLE + 1 }, (_, i) => t.slice(i, i + SHINGLE)).filter((w) => !w.includes(MARKUP)).map((w) => w.join(" ")));
 const wordCount = (s: string) => tokens(s).filter((t) => t !== MARKUP).length;
 
+/** The raw PDF text's shingles (line-end hyphens joined), to ask how much of a gold paragraph the PDF prints word for word. */
+export function rawShingleSet(raw: string): Set<string> {
+  return new Set(shingles(tokens(raw.replace(/(\p{Ll})-\s+(?=\p{Ll})/gu, "$1"))));
+}
+
+/** Share of a gold paragraph's shingles the PDF prints word for word. */
+export function printedShingleShare(goldText: string, raw: Set<string>): number {
+  const sh = [...new Set(shingles(tokens(goldText)))];
+  return sh.length ? sh.filter((s) => raw.has(s)).length / sh.length : 1;
+}
+
 export type ExtractedBlock = { id: string; text: string; warning: string | null; indent?: boolean; shortEnd?: boolean; spaced?: boolean; page?: number };
 
 export type ParagraphOutcome = {
@@ -141,7 +152,9 @@ export function alignParagraphs(gold: GoldParagraph[], blocks: ExtractedBlock[],
     const printedBreaks = share.length >= 2 && f >= 0.85 && (() => {
       const at = share.map((b) => blockIndex.get(b.id)!).sort((a, b) => a - b);
       // A few paragraph blocks between the pieces (figure text, a sidebar) do not change where the print breaks.
-      return at.every((k, n) => n === 0 || ((k - at[n - 1] <= 4 || (blocks[k].page ?? 0) - (blocks[at[n - 1]].page ?? 0) >= 2) &&
+      // (Any number of blocks between when both marks are there: a short last line before, an indented first line after.)
+      const bothMarks = (k: number, prev: number) => blocks[prev].shortEnd === true && blocks[k].indent === true;
+      return at.every((k, n) => n === 0 || ((k - at[n - 1] <= 4 || bothMarks(k, at[n - 1]) || (blocks[k].page ?? 0) - (blocks[at[n - 1]].page ?? 0) >= 2) &&
         /[.!?:][”"’')\]]*$/.test(blocks[at[n - 1]].text.trim()) && (blocks[k].indent === true || blocks[k].spaced === true || blocks[at[n - 1]].shortEnd === true ||
           // Two or more pages apart, a finished sentence and a capitalised start are separate printed paragraphs.
           (blocks[k].page !== undefined && blocks[at[n - 1]].page !== undefined && blocks[k].page! - blocks[at[n - 1]].page! >= 2)) && /^\p{Lu}/u.test(blocks[k].text.trim())));

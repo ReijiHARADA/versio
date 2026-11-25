@@ -1,5 +1,10 @@
+import { useTagColors } from "../../stores/tagColors";
+import { LabelDot } from "../ui/LabelColorPicker";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpDown, Check } from "lucide-react";
+import {
+  SortVerticalIcon as ArrowUpDown,
+  CheckIcon as Check,
+} from "@solar-icons/react/linear";
 import { useAppStore, type LibraryFilter, type LibrarySort, type LibrarySortKey } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { findDuplicatePaperIds } from "../../domain/duplicatePapers";
@@ -89,6 +94,7 @@ export function LibrarySortMenu() {
   const filter = useAppStore((state) => state.libraryFilter);
   const setLibraryFilter = useAppStore((state) => state.setLibraryFilter);
   const papers = useLibraryCache((state) => state.papers);
+  const tagColors = useTagColors((state) => state.colors);
   const allTags = useMemo(
     () =>
       [...new Set(papers.filter((paper) => !paper.trashedAt).flatMap((paper) => paper.tags ?? []))].sort(
@@ -202,6 +208,7 @@ export function LibrarySortMenu() {
                     onClick={() => setLibraryFilter({ tag })}
                   >
                     <Check size={14} className={filter.tag === tag ? "" : styles.hidden} />
+                    {tag && tagColors[tag.toLocaleLowerCase()] ? <LabelDot color={tagColors[tag.toLocaleLowerCase()]} /> : null}
                     {tag ?? "すべて"}
                   </button>
                 ))}

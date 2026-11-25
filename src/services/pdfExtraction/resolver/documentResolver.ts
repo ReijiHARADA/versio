@@ -796,7 +796,7 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
       /^protected by copyright\b/i.test(t) ||
       // Thesis front-matter declaration banners (UNSW / similar).
       /^(?:copyright|authenticity|originality)\s+statement\s*$/i.test(t) ||
-      /^downloaded from\b/i.test(t) ||
+      isDownloadStamp(t) ||
       /^to cite\s*:/i.test(t) ||
       /\bmoral rights remain with the author/i.test(t);
     const editorialLabel =
@@ -1086,6 +1086,9 @@ const STRUCTURED_ABSTRACT_LEAD =
   /^(?:background(?:\s+and\s+(?:objectives?|aims?))?|aims?|objectives?|purpose|methods?|materials(?:\s+and\s+methods)?|results?|findings?|conclusions?|discussion)\s*[.:：]/i;
 const PUBLISHER_COPYRIGHT_CHROME =
   /^(?:©|copyright|for personal use only|creative commons|email\b)/i;
+/** A repository download stamp (`Downloaded from https://… on 12 May 2024`), not a body line that starts the same way. */
+const isDownloadStamp = (t: string) => /^downloaded from\b/i.test(t) &&
+  (/https?:|www\.|\.(?:org|com|net|edu)\b|by guest|\bon \d{1,2}\b/i.test(t) || t.length <= 40);
 const PUBLISHER_DOWNLOAD_CHROME = /downloaded from\s+https?:/i;
 
 export function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
@@ -1656,7 +1659,7 @@ function demotePageOneProseCopyrights(nodes: CanonicalNode[]): CanonicalNode[] {
     if (
       /^(?:the\s+)?(?:associate|handling|guest)\s+editor\b/i.test(t) ||
       /\bcoordinating the review of this manuscript\b/i.test(t) ||
-      /^(?:protected by copyright|downloaded from|to cite\s*:)/i.test(t) ||
+      /^(?:protected by copyright|to cite\s*:)/i.test(t) || isDownloadStamp(t) ||
       // License grants are legal boilerplate even though they read as prose.
       /\b(?:is|are) (?:licensed|distributed) under\b|\bcreative commons\b/i.test(t) ||
       SUGGESTED_CITATION.test(t)
@@ -4507,7 +4510,7 @@ export function resolveCanonicalDocument(input: {
         if (cand.role !== "paragraph" && cand.role !== "other") continue;
         const text = (cand.text ?? "").trim();
         if (text.length < 40) continue;
-        if (/^(?:protected by copyright|downloaded from|to cite\s*:)/i.test(text)) continue;
+        if (/^(?:protected by copyright|to cite\s*:)/i.test(text) || isDownloadStamp(text)) continue;
         next[j] = {
           ...cand,
           role: "abstract" as const,
@@ -5000,7 +5003,9 @@ export function resolveCanonicalDocument(input: {
       return node;
     }
     if (
-      /\b(?:illustrates?|summarizes?|maps?|shows?|presents?|depicts?|further\s+ranks?|reports?)\b/i.test(t)
+      /\b(?:illustrates?|summarizes?|maps?|shows?|presents?|depicts?|further\s+ranks?|reports?)\b/i.test(t) ||
+      // Any lower-case word right after the number is the sentence's verb (`Figure 7 provided an illustration …`).
+      /^(?:figure|fig\.?|table|表)\s*\d+[a-z]?\s+\p{Ll}{3,}/iu.test(t) && !/^(?:figure|fig\.?|table)\s*\d+[a-z]?\s+\p{Lu}/u.test(t)
     ) {
       return node;
     }

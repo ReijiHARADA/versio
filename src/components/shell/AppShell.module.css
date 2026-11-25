@@ -49,6 +49,11 @@
   box-shadow: var(--shadow-card);
 }
 
+/* Paper fill (grain + dot grid). Doubled class beats .surface::before regardless of load order. */
+.main.main::before {
+  background: var(--paper-surface);
+}
+
 /* Clips page content. Its circle radius sits inside the card's clothoid, so the
    card's own fill covers the sliver between them; the card stays unmasked so
    scrolling never repaints a mask. */
@@ -291,4 +296,45 @@
   .shell:has(.inspectorSlot [data-motion="closed"]) .mainRim {
     animation: none;
   }
+}
+
+/* Split view: a second Reader on the card's left, the routed page on the right. */
+.main.split {
+  flex-direction: row;
+}
+
+.splitPane {
+  position: relative;
+  flex: 0 0 50%;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--sq-radius-card) 0 0 var(--sq-radius-card);
+}
+
+.split .mainBody {
+  border-radius: 0 var(--sq-radius-card) var(--sq-radius-card) 0;
+}
+
+/* 1px line with a wider invisible grip; sits between the two panes. */
+.splitDivider {
+  position: relative;
+  flex: none;
+  width: 1px;
+  background: var(--color-border);
+  cursor: col-resize;
+  z-index: var(--z-sidebar-resize);
+}
+
+.splitDivider::before {
+  content: "";
+  position: absolute;
+  inset: 0 -4px;
+}
+
+.splitDivider:hover,
+.splitDivider:active {
+  background: var(--color-accent);
 }

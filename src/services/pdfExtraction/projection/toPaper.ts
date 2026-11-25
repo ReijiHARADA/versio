@@ -1480,7 +1480,10 @@ function isReferenceText(text: string, currentKind: NormalizedSectionKind | null
     // A long sentence containing an inline year is usually body prose with a
     // citation, not a bibliography record.  Keep it visible for translation.
     if (!numberedEntry && !referenceContinuation && !authorYearEntry && !embeddedAuthorYear &&
-        trimmed.length > 180 && /[.!?]\s*$/.test(trimmed) && hasYear) return false;
+        trimmed.length > 180 && /[.!?]\s*$/.test(trimmed) &&
+        // (Without a year, DOI or URL it is no record at all: `All claims expressed in this article are solely those of
+        // the authors … endorsed by the publisher.`)
+        (hasYear || !/\b(?:doi\s*:|https?:\/\/|10\.\d{4,}\/)/i.test(trimmed))) return false;
     return hasBibliographicShape;
   }
   // A numbered list item is not a bibliography entry. Outside an explicit
@@ -4666,10 +4669,9 @@ function projectProseNode(context: BodyNodeContext, state: BodyProjectionState, 
       const isChartLabel = node.evidence.some(
         (evidence) => evidence.label === "repeated-numeric-chart-label"
       );
+      // A chart's repeated numeric labels are kept as source text (translation skipped below); nothing in them is broken.
       const translationInputWarning =
-        isChartLabel
-          ? "repeated numeric chart label; kept as source text"
-          : isRef || isExpectedNonProseParagraph(text)
+        isChartLabel || isRef || isExpectedNonProseParagraph(text)
           ? null
           : unsafeParagraphStructureReason(text);
       for (const [partIndex, part] of listParts.entries()) {
@@ -4991,6 +4993,10 @@ function finalizeBodyBlocks(rawBlocks: PaperBlock[], layoutBlocks: LayoutBlock[]
       /[.!?。！？:]\s*$/.test((current.original ?? "").trim()) ||
       // A math fragment (`∣ϑα –`) beside more math is no sentence that runs on.
       (currentText.match(/[A-Za-z]{3,}/g) ?? []).length < 3 ||
+      // Nor is a label or a table cell (`Check for updates`, `Australia efficient operating theatre`): it carries almost
+      // none of a sentence's small words.
+      (currentText.match(/\b(?:the|of|and|to|in|is|are|was|were|with|for|that|this|we|by|on|as|be|from)\b/gi)?.length ?? 0) <=
+        Math.max(2, (currentText.match(/[\p{L}\p{N}]+/gu)?.length ?? 0) * 0.06) ||
       !/^(?:which|that|and|or|but|where|while|because|although|including)\b/i.test((next.original ?? "").trim()) &&
       !/^[a-z]/.test((next.original ?? "").trim())
     ) continue;

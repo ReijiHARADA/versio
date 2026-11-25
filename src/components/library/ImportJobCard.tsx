@@ -1,5 +1,12 @@
 import { useMemo } from "react";
-import { AlertCircle, Loader2, RotateCcw, ExternalLink, Star, X } from "lucide-react";
+import {
+  DangerCircleIcon as AlertCircle,
+  RefreshIcon as Loader2,
+  RestartIcon as RotateCcw,
+  SquareShareLineIcon as ExternalLink,
+  StarIcon as Star,
+  CloseIcon as X,
+} from "@solar-icons/react/linear";
 import type { ImportJob } from "../../stores/importJobStore";
 import {
   actionLabel,

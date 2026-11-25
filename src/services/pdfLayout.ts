@@ -444,7 +444,10 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
   // italic, not table cells far apart) still win.
   if (!asymmetricRail?.bridgesMidpoint && !cleanGutter && midpointBridgedRows >= 8 && midpointBridgedRows / Math.max(midpointRows.length, 1) >= 0.55 &&
       !(alignedColumnPairs && alignedColumnPairs.count >= 6 && alignedColumnPairs.gap >= 14 && alignedColumnPairs.gap <= 40 &&
-        alignedColumnPairs.balance <= 0.1)) {
+        alignedColumnPairs.balance <= 0.1) &&
+      // (nine or more pairs of exactly equal widths stand for a narrow gutter too, past the masthead page)
+      !(page.pageNumber > 1 && alignedColumnPairs && alignedColumnPairs.count >= 9 && alignedColumnPairs.gap >= 10 && alignedColumnPairs.gap <= 40 &&
+        alignedColumnPairs.balance <= 0.01)) {
     return fallback;
   }
 
@@ -536,7 +539,10 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
   // or figure has shortened.
   const agreedStarts = alignedColumnPairs && rowStartPeaks &&
     Math.abs(rowStartPeaks[0] - alignedColumnPairs.leftX) <= 8 && Math.abs(rowStartPeaks[1] - alignedColumnPairs.rightX) <= 8;
-  const minShare = agreedStarts ? 0.15 : 0.22;
+  // (So are six or more aligned pairs of equal-width lines across a gutter: a page whose right column a table fills.)
+  const strongPairs = alignedColumnPairs != null && alignedColumnPairs.gap >= 10 && alignedColumnPairs.gap <= 40 &&
+    ((alignedColumnPairs.count >= 6 && alignedColumnPairs.balance <= 0.1) || (alignedColumnPairs.count >= 5 && alignedColumnPairs.balance <= 0.06));
+  const minShare = agreedStarts || strongPairs ? 0.15 : 0.22;
   const isMultiColumn = alignedColumnPairs
     ? rightX - leftX >= page.width * 0.22 && leftShare >= minShare && rightShare >= minShare
     : asymmetricWordColumns
@@ -1291,7 +1297,21 @@ function clusterItemsIntoLines(
         right = Math.max(right, item.x + item.width);
       }
       if (segment.length > 0) segments.push(segment);
-      if (segments.length >= 3) return segments.map((part) => ({ part, isGridRow: true }));
+      // A justified line of running text spreads its words wide (`such  as  stride  length  and  cadence;  pressure`):
+      // many one- or two-word pieces at near-even gaps across the full column, with a sentence's small words, are no
+      // table cells.
+      const wordsOf = (part: ExtractedTextItem[]) => part.map((item) => item.text).join(" ").trim().split(/\s+/).filter(Boolean).length;
+      const gaps = segments.slice(1).map((part, k) => part[0].x - Math.max(...segments[k].map((item) => item.x + item.width)));
+      const span = Math.max(...ordered.map((item) => item.x + item.width)) - ordered[0].x;
+      // The usual line width (a two-column page can also hold a full-width abstract or caption line).
+      const widest = median(groups.map((g) => Math.max(...g.map((item) => item.x + item.width)) - Math.min(...g.map((item) => item.x))));
+      const lineText = ordered.map((item) => item.text).join(" ");
+      // (PDF.js often hands the line's last words over as one run: allow two longer pieces and one wider gap.)
+      const evenGaps = [...gaps].sort((a, b) => a - b).slice(0, -1);
+      const justifiedProse = segments.length >= 5 && segments.filter((part) => wordsOf(part) > 3).length <= 2 &&
+        evenGaps.length > 0 && Math.max(...evenGaps) <= Math.min(...evenGaps) * 1.7 && span >= widest * 0.85 &&
+        /\b(?:the|of|and|to|in|is|are|was|were|with|for|that|this|by|on|as|from|such)\b/i.test(lineText);
+      if (segments.length >= 3 && !justifiedProse) return segments.map((part) => ({ part, isGridRow: true }));
     }
     // Rotated tables are sometimes emitted on the same baseline as a
     // horizontal footnote. Keep those native items as separate lines so the
@@ -1793,7 +1813,8 @@ function isCopyright(text: string, fontSize: number, baseFont: number): boolean 
     /^copyright\s*(?:©|\(\s*\d{4}\s*\)|\d{4}\b)/i.test(trimmed);
   const bmjRunningChrome =
     copyrightLead ||
-    /^(?:protected by copyright|downloaded from)\b/i.test(trimmed) ||
+    /^protected by copyright\b/i.test(trimmed) ||
+    (/^downloaded from\b/i.test(trimmed) && (/https?:|www\.|\.(?:org|com|net|edu)\b|by guest|\bon \d{1,2}\b/i.test(trimmed) || trimmed.length <= 40)) ||
     /\bprotected by copyright, including for uses related to text and data mining\b/i.test(text);
   const explicitLicense =
     bmjRunningChrome ||
@@ -2654,6 +2675,15 @@ function orderWithRegions(
     const region = deduped.find((candidate) => lineInRegion(line, candidate));
     if (region) members.get(region)?.push(line);
   }
+  // A figure region that takes in running text (an over-large image box behind both columns) keeps none of it:
+  // most of its lines are body-size, column-wide prose (`eight commercial ASR systems, including Microsoft, …`).
+  const pageFont = median(lines.map((line) => line.fontSize));
+  for (const [region, memberLines] of members) {
+    if (region.kind !== "figure") continue;
+    const prose = memberLines.filter((line) => line.fontSize >= pageFont * 0.92 && line.width >= 150 &&
+      /\p{Ll}{3,}[,;]?\s+\p{Ll}{2,}\s+\p{Ll}{3,}/u.test(line.text));
+    if (prose.length >= 6 && prose.length >= memberLines.length * 0.5) members.set(region, []);
+  }
   const ordered = orderPageLines(lines.filter((line) => ![...members.values()].some((memberLines) => memberLines.includes(line))), layout);
   const insertedAt = new Map<LayoutLine | undefined, number>();
   for (const [regionIndex, region] of deduped.entries()) {
@@ -2988,7 +3018,9 @@ function roleForLine(
   // HighWire / BMJ running margin stamps on every page.
   if (
     /^protected by copyright\b/i.test(text) ||
-    /^downloaded from\b/i.test(text) ||
+    // (a repository stamp names a site or a date, `Downloaded from https://… on 12 May 2024`; `downloaded from the
+    // Polar Flow web platform, and imported into` is a body line)
+    (/^downloaded from\b/i.test(text) && (/https?:|www\.|\.(?:org|com|net|edu)\b|by guest|\bon \d{1,2}\b/i.test(text) || text.length <= 40)) ||
     /^by guest\.?$/i.test(text)
   ) {
     return "chrome";
@@ -3623,6 +3655,13 @@ function groupLinesIntoBlocks(
           !/[.!?]\s*$/.test(joinLines(current)) &&
           line.y - current[current.length - 1].y < baseFont * 2.4)) &&
       line.y - current[current.length - 1].y < baseFont * 2.4 &&
+      // A caption goes on downwards: a line back up at the top of the next column (`FIGURE 1` at the page foot, then
+      // `The authors emphasized …` at the top of the right column) is body text.
+      line.y >= current[current.length - 1].y - 2 &&
+      // ... and under itself: a body line on the same baseline in the other column (`FIGURE 1` at x 316, `70B model
+      // handles …` at x 49) is no part of it.
+      // (A caption title may follow its label to the right on one baseline, never to the left.)
+      !(Math.abs(line.y - current[current.length - 1].y) <= 2 && line.x + line.width <= Math.min(...current.map((part) => part.x))) &&
       (/^(?:figure|fig\.?|図)\s*\d+[a-z]?(?:\s*,\s*[a-z]\b)*$/i.test(layoutPlain(joinLines(current))) ||
         line.fontSize <= (current.find((part) =>
           !/^(?:figure|fig\.?|図)\s*\d+[a-z]?(?:\s*,\s*[a-z]\b)*$/i.test(layoutPlain(part.text))
@@ -3633,6 +3672,13 @@ function groupLinesIntoBlocks(
           line.y - current[current.length - 1].y <= current[current.length - 1].fontSize * 1.6 &&
           current.slice(1).every((part) => Math.abs(part.fontSize - line.fontSize) <= 0.6) &&
           !/[.!?:]\s*$/.test(current[current.length - 1].text.trim()))) &&
+      // A blank line's worth of space after a caption of two or more lines ends it (`… oversampled -GAN` | gap |
+      // `Finally, the performance of four ML models …`).
+      // (Only when the new line is wider than the caption on both sides: running text under a centred legend.)
+      !(current.length >= 2 && line.y - current[current.length - 1].y >
+        median(current.slice(1).map((part, k) => part.y - current[k].y)) * 1.4 &&
+        line.x < Math.min(...current.map((part) => part.x)) - 3 &&
+        line.x + line.width > Math.max(...current.map((part) => part.x + part.width)) + 3) &&
       captionShouldContinue(joinLines(current), line, baseFont);
 
     const footnoteContinue =
@@ -3867,10 +3913,16 @@ function rejoinCaptionTails(blocks: LayoutBlock[]): LayoutBlock[] {
       if (at <= 0) continue;
       // The host's own type size: its lines before the carried ones.
       const hostFont = median(host.lines.slice(0, at).map((l) => l.fontSize));
-      if (host.lines[at].fontSize >= hostFont * 0.88) continue;
+      // A legend in body type: an open title line, its rest right under it at line pitch and flush with it, carried
+      // off by a paragraph from an earlier page (`Fig. 2: PCA visualization of the … princ` | `throughout the generation …`).
+      const atLine = host.lines[at];
+      const sameSizeTail = capOpen && host.lines[at - 1].page < capLast.page && atLine.column === capLast.column &&
+        atLine.y - capLast.y <= capLast.fontSize * 1.6 && Math.abs(atLine.x - capLast.x) <= 3;
+      if (atLine.fontSize >= hostFont * 0.88 && !sameSizeTail) continue;
       let end = at;
-      while (end + 1 < host.lines.length && host.lines[end + 1].page === capLast.page && host.lines[end + 1].fontSize < hostFont * 0.88 &&
-        host.lines[end + 1].y - host.lines[end].y <= host.lines[end].fontSize * 2) end += 1;
+      while (end + 1 < host.lines.length && host.lines[end + 1].page === capLast.page &&
+        (sameSizeTail ? host.lines[end + 1].column === capLast.column : host.lines[end + 1].fontSize < hostFont * 0.88) &&
+        host.lines[end + 1].y - host.lines[end].y <= host.lines[end].fontSize * (sameSizeTail ? 1.6 : 2)) end += 1;
       const moved = host.lines.slice(at, end + 1);
       const kept = [...host.lines.slice(0, at), ...host.lines.slice(end + 1)];
       const lines = [...caption.lines, ...moved];
@@ -3983,7 +4035,10 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
   const repeated = new Set<string>();
   for (let i = 0; i < result.length; i += 1) {
     const a = result[i];
-    if (!isBody(a) || a.text.trim().length < 80) continue;
+    // Text in another size than the body (an abstract set larger) breaks the same way: A and B in one size.
+    const sizeOf = (x: LayoutBlock) => median(x.lines.map(textSize));
+    const otherSize = !isBody(a) && a.role === "paragraph" && a.lines.length > 0 && sizeOf(a) >= font * 0.92;
+    if ((!isBody(a) && !otherSize) || a.text.trim().length < 80) continue;
     // A display equation ending in its number (`RMSE = …, (5)`, `ð5Þ` in some fonts) runs on into no paragraph.
     if (/=/.test(a.text) && /(?:\(\d{1,3}[a-z]?\)|ð\d{1,3}[a-z]?Þ)\s*$/.test(a.text.trim())) continue;
     let j = i + 1;
@@ -3994,7 +4049,7 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
       // Figure-internal labels (`PC2`, `0.6 0.6`) read in as tiny paragraphs.
       (result[j].role === "paragraph" && result[j].lines.length <= 2 && (result[j].text.match(/\p{L}{3,}/gu) ?? []).length < 2 && !/[.!?:]$/.test(result[j].text.trim())))) j += 1;
     const b = result[j];
-    if (!b || !isBody(b)) continue;
+    if (!b || (otherSize ? b.role !== "paragraph" || b.lines.length === 0 || Math.abs(sizeOf(b) - sizeOf(a)) > Math.max(0.3, sizeOf(a) * 0.04) : !isBody(b))) continue;
     // One line of small type skipped right beside B on its page is a figure label (`Decision-making
     // Information search` beside `Linda is 31 years old, …`), not a caption running on: B is inside the figure.
     if (result.slice(i + 1, j).some((t) => t.role === "paragraph" && t.lines.length === 1 && t.lines[0]?.page === b.lines[0]?.page &&
@@ -4007,7 +4062,20 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     const columnLines = (l: LayoutLine) => bodyColumnLines.get(`${l.page}:${l.column}`) ?? [];
     // A one-line B could be a heading or a note: only a lower-case start continues. (A longer B whose first run is
     // one line, the rest in the next column, is measured like any other.)
-    if (head.length < 2 && (columnLines(head[0]).length < 6 || (b.lines.length < 2 && !/^\p{Ll}/u.test(b.text.trim())))) continue;
+    // (A one-line B that fills its column with running text is a line out of the middle of a paragraph, as in
+    // double-spaced manuscripts where every line is a block of its own; not after a lead-in, which a display set
+    // as an image may follow.)
+    const fillsColumn = (l: LayoutLine) => {
+      const peers = columnLines(l);
+      const letters = l.text.match(/\p{L}/gu)?.length ?? 0;
+      const digits = l.text.match(/\p{N}/gu)?.length ?? 0;
+      return peers.length >= 6 && l.width >= Math.max(...peers.map((p) => p.width)) * 0.92 &&
+        (l.text.match(/\p{L}{3,}/gu)?.length ?? 0) >= 4 && digits < (letters + digits) * 0.3 &&
+        // (a table header is capitalised words only: `Variable N Mean Std. Min Max`)
+        (l.text.match(/(?:^|\s)\p{Ll}{3,}/gu)?.length ?? 0) >= 2;
+    };
+    const oneLineRest = fillsColumn(head[0]) && !/[,:;]\s*$/.test(a.text.trim());
+    if (head.length < 2 && (columnLines(head[0]).length < 6 || (b.lines.length < 2 && !/^\p{Ll}/u.test(b.text.trim()) && !oneLineRest))) continue;
     if (tail.length < 2 && (head[0].column !== last.column || head[0].page !== last.page) && columnLines(last).length < 6) continue;
     // A sentence cut mid-way (`Supplementary` / `Table 8)`, `record` / `(EHR)`) is no list or caption start.
     const midSentence = /[\p{L}\p{N},]$/u.test(a.text.trim());
@@ -4015,7 +4083,16 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     const right = (l: LayoutLine) => l.x + l.width;
     // The column's right margin and line width, from A's last run or, when that is one line, from B's first.
     const ref = tail.length >= 2 ? tail.slice(1) : head.length >= 2 ? head : columnLines(last);
-    const full = right(last) >= Math.max(...ref.map(right)) - font * 0.6 && last.width >= Math.max(...ref.map((l) => l.width)) * 0.92;
+    // The last printed line may be several pieces on one baseline: measure it whole.
+    const lastWidth = right(last) - Math.min(...tail.filter((l) => Math.abs(l.y - last.y) <= font * 0.6).map((l) => l.x));
+    // (A line at 97% of the width is full though justified a little short of the margin.)
+    // A display read as text lines (`= kVIP · P1C1V + P1C2V + …`) is no running line.
+    const mathLine = (l: LayoutLine) => ((l.text.match(/[=+−·∑∫∂×]/g)?.length ?? 0) >= 3 && (l.text.match(/\p{Ll}{4,}/gu)?.length ?? 0) < 3) ||
+      // (or bracket rows of a matrix: `[ ] ([ ] [ ] [ ] [ ])`)
+      (l.text.match(/\p{L}/gu)?.length ?? 0) < l.text.replace(/\s/g, "").length * 0.5;
+    const full = (right(last) >= Math.max(...ref.map(right)) - font * 0.6 && lastWidth >= Math.max(...ref.map((l) => l.width)) * 0.92) ||
+      (right(last) >= Math.max(...ref.map(right)) - font * 1.2 && lastWidth >= Math.max(...ref.map((l) => l.width)) * 0.97 &&
+        !mathLine(first) && !mathLine(last));
     const left = head.length >= 2 ? Math.min(...head.slice(1).map((l) => l.x)) : median(columnLines(first).map((l) => l.x));
     const unindented = Math.abs(first.x - left) <= font * 0.4;
     // A physical break: another page or column, or the text resumes after skipped floats.
@@ -4023,15 +4100,19 @@ function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
     // In an indent-marked journal an unindented line after a break is the same paragraph even when the last
     // line falls a little short (ragged right, a trailing superscript), as long as the sentence runs on; a short
     // last line, or a finished sentence before a capital, still ends it.
-    const nearlyFull = last.width >= Math.max(...ref.map((l) => l.width)) * 0.8;
+    const nearlyFull = lastWidth >= Math.max(...ref.map((l) => l.width)) * 0.8;
     const runsOn = !/[.!?][”"’')\]]*$/.test(a.text.trim()) || /^\p{Ll}/u.test(b.text.trim());
     // At 90% the line is justified short of the margin by a trailing word, not a paragraph end: the
     // unindented resumption alone decides.
-    const almostFull = last.width >= Math.max(...ref.map((l) => l.width)) * 0.9;
-    if (!unindented || (!full && !(indentStyle && broken && (almostFull || (nearlyFull && runsOn))))) continue;
+    const almostFull = lastWidth >= Math.max(...ref.map((l) => l.width)) * 0.9;
+    // B goes on along A's last printed line (`… adult populations.3,4,23–25` | `Population-based studies …` on one
+    // baseline, split at the superscript): the same line, whatever its length.
+    const sameLine = last.page === first.page && last.column === first.column && Math.abs(first.y - last.y) <= font * 0.6 &&
+      first.x >= right(last) - 1 && first.x - right(last) <= font * 2;
+    if (!sameLine && (!unindented || (!full && !(indentStyle && broken && (almostFull || (nearlyFull && runsOn)))))) continue;
     // Same place: an indent-marked journal needs no more; otherwise B must follow at the ordinary line pitch.
     const pitch = median(head.slice(1).map((l, k) => l.y - head[k].y));
-    if (!broken && !indentStyle && first.y - last.y > pitch * 1.2) continue;
+    if (!sameLine && !broken && !indentStyle && first.y - last.y > pitch * 1.2) continue;
     a.text = joinHyphenated(a.text, b.text).replace(/\s+/g, " ").trim();
     a.lines = [...a.lines, ...b.lines];
     a.pageEnd = Math.max(a.pageEnd, b.pageEnd);
@@ -6142,7 +6223,11 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         (canContinueAcrossColumns && isSentenceContinuation(target.text, block.text)) ||
         crossesPageBoundaryAfterFigureBand || crossesPageBoundaryProperName ||
         wrapsAcrossColumnAfterFloat) &&
-      !(hasRotatedNativeLine(target) !== hasRotatedNativeLine(block))
+      !(hasRotatedNativeLine(target) !== hasRotatedNativeLine(block)) &&
+      // Across columns the text runs on in its own type size: 7 pt reference entries at the foot of the left column
+      // do not go on in a 9 pt note at the top of the right one.
+      !(target.column !== block.column &&
+        Math.abs(median(target.lines.slice(-3).map((line) => line.fontSize)) - median(block.lines.slice(0, 3).map((line) => line.fontSize))) > 1.2)
     ) {
       if (debugFlag === "1" && target.pageStart === block.pageStart && target.column !== block.column) {
         console.warn(`[PDF_LAYOUT_MERGE] page=${block.pageStart} ${target.column}->${block.column} targetY=${target.lines[0]?.y?.toFixed(1)} blockY=${block.lines[0]?.y?.toFixed(1)} left=${target.text.slice(-100)} right=${block.text.slice(0, 100)}`);
