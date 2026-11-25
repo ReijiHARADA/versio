@@ -599,7 +599,7 @@ export function PaperTabBar() {
         aria-selected={active}
         tabIndex={active ? 0 : -1}
         title={title}
-        className={`${styles.tab} ${active ? styles.active : ""} ${inSplit ? styles.inSplit : ""} ${drag?.id === id ? (drag.mode === "split" ? styles.pulled : styles.dragging) : ""} ${settledRef.current?.has(id) ? "" : styles.entering}`}
+        className={`${styles.tab} ${active ? styles.active : ""} ${inSplit ? styles.inSplit : ""} ${drag?.id === id ? `${styles.lifted} ${drag.mode === "split" ? styles.pulled : styles.dragging}` : ""} ${settledRef.current?.has(id) ? "" : styles.entering}`}
         style={{ transform: tabTransform(id) }}
         onAnimationEnd={(event) => { if (event.target === event.currentTarget) settle(id); }}
         onPointerDown={(event) => onPointerDown(event, id)}
@@ -609,7 +609,7 @@ export function PaperTabBar() {
         onAuxClick={(event) => { if (event.button === 1) closeTab(id); }}
         onKeyDown={(event) => { if (event.key === "Enter") openTab(id); }}
       >
-        {(active || inSplit) && <ActiveTabShape moving={drag != null} textured={kind === "folder"} card={inSplit ? "[data-split-card]" : "[data-main-card]"} />}
+        {(active || inSplit) && drag?.id !== id && <ActiveTabShape moving={drag != null} textured={kind === "folder"} card={inSplit ? "[data-split-card]" : "[data-main-card]"} />}
         <Icon className={styles.icon} size={14} strokeWidth={1.6} aria-hidden />
         <span className={styles.title}>{title}</span>
         {translating && <span className={styles.status}>翻訳中</span>}
