@@ -37,14 +37,14 @@ status: draft
 - `src/test/pdfExtraction/pipeline.test.ts` の 2 件（diagram annotation・numeric label matrix）は main でも落ちる（2026-11-26 時点、未調査）。
 - 調べ方: stitch の止まった理由（`DBGSTITCH`）と `joinFullLineBreaks` の止まった理由（`DBGJF`）を一時的に記録し、split の一覧と突き合わせると多い型が分かる。語ごとに割れた行は、レイアウトで同じ y に 1〜2 語のブロックが 5 つ以上並ぶところを走査すると見つかる。
 - 見送り: 段落の文に表の行の証拠を付けない（表のセルが 11,856→10,544 に減る）、末尾のパネルラベル行を外す（効果なし）。残りの失敗には、PDF では 1 段落なのに JATS が分けているもの（`PMC13188243` の interleaved-columns 約 10 件）が混ざる。
-- 評価用 split（main #440、run `m12-test`、区切りで 1 回）: intact 95.9%、警告 1,235、誤警告 108。
+- 評価用 split（main #566、run `t566-test`、区切りで 1 回）: intact 97.3%（broken 678）、警告 839、誤警告 104。目標（98% / 500 / 50）は評価用で未達。前回は #440 の `m12-test` で 95.9% / 1,235 / 108。
 - 監査の出力（`extraction-audit.ts`）に段落ブロックの `indent` / `shortEnd` / `spaced` が入った。採点（`alignParagraphs`）はこれを使う。古い run を新しい採点で読むと、これらがないので印刷どおりの切れ目は救われない。
 - 変更の A/B: worktree `../app-worktrees/element-notes` で 1 コミットにした変更を `zsh test-data/extraction-audit/tools/ab.sh <worktreeの絶対パス> <基準の接頭辞> <変更の接頭辞>`（HEAD~1 と HEAD で elementgold 40 本・Europe PMC 106 本・dev 287 本を流して差を出す。約 15 分、負荷が高いと 30 分超なので `timeout` を長く）。悪化した論文は `docdiff.ts` / `pdiff.ts` で 1 本ずつ見る。評価用は `run-wt.sh` の中身を worktree で直接流す（`SPLIT=test`）。
 - 採点は #296 で新しくなった（独立数式で段落を分け、PDF に印字されていない段落を外す）。旧採点の数値とは比べない。
 
 ## 次の一手
 
-1. 98% は到達。次は警告 500・誤警告 50 の維持と評価用 split の確認（区切りで 1 回）。残りの split-interrupted は表のセル・図のラベルの混入など個別の型ばかり。調べた候補:
+1. dev は 98% に届いたが、評価用は 97.3% / 警告 839 / 誤警告 104 で 3 つとも未達。dev に寄せすぎていないか見ながら、警告と誤警告を減らす。残りの split-interrupted は表のセル・図のラベルの混入など個別の型ばかり。調べた候補:
    - 見出しにされた番号付き手順の文（`13 Final expert refinement uses …` + `maps to …`、PMC13623868）。stitch で見出しを段落にすると節の構造が崩れるので、resolver 側で直す。
    - 参考文献の後ろの謝辞が参考文献の項目に混ざる（PMC12280214、2 件）。
    - アルゴリズムの枠 `Input:` が文の途中に入る（4 件）。続きが枠の後ろのどこにあるか一定しない。
