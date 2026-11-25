@@ -94,6 +94,11 @@ type TabDrag = {
   moveSide: SplitSide | null;
   /** Pointer x at the last move; on release in split view it picks the tab's side. */
   lastX: number;
+  /** Pointer y at the last move. */
+  lastY: number;
+  /** Pointer offset inside the tab when grabbed; the pulled tab keeps it under the pointer. */
+  grabX: number;
+  grabY: number;
   /** Whether the right half accepts the tab (the paper that is there now can move left). */
   canRight: boolean;
   canLeft?: boolean;
@@ -336,7 +341,8 @@ export function PaperTabBar() {
   const settleRef = useRef<{ id: TabKey; offset: number } | null>(null);
   const onPointerDown = (event: React.PointerEvent, key: TabKey) => {
     if (event.button !== 0) return;
-    dragRef.current = { id: key, startX: event.clientX, startY: event.clientY, moved: false, from: -1, keys: [], slots: [], shift: 0, to: -1, dx: 0, mode: "reorder", overSplit: null, canRight: false, moveSide: null, lastX: event.clientX };
+    const grabbed = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    dragRef.current = { id: key, startX: event.clientX, startY: event.clientY, moved: false, from: -1, keys: [], slots: [], shift: 0, to: -1, dx: 0, mode: "reorder", overSplit: null, canRight: false, moveSide: null, lastX: event.clientX, lastY: event.clientY, grabX: event.clientX - grabbed.left, grabY: event.clientY - grabbed.top };
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   };
   // Already pulled below the strip, so any height counts; only the side matters.
@@ -435,6 +441,7 @@ export function PaperTabBar() {
       d.to = to;
     }
     d.lastX = event.clientX;
+    d.lastY = event.clientY;
     setDrag({ id: d.id, startX: d.startX, startY: d.startY, from: d.from, to: d.to, dx: d.dx, shift: d.shift, keys: d.keys, mode: d.mode, overSplit: d.overSplit, canRight: d.canRight, moveSide: d.moveSide, zones: d.zones, x: event.clientX, y: event.clientY });
   };
   const endDrag = (key: TabKey, commit: boolean) => {
@@ -557,13 +564,40 @@ export function PaperTabBar() {
   const tabTransform = (key: TabKey): string | undefined => {
     if (!drag) return undefined;
     const index = drag.keys.indexOf(key);
-    // Pulled down to split the card, the tab itself follows the pointer.
-    if (key === drag.id && drag.mode === "split") return `translate(${drag.x - drag.startX}px, ${drag.y - drag.startY}px)`;
+    // Pulled down to split the card, the tab follows the pointer (see the effect below).
+    if (key === drag.id && drag.mode === "split") return undefined;
     if (key === drag.id) return drag.dx !== 0 ? `translateX(${drag.dx}px)` : undefined;
     if (drag.to > drag.from && index > drag.from && index <= drag.to) return `translateX(${-drag.shift}px)`;
     if (drag.to < drag.from && index >= drag.to && index < drag.from) return `translateX(${drag.shift}px)`;
     return undefined;
   };
+
+  // The pulled tab stays under the pointer where it was grabbed. Its slot moves while the card
+  // shrinks to open the split slots, so place it from its current layout position every frame
+  // rather than from where the drag started.
+  const pulledId = drag?.mode === "split" ? drag.id : null;
+  useEffect(() => {
+    if (!pulledId) return;
+    const el = barRef.current?.querySelector<HTMLElement>(`[data-tab-id="${CSS.escape(pulledId)}"]`);
+    if (!el) return;
+    let frame = 0;
+    const place = () => {
+      const d = dragRef.current;
+      const parent = el.offsetParent as HTMLElement | null;
+      if (d && parent) {
+        const origin = parent.getBoundingClientRect();
+        const x = d.lastX - d.grabX - (origin.left + el.offsetLeft);
+        const y = d.lastY - d.grabY - (origin.top + el.offsetTop);
+        el.style.transform = `translate(${x}px, ${y}px)`;
+      }
+      frame = requestAnimationFrame(place);
+    };
+    place();
+    return () => {
+      cancelAnimationFrame(frame);
+      el.style.transform = "";
+    };
+  }, [pulledId]);
 
   const byId = new Map(papers.map((paper) => [paper.id, paper]));
   const nodeById = new Map(workspaceNodes.map((node) => [node.id, node]));
