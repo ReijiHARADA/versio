@@ -444,7 +444,10 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
   // italic, not table cells far apart) still win.
   if (!asymmetricRail?.bridgesMidpoint && !cleanGutter && midpointBridgedRows >= 8 && midpointBridgedRows / Math.max(midpointRows.length, 1) >= 0.55 &&
       !(alignedColumnPairs && alignedColumnPairs.count >= 6 && alignedColumnPairs.gap >= 14 && alignedColumnPairs.gap <= 40 &&
-        alignedColumnPairs.balance <= 0.1)) {
+        alignedColumnPairs.balance <= 0.1) &&
+      // (nine or more pairs of exactly equal widths stand for a narrow gutter too, past the masthead page)
+      !(page.pageNumber > 1 && alignedColumnPairs && alignedColumnPairs.count >= 9 && alignedColumnPairs.gap >= 10 && alignedColumnPairs.gap <= 40 &&
+        alignedColumnPairs.balance <= 0.01)) {
     return fallback;
   }
 
