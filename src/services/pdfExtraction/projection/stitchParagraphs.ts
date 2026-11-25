@@ -216,6 +216,13 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j + 1;
           break;
         }
+        // A display that opens with the words of the sentence (`… The DID model was specified` + `as follows: Outcome = β0 + …`)
+        // is its rest.
+        if (!listItem && j === i + 1 && candidate.type === "equation" && /^\p{Ll}{2,}\s+\p{Ll}{2,}\b/u.test(candidateText) &&
+          !TERMINAL.test(currentText) && /\p{Ll}$/u.test(currentText) && current.type === "paragraph") {
+          target = j;
+          break;
+        }
         if (!listItem && j === i + 1 && (isProseEquation(candidate) || isFullWidthProseEquation(current, candidate) || isInlineReferenceCaption(currentText, candidate) || isProseLineEquation(candidate, out[j + 1]))) {
           target = j;
           break;
@@ -346,7 +353,9 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         if (candidate.type !== "figure" && candidate.type !== "table" && !PAGE_NUMBER.test(candidateText) && !CONTINUED_FLOAT.test(candidateText) &&
           !(candidate.type === "footnote" && out[j - 1]?.type === "table") && !tableNote &&
           // Nor does a float's text read out as an equation or a non-prose paragraph (`Ctrl(16): μ = 137.64, …`).
-          !(sawFloat && (candidate.type === "equation" || (candidate.type === "paragraph" && isExpectedNonProseParagraph(candidateText))))) onlyFloats = false;
+          !(sawFloat && (candidate.type === "equation" || (candidate.type === "paragraph" && isExpectedNonProseParagraph(candidateText)))) &&
+          // (Nor a figure's legend line read as a heading: `DLPFC, VLPFC, and OFC. *, p < 0.05.`.)
+          !(sawFloat && candidate.type === "heading" && /\bp\s*[<=>≤]\s*0?\.\d|(?:^|\s)\*{1,3}[,.:\s]/.test(candidateText))) onlyFloats = false;
       }
       if (target < 0) break;
       const next = out[target];
