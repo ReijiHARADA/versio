@@ -165,9 +165,17 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
       // Full-page figures and tables (a long table runs over several pages) can push the rest of a paragraph several pages on.
       let onlyFloats = true;
       let sawFloat = false;
-      for (let j = i + 1; j < out.length && j <= i + 20 && out[j].pageStart <= current.pageEnd + (onlyFloats && j > i + 1 ? 8 : 1); j += 1) {
+      // (The other column's bibliography can run longer than the window and over pages: `… Writing – original draft,` |
+      // forty references | `Project administration, …`.)
+      let onlyReferences = true;
+      let sawReference = false;
+      for (let j = i + 1; j < out.length && (j <= i + 20 || (onlyReferences && sawReference)) &&
+        out[j].pageStart <= current.pageEnd + (onlyReferences && sawReference ? 3 : onlyFloats && j > i + 1 ? 8 : 1); j += 1) {
         const candidate = out[j];
         const candidateText = candidate.original?.trim() ?? "";
+        // A piece of a reference entry read out between the entries (`[Preprint]. arXiv:2212.06817.`) is part of the list.
+        const referenceFragment = candidate.type === "paragraph" && onlyReferences && sawReference && words(candidateText) <= 15 &&
+          /\b(?:(?:19|20)\d{2}[a-z]?\b|arXiv|doi|https?:)|\[Preprint\]|\d+\s*[–-]\s*\d+/i.test(candidateText);
         // A list's lead-in (`task (“diseased” vs. “no disease”). These modifications are:`) can be the rest of the sentence too.
         const listIntro = candidate.type === "paragraph" && candidate.metadata.listRole === "intro" && candidate.metadata.role !== "reference" &&
           !referenceSections.has(candidate.sectionId ?? "");
@@ -218,6 +226,15 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         const cutAtSubordinator = sawFloat && !skippedParagraph && !skippedFragment &&
           /\s(?:because|although|though|while|whereas|since|unless|if|when)$/i.test(currentText);
         if (!listItem && hardOpen && !skippedParagraph && !(skippedFragment && /^[,;:.]/.test(candidateText)) && eligible(candidate) && looseContinuation(currentText, candidateText, afterReferenceCaption || cutAtSubordinator)) {
+          target = j;
+          break;
+        }
+        // Past the other column's bibliography, a back-matter sentence cut at a comma or a function word goes on in the
+        // first paragraph after it, whatever its first letter (`… Writing – original draft,` | references |
+        // `Project administration, Formal analysis, …`).
+        if (!listItem && onlyReferences && sawReference && current.type === "paragraph" && eligible(candidate) && !referenceFragment && words(candidateText) >= 3 &&
+          /(?:,|\s(?:the|a|an|of|to|in|into|for|with|by|from|on|at|as|and|or|than|between))$/.test(currentText) &&
+          !/^(?:Table|Figure|Fig\.|Abbreviations?|Note|Notes|Keywords?)\b/.test(candidateText)) {
           target = j;
           break;
         }
@@ -303,11 +320,13 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         const transparentNote = candidate.type === "paragraph" &&
           ((out[j - 1]?.type === "table" && words(candidateText) <= 15) ||
             (words(candidateText) <= 20 && /^\p{Lu}[\p{L}'’-]+ et al\.?\s/u.test(candidateText) && /\b(?:19|20)\d{2}\b/.test(candidateText) && !TERMINAL.test(candidateText)));
-        if (transparentNote) { /* skipped like a float's own text */ }
+        if (transparentNote || referenceFragment) { /* skipped like a float's own text */ }
         else if (candidate.type === "paragraph" && (TERMINAL.test(candidateText) || words(candidateText) > 12)) skippedParagraph = true;
         else if (candidate.type === "paragraph") skippedFragment = true;
         // A page number (`10 / 23`) between the pages does not stop the look past full-page floats.
         // (Nor does a table's own footnote or note.)
+        if (candidate.type === "reference") sawReference = true;
+        else if (candidate.type !== "heading" && !referenceFragment) onlyReferences = false;
         if (candidate.type !== "figure" && candidate.type !== "table" && !PAGE_NUMBER.test(candidateText) && !CONTINUED_FLOAT.test(candidateText) &&
           !(candidate.type === "footnote" && out[j - 1]?.type === "table") && !tableNote &&
           // Nor does a float's text read out as an equation or a non-prose paragraph (`Ctrl(16): μ = 137.64, …`).

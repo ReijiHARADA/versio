@@ -79,6 +79,22 @@ describe("stitchParagraphContinuations", () => {
     expect(compound[0].original).toBe("We compare the results with several state-of-the-art baselines on four benchmarks.");
   });
 
+  it("carries a back-matter sentence past a long reference list and its stray pieces", () => {
+    const refs = Array.from({ length: 30 }, (_, k) =>
+      ({ ...block(`r${k}`, "reference", `Author${k}, A. (2022). A title of a referenced work. Journal 1:${k}.`, 12 + (k >> 4)), sectionId: "s-ref" }));
+    const blocks = [
+      block("a", "paragraph", "XL: Conceptualization, Software, Writing – review & editing, Writing – original draft,", 12),
+      { ...block("h", "heading", "References", 12), sectionId: "s-ref" },
+      ...refs.slice(0, 2),
+      { ...block("frag", "paragraph", "[Preprint]. arXiv:2212.06817.", 12), sectionId: "s-ref" },
+      ...refs.slice(2),
+      block("b", "paragraph", "Project administration, Formal analysis, Methodology. HH: Investigation.", 13),
+    ];
+    const out = stitchParagraphContinuations(blocks, sections);
+    expect(out[0].original).toBe("XL: Conceptualization, Software, Writing – review & editing, Writing – original draft, Project administration, Formal analysis, Methodology. HH: Investigation.");
+    expect(out.some((b) => b.id === "b")).toBe(false);
+  });
+
   it("does not reach beyond the next page", () => {
     expect(stitchParagraphContinuations([block("a", "paragraph", OPEN, 2), block("b", "paragraph", CONTINUATION, 4)], sections)).toHaveLength(2);
   });
