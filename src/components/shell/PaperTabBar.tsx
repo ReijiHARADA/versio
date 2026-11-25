@@ -105,7 +105,7 @@ type TabDrag = {
   releaseSelection?: () => void;
 };
 type SplitSide = "left" | "right";
-type DragView = Pick<TabDrag, "id" | "from" | "to" | "dx" | "shift" | "keys" | "mode" | "overSplit" | "canRight" | "moveSide" | "zones"> & { x: number; y: number };
+type DragView = Pick<TabDrag, "id" | "startX" | "startY" | "from" | "to" | "dx" | "shift" | "keys" | "mode" | "overSplit" | "canRight" | "moveSide" | "zones"> & { x: number; y: number };
 /** Keeps the outer flares on the card's straight top edge, clear of its rounded corners. */
 const EDGE_PAD = 24;
 const isTranslating = (paper: Paper) =>
@@ -435,7 +435,7 @@ export function PaperTabBar() {
       d.to = to;
     }
     d.lastX = event.clientX;
-    setDrag({ id: d.id, from: d.from, to: d.to, dx: d.dx, shift: d.shift, keys: d.keys, mode: d.mode, overSplit: d.overSplit, canRight: d.canRight, moveSide: d.moveSide, zones: d.zones, x: event.clientX, y: event.clientY });
+    setDrag({ id: d.id, startX: d.startX, startY: d.startY, from: d.from, to: d.to, dx: d.dx, shift: d.shift, keys: d.keys, mode: d.mode, overSplit: d.overSplit, canRight: d.canRight, moveSide: d.moveSide, zones: d.zones, x: event.clientX, y: event.clientY });
   };
   const endDrag = (key: TabKey, commit: boolean) => {
     const d = dragRef.current;
@@ -557,7 +557,9 @@ export function PaperTabBar() {
   const tabTransform = (key: TabKey): string | undefined => {
     if (!drag) return undefined;
     const index = drag.keys.indexOf(key);
-    if (key === drag.id) return drag.mode === "reorder" && drag.dx !== 0 ? `translateX(${drag.dx}px)` : undefined;
+    // Pulled down to split the card, the tab itself follows the pointer.
+    if (key === drag.id && drag.mode === "split") return `translate(${drag.x - drag.startX}px, ${drag.y - drag.startY}px)`;
+    if (key === drag.id) return drag.dx !== 0 ? `translateX(${drag.dx}px)` : undefined;
     if (drag.to > drag.from && index > drag.from && index <= drag.to) return `translateX(${-drag.shift}px)`;
     if (drag.to < drag.from && index >= drag.to && index < drag.from) return `translateX(${drag.shift}px)`;
     return undefined;
@@ -676,7 +678,7 @@ export function PaperTabBar() {
       )}
       {leadWidth == null && pinnedTabs}
       {(leadWidth != null ? visible.filter((tab) => !isLeftTab(tab.key)) : visible).map(renderTab)}
-      {drag?.mode === "split" && createPortal(<SplitDropPreview drag={drag} title={visible.find((tab) => tab.key === drag.id)?.title ?? ""} />, document.body)}
+      {drag?.mode === "split" && createPortal(<SplitDropPreview drag={drag} />, document.body)}
     </div>
   );
 }
@@ -692,9 +694,9 @@ const MORPH_TAIL_MS = SETTLE_MS + 120;
  *  drop into a card that is not there. */
 const snapGap = (gap: number) => (gap < -1.5 ? Infinity : gap < 0.5 ? 0 :gap >= TAB_MORPH_GAP - 0.5 ? Infinity : Math.round(gap * 4) / 4);
 
-/** While a paper tab is pulled onto the card: a ghost under the pointer and, over the card's
- *  left or right half, the half it will open in. */
-function SplitDropPreview({ drag, title }: { drag: DragView; title: string }) {
+/** While a paper tab is pulled onto the card (the tab itself follows the pointer): over the
+ *  card's left or right half, the half it will open in. */
+function SplitDropPreview({ drag }: { drag: DragView }) {
   // Each target is drawn exactly where it accepts the drop; over one, it lights up.
   const zone = (side: SplitSide) => {
     const range = drag.zones?.[side];
@@ -728,10 +730,6 @@ function SplitDropPreview({ drag, title }: { drag: DragView; title: string }) {
           <span className={styles.splitZoneLabel}>{drag.moveSide === "left" ? "左で開く" : "右で開く"}</span>
         </div>
       )}
-      <div className={styles.ghost} style={{ transform: `translate(${drag.x + 12}px, ${drag.y + 10}px)` }} aria-hidden>
-        <FileText size={14} strokeWidth={1.6} aria-hidden />
-        <span className={styles.ghostTitle}>{title}</span>
-      </div>
     </>
   );
 }
