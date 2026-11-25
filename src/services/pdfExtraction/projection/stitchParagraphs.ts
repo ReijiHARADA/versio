@@ -258,7 +258,8 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // the very next one is its rest, whatever its first letter.
         if (!listItem && (j === i + 1 || onlyRunningHeads) && eligible(candidate) && words(candidateText) >= 3 &&
           /(?:^|[.!?]\s+)(?:Briefly|However|Moreover|Furthermore|Additionally|Thus|Therefore|Hence|Specifically|Similarly|Finally|Notably|Importantly|Consequently|Conversely|Meanwhile|Nevertheless|Overall|In addition|In contrast|In particular|For example|For instance|In this study|In summary|In conclusion),$/.test(currentText) &&
-          !/^(?:Table|Figure|Fig\.|Abbreviations?|Note|Notes|Keywords?)\b/.test(candidateText)) {
+          !/^(?:Table|Figure|Fig\.|Abbreviations?|Note|Notes|Keywords?)\b/.test(candidateText) &&
+          !(/^\p{Lu}[\p{L}'’-]+ et al\.?\s/u.test(candidateText) && /\b(?:19|20)\d{2}\b/.test(candidateText))) {
           target = j;
           break;
         }

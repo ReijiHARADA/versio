@@ -95,6 +95,18 @@ describe("stitchParagraphContinuations", () => {
     expect(out.some((b) => b.id === "b")).toBe(false);
   });
 
+  it("continues past a running head in a term, and after a sentence adverb's comma", () => {
+    const blocks = [
+      block("a", "paragraph", "Several tools map clinical text to concepts, but they differ in how they resolve ambiguous terms in context, and MetaMap implements", 7),
+      block("head", "paragraph", "Peng et al. BMC Med Inform Decis Mak 2020, 20(Suppl 11):322", 8),
+      block("b", "paragraph", "WSD by favoring mappings that are consistent with the surrounding text. Briefly,", 8),
+      block("c", "paragraph", "CleanText is a tool that removes noise before the mapping step.", 8),
+    ];
+    const out = stitchParagraphContinuations(blocks, sections);
+    expect(out.map((b) => b.id)).toEqual(["a", "head"]);
+    expect(out[0].original).toMatch(/MetaMap implements WSD by .* Briefly, CleanText is a tool/);
+  });
+
   it("does not reach beyond the next page", () => {
     expect(stitchParagraphContinuations([block("a", "paragraph", OPEN, 2), block("b", "paragraph", CONTINUATION, 4)], sections)).toHaveLength(2);
   });
