@@ -319,7 +319,9 @@
   height: 100%;
   display: flex;
   align-items: flex-end;
-  overflow: hidden;
+  /* Clip sideways only: the active tab reaches 1px below the strip to cover the card's top ring. */
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 /* すべての論文 / インボックス: icon-only, fixed width, never shrinks with the strip. */
