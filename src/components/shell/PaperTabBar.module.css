@@ -58,11 +58,13 @@
 .tab:hover::after,
 .tab:hover + .tab::after,
 .active::after,
-.active + .tab::after {
+.active + .tab::after,
+.inSplit::after,
+.inSplit + .tab::after {
   opacity: 0;
 }
 
-.tab:not(.active):hover {
+.tab:not(.active, .inSplit):hover {
   --sq-bg: var(--color-bg-tertiary);
 }
 
@@ -77,15 +79,19 @@
   left: 0;
 }
 
-.bar .tab:has(+ .active)::before {
+.bar .tab:has(+ .active)::before,
+.bar .tab:has(+ .inSplit)::before {
   right: calc(var(--tab-hover-gap) * 2);
 }
 
-.bar .active + .tab::before {
+.bar .active + .tab::before,
+.bar .inSplit + .tab::before {
   left: calc(var(--tab-hover-gap) * 2);
 }
 
-.active {
+/* The active tab, and in split view the left card's tab: each joins its card. */
+.active,
+.inSplit {
   /* Same height as the strip bottom band; sits on the card's top edge, covering its ring. */
   height: calc(var(--titlebar-h) - var(--card-gap) + 1px); /* = TAB_HEIGHT in paperTabShape.ts */
   margin-bottom: -1px; /* spacing-literal-ok: covers the card's 1px top ring */
@@ -136,12 +142,6 @@
 /* Pulled down towards the card: the tab waits in its slot while the ghost travels. */
 .pulled {
   opacity: 0.45;
-}
-
-/* The paper shown in the split pane. */
-.inSplit:not(.active) {
-  --sq-bg: var(--color-bg-tertiary);
-  color: var(--color-text);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -290,7 +290,8 @@
 }
 
 .tab:hover .close,
-.active .close {
+.active .close,
+.inSplit .close {
   opacity: 0.6;
 }
 

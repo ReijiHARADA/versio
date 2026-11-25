@@ -534,7 +534,7 @@ export function PaperTabBar() {
         onAuxClick={(event) => { if (event.button === 1) closeTab(id); }}
         onKeyDown={(event) => { if (event.key === "Enter") openTab(id); }}
       >
-        {active && <ActiveTabShape moving={drag != null} textured={kind === "folder"} />}
+        {(active || inSplit) && <ActiveTabShape moving={drag != null} textured={kind === "folder"} card={inSplit ? "[data-split-card]" : "[data-main-card]"} />}
         <Icon className={styles.icon} size={14} strokeWidth={1.6} aria-hidden />
         <span className={styles.title}>{title}</span>
         {translating && <span className={styles.status}>翻訳中</span>}
@@ -664,7 +664,8 @@ function capMaskUrl(d: string, width: number, height: number): string {
  *  card's corner, and in between the card corner and the flare grow together (see morphLeftCap).
  *  `textured` paints the card's paper texture too: folder pages show it, Reader covers the card
  *  with a plain fill. */
-function ActiveTabShape({ moving, textured }: { moving: boolean; textured: boolean }) {
+/** The tab of the paper a card shows, joined to that card (`card`: the card's selector). */
+function ActiveTabShape({ moving, textured, card: cardSelector = "[data-main-card]" }: { moving: boolean; textured: boolean; card?: string }) {
   const cap = (fill: string, stroke: string, width = TAB_CAP_WIDTH, height = TAB_HEIGHT, clipId?: string) => (
     <svg className={styles.cap} width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden>
       {clipId && (
@@ -686,7 +687,7 @@ function ActiveTabShape({ moving, textured }: { moving: boolean; textured: boole
   syncRef.current = () => {
     const texture = textureRef.current;
     const tab = shapeRef.current?.parentElement;
-    const card = document.querySelector<HTMLElement>("[data-main-card]");
+    const card = document.querySelector<HTMLElement>(cardSelector);
     if (!tab || !card) return;
     const c = card.getBoundingClientRect();
     setGap(snapGap(tab.getBoundingClientRect().left - c.left));
@@ -699,7 +700,7 @@ function ActiveTabShape({ moving, textured }: { moving: boolean; textured: boole
   useLayoutEffect(() => syncRef.current());
   useEffect(() => {
     const shape = shapeRef.current;
-    const card = document.querySelector<HTMLElement>("[data-main-card]");
+    const card = document.querySelector<HTMLElement>(cardSelector);
     if (!shape || !card) return;
     const sync = () => syncRef.current();
     const observer = new ResizeObserver(sync);
@@ -714,7 +715,7 @@ function ActiveTabShape({ moving, textured }: { moving: boolean; textured: boole
       bar?.removeEventListener("transitionend", sync);
       bar?.removeEventListener("animationend", sync);
     };
-  }, []);
+  }, [cardSelector]);
   // While tabs move (drag, then the glide into place) follow the tab every frame.
   useEffect(() => {
     let frame = 0;
