@@ -1,4 +1,6 @@
 :root {
+  /* Solar icon default stroke (library default 1.5); explicit strokeWidth props still win. */
+  --solar-stroke-width: 1.75;
   /* Title bar band (macOS traffic lights + sidebar toggle) above the main card. */
   --titlebar-h: 50px;
   /* Main card inset from the window's right and bottom edges, and its corner radius. */
@@ -348,4 +350,10 @@ body.paper-dragging * {
 
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--scrollbar-thumb-hover);
+}
+
+/* Solar sets stroke-width as a presentation attribute holding var(); a CSS rule
+   applies it reliably in WKWebView. Inline strokeWidth props still win. */
+svg.solar {
+  stroke-width: var(--solar-stroke-width);
 }
