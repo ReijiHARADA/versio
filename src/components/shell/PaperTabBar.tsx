@@ -12,7 +12,7 @@ import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
 import { releasePaperBody } from "../../services/paperBodyRelease";
 import { parseTab, tabForPath, tabPath, usePaperTabs, type TabKey } from "../../stores/paperTabsStore";
-import { useSplitView } from "../../stores/splitViewStore";
+import { isPageTab, pagePath, pageTabForPath, useSplitView, type PageTab } from "../../stores/splitViewStore";
 import { useAppStore } from "../../stores/appStore";
 import { displayPaperTitle } from "../../services/translation/quality";
 import type { Paper } from "../../types/paper";
@@ -35,11 +35,11 @@ import styles from "./PaperTabBar.module.css";
 import { suppressTextSelection } from "../../utils/dragSelection";
 
 /** Icon-only tabs that always lead the strip; they are pages, not open documents. The left is
- *  their home: in split view they lead the left card's tabs, not the right card's. */
-const PINNED_TABS = [
-  { path: "/", label: "すべての論文", Icon: Library },
-  { path: "/inbox", label: "インボックス", Icon: Inbox },
-] as const;
+ *  their home: in split view they lead the left card's tabs and open in the left pane. */
+const PINNED_TABS: { path: string; page: PageTab; label: string; Icon: typeof Library }[] = [
+  { path: "/", page: "page:/", label: "すべての論文", Icon: Library },
+  { path: "/inbox", page: "page:/inbox", label: "インボックス", Icon: Inbox },
+];
 
 const DRAG_THRESHOLD = 4;
 /** How far below the strip a paper tab must be pulled before it becomes a split-view drop. */
@@ -193,7 +193,7 @@ export function PaperTabBar() {
 
   // The paper in the split pane always has a tab (it may have been opened without one).
   useEffect(() => {
-    if (!splitTab) return;
+    if (!splitTab || isPageTab(splitTab)) return;
     const { kind, id } = parseTab(splitTab);
     const live = kind === "paper" ? papers.some((paper) => paper.id === id && !paper.trashedAt) : workspaceNodes.some((node) => node.id === id);
     if (live && !usePaperTabs.getState().tabs.includes(splitTab)) usePaperTabs.getState().openTab(splitTab, activeId);
@@ -236,7 +236,7 @@ export function PaperTabBar() {
     const left = useSplitView.getState().tab;
     useSplitView.getState().closeSplit();
     lastActiveRef.current = null;
-    navigate(left ? tabPath(left) : lastPagePathRef.current);
+    navigate(left ? (isPageTab(left) ? pagePath(left) : tabPath(left)) : lastPagePathRef.current);
   }, [navigate]);
 
   const closeTab = useCallback(
@@ -349,7 +349,8 @@ export function PaperTabBar() {
     const pulledDown = barRect != null && event.clientY > barRect.bottom + SPLIT_PULL;
     if (pulledDown) {
       const left = useSplitView.getState().tab;
-      d.canRight = activeId != null ? activeId !== d.id : left != null && left !== d.id;
+      // On a pinned page the page moves to the left pane, so any tab can open on the right.
+      d.canRight = activeId != null ? activeId !== d.id : left != null ? left !== d.id : pageTabForPath(location.pathname) != null;
       if (d.mode !== "split" || d.zones === undefined) {
         // The right side keeps at least one tab, so its only tab cannot move left.
         const canLeft = d.id !== activeId || rightNeighbour(d.id) != null;
@@ -500,7 +501,9 @@ export function PaperTabBar() {
   };
 
   const openRightFromTab = (key: TabKey) => {
+    const page = pageTabForPath(location.pathname);
     if (activeId) useSplitView.getState().openSplit(activeId);
+    else if (page) useSplitView.getState().showPage(page);
     navigate(tabPath(key));
   };
 
@@ -582,11 +585,18 @@ export function PaperTabBar() {
   };
 
   const split = leadWidth != null;
-  const pinnedTabs = PINNED_TABS.map(({ path, label, Icon }) => {
-    const active = location.pathname === path;
+  const pinnedTabs = PINNED_TABS.map(({ path, page, label, Icon }) => {
+    // In split view the pinned pages open in the left pane; one already on the right stays there.
+    const onRight = location.pathname === path;
+    const shownLeft = split && splitTab === page;
+    const active = split ? shownLeft : onRight;
     const open = () => {
       if (path === "/") useAppStore.getState().setLibraryFilter({ tag: null });
-      if (!active || location.search) navigate(path);
+      if (split) {
+        if (!onRight) useSplitView.getState().showPage(page);
+        return;
+      }
+      if (!onRight || location.search) navigate(path);
     };
     return (
       <div
@@ -596,13 +606,12 @@ export function PaperTabBar() {
         aria-label={label}
         tabIndex={active ? 0 : -1}
         title={label}
-        className={`${styles.tab} ${styles.pinned} ${active ? (split ? styles.pinnedCurrent : styles.active) : ""}`}
+        className={`${styles.tab} ${styles.pinned} ${active ? styles.active : split && onRight ? styles.pinnedCurrent : ""}`}
         onClick={open}
         onKeyDown={(event) => { if (event.key === "Enter") open(); }}
       >
-        {/* In split view the pinned tabs sit over the left card while their page opens in the right
-            one, so the current one is only filled, not joined to a card. */}
-        {active && !split && <ActiveTabShape moving={drag != null} textured={false} />}
+        {/* In split view the page shows in the left card; one left on the right card is only filled. */}
+        {active && <ActiveTabShape moving={drag != null} textured={false} card={split ? "[data-split-card]" : "[data-main-card]"} />}
         <Icon className={styles.icon} size={15} strokeWidth={1.6} aria-hidden />
       </div>
     );
