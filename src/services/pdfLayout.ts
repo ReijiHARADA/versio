@@ -3652,6 +3652,10 @@ function groupLinesIntoBlocks(
       // A caption goes on downwards: a line back up at the top of the next column (`FIGURE 1` at the page foot, then
       // `The authors emphasized …` at the top of the right column) is body text.
       line.y >= current[current.length - 1].y - 2 &&
+      // ... and under itself: a body line on the same baseline in the other column (`FIGURE 1` at x 316, `70B model
+      // handles …` at x 49) is no part of it.
+      // (A caption title may follow its label to the right on one baseline, never to the left.)
+      !(Math.abs(line.y - current[current.length - 1].y) <= 2 && line.x + line.width <= Math.min(...current.map((part) => part.x))) &&
       (/^(?:figure|fig\.?|図)\s*\d+[a-z]?(?:\s*,\s*[a-z]\b)*$/i.test(layoutPlain(joinLines(current))) ||
         line.fontSize <= (current.find((part) =>
           !/^(?:figure|fig\.?|図)\s*\d+[a-z]?(?:\s*,\s*[a-z]\b)*$/i.test(layoutPlain(part.text))
