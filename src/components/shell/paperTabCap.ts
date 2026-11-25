@@ -44,14 +44,3 @@ export function morphLeftCap(gap: number): MorphCap {
   ];
   return { width, height, fill: `${path(outline)}L${width} ${height}Z`, stroke: path(outline) };
 }
-
-/** Mirrors an M/L path left-right within a `width`-wide box (for the right-hand caps). */
-export function mirrorPath(d: string, width: number): string {
-  return d.replace(/([ML])(-?[\d.]+) (-?[\d.]+)/g, (_, cmd: string, x: string, y: string) => `${cmd}${f(width - Number(x))} ${y}`);
-}
-
-/** Right cap of the active tab `gap` px left of the card's right edge: morphLeftCap mirrored. */
-export function morphRightCap(gap: number): MorphCap {
-  const cap = morphLeftCap(gap);
-  return { ...cap, fill: mirrorPath(cap.fill, cap.width), stroke: mirrorPath(cap.stroke, cap.width) };
-}
