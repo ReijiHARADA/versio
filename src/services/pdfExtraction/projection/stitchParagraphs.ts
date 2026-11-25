@@ -195,6 +195,18 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j + 1;
           break;
         }
+        // A sentence cut where it runs into a line of statistics typed as an equation (`… with similar levels observed in`
+        // | `the IG (M = 11.8, SD = 1.` | `No baseline differences …`): the line and the paragraph after it are its rest.
+        if (!listItem && j === i + 1 && candidate.type === "equation" && isHardOpen(currentText) &&
+          !/[∈∉∼≅≁⊂⊆⊕⊗∀∃∑∏∫∂∇′{}^_\\|]/u.test(candidateText) &&
+          (/\b(?:SD|SE|CI|IQR|OR|HR|RR|M|p|n|r)\s*[=<>≤≥]\s*[−-]?\d/.test(candidateText) ||
+            (candidateText.match(/\b[a-z]{3,}\b/g)?.length ?? 0) >= 3) && !/(?:^|\s)\(\s*\d{1,3}[a-z]?\s*\)\s*$/.test(candidateText) &&
+          !/(?:\b(?:as|follows|by|is|are)|[:=])\s*$/.test(currentText) &&
+          out[j + 1] && eligible(out[j + 1]) && out[j + 1].pageStart <= current.pageEnd + 1 && words(out[j + 1].original ?? "") >= 3) {
+          formula = j;
+          target = j + 1;
+          break;
+        }
         if (!listItem && j === i + 1 && (isProseEquation(candidate) || isFullWidthProseEquation(current, candidate) || isInlineReferenceCaption(currentText, candidate) || isProseLineEquation(candidate, out[j + 1]))) {
           target = j;
           break;
