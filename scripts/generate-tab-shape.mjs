@@ -50,6 +50,11 @@ export const TAB_FLUSH_LEFT_FILL = "${toPath(flush, false)}L${FW} ${HEIGHT + DRO
 export const TAB_FLUSH_LEFT_STROKE = "${toPath(flushStroke, false)}";
 export const TAB_CAP_LEFT_STROKE = "${toPath(strokePts, false)}";
 export const TAB_CAP_RIGHT_STROKE = "${toPath(strokePts, true)}";
+/** Unit clothoid corner (from (-1, 0) to (0, 1)) and its sizes, for caps built at runtime. */
+export const TAB_K = ${K};
+export const TAB_CORNER_R = ${CORNER_R};
+export const TAB_FLARE_R = ${FLARE_R};
+export const TAB_CORNER_UNIT: ReadonlyArray<readonly [number, number]> = ${JSON.stringify(UNIT.map(([x, y]) => [+x.toFixed(4), +y.toFixed(4)]))};
 `;
 const file = path.join(path.dirname(fileURLToPath(import.meta.url)), "../src/components/shell/paperTabShape.ts");
 fs.writeFileSync(file, out);
