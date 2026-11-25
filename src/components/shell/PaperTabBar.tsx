@@ -368,7 +368,7 @@ export function PaperTabBar() {
             onAuxClick={(event) => { if (event.button === 1) closeTab(id); }}
             onKeyDown={(event) => { if (event.key === "Enter") openTab(id); }}
           >
-            {active && <ActiveTabShape moving={drag != null} />}
+            {active && <ActiveTabShape moving={drag != null} textured={kind === "folder"} />}
             <Icon className={styles.icon} size={14} strokeWidth={1.6} aria-hidden />
             <span className={styles.title}>{title}</span>
             {translating && <span className={styles.status}>翻訳中</span>}
@@ -438,8 +438,10 @@ function capMaskUrl(d: string, width: number, height: number): string {
 
 /** Card-coloured tab body whose flared base runs into the main card below. Its left cap follows
  *  the tab's gap from the card's left edge: flush on the edge, fully flared once clear of the
- *  card's corner, and in between the card corner and the flare grow together (see morphLeftCap). */
-function ActiveTabShape({ moving }: { moving: boolean }) {
+ *  card's corner, and in between the card corner and the flare grow together (see morphLeftCap).
+ *  `textured` paints the card's paper texture too: folder pages show it, Reader covers the card
+ *  with a plain fill. */
+function ActiveTabShape({ moving, textured }: { moving: boolean; textured: boolean }) {
   const cap = (fill: string, stroke: string, width = TAB_CAP_WIDTH, height = TAB_HEIGHT, clipId?: string) => (
     <svg className={styles.cap} width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden>
       {clipId && (
@@ -532,11 +534,13 @@ function ActiveTabShape({ moving }: { moving: boolean }) {
       {cap(left.fill, left.stroke, left.width, left.height, morph ? clipId : undefined)}
       <span className={styles.shapeMid} />
       {cap(TAB_CAP_RIGHT_FILL, TAB_CAP_RIGHT_STROKE)}
-      <span
-        ref={textureRef}
-        className={styles.texture}
-        style={{ height: left.height, mask, WebkitMask: mask }}
-      />
+      {textured && (
+        <span
+          ref={textureRef}
+          className={styles.texture}
+          style={{ height: left.height, mask, WebkitMask: mask }}
+        />
+      )}
     </span>
   );
 }
