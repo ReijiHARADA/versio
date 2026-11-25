@@ -17,13 +17,14 @@ export function SplitReaderPane({ paperId }: { paperId: string }) {
   const closeSplit = useSplitView((state) => state.closeSplit);
   const dividerRef = useRef<HTMLDivElement>(null);
 
-  // Opening the same paper on the right moves it there; one paper never shows twice. Only a route
+  // Opening the left paper on the right moves it there (the left pane shows another left tab, or the
+  // split closes); one paper never shows twice. Only a route
   // change counts: dropping the active tab here opens the pane a render before the route moves on.
   const lastPathRef = useRef(location.pathname);
   useEffect(() => {
     if (lastPathRef.current === location.pathname) return;
     lastPathRef.current = location.pathname;
-    if (readerPaperId(location.pathname) === paperId) closeSplit();
+    if (readerPaperId(location.pathname) === paperId) useSplitView.getState().removeLeftTab(paperId);
   }, [location.pathname, paperId, closeSplit]);
 
   // The pane held the body warm; free it once the paper leaves both the pane and the tab strip.
