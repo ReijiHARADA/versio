@@ -395,6 +395,12 @@ function SplitDropPreview({ drag, title }: { drag: DragView; title: string }) {
   );
 }
 
+/** A cap's fill path as a CSS mask image. */
+function capMaskUrl(d: string, width: number, height: number): string {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'><path d='${d}'/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
 /** Card-coloured tab body whose flared base runs into the main card below. */
 function ActiveTabShape({ flushLeft }: { flushLeft: boolean }) {
   const cap = (fill: string, stroke: string, width = TAB_CAP_WIDTH, height = TAB_HEIGHT) => (
@@ -403,6 +409,39 @@ function ActiveTabShape({ flushLeft }: { flushLeft: boolean }) {
       <path d={stroke} className={styles.capStroke} />
     </svg>
   );
+  const textureRef = useRef<HTMLSpanElement>(null);
+  // Anchor the texture to the main card's top-left so its dot grid runs on from the card's.
+  useLayoutEffect(() => {
+    const texture = textureRef.current;
+    const card = document.querySelector<HTMLElement>("[data-main-pane]");
+    if (!texture || !card) return;
+    const sync = () => {
+      const t = texture.getBoundingClientRect();
+      const c = card.getBoundingClientRect();
+      const pos = `${c.left - t.left}px ${c.top - t.top}px`;
+      texture.style.backgroundPosition = `${pos}, ${pos}`;
+    };
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(card);
+    const bar = texture.closest<HTMLElement>(`.${styles.bar}`);
+    if (bar) observer.observe(bar);
+    // Neighbouring tabs growing / the bar's padding gliding move this tab without a resize.
+    bar?.addEventListener("transitionend", sync);
+    bar?.addEventListener("animationend", sync);
+    return () => {
+      observer.disconnect();
+      bar?.removeEventListener("transitionend", sync);
+      bar?.removeEventListener("animationend", sync);
+    };
+  });
+  const leftWidth = flushLeft ? TAB_FLUSH_CAP_WIDTH : TAB_CAP_WIDTH;
+  const leftHeight = flushLeft ? TAB_HEIGHT + TAB_FLUSH_DROP : TAB_HEIGHT;
+  const mask = [
+    `${capMaskUrl(flushLeft ? TAB_FLUSH_LEFT_FILL : TAB_CAP_LEFT_FILL, leftWidth, leftHeight)} 0 0 / ${leftWidth}px ${leftHeight}px no-repeat`,
+    `linear-gradient(#000, #000) ${leftWidth - 1}px 0 / calc(100% - ${leftWidth + TAB_CAP_WIDTH - 2}px) ${TAB_HEIGHT}px no-repeat`,
+    `${capMaskUrl(TAB_CAP_RIGHT_FILL, TAB_CAP_WIDTH, TAB_HEIGHT)} 100% 0 / ${TAB_CAP_WIDTH}px ${TAB_HEIGHT}px no-repeat`,
+  ].join(", ");
   return (
     <span
       className={styles.shape}
@@ -421,6 +460,11 @@ function ActiveTabShape({ flushLeft }: { flushLeft: boolean }) {
         : cap(TAB_CAP_LEFT_FILL, TAB_CAP_LEFT_STROKE)}
       <span className={styles.shapeMid} />
       {cap(TAB_CAP_RIGHT_FILL, TAB_CAP_RIGHT_STROKE)}
+      <span
+        ref={textureRef}
+        className={styles.texture}
+        style={{ height: leftHeight, mask, WebkitMask: mask }}
+      />
     </span>
   );
 }
