@@ -73,6 +73,9 @@ export function PaperTabBar() {
   const lastPagePathRef = useRef("/");
   const barRef = useRef<HTMLDivElement>(null);
   const [inset, setInset] = useState({ left: 0, right: 0 });
+  // Split view: x of the right (main) card's left edge from the bar's left, so the routed tab can
+  // start right above it. Null when the card is not split.
+  const [mainCardX, setMainCardX] = useState<number | null>(null);
   // Tabs restored at launch appear in place; tabs opened later grow in (see .entering).
   const settledRef = useRef<Set<string> | null>(null);
   if (settledRef.current === null) settledRef.current = new Set(tabs);
@@ -110,6 +113,24 @@ export function PaperTabBar() {
       if (kind === "paper" && !after.has(key)) releasePaperBody(id);
     }
   }, [papers, workspaceNodes, workspaceLoaded, activeId]);
+
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    const card = splitPaperId ? document.querySelector<HTMLElement>("[data-main-card]") : null;
+    if (!bar || !card) {
+      setMainCardX(null);
+      return;
+    }
+    const measure = () => {
+      const x = Math.round(card.getBoundingClientRect().left - bar.getBoundingClientRect().left);
+      setMainCardX((prev) => (prev === x ? prev : x));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(card);
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, [splitPaperId]);
 
   // Keep clear of the fixed title bar controls (back/forward) and the search field.
   useLayoutEffect(() => {
@@ -337,6 +358,49 @@ export function PaperTabBar() {
   // the way; then they move right far enough for the flare to clear the card's corner.
   const paddingLeft = inset.left > 0 ? Math.max(EDGE_PAD, inset.left) : 0;
 
+  const activeIndex = activeId ? visible.findIndex((tab) => tab.key === activeId) : -1;
+  // In split view the routed tab sits above the right card's left edge; the tabs before it share
+  // the room above the left card.
+  const leadWidth = mainCardX != null && activeIndex >= 0 ? Math.max(0, mainCardX - paddingLeft) : null;
+  const renderTab = ({ key: id, kind, title, translating }: VisibleTab) => {
+    const active = id === activeId;
+    const inSplit = kind === "paper" && parseTab(id).id === splitPaperId;
+    const Icon = kind === "folder" ? Folder : FileText;
+    return (
+      <div
+        key={id}
+        data-tab-id={id}
+        role="tab"
+        aria-selected={active}
+        tabIndex={active ? 0 : -1}
+        title={title}
+        className={`${styles.tab} ${active ? styles.active : ""} ${inSplit ? styles.inSplit : ""} ${drag?.id === id ? (drag.mode === "split" ? styles.pulled : styles.dragging) : ""} ${settledRef.current?.has(id) ? "" : styles.entering}`}
+        style={{ transform: tabTransform(id) }}
+        onAnimationEnd={(event) => { if (event.target === event.currentTarget) settle(id); }}
+        onPointerDown={(event) => onPointerDown(event, id)}
+        onPointerMove={onPointerMove}
+        onPointerUp={() => endDrag(id, true)}
+        onPointerCancel={() => endDrag(id, false)}
+        onAuxClick={(event) => { if (event.button === 1) closeTab(id); }}
+        onKeyDown={(event) => { if (event.key === "Enter") openTab(id); }}
+      >
+        {active && <ActiveTabShape moving={drag != null} textured={kind === "folder"} />}
+        <Icon className={styles.icon} size={14} strokeWidth={1.6} aria-hidden />
+        <span className={styles.title}>{title}</span>
+        {translating && <span className={styles.status}>翻訳中</span>}
+        <button
+          type="button"
+          className={styles.close}
+          aria-label={`${title} のタブを閉じる`}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => { event.stopPropagation(); closeTab(id); }}
+        >
+          <X size={12} strokeWidth={2} aria-hidden />
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div
       ref={barRef}
@@ -346,44 +410,12 @@ export function PaperTabBar() {
       aria-label="開いている論文とフォルダ"
       style={{ paddingLeft, paddingRight: Math.max(EDGE_PAD + 10, inset.right) }}
     >
-      {visible.map(({ key: id, kind, title, translating }) => {
-        const active = id === activeId;
-        const inSplit = kind === "paper" && parseTab(id).id === splitPaperId;
-        const Icon = kind === "folder" ? Folder : FileText;
-        return (
-          <div
-            key={id}
-            data-tab-id={id}
-            role="tab"
-            aria-selected={active}
-            tabIndex={active ? 0 : -1}
-            title={title}
-            className={`${styles.tab} ${active ? styles.active : ""} ${inSplit ? styles.inSplit : ""} ${drag?.id === id ? (drag.mode === "split" ? styles.pulled : styles.dragging) : ""} ${settledRef.current?.has(id) ? "" : styles.entering}`}
-            style={{ transform: tabTransform(id) }}
-            onAnimationEnd={(event) => { if (event.target === event.currentTarget) settle(id); }}
-            onPointerDown={(event) => onPointerDown(event, id)}
-            onPointerMove={onPointerMove}
-            onPointerUp={() => endDrag(id, true)}
-            onPointerCancel={() => endDrag(id, false)}
-            onAuxClick={(event) => { if (event.button === 1) closeTab(id); }}
-            onKeyDown={(event) => { if (event.key === "Enter") openTab(id); }}
-          >
-            {active && <ActiveTabShape moving={drag != null} textured={kind === "folder"} />}
-            <Icon className={styles.icon} size={14} strokeWidth={1.6} aria-hidden />
-            <span className={styles.title}>{title}</span>
-            {translating && <span className={styles.status}>翻訳中</span>}
-            <button
-              type="button"
-              className={styles.close}
-              aria-label={`${title} のタブを閉じる`}
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => { event.stopPropagation(); closeTab(id); }}
-            >
-              <X size={12} strokeWidth={2} aria-hidden />
-            </button>
-          </div>
-        );
-      })}
+      {leadWidth != null && (
+        <div className={styles.lead} style={{ width: leadWidth }}>
+          {visible.slice(0, activeIndex).map(renderTab)}
+        </div>
+      )}
+      {(leadWidth != null ? visible.slice(activeIndex) : visible).map(renderTab)}
       {drag?.mode === "split" && createPortal(<SplitDropPreview drag={drag} title={visible.find((tab) => tab.key === drag.id)?.title ?? ""} />, document.body)}
     </div>
   );
@@ -463,7 +495,7 @@ function ActiveTabShape({ moving, textured }: { moving: boolean; textured: boole
   syncRef.current = () => {
     const texture = textureRef.current;
     const tab = shapeRef.current?.parentElement;
-    const card = document.querySelector<HTMLElement>("[data-main-pane]");
+    const card = document.querySelector<HTMLElement>("[data-main-card]");
     if (!texture || !tab || !card) return;
     const c = card.getBoundingClientRect();
     setGap(snapGap(tab.getBoundingClientRect().left - c.left));
@@ -474,7 +506,7 @@ function ActiveTabShape({ moving, textured }: { moving: boolean; textured: boole
   useLayoutEffect(() => syncRef.current());
   useEffect(() => {
     const texture = textureRef.current;
-    const card = document.querySelector<HTMLElement>("[data-main-pane]");
+    const card = document.querySelector<HTMLElement>("[data-main-card]");
     if (!texture || !card) return;
     const sync = () => syncRef.current();
     const observer = new ResizeObserver(sync);

@@ -298,3 +298,13 @@
   opacity: 1;
   background: var(--color-bg-tertiary);
 }
+
+/* Split view: the tabs before the routed one, kept over the left card. */
+.lead {
+  flex: none;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
