@@ -430,6 +430,23 @@ export function createPresentationCaptureSeed(): {
   const link = (nodeId: string, paperId: string, order: number): WorkspacePaper => ({
     nodeId, paperId, order, status: "unread", createdAt: now, updatedAt: now,
   });
+  // Scale bench only (`?scaleN=1000`, `npm run bench:library-render`): clone the rows to N library papers.
+  const scale = Number(
+    typeof location === "undefined" ? 0 : new URLSearchParams(location.search).get("scaleN") ?? 0
+  );
+  if (scale > papers.length) {
+    const base = papers.slice(1);
+    for (let i = papers.length; i < scale; i++) {
+      const row = base[i % base.length];
+      papers.push({
+        ...row,
+        id: `${row.id}-scale-${i}`,
+        sourceFileHash: `${row.sourceFileHash}-scale-${i}`,
+        titleOriginal: `${row.titleOriginal} (${i})`,
+        lastOpenedAt: opened(24 + i),
+      });
+    }
+  }
   return {
     papers,
     documents: [
