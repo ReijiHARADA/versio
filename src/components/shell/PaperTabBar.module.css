@@ -308,3 +308,19 @@
   align-items: flex-end;
   overflow: hidden;
 }
+
+/* Drop grip beside a card edge while a paper tab is pulled down. */
+.splitEdge {
+  composes: pill from "../../styles/squircle.module.css";
+  position: fixed;
+  z-index: var(--z-overlay);
+  width: 5px;
+  --sq-bg: var(--color-text-tertiary);
+  pointer-events: none;
+  transition: --sq-bg 120ms ease, transform 120ms ease;
+}
+
+.splitEdgeActive {
+  --sq-bg: var(--color-accent);
+  transform: scaleX(1.4);
+}

@@ -33,6 +33,8 @@ const DRAG_THRESHOLD = 4;
 /** How far below the strip a paper tab must be pulled before it becomes a split-view drop. */
 const SPLIT_PULL = 24;
 const SETTLE_MS = 180;
+/** How far inside the cards' left / right edge the split drop targets still reach. */
+const SPLIT_EDGE_IN = 24;
 
 type TabDrag = {
   id: TabKey;
@@ -255,8 +257,10 @@ export function PaperTabBar() {
       const routed = readerPaperId(location.pathname);
       const left = useSplitView.getState().paperId;
       d.canRight = routed != null ? routed !== id : left != null && left !== id;
-      const inCard = card != null && event.clientX >= card.left && event.clientX < card.right && event.clientY >= card.top && event.clientY <= card.bottom;
-      const side: SplitSide | null = !inCard ? null : event.clientX < card.left + card.width / 2 ? "left" : "right";
+      // Drop targets sit beside the cards, not on them: left of the cards' left edge (over the
+      // sidebar) or right of their right edge, plus a thin band just inside each edge.
+      const level = card != null && event.clientY >= card.top && event.clientY <= card.bottom;
+      const side: SplitSide | null = !level || !card ? null : event.clientX < card.left + SPLIT_EDGE_IN ? "left" : event.clientX > card.right - SPLIT_EDGE_IN ? "right" : null;
       d.overSplit = side === "right" && !d.canRight ? null : side;
       d.dx = 0;
       d.to = d.from;
@@ -434,26 +438,29 @@ const snapGap = (gap: number) => (gap < 0.5 ? 0 : gap >= TAB_MORPH_GAP - 0.5 ? I
  *  left or right half, the half it will open in. */
 function SplitDropPreview({ drag, title }: { drag: DragView; title: string }) {
   const card = document.querySelector("[data-main-pane]")?.getBoundingClientRect();
+  const half = card ? card.width / 2 : 0;
+  // A grip beside each edge marks where to drop; over one, the half the paper will open in lights up.
+  const edge = (side: SplitSide) =>
+    card && (
+      <>
+        <div
+          className={`${styles.splitEdge} ${drag.overSplit === side ? styles.splitEdgeActive : ""}`}
+          style={{ left: side === "left" ? card.left - 7 : card.right + 2, top: card.top + card.height * 0.3, height: card.height * 0.4 }}
+          aria-hidden
+        />
+        <div
+          className={`${styles.splitZone} ${drag.overSplit === side ? styles.splitZoneActive : ""}`}
+          style={{ left: side === "left" ? card.left : card.left + half, top: card.top, width: half, height: card.height }}
+          aria-hidden
+        >
+          <span className={styles.splitZoneLabel}>{side === "left" ? "左に並べて開く" : "右に並べて開く"}</span>
+        </div>
+      </>
+    );
   return (
     <>
-      {card && (
-        <div
-          className={`${styles.splitZone} ${drag.overSplit === "left" ? styles.splitZoneActive : ""}`}
-          style={{ left: card.left, top: card.top, width: card.width / 2, height: card.height }}
-          aria-hidden
-        >
-          <span className={styles.splitZoneLabel}>左に並べて開く</span>
-        </div>
-      )}
-      {card && drag.canRight && (
-        <div
-          className={`${styles.splitZone} ${drag.overSplit === "right" ? styles.splitZoneActive : ""}`}
-          style={{ left: card.left + card.width / 2, top: card.top, width: card.width / 2, height: card.height }}
-          aria-hidden
-        >
-          <span className={styles.splitZoneLabel}>右に並べて開く</span>
-        </div>
-      )}
+      {edge("left")}
+      {drag.canRight && edge("right")}
       <div className={styles.ghost} style={{ transform: `translate(${drag.x + 12}px, ${drag.y + 10}px)` }} aria-hidden>
         <FileText size={14} strokeWidth={1.6} aria-hidden />
         <span className={styles.ghostTitle}>{title}</span>
