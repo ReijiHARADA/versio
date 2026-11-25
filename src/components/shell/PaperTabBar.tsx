@@ -4,6 +4,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   FileTextIcon as FileText,
   FolderIcon as Folder,
+  InboxIcon as Inbox,
+  LibraryIcon as Library,
   CloseIcon as X,
 } from "@solar-icons/react/linear";
 import { useLibraryCache } from "../../stores/libraryCache";
@@ -11,6 +13,7 @@ import { useProjectStore } from "../../stores/projectStore";
 import { releasePaperBody } from "../../services/paperBodyRelease";
 import { paperTab, parseTab, readerPaperId, tabForPath, tabPath, usePaperTabs, type TabKey } from "../../stores/paperTabsStore";
 import { useSplitView } from "../../stores/splitViewStore";
+import { useAppStore } from "../../stores/appStore";
 import { displayPaperTitle } from "../../services/translation/quality";
 import type { Paper } from "../../types/paper";
 import {
@@ -29,6 +32,12 @@ import {
 import { morphLeftCap, TAB_MORPH_GAP } from "./paperTabCap";
 import styles from "./PaperTabBar.module.css";
 import { suppressTextSelection } from "../../utils/dragSelection";
+
+/** Icon-only tabs that always lead the main card's tabs; they are pages, not open documents. */
+const PINNED_TABS = [
+  { path: "/", label: "すべての論文", Icon: Library },
+  { path: "/inbox", label: "インボックス", Icon: Inbox },
+] as const;
 
 const DRAG_THRESHOLD = 4;
 /** How far below the strip a paper tab must be pulled before it becomes a split-view drop. */
@@ -554,6 +563,30 @@ export function PaperTabBar() {
     );
   };
 
+  const pinnedTabs = PINNED_TABS.map(({ path, label, Icon }) => {
+    const active = location.pathname === path;
+    const open = () => {
+      if (path === "/") useAppStore.getState().setLibraryFilter({ tag: null });
+      if (!active || location.search) navigate(path);
+    };
+    return (
+      <div
+        key={path}
+        role="tab"
+        aria-selected={active}
+        aria-label={label}
+        tabIndex={active ? 0 : -1}
+        title={label}
+        className={`${styles.tab} ${styles.pinned} ${active ? styles.active : ""}`}
+        onClick={open}
+        onKeyDown={(event) => { if (event.key === "Enter") open(); }}
+      >
+        {active && <ActiveTabShape moving={drag != null} textured={false} />}
+        <Icon className={styles.icon} size={15} strokeWidth={1.6} aria-hidden />
+      </div>
+    );
+  });
+
   return (
     <div
       ref={barRef}
@@ -568,6 +601,7 @@ export function PaperTabBar() {
           {leadTabs.map(renderTab)}
         </div>
       )}
+      {pinnedTabs}
       {(leadWidth != null ? visible.filter((tab) => !isLeftTab(tab.key)) : visible).map(renderTab)}
       {drag?.mode === "split" && createPortal(<SplitDropPreview drag={drag} title={visible.find((tab) => tab.key === drag.id)?.title ?? ""} />, document.body)}
     </div>

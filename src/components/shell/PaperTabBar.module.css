@@ -326,3 +326,14 @@
 .splitEdgeActive {
   --sq-bg: color-mix(in srgb, var(--color-accent) 18%, transparent);
 }
+
+/* すべての論文 / インボックス: icon-only, fixed width, never shrinks with the strip. */
+.pinned,
+.pinned.active {
+  flex: none;
+  width: 40px; /* spacing-literal-ok: icon tab width */
+  min-width: 40px; /* spacing-literal-ok: icon tab width */
+  padding-left: 0;
+  padding-right: 0;
+  justify-content: center;
+}
