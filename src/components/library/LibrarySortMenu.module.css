@@ -13,7 +13,7 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  background: color-mix(in srgb, var(--color-text) 6%, var(--color-bg));
   color: var(--color-text-secondary);
   cursor: pointer;
   transition:
@@ -23,7 +23,7 @@
 
 .trigger:hover,
 .trigger[aria-expanded="true"] {
-  background: color-mix(in srgb, var(--color-text) 11%, transparent);
+  background: color-mix(in srgb, var(--color-text) 11%, var(--color-bg));
   color: var(--color-text);
 }
 

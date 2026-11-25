@@ -6,7 +6,7 @@
   gap: var(--spacing-2xs);
   padding: 3px; /* spacing-literal-ok: segmented control inset, sized with the thumb */
   border-radius: 999px;
-  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  background: color-mix(in srgb, var(--color-text) 6%, var(--color-bg));
 }
 
 .option {
@@ -79,7 +79,7 @@
   /* 9 pad + 15 icon + 5 gap + 4em label + 11 pad */
   width: calc(40px + 4em);
   padding-left: 9px; /* spacing-literal-ok: segmented control geometry */
-  background: color-mix(in srgb, var(--color-text) 11%, transparent);
+  background: color-mix(in srgb, var(--color-text) 11%, var(--color-bg));
   color: var(--color-text);
 }
 
