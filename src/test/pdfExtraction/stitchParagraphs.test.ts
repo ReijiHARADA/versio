@@ -107,6 +107,17 @@ describe("stitchParagraphContinuations", () => {
     expect(out[0].original).toMatch(/MetaMap implements WSD by .* Briefly, CleanText is a tool/);
   });
 
+  it("takes a display that opens with the sentence's words as its rest", () => {
+    const blocks = [
+      block("a", "paragraph", "We estimated the intervention effect with a difference-in-differences design. The DID model was specified"),
+      block("eq", "equation", "as follows: Outcome = β0 + β1Group + β2Time + β3(Group"),
+      block("b", "paragraph", "× Time) + β4Covariates + ε, where β3 is the effect of interest."),
+    ];
+    const out = stitchParagraphContinuations(blocks, sections);
+    expect(out.map((b) => b.id)).toEqual(["a"]);
+    expect(out[0].original).toMatch(/was specified as follows: Outcome = .*β3\(Group × Time\) \+ β4Covariates/);
+  });
+
   it("does not reach beyond the next page", () => {
     expect(stitchParagraphContinuations([block("a", "paragraph", OPEN, 2), block("b", "paragraph", CONTINUATION, 4)], sections)).toHaveLength(2);
   });
