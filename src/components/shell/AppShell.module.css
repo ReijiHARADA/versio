@@ -307,8 +307,20 @@
 }
 
 /* Split view: a second card on the left, the routed page's card on the right, ground between. */
-.splitCard {
-  flex: none;
+/* The two cards split what the inspectors leave by the split ratio (flex-grow set inline). */
+.splitCard,
+.cards:has(.splitCard) .main {
+  flex-basis: 0;
+}
+
+.splitInspectorSlot {
+  flex-shrink: 0;
+  min-height: 0;
+  display: flex;
+}
+
+.splitInspectorSlot:empty {
+  display: none;
 }
 
 /* The inspector sweep belongs to the main card beside it, not to the split card. */
