@@ -52,19 +52,18 @@ const rectOf = (selector: string) => {
   return rect && rect.width > 0 ? rect : null;
 };
 /** Targets never overlap the main card: the card shrinks to open an empty slot on the side being
- *  aimed at. Left target: the sidebar plus the left slot. Right target: the right slot plus
+ *  aimed at. Left target: the left slot only (not the sidebar). Right target: the right slot plus
  *  the open inspector. */
 function measureSplitZones(canLeft: boolean, canRight: boolean): SplitZones | null {
   const card = rectOf("[data-main-card]");
   if (!card) return null;
   const leftSlot = document.querySelector("[data-split-peek-left]")?.getBoundingClientRect();
   const rightSlot = document.querySelector("[data-split-peek]")?.getBoundingClientRect();
-  const sidebar = rectOf("[data-sidebar-mode]");
   const inspector = rectOf(`#${INSPECTOR_SLOT_ID}`);
   return {
     top: card.top,
     height: card.height,
-    left: canLeft && leftSlot ? [sidebar && sidebar.right <= leftSlot.left + 1 ? sidebar.left : leftSlot.left, card.left] : null,
+    left: canLeft && leftSlot ? [leftSlot.left, card.left] : null,
     right: canRight && rightSlot ? [card.right, inspector && inspector.left >= rightSlot.right - 1 ? inspector.right : rightSlot.right] : null,
   };
 }
@@ -358,7 +357,7 @@ export function PaperTabBar() {
     d.zones = measureSplitZones(side === "left", side === "right");
     const z = d.zones;
     const x = d.lastX;
-    d.overSplit = !z ? null : z.left && x < z.left[1] ? "left" : z.right && x > z.right[0] ? "right" : null;
+    d.overSplit = !z ? null : z.left && x >= z.left[0] && x < z.left[1] ? "left" : z.right && x > z.right[0] ? "right" : null;
   };
   const onPointerMove = (event: React.PointerEvent) => {
     const d = dragRef.current;
