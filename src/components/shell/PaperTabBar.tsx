@@ -54,6 +54,8 @@ type TabDrag = {
   mode: "reorder" | "split";
   /** Half of the card the pulled tab will open in, or null when it is not over one. */
   overSplit: SplitSide | null;
+  /** Split view already open: the card the pulled tab would open in (null: nowhere new). */
+  moveSide: SplitSide | null;
   /** Pointer x at the last move; on release in split view it picks the tab's side. */
   lastX: number;
   /** Whether the right half accepts the tab (the paper that is there now can move left). */
@@ -62,7 +64,7 @@ type TabDrag = {
   releaseSelection?: () => void;
 };
 type SplitSide = "left" | "right";
-type DragView = Pick<TabDrag, "id" | "from" | "to" | "dx" | "shift" | "keys" | "mode" | "overSplit" | "canRight"> & { x: number; y: number };
+type DragView = Pick<TabDrag, "id" | "from" | "to" | "dx" | "shift" | "keys" | "mode" | "overSplit" | "canRight" | "moveSide"> & { x: number; y: number };
 /** Keeps the outer flares on the card's straight top edge, clear of its rounded corners. */
 const EDGE_PAD = 24;
 const isTranslating = (paper: Paper) =>
@@ -289,7 +291,7 @@ export function PaperTabBar() {
   const settleRef = useRef<{ id: TabKey; offset: number } | null>(null);
   const onPointerDown = (event: React.PointerEvent, key: TabKey) => {
     if (event.button !== 0) return;
-    dragRef.current = { id: key, startX: event.clientX, startY: event.clientY, moved: false, from: -1, keys: [], slots: [], shift: 0, to: -1, dx: 0, mode: "reorder", overSplit: null, canRight: false, lastX: event.clientX };
+    dragRef.current = { id: key, startX: event.clientX, startY: event.clientY, moved: false, from: -1, keys: [], slots: [], shift: 0, to: -1, dx: 0, mode: "reorder", overSplit: null, canRight: false, moveSide: null, lastX: event.clientX };
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   };
   const onPointerMove = (event: React.PointerEvent) => {
@@ -331,11 +333,21 @@ export function PaperTabBar() {
       const band = card ? splitBand(card.width) : 0;
       const side: SplitSide | null = !level || !card ? null : event.clientX < card.left + band ? "left" : event.clientX > card.right - band ? "right" : null;
       d.overSplit = side === "right" && !d.canRight ? null : side;
+      d.moveSide = null;
+      // Already split: dropping on a card opens the tab there (and moves it to that card's group).
+      if (splitPaperId) {
+        d.overSplit = null;
+        const groove = document.querySelector("[data-main-card]")?.getBoundingClientRect().left ?? Infinity;
+        const target: SplitSide = event.clientX < groove ? "left" : "right";
+        const shownThere = target === "right" ? d.id === activeId : id === splitPaperId;
+        d.moveSide = shownThere || (target === "left" && parseTab(d.id).kind !== "paper") ? null : target;
+      }
       d.dx = 0;
       d.to = d.from;
     } else {
       d.mode = "reorder";
       d.overSplit = null;
+      d.moveSide = null;
       const own = d.slots[d.from];
       const first = d.slots[0];
       const last = d.slots[d.slots.length - 1];
@@ -352,7 +364,7 @@ export function PaperTabBar() {
       d.to = to;
     }
     d.lastX = event.clientX;
-    setDrag({ id: d.id, from: d.from, to: d.to, dx: d.dx, shift: d.shift, keys: d.keys, mode: d.mode, overSplit: d.overSplit, canRight: d.canRight, x: event.clientX, y: event.clientY });
+    setDrag({ id: d.id, from: d.from, to: d.to, dx: d.dx, shift: d.shift, keys: d.keys, mode: d.mode, overSplit: d.overSplit, canRight: d.canRight, moveSide: d.moveSide, x: event.clientX, y: event.clientY });
   };
   const endDrag = (key: TabKey, commit: boolean) => {
     const d = dragRef.current;
@@ -362,6 +374,10 @@ export function PaperTabBar() {
     d.releaseSelection?.();
     if (!d.moved) {
       if (commit) openTab(key);
+      return;
+    }
+    if (commit && d.mode === "split" && d.moveSide) {
+      moveTabToSide(d.id, d.moveSide);
       return;
     }
     if (commit && d.mode === "split" && d.overSplit) {
@@ -432,6 +448,29 @@ export function PaperTabBar() {
 
   // Dropped on the card's right half: the paper opens there and the paper that was there moves
   // to the left pane (swapping places when the dropped tab came from the left pane).
+  // Split view: open a tab in the given card; it joins that card's group.
+  const moveTabToSide = (key: TabKey, side: SplitSide) => {
+    const { id } = parseTab(key);
+    if (side === "right") {
+      // The route effects take it out of the left group (and refill or end the left side).
+      if (key === activeId) return;
+      lastActiveRef.current = null;
+      navigate(tabPath(key));
+      return;
+    }
+    if (key !== activeId) {
+      useSplitView.getState().openSplit(id);
+      return;
+    }
+    // The right pane's paper moves left: the right shows its next tab, or the split ends.
+    const next = rightNeighbour(key);
+    useSplitView.getState().openSplit(id);
+    if (next) {
+      lastActiveRef.current = null;
+      navigate(tabPath(next));
+    } else collapseSplit();
+  };
+
   const openRightFromTab = (key: TabKey) => {
     const routed = readerPaperId(location.pathname);
     if (routed) useSplitView.getState().openSplit(routed);
@@ -568,10 +607,22 @@ function SplitDropPreview({ drag, title }: { drag: DragView; title: string }) {
         </div>
       </>
     );
+  // Already split: the whole card the tab would open in lights up.
+  const target = drag.moveSide ? document.querySelector(drag.moveSide === "left" ? "[data-split-card]" : "[data-main-card]")?.getBoundingClientRect() : null;
+  const splitOpen = document.querySelector("[data-split-card]") != null;
   return (
     <>
-      {edge("left")}
-      {drag.canRight && edge("right")}
+      {!splitOpen && edge("left")}
+      {!splitOpen && drag.canRight && edge("right")}
+      {target && (
+        <div
+          className={`${styles.splitZone} ${styles.splitZoneActive}`}
+          style={{ left: target.left, top: target.top, width: target.width, height: target.height }}
+          aria-hidden
+        >
+          <span className={styles.splitZoneLabel}>{drag.moveSide === "left" ? "左で開く" : "右で開く"}</span>
+        </div>
+      )}
       <div className={styles.ghost} style={{ transform: `translate(${drag.x + 12}px, ${drag.y + 10}px)` }} aria-hidden>
         <FileText size={14} strokeWidth={1.6} aria-hidden />
         <span className={styles.ghostTitle}>{title}</span>
