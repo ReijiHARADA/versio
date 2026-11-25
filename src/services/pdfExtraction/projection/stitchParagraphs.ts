@@ -165,6 +165,7 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
       // Full-page figures and tables (a long table runs over several pages) can push the rest of a paragraph several pages on.
       let onlyFloats = true;
       let sawFloat = false;
+      let onlyRunningHeads = false;
       // (The other column's bibliography can run longer than the window and over pages: `… Writing – original draft,` |
       // forty references | `Project administration, …`.)
       let onlyReferences = true;
@@ -253,6 +254,15 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j;
           break;
         }
+        // A sentence adverb and its comma (`… technology. Briefly,` + `CleanBoxTM is a hygiene …`) cannot end a paragraph:
+        // the very next one is its rest, whatever its first letter.
+        if (!listItem && (j === i + 1 || onlyRunningHeads) && eligible(candidate) && words(candidateText) >= 3 &&
+          /(?:^|[.!?]\s+)(?:Briefly|However|Moreover|Furthermore|Additionally|Thus|Therefore|Hence|Specifically|Similarly|Finally|Notably|Importantly|Consequently|Conversely|Meanwhile|Nevertheless|Overall|In addition|In contrast|In particular|For example|For instance|In this study|In summary|In conclusion),$/.test(currentText) &&
+          !/^(?:Table|Figure|Fig\.|Abbreviations?|Note|Notes|Keywords?)\b/.test(candidateText) &&
+          !(/^\p{Lu}[\p{L}'’-]+ et al\.?\s/u.test(candidateText) && /\b(?:19|20)\d{2}\b/.test(candidateText))) {
+          target = j;
+          break;
+        }
         // A word broken at the line end (`… 88.40 macro-` | `F1 (88.40%) with …`) goes on in the very next paragraph.
         if (!listItem && j === i + 1 && /\p{L}{2,}-$/u.test(currentText) && candidate.type === "paragraph" && eligible(candidate) &&
           words(candidateText) >= 3 && /^[\p{L}\d(]/u.test(candidateText)) {
@@ -269,8 +279,10 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j;
           break;
         }
-        if (!listItem && (j === i + 1 || (sawFloat && !skippedParagraph && !skippedFragment && hardOpen)) &&
-          (hardOpen || (/\s\p{Ll}{3,}$/u.test(currentText) && words(currentText) >= 20)) && !/,$/.test(currentText) && (eligible(candidate) || listIntro) &&
+        // (Past a running head too: `… MetaMap implements` | `Peng et al. BMC Med Inform Decis Mak 2020, …` | `WSD by …`;
+        // and after a compound word: `… placed under medical-grade` + `UV-C light for 60 s …`.)
+        if (!listItem && (j === i + 1 || onlyRunningHeads || (sawFloat && !skippedParagraph && !skippedFragment && hardOpen)) &&
+          (hardOpen || (/[\s-]\p{Ll}{3,}$/u.test(currentText) && words(currentText) >= 20)) && !/,$/.test(currentText) && (eligible(candidate) || listIntro) &&
           TERM_START.test(candidateText) && looseContinuation(currentText, candidateText, true)) {
           target = j;
           break;
@@ -323,6 +335,7 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         const transparentNote = candidate.type === "paragraph" &&
           ((out[j - 1]?.type === "table" && words(candidateText) <= 15) ||
             (words(candidateText) <= 20 && /^\p{Lu}[\p{L}'’-]+ et al\.?\s/u.test(candidateText) && /\b(?:19|20)\d{2}\b/.test(candidateText) && !TERMINAL.test(candidateText)));
+        onlyRunningHeads = (j === i + 1 || onlyRunningHeads) && candidate.type === "paragraph" && out[j - 1]?.type !== "table" && transparentNote;
         if (transparentNote || referenceFragment) { /* skipped like a float's own text */ }
         else if (candidate.type === "paragraph" && (TERMINAL.test(candidateText) || words(candidateText) > 12)) skippedParagraph = true;
         else if (candidate.type === "paragraph") skippedFragment = true;
