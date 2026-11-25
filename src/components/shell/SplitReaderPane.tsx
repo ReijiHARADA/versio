@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { readerPaperId } from "../../stores/paperTabsStore";
 import { clampSplitRatio, useSplitView } from "../../stores/splitViewStore";
 import { releasePaperBody } from "../../services/paperBodyRelease";
+import { SPLIT_INSPECTOR_SLOT_ID } from "./inspectorSlot";
 import styles from "./AppShell.module.css";
 
 const ReaderScreen = lazy(() => import("../reader/ReaderScreen").then((m) => ({ default: m.ReaderScreen })));
@@ -33,9 +34,12 @@ export function SplitReaderPane({ paperId }: { paperId: string }) {
     if (!row) return;
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
-    const rect = row.getBoundingClientRect();
-    // The groove's centre follows the pointer.
-    const move = (e: PointerEvent) => useSplitView.getState().setRatio((e.clientX - rect.left) / rect.width);
+    // The cards share what the inspectors leave; the left card's right edge follows the pointer.
+    const left = row.querySelector<HTMLElement>("[data-split-card]")?.getBoundingClientRect();
+    const right = row.querySelector<HTMLElement>("[data-main-card]")?.getBoundingClientRect();
+    if (!left || !right) return;
+    const total = left.width + right.width;
+    const move = (e: PointerEvent) => useSplitView.getState().setRatio((left.width + e.clientX - event.clientX) / total);
     const up = () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
@@ -48,10 +52,7 @@ export function SplitReaderPane({ paperId }: { paperId: string }) {
 
   return (
     <>
-      <div
-        className={`${styles.main} ${styles.splitCard}`}
-        style={{ flexBasis: `calc(${clampSplitRatio(ratio) * 100}% - var(--card-gap) / 2)` }}
-      >
+      <div className={`${styles.main} ${styles.splitCard}`} style={{ flexGrow: clampSplitRatio(ratio) }} data-split-card>
         <div className={styles.splitPane} data-split-pane>
           <Suspense fallback={null}>
             <ReaderScreen key={paperId} paperId={paperId} onClosePane={closeSplit} />
@@ -59,6 +60,8 @@ export function SplitReaderPane({ paperId }: { paperId: string }) {
         </div>
         <div className={styles.mainRim} aria-hidden />
       </div>
+      {/* This pane's inspector sits on the ground beside its card, like the main card's. */}
+      <div id={SPLIT_INSPECTOR_SLOT_ID} className={styles.splitInspectorSlot} />
       <div
         ref={dividerRef}
         className={styles.splitGroove}

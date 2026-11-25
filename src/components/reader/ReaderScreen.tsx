@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
-import { INSPECTOR_ON_GROUND_QUERY, INSPECTOR_SLOT_ID } from "../shell/inspectorSlot";
+import { INSPECTOR_ON_GROUND_QUERY, INSPECTOR_SLOT_ID, SPLIT_INSPECTOR_SLOT_ID } from "../shell/inspectorSlot";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeftIcon as ArrowLeft,
@@ -102,7 +102,7 @@ export function ReaderScreen({ paperId: paneId, onClosePane }: ReaderScreenProps
   // first commit); narrow ones keep it inside the card as an overlay so it never covers the toolbar.
   // The split pane keeps its inspector inside its own half; only the main pane uses the ground.
   const [inspectorSlot, setInspectorSlot] = useState<HTMLElement | null>(() =>
-    !inPane && window.matchMedia(INSPECTOR_ON_GROUND_QUERY).matches ? document.getElementById(INSPECTOR_SLOT_ID) : null
+    window.matchMedia(INSPECTOR_ON_GROUND_QUERY).matches ? document.getElementById(inPane ? SPLIT_INSPECTOR_SLOT_ID : INSPECTOR_SLOT_ID) : null
   );
   const [wideAtMount] = useState(() => window.matchMedia(INSPECTOR_ON_GROUND_QUERY).matches);
   const setDisplaySettings = useAppStore((s) => s.setDisplaySettings);
@@ -122,9 +122,9 @@ export function ReaderScreen({ paperId: paneId, onClosePane }: ReaderScreenProps
     [inPane, setDisplaySettings]
   );
   useEffect(() => {
-    if (inPane) return;
     const wide = window.matchMedia(INSPECTOR_ON_GROUND_QUERY);
-    const sync = () => setInspectorSlot(wide.matches ? document.getElementById(INSPECTOR_SLOT_ID) : null);
+    const slotId = inPane ? SPLIT_INSPECTOR_SLOT_ID : INSPECTOR_SLOT_ID;
+    const sync = () => setInspectorSlot(wide.matches ? document.getElementById(slotId) : null);
     sync();
     wide.addEventListener("change", sync);
     return () => wide.removeEventListener("change", sync);
