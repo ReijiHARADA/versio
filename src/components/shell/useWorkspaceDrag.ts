@@ -5,6 +5,7 @@ import { listWorkspace, moveWorkspaceItem } from "../../services/projectService"
 import { getAllWorkspacePapers } from "../../services/database";
 import { useProjectStore } from "../../stores/projectStore";
 import { showToast } from "../../stores/toastStore";
+import { suppressTextSelection } from "../../utils/dragSelection";
 
 type Drop = { id: string; parentId: string | null; order?: number; edge: string; error?: string };
 
@@ -46,17 +47,20 @@ export function useWorkspaceDrag(nodes: WorkspaceNode[], onMoved: (id: string | 
       skipClick.current = false;
       const { clientX: x, clientY: y, pointerId } = event;
       let started = false;
+      let releaseSelection: (() => void) | null = null;
       const stop = () => {
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", up);
         window.removeEventListener("pointercancel", cancel);
         window.removeEventListener("keydown", key);
         document.body.style.cursor = "";
+        releaseSelection?.();
         setDragging(false); setDrop(null);
       };
       const move = (e: PointerEvent) => {
         if (e.pointerId !== pointerId) return;
         if (!started && Math.hypot(e.clientX - x, e.clientY - y) < 8) return;
+        if (!started) releaseSelection = suppressTextSelection();
         started = true; skipClick.current = true; setDragging(true); e.preventDefault();
         const target = workspaceDropAtPoint(nodes, id, e.clientX, e.clientY);
         setDrop(target);

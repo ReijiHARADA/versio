@@ -5,6 +5,7 @@ import { clampSplitRatio, useSplitView } from "../../stores/splitViewStore";
 import { releasePaperBody } from "../../services/paperBodyRelease";
 import { SPLIT_INSPECTOR_SLOT_ID } from "./inspectorSlot";
 import styles from "./AppShell.module.css";
+import { suppressTextSelection } from "../../utils/dragSelection";
 
 const ReaderScreen = lazy(() => import("../reader/ReaderScreen").then((m) => ({ default: m.ReaderScreen })));
 
@@ -39,8 +40,10 @@ export function SplitReaderPane({ paperId }: { paperId: string }) {
     const right = row.querySelector<HTMLElement>("[data-main-card]")?.getBoundingClientRect();
     if (!left || !right) return;
     const total = left.width + right.width;
+    const releaseSelection = suppressTextSelection();
     const move = (e: PointerEvent) => useSplitView.getState().setRatio((left.width + e.clientX - event.clientX) / total);
     const up = () => {
+      releaseSelection();
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
