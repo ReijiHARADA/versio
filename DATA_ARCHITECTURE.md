@@ -1,3 +1,11 @@
+---
+type: Spec
+title: Versio Data Architecture
+description: Where Versio stores paper bodies, the library index, annotations, caches, and the search index, and what anchors each.
+tags: [data, persistence, sqlite, paper-package]
+status: stable
+---
+
 # Versio Data Architecture
 
 Production persistence for Versio. Extraction internals remain in
@@ -268,7 +276,7 @@ Tables:
 - `annotations` — block-anchored notes
 - `reading_positions` — `paperId + blockId + offset`
 - `glossaries`, `translation_cache`, `translation_jobs`, `settings`, `benchmarks`
-- `papers_fts` — FTS5 cache; rebuildable from packages + annotations. Columns hold normalized search text (`normalizeIndexText`), not display text; searched with `LIKE` (schema v10 rewrote existing rows)
+- `papers_fts` — search cache for the browser build; rebuildable from packages + annotations. Columns hold normalized search text (`normalizeIndexText`), not display text (schema v10 rewrote existing rows). The desktop app keeps this text in `<AppData>/search-index.sqlite` instead (native rusqlite, FTS5 trigram; `src-tauri/src/search_index.rs`) and empties `papers_fts` / `paper_words` once moved
 
 ### Soft delete / Trash (schema v7)
 

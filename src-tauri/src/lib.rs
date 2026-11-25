@@ -9,6 +9,7 @@ mod ocr;
 mod opened_files;
 mod paper_fs;
 mod plamo;
+mod search_index;
 mod source_pdf;
 mod updater;
 
@@ -53,6 +54,7 @@ pub fn run() {
     tauri::Builder::default()
         .manage(plamo::PlamoState::default())
         .manage(opened_files::OpenedPdfQueue::default())
+        .manage(search_index::SearchIndexState::default())
         // Restore window size/position only; other flags (visibility,
         // decorations) would fight the macOS chrome setup.
         .plugin(
@@ -120,6 +122,12 @@ pub fn run() {
             source_pdf::ui_e2e_enabled,
             source_pdf::ui_e2e_smoke_only,
             source_pdf::ui_e2e_fixture_path,
+            search_index::search_index_put,
+            search_index::search_index_put_many,
+            search_index::search_index_set_meta,
+            search_index::search_index_delete,
+            search_index::search_index_ids,
+            search_index::search_index_search,
             paper_fs::read_app_file,
             paper_fs::write_app_file,
             paper_fs::app_file_exists,

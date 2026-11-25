@@ -26,6 +26,8 @@ tauri-plugin-updater = "2"
 tauri-plugin-shell = "2"
 base64 = "0.22"
 sha2 = "0.10"
+# Library search index (search_index.rs); bundled for FTS5 trigram + contentless_delete.
+rusqlite = { version = "=0.41.1", features = ["bundled"] }
 
 # Apple Vision OCR + window chrome (macOS only)
 [target.'cfg(target_os = "macos")'.dependencies]

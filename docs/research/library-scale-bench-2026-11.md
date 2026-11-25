@@ -62,6 +62,20 @@ generated: 2026-11-26
 | 10000（前） | 3.2s | 7.1s | 200k | 100 / 167ms | 254MB |
 | 10000（後） | 0.21s | 0.13s | 2.2k | 16.7 / 16.7ms | 33MB |
 
+### 検索本文をネイティブ索引へ（`search-index.sqlite`）
+
+`cd src-tauri && NATIVE_SCALE=1000,10000 cargo test --release --lib native_scale -- --ignored --nocapture`（入力は `npm run bench:library-scale` が書き出す `.cache/library-scale/native-input.json`）。
+
+| 本数 | ファイル | 1 本の書き込み | 検索（8 クエリ） |
+| --- | --- | --- | --- |
+| 1000 | 381MB | 21ms | 0–4ms（cognitive load のみ 75ms） |
+| 10000 | 3.7GB | 32ms | 0–36ms（cognitive load のみ 250ms） |
+
+- sql.js では 10000 本で検索 3.2〜7.8 秒、library.sqlite 1.37GB を変更のたびに丸ごと書き直していた。いまは本文が sql.js から出て、行単位で書き込む（WAL）。
+- 列ごとの trigram フレーズ検索（`detail=full`、`case_sensitive 1`）だけで採点し、本文は読まない。`detail=none` の候補絞り込み＋本文照合も試した: ファイルは 1000 本で 119MB と小さいが、検索が 74〜153ms（10000 本では約 1 秒）かかり見送り。
+- 1〜2 文字の CJK（`研究`、`数`）は印付き trigram（`研究\uE000`、`数\uE000\uE000`）で引く。
+- 1000 本相当を移す初回の移行は約 30 秒。起動を止めないよう、バックグラウンドで走らせる。
+
 ## 結論
 
 - 〜300 本: 問題なし。
@@ -72,6 +86,6 @@ generated: 2026-11-26
 
 1. **IPC をバイナリで渡す**（済: `write_app_file` / `read_app_file` / `read_dropped_pdf` / `download_open_access_pdf` を Tauri v2 の raw body / `tauri::ipc::Response` にした）。小さい変更で 1000 本の壁を外せる。
 2. **一覧を仮想化する**（済: `LibraryPaperList` を `@tanstack/react-virtual` で行単位に仮想化。グリッドは列数ごとに行へまとめる）。ワークスペース画面（`ProjectScreen`）は未対応。
-3. **SQLite をネイティブにする**: Rust の rusqlite でファイルへ差分を書き込み、sql.js の全体 export と起動時の全体読み込みをやめる。10000 本にはこれが必須。
-4. **検索の候補を先に絞る**: FTS5 `MATCH`（trigram など）で候補を絞ってから `versio_search_score` をかける。3 を入れると FTS5 / trigram が確実に使える。
+3. **SQLite をネイティブにする**（検索本文は済: `search-index.sqlite`。sql.js に残るのはメタデータ・注釈・`translation_cache`・`benchmarks`）。
+4. **検索を索引で引く**（済: FTS5 trigram の列ごとのフレーズ検索で採点）。
 5. `translation_cache` は件数に上限を設けるか、別ファイルに分ける。

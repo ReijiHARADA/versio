@@ -4,7 +4,7 @@ import type { Annotation } from "../types/annotation";
 import type { GlossaryEntry } from "./llm/types";
 import type { TranslationCacheEntry } from "./translation/types";
 import type { BenchmarkEntry } from "../data/types/benchmark";
-import { getStorage } from "../data/runtime";
+import { getStorage, type StorageRuntime } from "../data/runtime";
 import { applyMetadataPatch, type PaperMetadataPatch } from "./bibliography/applyPatch";
 import { migrateIndexedDbV4IfNeeded } from "../data/migration/migrate";
 import {
@@ -66,6 +66,19 @@ import { syncPaperIndexesFromPackages } from "../data/package/syncIndex";
 export type { BenchmarkEntry };
 
 let migrated = false;
+/** Settles when the startup search index reconcile is done; search waits for it. */
+let searchIndexReady: Promise<void> = Promise.resolve();
+
+async function reconcileSearchIndexInBackground(storage: StorageRuntime): Promise<void> {
+  try {
+    const { reconcileNativeSearchIndex } = await import("../data/sqlite/reconcileSearchIndex");
+    const result = await reconcileNativeSearchIndex(storage.fs, storage.db);
+    if (result && (result.copied || result.rebuilt || result.removed)) console.info("search index reconciled", result);
+  } catch (error) {
+    // Search degrades; the library stays usable, and the next launch retries.
+    console.warn("search index reconcile failed:", error);
+  }
+}
 let migrationInFlight: Promise<void> | null = null;
 
 async function ready() {
@@ -80,6 +93,8 @@ async function ready() {
         await migrateIndexedDbV4IfNeeded(storage.fs, storage.db);
         await syncPaperIndexesFromPackages(storage.fs, storage.db);
         migrated = true;
+        // In the background: moving a large sql.js index over must not hold up startup.
+        searchIndexReady = reconcileSearchIndexInBackground(storage);
       })().finally(() => {
         migrationInFlight = null;
       });
@@ -183,6 +198,8 @@ export async function flushPersistence(): Promise<void> {
   const { fs, db } = await ready();
   await flushDocumentPersist(fs, db);
   await db.persist();
+  const { nativeSearchIndex } = await import("../data/sqlite/nativeSearchIndex");
+  await nativeSearchIndex()?.flush();
 }
 
 export async function getPaper(id: string): Promise<Paper | undefined> {
@@ -431,8 +448,9 @@ export async function searchLibraryPaperIds(
   query: string | import("../domain/search/searchQuery").SearchQuery
 ): Promise<string[]> {
   const { db } = await ready();
-  const { searchPapersFts } = await import("../data/sqlite/fts");
-  return searchPapersFts(db, query);
+  await searchIndexReady;
+  const { searchPaperIds } = await import("../data/sqlite/fts");
+  return searchPaperIds(db, query);
 }
 
 export { indexPaperText };

@@ -2,7 +2,9 @@ import type { Database } from "sql.js";
 import type { SqliteClient } from "./client";
 import { normalizeIndexText } from "../../domain/search/normalizeSearchText";
 import { singleCharWords } from "../../domain/search/singleCharWords";
-import { buildSearchQuery, scoreFields, type SearchQuery } from "../../domain/search/searchQuery";
+import { isSingleCharTerm } from "../../domain/search/singleCharWords";
+import { buildSearchQuery, scoreFields, variantNeedles, type SearchQuery } from "../../domain/search/searchQuery";
+import { nativeSearchIndex, type NativeSearchGroup } from "./nativeSearchIndex";
 
 /**
  * `papers_fts` is a search-only cache. Every column holds `normalizeIndexText`
@@ -19,22 +21,44 @@ export function rebuildPaperFts(
     annotation: string;
   }
 ): void {
+  const words = singleCharWords([input.title, input.authors, input.original, input.translation, input.annotation].join("\n"));
+  const fields = {
+    title: normalizeIndexText(input.title),
+    authors: normalizeIndexText(input.authors),
+    original: normalizeIndexText(input.original),
+    translation: normalizeIndexText(input.translation),
+    annotation: normalizeIndexText(input.annotation),
+  };
+  const native = nativeSearchIndex();
+  if (native) {
+    native.put({ paperId, ...fields, words });
+    return;
+  }
   db.exec("DELETE FROM papers_fts WHERE paper_id = ?", [paperId]);
-  db.exec("INSERT OR REPLACE INTO paper_words (paper_id, words) VALUES (?, ?)", [
-    paperId,
-    singleCharWords([input.title, input.authors, input.original, input.translation, input.annotation].join("\n")),
-  ]);
+  db.exec("INSERT OR REPLACE INTO paper_words (paper_id, words) VALUES (?, ?)", [paperId, words]);
   db.exec(
     "INSERT INTO papers_fts (paper_id, title, authors, original, translation, annotation) VALUES (?, ?, ?, ?, ?, ?)",
-    [
-      paperId,
-      normalizeIndexText(input.title),
-      normalizeIndexText(input.authors),
-      normalizeIndexText(input.original),
-      normalizeIndexText(input.translation),
-      normalizeIndexText(input.annotation),
-    ]
+    [paperId, fields.title, fields.authors, fields.original, fields.translation, fields.annotation]
   );
+}
+
+/**
+ * Title / authors / annotation changed but not the body. Returns false when the
+ * caller must rewrite the whole row (sql.js path).
+ */
+export function refreshPaperFtsMeta(
+  paperId: string,
+  input: { title: string; authors: string; annotation: string }
+): boolean {
+  const native = nativeSearchIndex();
+  if (!native) return false;
+  native.setMeta({
+    paperId,
+    title: normalizeIndexText(input.title),
+    authors: normalizeIndexText(input.authors),
+    annotation: normalizeIndexText(input.annotation),
+  });
+  return true;
 }
 
 /** A hit in the title outranks one in the body. */
@@ -112,4 +136,32 @@ export function searchPapersFts(db: SqliteClient, query: string | SearchQuery): 
     ORDER BY score DESC
     LIMIT 50`;
   return db.query<{ paper_id: string }>(sql, [scoringJson(parsed)]).map((row) => String(row.paper_id));
+}
+
+/** The query as `search_index_search` takes it; needles as `scoreFields` uses them. */
+export function nativeSearchGroups(query: SearchQuery): NativeSearchGroup[] {
+  return query.groups.map((group) => ({
+    variants: group.variants.map((variant) => {
+      const single = isSingleCharTerm(variant.term);
+      return {
+        term: variant.term,
+        weight: variant.weight,
+        single,
+        needles: single ? [variant.term] : variantNeedles(variant),
+      };
+    }),
+  }));
+}
+
+/** Ranked ids (at most 50, no trashed papers) from the native index or sql.js. */
+export async function searchPaperIds(db: SqliteClient, query: string | SearchQuery): Promise<string[]> {
+  const native = nativeSearchIndex();
+  if (!native) return searchPapersFts(db, query);
+  const parsed = typeof query === "string" ? buildSearchQuery(query) : query;
+  if (parsed.groups.length === 0) return [];
+  const ranked = await native.search(nativeSearchGroups(parsed));
+  const live = new Set(
+    db.query<{ id: string }>("SELECT id FROM papers WHERE trashed_at IS NULL").map((row) => String(row.id))
+  );
+  return ranked.filter((id) => live.has(id)).slice(0, 50);
 }
