@@ -22,11 +22,14 @@ export function useReaderSearch(opts: {
   contentRef: RefObject<HTMLDivElement | null>;
   paperContentRef: RefObject<ReaderContentHandle | null>;
   storeBlocks: PaperBlock[];
+  /** False in the split pane: the title bar search drives the main pane only. */
+  enabled?: boolean;
 }) {
-  const { contentRef, paperContentRef, storeBlocks } = opts;
+  const { contentRef, paperContentRef, storeBlocks, enabled = true } = opts;
 
   // The title bar search field drives in-paper search while Reader is open.
-  const searchQuery = useProjectStore((state) => state.searchQuery);
+  const globalSearchQuery = useProjectStore((state) => state.searchQuery);
+  const searchQuery = enabled ? globalSearchQuery : "";
   const setSearchQuery = useProjectStore((state) => state.setSearchQuery);
   const showSearch = searchQuery.length > 0;
   const [searchHitIndex, setSearchHitIndex] = useState(0);
@@ -40,6 +43,7 @@ export function useReaderSearch(opts: {
   storeBlocksRef.current = storeBlocks;
 
   useEffect(() => {
+    if (!enabled) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "f") {
         e.preventDefault();
@@ -54,7 +58,7 @@ export function useReaderSearch(opts: {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showSearch, setSearchQuery]);
+  }, [enabled, showSearch, setSearchQuery]);
 
   const mountAndScrollToHit = useCallback(
     async (index: number, blockIds: string[]) => {
