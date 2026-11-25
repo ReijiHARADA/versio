@@ -54,6 +54,8 @@ type TabDrag = {
   mode: "reorder" | "split";
   /** Half of the card the pulled tab will open in, or null when it is not over one. */
   overSplit: SplitSide | null;
+  /** Pointer x at the last move; on release in split view it picks the tab's side. */
+  lastX: number;
   /** Whether the right half accepts the tab (the paper that is there now can move left). */
   canRight: boolean;
   /** Lifts the drag-time text-selection lock (set once the drag passes its threshold). */
@@ -76,6 +78,16 @@ export function PaperTabBar() {
   const workspaceLoaded = useProjectStore((state) => state.loaded);
   const activeId = tabForPath(location.pathname);
   const splitPaperId = useSplitView((state) => state.paperId);
+  const leftTabIds = useSplitView((state) => state.leftTabs);
+  /** In split view, whether a tab sits over the left card (and opens in the left pane). */
+  const isLeftTab = useCallback(
+    (key: TabKey) => {
+      if (!splitPaperId) return false;
+      const { kind, id } = parseTab(key);
+      return kind === "paper" && key !== activeId && (id === splitPaperId || leftTabIds.includes(id));
+    },
+    [splitPaperId, leftTabIds, activeId]
+  );
   const lastActiveRef = useRef<TabKey | null>(null);
   const lastPagePathRef = useRef("/");
   const barRef = useRef<HTMLDivElement>(null);
@@ -139,6 +151,13 @@ export function PaperTabBar() {
     return () => observer.disconnect();
   }, [splitPaperId]);
 
+  // The routed tab always sits over the right card.
+  useEffect(() => {
+    if (!activeId || !splitPaperId) return;
+    const { kind, id } = parseTab(activeId);
+    if (kind === "paper" && id !== splitPaperId && leftTabIds.includes(id)) useSplitView.getState().removeLeftTab(id);
+  }, [activeId, splitPaperId, leftTabIds]);
+
   // The paper in the split pane always has a tab (it may have been opened without one).
   useEffect(() => {
     const live = papers.some((paper) => paper.id === splitPaperId && !paper.trashedAt);
@@ -173,7 +192,8 @@ export function PaperTabBar() {
     (key: TabKey) => {
       const next = usePaperTabs.getState().closeTab(key);
       const { kind: closedKind, id: closedId } = parseTab(key);
-      if (closedKind === "paper" && useSplitView.getState().paperId === closedId) useSplitView.getState().closeSplit();
+      // A left tab leaves the left group; if it was on screen there, another left tab takes its place.
+      if (closedKind === "paper") useSplitView.getState().removeLeftTab(closedId);
       // A closed paper no longer needs its body kept warm (see useReaderDocument).
       const { kind, id } = parseTab(key);
       if (kind === "paper" && key !== activeId) releasePaperBody(id);
@@ -187,10 +207,16 @@ export function PaperTabBar() {
   const openTab = useCallback(
     (key: TabKey) => {
       // The paper in the split pane is already on screen; its tab only marks it.
-      if (key === activeId || parseTab(key).id === useSplitView.getState().paperId) return;
+      const { id } = parseTab(key);
+      if (key === activeId || id === useSplitView.getState().paperId) return;
+      // A tab over the left card opens in the left pane.
+      if (isLeftTab(key)) {
+        useSplitView.getState().openSplit(id);
+        return;
+      }
       navigate(tabPath(key));
     },
-    [activeId, navigate]
+    [activeId, navigate, isLeftTab]
   );
 
   // ⌘1–9 jumps to a tab (⌘9 = last), ⌃Tab / ⌃⇧Tab cycles.
@@ -236,7 +262,7 @@ export function PaperTabBar() {
   const settleRef = useRef<{ id: TabKey; offset: number } | null>(null);
   const onPointerDown = (event: React.PointerEvent, key: TabKey) => {
     if (event.button !== 0) return;
-    dragRef.current = { id: key, startX: event.clientX, startY: event.clientY, moved: false, from: -1, keys: [], slots: [], shift: 0, to: -1, dx: 0, mode: "reorder", overSplit: null, canRight: false };
+    dragRef.current = { id: key, startX: event.clientX, startY: event.clientY, moved: false, from: -1, keys: [], slots: [], shift: 0, to: -1, dx: 0, mode: "reorder", overSplit: null, canRight: false, lastX: event.clientX };
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   };
   const onPointerMove = (event: React.PointerEvent) => {
@@ -298,6 +324,7 @@ export function PaperTabBar() {
       for (let i = d.from - 1; i >= 0; i--) if (leftEdge < d.slots[i].left + d.slots[i].width / 2) to = i;
       d.to = to;
     }
+    d.lastX = event.clientX;
     setDrag({ id: d.id, from: d.from, to: d.to, dx: d.dx, shift: d.shift, keys: d.keys, mode: d.mode, overSplit: d.overSplit, canRight: d.canRight, x: event.clientX, y: event.clientY });
   };
   const endDrag = (key: TabKey, commit: boolean) => {
@@ -316,6 +343,20 @@ export function PaperTabBar() {
       return;
     }
     const to = commit && d.mode === "reorder" ? d.to : d.from;
+    // Split view: a tab on screen in neither pane may cross to the other card's group; it then
+    // opens on that side. The tabs on screen stay over their own card.
+    const bar = barRef.current?.getBoundingClientRect();
+    let crossed = false;
+    if (commit && d.mode === "reorder" && splitPaperId && mainCardX != null && bar) {
+      const { kind, id } = parseTab(d.id);
+      const onScreen = d.id === activeId || id === splitPaperId;
+      const wantsLeft = d.lastX < bar.left + mainCardX;
+      if (!onScreen && kind === "paper" && wantsLeft !== isLeftTab(d.id)) {
+        if (wantsLeft) useSplitView.getState().addLeftTab(id);
+        else useSplitView.getState().removeLeftTab(id);
+        crossed = true;
+      }
+    }
     const own = d.slots[d.from];
     const finalLeft = to > d.from ? d.slots[to].left + d.slots[to].width - own.width : to < d.from ? d.slots[to].left : own.left;
     const offset = own.left + d.dx - finalLeft;
@@ -325,7 +366,7 @@ export function PaperTabBar() {
       const at = without.indexOf(d.keys[to]);
       if (at >= 0) usePaperTabs.getState().moveTab(d.id, to > d.from ? at + 1 : at);
     }
-    if (Math.abs(offset) > 0.5) settleRef.current = { id: d.id, offset };
+    if (!crossed && Math.abs(offset) > 0.5) settleRef.current = { id: d.id, offset };
   };
   // Released tab glides from where the pointer left it into its (new) slot.
   useLayoutEffect(() => {
@@ -383,14 +424,12 @@ export function PaperTabBar() {
   // the way; then they move right far enough for the flare to clear the card's corner.
   const paddingLeft = inset.left > 0 ? Math.max(EDGE_PAD, inset.left) : 0;
 
-  const activeIndex = activeId ? visible.findIndex((tab) => tab.key === activeId) : -1;
   // In split view the routed tab sits above the right card's left edge; the tabs before it share
   // the room above the left card.
-  const leadWidth = mainCardX != null && activeIndex >= 0 ? Math.max(0, mainCardX - paddingLeft) : null;
-  // The left pane's paper leads the tabs over the left card; the rest keep their order.
-  const splitKey = splitPaperId ? paperTab(splitPaperId) : null;
-  const splitTab = visible.find((tab) => tab.key === splitKey);
-  const leadTabs = [...(splitTab ? [splitTab] : []), ...visible.slice(0, Math.max(0, activeIndex)).filter((tab) => tab.key !== splitKey)];
+  // In split view the tabs form two groups: those over the left card (opening in the left pane)
+  // and those over the right card, whose first tab starts at the right card's left edge.
+  const leadWidth = mainCardX != null ? Math.max(0, mainCardX - paddingLeft) : null;
+  const leadTabs = leadWidth != null ? visible.filter((tab) => isLeftTab(tab.key)) : [];
   const renderTab = ({ key: id, kind, title, translating }: VisibleTab) => {
     const active = id === activeId;
     const inSplit = kind === "paper" && parseTab(id).id === splitPaperId;
@@ -444,7 +483,7 @@ export function PaperTabBar() {
           {leadTabs.map(renderTab)}
         </div>
       )}
-      {(leadWidth != null ? visible.slice(activeIndex).filter((tab) => tab.key !== splitKey) : visible).map(renderTab)}
+      {(leadWidth != null ? visible.filter((tab) => !isLeftTab(tab.key)) : visible).map(renderTab)}
       {drag?.mode === "split" && createPortal(<SplitDropPreview drag={drag} title={visible.find((tab) => tab.key === drag.id)?.title ?? ""} />, document.body)}
     </div>
   );
