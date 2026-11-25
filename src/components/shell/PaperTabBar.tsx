@@ -284,10 +284,14 @@ export function PaperTabBar() {
       const last = d.slots[d.slots.length - 1];
       const dx = event.clientX - d.startX;
       d.dx = Math.min(last.left + last.width - (own.left + own.width), Math.max(first.left - own.left, dx));
-      const center = own.left + own.width / 2 + d.dx;
+      // Swap once the dragged tab's leading edge passes a neighbour's middle. (Its centre cannot:
+      // the drag stops at the strip's ends, where an equal-width tab's centre only reaches the
+      // end tab's centre, so the first / last slot was unreachable.)
+      const leftEdge = own.left + d.dx;
+      const rightEdge = leftEdge + own.width;
       let to = d.from;
-      for (let i = d.from + 1; i < d.slots.length; i++) if (center > d.slots[i].left + d.slots[i].width / 2) to = i;
-      for (let i = d.from - 1; i >= 0; i--) if (center < d.slots[i].left + d.slots[i].width / 2) to = i;
+      for (let i = d.from + 1; i < d.slots.length; i++) if (rightEdge > d.slots[i].left + d.slots[i].width / 2) to = i;
+      for (let i = d.from - 1; i >= 0; i--) if (leftEdge < d.slots[i].left + d.slots[i].width / 2) to = i;
       d.to = to;
     }
     setDrag({ id: d.id, from: d.from, to: d.to, dx: d.dx, shift: d.shift, keys: d.keys, mode: d.mode, overSplit: d.overSplit, canRight: d.canRight, x: event.clientX, y: event.clientY });
