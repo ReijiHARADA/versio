@@ -9,7 +9,7 @@ import {
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
 import { releasePaperBody } from "../../services/paperBodyRelease";
-import { parseTab, readerPaperId, tabForPath, tabPath, usePaperTabs, type TabKey } from "../../stores/paperTabsStore";
+import { paperTab, parseTab, readerPaperId, tabForPath, tabPath, usePaperTabs, type TabKey } from "../../stores/paperTabsStore";
 import { useSplitView } from "../../stores/splitViewStore";
 import { displayPaperTitle } from "../../services/translation/quality";
 import type { Paper } from "../../types/paper";
@@ -133,6 +133,14 @@ export function PaperTabBar() {
     observer.observe(bar);
     return () => observer.disconnect();
   }, [splitPaperId]);
+
+  // The paper in the split pane always has a tab (it may have been opened without one).
+  useEffect(() => {
+    const live = papers.some((paper) => paper.id === splitPaperId && !paper.trashedAt);
+    if (splitPaperId && live && !usePaperTabs.getState().tabs.includes(paperTab(splitPaperId))) {
+      usePaperTabs.getState().openTab(paperTab(splitPaperId), activeId);
+    }
+  }, [splitPaperId, activeId, tabs, papers]);
 
   // Keep clear of the fixed title bar controls (back/forward) and the search field.
   useLayoutEffect(() => {
@@ -366,6 +374,10 @@ export function PaperTabBar() {
   // In split view the routed tab sits above the right card's left edge; the tabs before it share
   // the room above the left card.
   const leadWidth = mainCardX != null && activeIndex >= 0 ? Math.max(0, mainCardX - paddingLeft) : null;
+  // The left pane's paper leads the tabs over the left card; the rest keep their order.
+  const splitKey = splitPaperId ? paperTab(splitPaperId) : null;
+  const splitTab = visible.find((tab) => tab.key === splitKey);
+  const leadTabs = [...(splitTab ? [splitTab] : []), ...visible.slice(0, Math.max(0, activeIndex)).filter((tab) => tab.key !== splitKey)];
   const renderTab = ({ key: id, kind, title, translating }: VisibleTab) => {
     const active = id === activeId;
     const inSplit = kind === "paper" && parseTab(id).id === splitPaperId;
@@ -416,10 +428,10 @@ export function PaperTabBar() {
     >
       {leadWidth != null && (
         <div className={styles.lead} style={{ width: leadWidth }}>
-          {visible.slice(0, activeIndex).map(renderTab)}
+          {leadTabs.map(renderTab)}
         </div>
       )}
-      {(leadWidth != null ? visible.slice(activeIndex) : visible).map(renderTab)}
+      {(leadWidth != null ? visible.slice(activeIndex).filter((tab) => tab.key !== splitKey) : visible).map(renderTab)}
       {drag?.mode === "split" && createPortal(<SplitDropPreview drag={drag} title={visible.find((tab) => tab.key === drag.id)?.title ?? ""} />, document.body)}
     </div>
   );
