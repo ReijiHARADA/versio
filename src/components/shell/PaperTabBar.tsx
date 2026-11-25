@@ -136,6 +136,9 @@ export function PaperTabBar() {
   // Split view: x of the right (main) card's left edge from the bar's left, so the routed tab can
   // start right above it. Null when the card is not split.
   const [mainCardX, setMainCardX] = useState<number | null>(null);
+  // Split view: x of the left card's right edge. The left pane's inspector sits between the two
+  // cards; the left group's tabs stay over the left card and never reach over that inspector.
+  const [splitCardRight, setSplitCardRight] = useState<number | null>(null);
   // Tabs restored at launch appear in place; tabs opened later grow in (see .entering).
   const settledRef = useRef<Set<string> | null>(null);
   if (settledRef.current === null) settledRef.current = new Set(tabs);
@@ -177,17 +180,23 @@ export function PaperTabBar() {
   useLayoutEffect(() => {
     const bar = barRef.current;
     const card = splitTab ? document.querySelector<HTMLElement>("[data-main-card]") : null;
+    const leftCard = splitTab ? document.querySelector<HTMLElement>("[data-split-card]") : null;
     if (!bar || !card) {
       setMainCardX(null);
+      setSplitCardRight(null);
       return;
     }
     const measure = () => {
-      const x = Math.round(card.getBoundingClientRect().left - bar.getBoundingClientRect().left);
+      const barLeft = bar.getBoundingClientRect().left;
+      const x = Math.round(card.getBoundingClientRect().left - barLeft);
       setMainCardX((prev) => (prev === x ? prev : x));
+      const right = leftCard ? Math.round(leftCard.getBoundingClientRect().right - barLeft) : null;
+      setSplitCardRight((prev) => (prev === right ? prev : right));
     };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(card);
+    if (leftCard) observer.observe(leftCard);
     observer.observe(bar);
     return () => observer.disconnect();
   }, [splitTab]);
@@ -575,6 +584,8 @@ export function PaperTabBar() {
   // In split view the tabs form two groups: those over the left card (opening in the left pane)
   // and those over the right card, whose first tab starts at the right card's left edge.
   const leadWidth = mainCardX != null ? Math.max(0, mainCardX - paddingLeft) : null;
+  // Room past the left card (its inspector) that the left group's tabs leave empty.
+  const leadGutter = mainCardX != null && splitCardRight != null ? Math.max(0, mainCardX - splitCardRight) : 0;
   const leadTabs = leadWidth != null ? visible.filter((tab) => isLeftTab(tab.key)) : [];
   const renderTab = ({ key: id, kind, title, translating }: VisibleTab) => {
     const active = id === activeId;
@@ -658,7 +669,7 @@ export function PaperTabBar() {
       style={{ paddingLeft, paddingRight: Math.max(EDGE_PAD + 10, inset.right) }}
     >
       {leadWidth != null && (
-        <div className={styles.lead} style={{ width: leadWidth }}>
+        <div className={styles.lead} style={{ width: leadWidth, paddingRight: leadGutter }}>
           {pinnedTabs}
           {leadTabs.map(renderTab)}
         </div>
