@@ -317,6 +317,10 @@
   flex-shrink: 0;
   min-height: 0;
   display: flex;
+  /* The panel sits flush on its left and pads its right by the card gap (for the window edge).
+     Here the gap goes on the left, against the card, and the groove takes the place of the
+     panel's right padding, so both sides match the main card's inspector. */
+  margin: 0 calc(-1 * var(--card-gap)) 0 var(--card-gap);
 }
 
 .splitInspectorSlot:empty {
