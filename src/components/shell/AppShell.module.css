@@ -74,6 +74,25 @@
   margin: var(--titlebar-h) 0 var(--card-gap);
 }
 
+/* Empty slot that opens beside the main card while a tab is held over the right split target
+   with no inspector open: the card shrinks to show where the paper will go. */
+.splitPeek {
+  flex-shrink: 0;
+  width: 0;
+  margin: var(--titlebar-h) 0 var(--card-gap);
+  transition: width 220ms var(--pane-ease);
+}
+
+.splitPeek[data-open] {
+  width: min(280px, 22vw); /* spacing-literal-ok: split preview slot */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splitPeek {
+    transition: none;
+  }
+}
+
 .inspectorSlot:empty {
   display: none;
 }
