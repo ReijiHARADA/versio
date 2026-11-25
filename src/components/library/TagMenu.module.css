@@ -1,0 +1,25 @@
+/* Same look as the sidebar folder menu. */
+.menu {
+  composes: projectMenu from "../shell/AppSidebar.module.css";
+}
+
+.title {
+  padding: var(--spacing-xs-plus) var(--spacing-sm-mid) 0;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.colors {
+  composes: projectMenuColors from "../shell/AppSidebar.module.css";
+}
+
+.separator {
+  composes: projectMenuSeparator from "../shell/AppSidebar.module.css";
+}
+
+.item {
+  composes: projectMenuItem from "../shell/AppSidebar.module.css";
+}

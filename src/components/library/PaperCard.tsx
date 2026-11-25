@@ -23,6 +23,7 @@ import { DraggablePaperArticle } from "./DraggablePaperArticle";
 import { PaperEpubSyncControl } from "./PaperEpubSyncControl";
 import { PaperCover } from "./PaperCover";
 import styles from "./PaperCard.module.css";
+import { openTagMenu } from "./TagMenu";
 
 type PaperCardProps = {
   paper: Paper;
@@ -150,6 +151,7 @@ export function PaperCard({ paper, enabled = true, onOpen, actions, layout = "li
             style={{ flexShrink: tag.length, ...tagColorStyle(tagColors[tag.toLocaleLowerCase()]) }}
             data-colored={tagColors[tag.toLocaleLowerCase()] ? "" : undefined}
             data-active={tagFilter === tag || undefined}
+            onContextMenu={(event) => openTagMenu(event, tag)}
             title={tagFilter === tag ? `#${tag} の絞り込みを解除` : `#${tag} で絞り込む`}
             onClick={(event) => {
               event.stopPropagation();

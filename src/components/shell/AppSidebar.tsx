@@ -1,4 +1,5 @@
 import { useTagColors } from "../../stores/tagColors";
+import { openTagMenu } from "../library/TagMenu";
 import { tagColorStyle } from "../../domain/labelColors";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
@@ -424,6 +425,7 @@ export function AppSidebar({
                         data-colored={tagColors[tag.toLocaleLowerCase()] ? "" : undefined}
                         aria-current={selected ? "page" : false}
                         title={tag}
+                        onContextMenu={(event) => openTagMenu(event, tag)}
                         onClick={(event) => {
                           if (draggingPaperId) {
                             event.preventDefault();
