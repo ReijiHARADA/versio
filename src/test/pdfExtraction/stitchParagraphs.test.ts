@@ -118,6 +118,14 @@ describe("stitchParagraphContinuations", () => {
     expect(out[0].original).toMatch(/was specified as follows: Outcome = .*β3\(Group × Time\) \+ β4Covariates/);
   });
 
+  it("continues a database search string at its next operator", () => {
+    const blocks = [
+      block("a", "paragraph", "The search used TS = (“Mediterranean diet”) AND LIMIT-TO (DOCTYPE, “ar”) OR LIMIT-TO (DOCTYPE, “re”))"),
+      block("b", "paragraph", "AND (LIMIT-TO (LANGUAGE, “English”)). Records retrieved were saved in plain text."),
+    ];
+    expect(stitchParagraphContinuations(blocks, sections).map((b) => b.id)).toEqual(["a"]);
+  });
+
   it("does not reach beyond the next page", () => {
     expect(stitchParagraphContinuations([block("a", "paragraph", OPEN, 2), block("b", "paragraph", CONTINUATION, 4)], sections)).toHaveLength(2);
   });
