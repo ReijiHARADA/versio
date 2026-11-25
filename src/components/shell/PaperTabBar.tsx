@@ -51,8 +51,8 @@ const rectOf = (selector: string) => {
   const rect = document.querySelector(selector)?.getBoundingClientRect();
   return rect && rect.width > 0 ? rect : null;
 };
-/** Targets never overlap the main card: the card shrinks to open an empty slot on each side that
- *  accepts the tab. Left target: the sidebar plus the left slot. Right target: the right slot plus
+/** Targets never overlap the main card: the card shrinks to open an empty slot on the side being
+ *  aimed at. Left target: the sidebar plus the left slot. Right target: the right slot plus
  *  the open inspector. */
 function measureSplitZones(canLeft: boolean, canRight: boolean): SplitZones | null {
   const card = rectOf("[data-main-card]");
@@ -98,6 +98,8 @@ type TabDrag = {
   /** Whether the right half accepts the tab (the paper that is there now can move left). */
   canRight: boolean;
   canLeft?: boolean;
+  /** Side whose slot is open beside the shrunken card. */
+  peekSide?: SplitSide | null;
   /** Drop targets: the slots beside the shrunken card (re-measured while they open). */
   zones?: SplitZones | null;
   /** Lifts the drag-time text-selection lock (set once the drag passes its threshold). */
@@ -330,8 +332,30 @@ export function PaperTabBar() {
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   };
   // Already pulled below the strip, so any height counts; only the side matters.
+  // The card shrinks only on the side the pointer is on (its half of the card); the slot that opens
+  // there is the target. Follow the slot while it opens.
   const aimSplit = (d: TabDrag) => {
-    d.zones = splitTab ? null : measureSplitZones(d.canLeft ?? false, d.canRight);
+    if (splitTab) {
+      d.zones = null;
+      d.overSplit = null;
+      return;
+    }
+    const card = rectOf("[data-main-card]");
+    const half: SplitSide | null = !card ? null : d.lastX < card.left + card.width / 2 ? "left" : "right";
+    const side = half === "left" ? (d.canLeft ? "left" : null) : half === "right" && d.canRight ? "right" : null;
+    if (side !== d.peekSide) {
+      d.peekSide = side;
+      setSplitPeek(side === "left", side === "right");
+      const startedAt = performance.now();
+      const follow = () => {
+        if (dragRef.current !== d || d.mode !== "split" || d.peekSide !== side) return;
+        aimSplit(d);
+        setDrag((view) => (view ? { ...view, zones: d.zones, overSplit: d.overSplit } : view));
+        if (performance.now() - startedAt < PEEK_MS) requestAnimationFrame(follow);
+      };
+      requestAnimationFrame(follow);
+    }
+    d.zones = measureSplitZones(side === "left", side === "right");
     const z = d.zones;
     const x = d.lastX;
     d.overSplit = !z ? null : z.left && x < z.left[1] ? "left" : z.right && x > z.right[0] ? "right" : null;
@@ -364,21 +388,8 @@ export function PaperTabBar() {
       const left = useSplitView.getState().tab;
       // On a pinned page the page moves to the left pane, so any tab can open on the right.
       d.canRight = activeId != null ? activeId !== d.id : left != null ? left !== d.id : pageTabForPath(location.pathname) != null;
-      if (d.mode !== "split" && !splitTab) {
-        // The right side keeps at least one tab, so its only tab cannot move left.
-        d.canLeft = d.id !== activeId || rightNeighbour(d.id) != null;
-        // The card shrinks away from both targets; follow the slots while they open.
-        setSplitPeek(d.canLeft, d.canRight);
-        const pulled = d;
-        const startedAt = performance.now();
-        const follow = () => {
-          if (dragRef.current !== pulled || pulled.mode !== "split") return;
-          aimSplit(pulled);
-          setDrag((view) => (view ? { ...view, zones: pulled.zones, overSplit: pulled.overSplit } : view));
-          if (performance.now() - startedAt < PEEK_MS) requestAnimationFrame(follow);
-        };
-        requestAnimationFrame(follow);
-      }
+      // The right side keeps at least one tab, so its only tab cannot move left.
+      if (d.mode !== "split") d.canLeft = d.id !== activeId || rightNeighbour(d.id) != null;
       d.mode = "split";
       d.lastX = event.clientX;
       aimSplit(d);
@@ -395,6 +406,7 @@ export function PaperTabBar() {
       d.to = d.from;
     } else {
       if (d.mode === "split") setSplitPeek(false);
+      d.peekSide = null;
       d.mode = "reorder";
       d.zones = undefined;
       d.overSplit = null;
