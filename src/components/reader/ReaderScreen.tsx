@@ -90,7 +90,7 @@ export function ReaderScreen({ paperId: paneId, onClosePane }: ReaderScreenProps
   // The split pane is half a card wide, so it starts with the outline hidden.
   const [showOutline, setShowOutline] = useState(!inPane);
   // Each half of a split card is narrow: the main pane folds its outline when a split opens.
-  const splitOpen = useSplitView((state) => state.paperId != null);
+  const splitOpen = useSplitView((state) => state.tab != null);
   useEffect(() => {
     if (splitOpen && !inPane) setShowOutline(false);
   }, [splitOpen, inPane]);

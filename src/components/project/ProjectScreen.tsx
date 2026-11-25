@@ -6,6 +6,8 @@ import {
   UploadIcon as Upload,
 } from "@solar-icons/react/linear";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSplitView } from "../../stores/splitViewStore";
+import { folderTab } from "../../stores/paperTabsStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
 import { useImportJobStore, visibleImportJobs } from "../../stores/importJobStore";
@@ -43,9 +45,12 @@ function subtreePaperIds(
   ];
 }
 
-/** Compatibility route component for /project/:id; every id is a WorkspaceNode. */
-export function ProjectScreen() {
-  const { projectId: nodeId } = useParams<{ projectId: string }>();
+/** Compatibility route component for /project/:id; every id is a WorkspaceNode. The split view's
+ *  left card passes `nodeId` instead of the route; child folders then open in that card too. */
+export function ProjectScreen({ nodeId: paneNodeId }: { nodeId?: string } = {}) {
+  const params = useParams<{ projectId: string }>();
+  const inPane = paneNodeId !== undefined;
+  const nodeId = inPane ? paneNodeId : params.projectId;
   const navigate = useNavigate();
   const openPaper = useOpenPaper();
   const storePapers = useLibraryCache((state) => state.papers);
@@ -184,7 +189,8 @@ export function ProjectScreen() {
                     dropTarget={dropTargetId === folder.id}
                     onOpen={() => {
                       if (draggingPaperId) return;
-                      navigate(`/project/${folder.id}`);
+                      if (inPane) useSplitView.getState().openSplit(folderTab(folder.id));
+                      else navigate(`/project/${folder.id}`);
                     }}
                   />
                 );
