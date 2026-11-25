@@ -222,6 +222,13 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
             break;
           }
         }
+        // A sentence cut at a binary operator (`… but no Age ×` + `Condition interaction (F(2,84) = 2.12, …`) goes on in the very
+        // next paragraph, or the first one past the floats, whatever its first letter.
+        if (!listItem && (j === i + 1 || (sawFloat && !skippedParagraph && !skippedFragment)) && /\s[×+−]$/.test(currentText) &&
+          eligible(candidate) && words(candidateText) >= 3 && /^[\p{L}\d(]/u.test(candidateText)) {
+          target = j;
+          break;
+        }
         // A sentence cut at a relation sign (`… a DID estimate of −2.2 (P =`) goes on in the number, past a stray short line
         // (`Burnout Inventory.` | `0.001). Absenteeism rate …`).
         if (!listItem && j <= i + 3 && /[=<>≤≥]$/.test(currentText) && eligible(candidate) && /^[−-]?\d/.test(candidateText) && words(candidateText) >= 3 &&
