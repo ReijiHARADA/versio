@@ -232,8 +232,11 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // Past the other column's bibliography, a back-matter sentence cut at a comma or a function word goes on in the
         // first paragraph after it, whatever its first letter (`… Writing – original draft,` | references |
         // `Project administration, Formal analysis, …`).
-        if (!listItem && onlyReferences && sawReference && current.type === "paragraph" && eligible(candidate) && !referenceFragment && words(candidateText) >= 3 &&
-          /(?:,|\s(?:the|a|an|of|to|in|into|for|with|by|from|on|at|as|and|or|than|between))$/.test(currentText) &&
+        if (!listItem && onlyReferences && sawReference && current.type === "paragraph" && !referenceFragment && words(candidateText) >= 3 &&
+          // (The rest can be filed under the references heading too: `Data curation, Writing – review & editing, …`.)
+          (eligible(candidate) || (candidate.type === "paragraph" && !candidate.metadata.listRole && candidate.metadata.role !== "reference" &&
+            !/\b(?:19|20)\d{2}[a-z]?\b/.test(candidateText))) &&
+          /(?:,|\s(?:the|a|an|of|to|in|into|for|with|by|from|on|at|as|and|or|than|between|not))$/.test(currentText) &&
           !/^(?:Table|Figure|Fig\.|Abbreviations?|Note|Notes|Keywords?)\b/.test(candidateText)) {
           target = j;
           break;
@@ -309,7 +312,7 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           // A sentence cut at a comma or a function word (`… Writing – original draft,` | reference entries of the other
           // column | `Project administration, …`) goes on past the other column's bibliography.
           candidate.type === "reference" && current.type === "paragraph" &&
-            /(?:,|\s(?:the|a|an|of|to|in|into|for|with|by|from|on|at|as|and|or|than|between))$/.test(currentText);
+            /(?:,|\s(?:the|a|an|of|to|in|into|for|with|by|from|on|at|as|and|or|than|between|not))$/.test(currentText);
         if (!interruptionAllowed(candidate) && !tableNote && !pastDisplay &&
           !(finished && (sawFloat || (words(currentText) >= 20 && !KEYWORD_TAIL.test(currentText) && passedFinished < 2)))) break;
         if (finished && !interruptionAllowed(candidate)) passedFinished += 1;
