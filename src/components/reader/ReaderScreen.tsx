@@ -9,7 +9,6 @@ import {
   FileSendIcon as FileUp,
   PanelLeftIcon as PanelLeft,
   PanelRightIcon as PanelRight,
-  CloseIcon as X,
 } from "@solar-icons/react/linear";
 import { useAppStore } from "../../stores/appStore";
 import { useSplitView } from "../../stores/splitViewStore";
@@ -63,7 +62,7 @@ function placeInspector(panel: ReactNode, slot: HTMLElement | null): ReactNode {
 type ReaderScreenProps = {
   /** Set by the split pane; the routed Reader reads `:paperId` from the URL. */
   paperId?: string;
-  /** Present in the split pane: closes it (replaces the back button). */
+  /** Present in the split pane: called when its paper is gone (the pane has no back button). */
   onClosePane?: () => void;
 };
 
@@ -384,16 +383,8 @@ export function ReaderScreen({ paperId: paneId, onClosePane }: ReaderScreenProps
     <div className={styles.container} data-testid="reader-screen" aria-label="リーダー">
       <header className={styles.header} data-tauri-drag-region>
         <div className={styles.headerLeft}>
-          {onClosePane ? (
-            <button
-              className={styles.iconButton}
-              onClick={onClosePane}
-              aria-label="分割表示を閉じる"
-              data-tooltip="分割表示を閉じる"
-            >
-              <X size={iconSize.md} />
-            </button>
-          ) : (
+          {/* The split pane has no back / close button: the split ends when one side runs out of tabs. */}
+          {!onClosePane && (
             <button
               className={styles.iconButton}
               onClick={handleBackClick}

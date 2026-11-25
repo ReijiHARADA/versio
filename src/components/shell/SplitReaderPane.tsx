@@ -59,7 +59,7 @@ export function SplitReaderPane({ paperId }: { paperId: string }) {
       <div className={`${styles.main} ${styles.splitCard}`} style={{ flexGrow: clampSplitRatio(ratio) }} data-split-card>
         <div className={styles.splitPane} data-split-pane>
           <Suspense fallback={null}>
-            <ReaderScreen key={paperId} paperId={paperId} onClosePane={closeSplit} />
+            <ReaderScreen key={paperId} paperId={paperId} onClosePane={() => useSplitView.getState().removeLeftTab(paperId)} />
           </Suspense>
         </div>
         <div className={styles.mainRim} aria-hidden />

@@ -188,8 +188,27 @@ export function PaperTabBar() {
     };
   }, []);
 
+  // Split view: the tab to show on the right instead of `key` (its nearest right-group neighbour).
+  const rightNeighbour = useCallback(
+    (key: TabKey): TabKey | null => {
+      const list = usePaperTabs.getState().tabs;
+      const index = list.indexOf(key);
+      const right = (k: TabKey) => k !== key && !isLeftTab(k);
+      return list.slice(index + 1).find(right) ?? [...list.slice(0, Math.max(0, index))].reverse().find(right) ?? null;
+    },
+    [isLeftTab]
+  );
+  // The right side ran out of tabs: the split ends and the left pane's paper fills the card.
+  const collapseSplit = useCallback(() => {
+    const left = useSplitView.getState().paperId;
+    useSplitView.getState().closeSplit();
+    lastActiveRef.current = null;
+    navigate(left ? tabPath(paperTab(left)) : lastPagePathRef.current);
+  }, [navigate]);
+
   const closeTab = useCallback(
     (key: TabKey) => {
+      const splitNext = splitPaperId && key === activeId ? rightNeighbour(key) : null;
       const next = usePaperTabs.getState().closeTab(key);
       const { kind: closedKind, id: closedId } = parseTab(key);
       // A left tab leaves the left group; if it was on screen there, another left tab takes its place.
@@ -198,10 +217,18 @@ export function PaperTabBar() {
       const { kind, id } = parseTab(key);
       if (kind === "paper" && key !== activeId) releasePaperBody(id);
       if (key !== activeId) return;
+      if (splitPaperId) {
+        // Closing the right side's last tab ends the split.
+        if (splitNext) {
+          lastActiveRef.current = null;
+          navigate(tabPath(splitNext));
+        } else collapseSplit();
+        return;
+      }
       lastActiveRef.current = null;
       navigate(next ? tabPath(next) : lastPagePathRef.current);
     },
-    [activeId, navigate]
+    [activeId, navigate, splitPaperId, rightNeighbour, collapseSplit]
   );
 
   const openTab = useCallback(
@@ -349,12 +376,25 @@ export function PaperTabBar() {
     let crossed = false;
     if (commit && d.mode === "reorder" && splitPaperId && mainCardX != null && bar) {
       const { kind, id } = parseTab(d.id);
-      const onScreen = d.id === activeId || id === splitPaperId;
       const wantsLeft = d.lastX < bar.left + mainCardX;
-      if (!onScreen && kind === "paper" && wantsLeft !== isLeftTab(d.id)) {
-        if (wantsLeft) useSplitView.getState().addLeftTab(id);
-        else useSplitView.getState().removeLeftTab(id);
+      if (kind === "paper" && wantsLeft !== isLeftTab(d.id)) {
         crossed = true;
+        if (!wantsLeft) {
+          // Leaving the left group; if it was on screen there, another left tab (or none: the
+          // split ends) takes its place.
+          useSplitView.getState().removeLeftTab(id);
+        } else if (d.id !== activeId) {
+          useSplitView.getState().addLeftTab(id);
+        } else {
+          // The right pane's paper moves left: the right shows its next tab, or, with none left,
+          // the split ends.
+          const next = rightNeighbour(d.id);
+          useSplitView.getState().addLeftTab(id);
+          if (next) {
+            lastActiveRef.current = null;
+            navigate(tabPath(next));
+          } else collapseSplit();
+        }
       }
     }
     const own = d.slots[d.from];
@@ -381,14 +421,13 @@ export function PaperTabBar() {
   // the right side moves on to a neighbouring tab (or back to the last page).
   const openSplitFromTab = (key: TabKey) => {
     const { id } = parseTab(key);
+    // The right side keeps at least one tab; the only tab there cannot leave it.
+    const next = key === activeId ? rightNeighbour(key) : null;
+    if (key === activeId && !next) return;
     useSplitView.getState().openSplit(id);
-    if (key !== activeId) return;
-    const list = usePaperTabs.getState().tabs;
-    const index = list.indexOf(key);
-    const rest = list.filter((item) => item !== key);
-    const next = rest[index] ?? rest[index - 1] ?? null;
+    if (!next) return;
     lastActiveRef.current = null;
-    navigate(next ? tabPath(next) : lastPagePathRef.current);
+    navigate(tabPath(next));
   };
 
   // Dropped on the card's right half: the paper opens there and the paper that was there moves
@@ -398,6 +437,13 @@ export function PaperTabBar() {
     if (routed) useSplitView.getState().openSplit(routed);
     navigate(tabPath(key));
   };
+
+  // Every tab moved or closed out of the right side: the split ends.
+  useEffect(() => {
+    if (!splitPaperId || drag || papers.length === 0) return;
+    const list = usePaperTabs.getState().tabs;
+    if (list.length > 0 && !list.some((key) => !isLeftTab(key))) collapseSplit();
+  }, [splitPaperId, drag, papers.length, tabs, isLeftTab, collapseSplit]);
 
   const tabTransform = (key: TabKey): string | undefined => {
     if (!drag) return undefined;
