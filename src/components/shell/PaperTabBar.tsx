@@ -34,7 +34,8 @@ import { INSPECTOR_SLOT_ID } from "./inspectorSlot";
 import styles from "./PaperTabBar.module.css";
 import { suppressTextSelection } from "../../utils/dragSelection";
 
-/** Icon-only tabs that always lead the main card's tabs; they are pages, not open documents. */
+/** Icon-only tabs that always lead the strip; they are pages, not open documents. The left is
+ *  their home: in split view they lead the left card's tabs, not the right card's. */
 const PINNED_TABS = [
   { path: "/", label: "すべての論文", Icon: Library },
   { path: "/inbox", label: "インボックス", Icon: Inbox },
@@ -580,6 +581,7 @@ export function PaperTabBar() {
     );
   };
 
+  const split = leadWidth != null;
   const pinnedTabs = PINNED_TABS.map(({ path, label, Icon }) => {
     const active = location.pathname === path;
     const open = () => {
@@ -594,11 +596,13 @@ export function PaperTabBar() {
         aria-label={label}
         tabIndex={active ? 0 : -1}
         title={label}
-        className={`${styles.tab} ${styles.pinned} ${active ? styles.active : ""}`}
+        className={`${styles.tab} ${styles.pinned} ${active ? (split ? styles.pinnedCurrent : styles.active) : ""}`}
         onClick={open}
         onKeyDown={(event) => { if (event.key === "Enter") open(); }}
       >
-        {active && <ActiveTabShape moving={drag != null} textured={false} />}
+        {/* In split view the pinned tabs sit over the left card while their page opens in the right
+            one, so the current one is only filled, not joined to a card. */}
+        {active && !split && <ActiveTabShape moving={drag != null} textured={false} />}
         <Icon className={styles.icon} size={15} strokeWidth={1.6} aria-hidden />
       </div>
     );
@@ -615,10 +619,11 @@ export function PaperTabBar() {
     >
       {leadWidth != null && (
         <div className={styles.lead} style={{ width: leadWidth }}>
+          {pinnedTabs}
           {leadTabs.map(renderTab)}
         </div>
       )}
-      {pinnedTabs}
+      {leadWidth == null && pinnedTabs}
       {(leadWidth != null ? visible.filter((tab) => !isLeftTab(tab.key)) : visible).map(renderTab)}
       {drag?.mode === "split" && createPortal(<SplitDropPreview drag={drag} title={visible.find((tab) => tab.key === drag.id)?.title ?? ""} />, document.body)}
     </div>
