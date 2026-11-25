@@ -326,6 +326,12 @@ body.paper-dragging * {
   cursor: grabbing !important;
 }
 
+html.drag-no-select,
+html.drag-no-select * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
 ::selection {
   background-color: var(--color-accent-light);
 }

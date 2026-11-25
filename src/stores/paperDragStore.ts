@@ -1,10 +1,13 @@
 import { create } from "zustand";
 import { showToast as showAppToast } from "./toastStore";
+import { suppressTextSelection } from "../utils/dragSelection";
 
 type PaperDropToast = {
   kind: "duplicate" | "added" | "error";
   message: string;
 };
+
+let releaseSelection: (() => void) | null = null;
 
 export const INBOX_DROP_ID = "inbox";
 const PROJECT_DROP_ATTR = "data-project-drop-id";
@@ -68,6 +71,8 @@ export const usePaperDragStore = create<PaperDragState>((set) => ({
 
   beginDrag: (paperIds, label, x, y, sourceNodeId, covers = []) => {
     document.body.classList.add("paper-dragging");
+    releaseSelection?.();
+    releaseSelection = suppressTextSelection();
     set({
       draggingPaperId: paperIds[0] ?? null,
       draggingPaperIds: paperIds,
@@ -85,6 +90,8 @@ export const usePaperDragStore = create<PaperDragState>((set) => ({
 
   endDrag: () => {
     document.body.classList.remove("paper-dragging");
+    releaseSelection?.();
+    releaseSelection = null;
     set({
       draggingPaperId: null,
       draggingPaperIds: [],

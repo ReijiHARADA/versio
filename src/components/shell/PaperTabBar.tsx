@@ -28,6 +28,7 @@ import {
 } from "./paperTabShape";
 import { morphLeftCap, TAB_MORPH_GAP } from "./paperTabCap";
 import styles from "./PaperTabBar.module.css";
+import { suppressTextSelection } from "../../utils/dragSelection";
 
 const DRAG_THRESHOLD = 4;
 /** How far below the strip a paper tab must be pulled before it becomes a split-view drop. */
@@ -55,6 +56,8 @@ type TabDrag = {
   overSplit: SplitSide | null;
   /** Whether the right half accepts the tab (the paper that is there now can move left). */
   canRight: boolean;
+  /** Lifts the drag-time text-selection lock (set once the drag passes its threshold). */
+  releaseSelection?: () => void;
 };
 type SplitSide = "left" | "right";
 type DragView = Pick<TabDrag, "id" | "from" | "to" | "dx" | "shift" | "keys" | "mode" | "overSplit" | "canRight"> & { x: number; y: number };
@@ -256,6 +259,7 @@ export function PaperTabBar() {
       d.shift = own.width + Math.max(0, gap);
       d.to = d.from;
       d.moved = true;
+      d.releaseSelection = suppressTextSelection();
     }
     const barRect = barRef.current?.getBoundingClientRect();
     const canSplit = parseTab(d.id).kind === "paper";
@@ -297,6 +301,7 @@ export function PaperTabBar() {
     dragRef.current = null;
     setDrag(null);
     if (!d) return;
+    d.releaseSelection?.();
     if (!d.moved) {
       if (commit) openTab(key);
       return;
