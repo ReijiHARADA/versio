@@ -90,3 +90,20 @@
   width: 4em;
   text-align: center;
 }
+
+/* Narrow page header (split view): the selected pill keeps only its icon. */
+@container page-header (max-width: 640px) {
+  .option.active {
+    width: 29px;
+    padding-left: 7px; /* spacing-literal-ok: segmented control geometry */
+  }
+
+  .active .label {
+    grid-template-columns: 0fr;
+    opacity: 0;
+  }
+
+  .active .label > span {
+    padding-left: 0;
+  }
+}

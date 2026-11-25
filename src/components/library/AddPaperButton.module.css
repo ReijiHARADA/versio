@@ -83,3 +83,17 @@
 .error {
   color: var(--color-danger);
 }
+
+/* Narrow page header (split view): icon only. The doubled class beats the
+   screen's own .addButton padding regardless of stylesheet order. */
+@container page-header (max-width: 640px) {
+  .trigger.trigger {
+    width: var(--control-height);
+    padding: 0;
+    justify-content: center;
+  }
+
+  .triggerLabel {
+    display: none;
+  }
+}

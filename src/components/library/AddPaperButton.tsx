@@ -53,8 +53,9 @@ export function AddPaperButton({
       <button
         ref={buttonRef}
         type="button"
-        className={className}
+        className={`${className} ${styles.trigger}`}
         title="論文を追加"
+        aria-label="論文を追加"
         aria-haspopup="dialog"
         aria-expanded={anchor != null}
         onClick={() => {
@@ -65,7 +66,7 @@ export function AddPaperButton({
         }}
       >
         <Plus size={18} aria-hidden="true" />
-        論文を追加
+        <span className={styles.triggerLabel}>論文を追加</span>
       </button>
       <Presence>{anchor && (
         <InfoPopover anchor={anchor} title="論文を追加" onClose={() => setAnchor(null)}>
