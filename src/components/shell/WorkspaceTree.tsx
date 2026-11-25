@@ -2,16 +2,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
 import {
-  Upload,
-  FilePlus2,
-  FileText,
-  Folder,
-  FolderOpen,
-  FolderPlus,
-  Pencil,
-  Quote,
-  Trash2,
-} from "lucide-react";
+  UploadIcon as Upload,
+  FileAddIcon as FilePlus2,
+  FileTextIcon as FileText,
+  FolderIcon as Folder,
+  FolderOpenIcon as FolderOpen,
+  AddFolderIcon as FolderPlus,
+  PenIcon as Pencil,
+  QuoteIcon as Quote,
+  TrashBinMinimalisticIcon as Trash2,
+} from "@solar-icons/react/linear";
 import type { WorkspaceNode, WorkspacePaper } from "../../types/project";
 import type { Paper } from "../../types/paper";
 import { buildWorkspaceTree, collectDescendantIds } from "../../data/workspace/tree";

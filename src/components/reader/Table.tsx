@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Maximize2 } from "lucide-react";
+import {
+  MaximizeIcon as Maximize2,
+} from "@solar-icons/react/linear";
 import type { PaperBlock, TableMetadata } from "../../types/paper";
 import { usePaperAssetUrl } from "../../hooks/usePaperAssetUrl";
 import styles from "./Figure.module.css";

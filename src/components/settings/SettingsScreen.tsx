@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Settings } from "lucide-react";
+import {
+  SettingsIcon as Settings,
+} from "@solar-icons/react/linear";
 import { getSetting, saveSetting, clearTranslationCache, restoreTranslationCache } from "../../services/database";
 import { showToast } from "../../stores/toastStore";
 import {

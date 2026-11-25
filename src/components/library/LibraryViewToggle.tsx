@@ -1,4 +1,7 @@
-import { LayoutGrid, List } from "lucide-react";
+import {
+  WidgetIcon as LayoutGrid,
+  ListIcon as List,
+} from "@solar-icons/react/linear";
 import { useAppStore, type LibraryView } from "../../stores/appStore";
 import styles from "./LibraryViewToggle.module.css";
 

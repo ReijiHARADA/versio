@@ -2,12 +2,12 @@ import { useTagColors } from "../../stores/tagColors";
 import { tagColorStyle } from "../../domain/labelColors";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Loader2,
-  Star,
-} from "lucide-react";
+  DangerCircleIcon as AlertCircle,
+  CheckCircleIcon as CheckCircle,
+  ClockCircleIcon as Clock,
+  RefreshIcon as Loader2,
+  StarIcon as Star,
+} from "@solar-icons/react/linear";
 import type { Paper } from "../../types/paper";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useAppStore } from "../../stores/appStore";

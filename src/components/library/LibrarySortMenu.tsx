@@ -1,7 +1,10 @@
 import { useTagColors } from "../../stores/tagColors";
 import { LabelDot } from "../ui/LabelColorPicker";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpDown, Check } from "lucide-react";
+import {
+  SortVerticalIcon as ArrowUpDown,
+  CheckIcon as Check,
+} from "@solar-icons/react/linear";
 import { useAppStore, type LibraryFilter, type LibrarySort, type LibrarySortKey } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { findDuplicatePaperIds } from "../../domain/duplicatePapers";

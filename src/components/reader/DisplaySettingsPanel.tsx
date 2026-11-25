@@ -1,4 +1,6 @@
-import { X } from "lucide-react";
+import {
+  CloseIcon as X,
+} from "@solar-icons/react/linear";
 import { DisplaySettingsControls } from "./DisplaySettingsControls";
 import styles from "./DisplaySettingsPanel.module.css";
 import { useMotionState } from "../ui/Presence";

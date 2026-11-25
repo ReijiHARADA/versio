@@ -1,6 +1,8 @@
 import { labelColorVar } from "../../domain/labelColors";
 import { useState } from "react";
-import { Folder } from "lucide-react";
+import {
+  FolderIcon as Folder,
+} from "@solar-icons/react/linear";
 import type { WorkspaceNode } from "../../types/project";
 import { PaperCover } from "../library/PaperCover";
 import styles from "./WorkspaceFolderCard.module.css";

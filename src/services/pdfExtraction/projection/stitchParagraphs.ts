@@ -28,7 +28,8 @@ const ABBREVIATION_END = /\b(?:et al|e\.g|i\.e|cf|vs)\.$/i;
 // A keyword list glued to an abstract (`…, Feature fusion, Computer-aided diagnosis`) ends without a full stop but is finished.
 const KEYWORD_TAIL = /(?:,\s*\p{Lu}[\p{L}-]*(?:\s+[\p{L}-]+){0,3}){3,}$/u;
 const TERM_START = /^(?:\p{Lu}{2,}|\p{Lu}[\p{L}\d]*[\d+(\-]|\p{Lu}\p{Ll}+\p{Lu})/u;
-const isOpenEnded = (text: string) => (!TERMINAL.test(text) || ABBREVIATION_END.test(text)) && !/:\s*$/.test(text);
+// (A colon inside an unclosed parenthesis, `(β = −0.247: M = 2.856:`, ends no lead-in.)
+const isOpenEnded = (text: string) => (!TERMINAL.test(text) || ABBREVIATION_END.test(text)) && (!/:\s*$/.test(text) || hasOpenParenthesis(text));
 const CONTINUATION_START = /^(?:[a-z]|(?:which|that|and|or|but|where|while|whereas|because|although|including|with|for|of|to|in)\b)/;
 /**
  * A paragraph that cannot end where it does: after a comma, a function word or
@@ -164,13 +165,15 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
       // Full-page figures and tables (a long table runs over several pages) can push the rest of a paragraph several pages on.
       let onlyFloats = true;
       let sawFloat = false;
-      for (let j = i + 1; j < out.length && j <= i + 12 && out[j].pageStart <= current.pageEnd + (onlyFloats && j > i + 1 ? 8 : 1); j += 1) {
+      for (let j = i + 1; j < out.length && j <= i + 20 && out[j].pageStart <= current.pageEnd + (onlyFloats && j > i + 1 ? 8 : 1); j += 1) {
         const candidate = out[j];
         const candidateText = candidate.original?.trim() ?? "";
         // A list's lead-in (`task (“diseased” vs. “no disease”). These modifications are:`) can be the rest of the sentence too.
         const listIntro = candidate.type === "paragraph" && candidate.metadata.listRole === "intro" && candidate.metadata.role !== "reference" &&
           !referenceSections.has(candidate.sectionId ?? "");
-        if (!listItem && (eligible(candidate) || listIntro) && words(candidateText) >= 2 && CONTINUATION_START.test(candidateText)) {
+        // (A list item cut at a page foot goes on past the floats in a lower-case paragraph too: `• Element-wise
+        // Addition: … is computationally` | tables | `lightweight and does not change …`.)
+        if ((!listItem || (sawFloat && /^\p{Ll}/u.test(candidateText) && /\p{Ll}$/u.test(currentText))) && (eligible(candidate) || listIntro) && words(candidateText) >= 2 && CONTINUATION_START.test(candidateText)) {
           target = j;
           break;
         }
@@ -235,8 +238,13 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           break;
         }
         if (!listItem && (j === i + 1 || (sawFloat && !skippedParagraph && !skippedFragment && hardOpen)) &&
-          (hardOpen || (/\s\p{Ll}{3,}$/u.test(currentText) && words(currentText) >= 20)) && !/,$/.test(currentText) && eligible(candidate) &&
+          (hardOpen || (/\s\p{Ll}{3,}$/u.test(currentText) && words(currentText) >= 20)) && !/,$/.test(currentText) && (eligible(candidate) || listIntro) &&
           TERM_START.test(candidateText) && looseContinuation(currentText, candidateText, true)) {
+          target = j;
+          break;
+        }
+        // Right after it, an open paragraph goes on in an operator (`… input resolution of 224` + `× 224 × 3 to …`).
+        if (!listItem && j === i + 1 && eligible(candidate) && /^[×=+−≤≥<>±·∼≈]\s*\S/u.test(candidateText) && words(candidateText) >= 4) {
           target = j;
           break;
         }
@@ -262,7 +270,19 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // (`Model adjusted for age, … CI 95% confidence interval`); `… across all of the wards in` is open prose.
         const tableNote = candidate.type === "paragraph" && out[j - 1]?.type === "table" && !CONTINUATION_START.test(candidateText) &&
           !isHardOpen(candidateText);
-        if (!interruptionAllowed(candidate) && !tableNote && !(finished && (sawFloat || (words(currentText) >= 20 && !KEYWORD_TAIL.test(currentText) && passedFinished < 2)))) break;
+        // A word cut at its line-end hyphen (`… including stop-` | display | `ping when …`) goes on past a display set
+        // in between.
+        // (An unnumbered one only: a numbered display belongs where it is printed.)
+        const pastDisplay = candidate.type === "equation" && /\p{L}{2,}-$/u.test(currentText) && !/\(\s*\d{1,3}[a-z]?\s*\)\s*$/.test(candidateText) ||
+          // (Also past running text typed as an equation, `(0) = 0.00. A likelihood ratio test comparing the …`: it is
+          // a float's text or another column's, not a display of this sentence.)
+          candidate.type === "equation" && (candidateText.match(/\b\p{Ll}{4,}\b/gu)?.length ?? 0) >= 4 && words(candidateText) >= 8 ||
+          // A sentence cut at a comma or a function word (`… Writing – original draft,` | reference entries of the other
+          // column | `Project administration, …`) goes on past the other column's bibliography.
+          candidate.type === "reference" && current.type === "paragraph" &&
+            /(?:,|\s(?:the|a|an|of|to|in|into|for|with|by|from|on|at|as|and|or|than|between))$/.test(currentText);
+        if (!interruptionAllowed(candidate) && !tableNote && !pastDisplay &&
+          !(finished && (sawFloat || (words(currentText) >= 20 && !KEYWORD_TAIL.test(currentText) && passedFinished < 2)))) break;
         if (finished && !interruptionAllowed(candidate)) passedFinished += 1;
         if (candidate.type === "figure" || candidate.type === "table") sawFloat = true;
         // A running head or a table cell (short, no sentence end) does not count as a skipped paragraph.
@@ -357,7 +377,12 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     // A colon closes a lead-in like a full stop (`A student shared:` before a quotation,
     // `defined in Eq. 2:` before an equation); every other check still applies. Only a
     // lower-case paragraph right after it shows that the sentence itself goes on.
-    const nextText = blocks.slice(index + 1).find((b) => b.type === "paragraph" && !isEquationDebris(b))?.original?.trim() ?? "";
+    // (Nor pieces of a display read as paragraphs: `{ }`, `d mXPer1`.)
+    const displayPiece = (b: PaperBlock) => {
+      const t = (b.original ?? "").trim();
+      return words(t) <= 3 || (t.match(/\p{L}/gu)?.length ?? 0) < t.replace(/\s/g, "").length * 0.5;
+    };
+    const nextText = blocks.slice(index + 1).find((b) => b.type === "paragraph" && !isEquationDebris(b) && !displayPiece(b))?.original?.trim() ?? "";
     // `… was used:` then `where β is …`: the display between them was not extracted as text (an image);
     // a heading straight after the colon is a list or display that was read as one.
     const introduced = /:\s*$/.test(text) && (block.metadata.listRole === "intro" || adjacentDisplay(blocks.slice(index + 1, index + 6), block, true) ||
@@ -383,14 +408,62 @@ export function reconcileTranslationWarnings(blocks: PaperBlock[]): PaperBlock[]
     if (own && (label(blocks[index - 1]) === String.fromCharCode(own.charCodeAt(0) - 1) || label(blocks[index + 1]) === String.fromCharCode(own.charCodeAt(0) + 1))) {
       checked = checked.replace(/^\([a-z]\)\s+/, "");
     }
+    // Right before a heading, a sentence that ends in its citation or a parenthesis without the full stop
+    // (`… text classification [23]`, `… website. (The DHS Program - Access Instructions)`) is finished: a heading never
+    // runs on in mid-sentence.
+    if (blocks[index + 1]?.type === "heading" && /[\])]$/.test(checked)) checked = `${checked}.`;
+    // A stray backslash after the full stop (`… searches (e.g. Google).\`) is a typesetting leftover.
+    checked = checked.replace(/([.!?][)\]”"’]*)\\$/, "$1");
     // A supporting-information entry ends with its file type after the last sentence (`… policy. (ZIP)`).
     checked = checked.replace(/([.!?])\s*\((?:[A-Z][A-Z0-9]{1,4}(?:\s*\/\s*[A-Z][A-Z0-9]{1,4})?)\)$/, "$1");
     // A supporting-information reference puts its number first (`… as in S7 Fig.`): the reference is complete, not cut after `Fig.`.
     checked = checked.replace(/(\bS\d{1,3}\s+)(?:Fig|Table)\.$/, "$1item.");
     // A short piece between two parts of one table on its page is a table cell read as a paragraph.
     const betweenTables = words(text) < 40 && [blocks[index - 1], blocks[index + 1]].every((b) => b?.type === "table" && b.pageStart <= block.pageStart && b.pageEnd >= block.pageStart);
-    const warning = isExpectedNonProseParagraph(text) || betweenTables ? null : unsafeParagraphStructureReason(checked);
+    // A run almost without the small words a sentence is made of (`Trinidad and Tobago Susanta Kumar Ghosh,`, a cell, a
+    // label, a credit list `EA: Validation, Writing – review & editing, …`) is no sentence that could be cut: its
+    // structure is not checked. Running prose carries one such word in every few.
+    const shortLabel = (text.match(/\b(?:the|of|and|to|in|is|are|was|were|with|for|that|this|we|by|on|as|be|from)\b/gi)?.length ?? 0) <=
+      Math.max(2, words(text) * 0.06);
+    const structural = isExpectedNonProseParagraph(text) || betweenTables ? null : unsafeParagraphStructureReason(checked);
+    const warning = shortLabel && structural && /末尾が欠け|先頭が前段|語が途中で切れ|括弧|集合記法/.test(structural) ? null : structural;
     if ((warning ?? undefined) === current) return block;
     return { ...block, metadata: { ...block.metadata, translationInputWarning: warning ?? undefined } };
   });
+}
+
+/**
+ * A figure legend cut at a page or column break goes on in a lower-case paragraph a few blocks on
+ * (`… Green boxes represent` | `important variables identified by the model, while red boxes indicate …`): when the
+ * caption stops mid-sentence and the paragraph reads as legend text (a panel label, or a colour or line style it
+ * explains), the paragraph is the caption's rest.
+ */
+export function rejoinLegendTails(blocks: PaperBlock[]): PaperBlock[] {
+  const out = [...blocks];
+  for (let i = 0; i < out.length; i += 1) {
+    const block = out[i];
+    const text = (block.original ?? "").trim();
+    if (block.type !== "paragraph" || !/^\p{Ll}/u.test(text)) continue;
+    const legend = /\(\s*[A-H]\s*\)|[.;]\s[A-H]\s\p{Lu}\p{Ll}/u.test(text) ||
+      (/\b(?:red|blue|green|black|grey|gray|orange|purple|yellow|dashed|dotted|light-blue|colou?rs?)\b/.test(text) &&
+        /\b(?:indicat|show|represent|denot)/.test(text));
+    if (!legend) continue;
+    let k = i - 1;
+    while (k >= 0 && k >= i - 3 && out[k].type !== "figure") k -= 1;
+    const figure = out[k];
+    if (!figure || figure.type !== "figure") continue;
+    const caption = (figure.original ?? "").trim();
+    if (!caption || /[.!?][)\]”"’]*$/.test(caption)) continue;
+    const joined = joinTexts(caption, text);
+    out[k] = {
+      ...figure,
+      original: joined,
+      pageEnd: Math.max(figure.pageEnd, block.pageEnd),
+      boundingBoxes: [...figure.boundingBoxes, ...block.boundingBoxes],
+      metadata: { ...figure.metadata, ...("captionOriginal" in figure.metadata ? { captionOriginal: joined } : {}) },
+    };
+    out.splice(i, 1);
+    i -= 1;
+  }
+  return out;
 }

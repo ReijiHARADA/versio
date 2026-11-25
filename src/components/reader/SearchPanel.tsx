@@ -1,5 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
-import { X, ChevronUp, ChevronDown } from "lucide-react";
+import {
+  CloseIcon as X,
+  AltArrowUpIcon as ChevronUp,
+  AltArrowDownIcon as ChevronDown,
+} from "@solar-icons/react/linear";
 import type { PaperBlock, Section } from "../../types/paper";
 import { sectionDisplayTitle } from "../../services/translation/quality";
 import styles from "./SearchPanel.module.css";

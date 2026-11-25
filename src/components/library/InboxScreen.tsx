@@ -1,5 +1,8 @@
 import { useMemo, useRef } from "react";
-import { Upload, Inbox } from "lucide-react";
+import {
+  UploadIcon as Upload,
+  InboxIcon as Inbox,
+} from "@solar-icons/react/linear";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useImportJobStore, visibleImportJobs } from "../../stores/importJobStore";
 import { useProjectStore } from "../../stores/projectStore";

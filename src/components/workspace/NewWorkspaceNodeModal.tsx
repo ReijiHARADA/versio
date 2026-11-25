@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
-import { X } from "lucide-react";
+import {
+  CloseIcon as X,
+} from "@solar-icons/react/linear";
 import styles from "../project/ProjectModal.module.css";
 import { isImeComposing } from "../../utils/ime";
 import { useMotionState } from "../ui/Presence";

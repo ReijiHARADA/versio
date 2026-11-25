@@ -561,6 +561,26 @@ function collectCurated() {
     warnings.push("node_modules/pdfjs-dist/cmaps/LICENSE が見つかりません");
   }
 
+  // Solar icon artwork (480 Design), distributed via @solar-icons/react. The npm
+  // package code is MIT; the icon designs themselves are CC BY 4.0 and require attribution.
+  const solarThirdParty = path.join(ROOT, "node_modules", "@solar-icons", "react", "LICENSE-THIRD-PARTY");
+  if (existsSync(solarThirdParty)) {
+    addPackage({
+      id: "asset:solar-icons",
+      name: "Solar Icons Set (480 Design)",
+      version: readInstalledVersion("@solar-icons/react") ?? "bundled",
+      ecosystem: "asset",
+      license: "CC-BY-4.0",
+      copyright: "480 Design",
+      textKey: storeText(readText(solarThirdParty)),
+      noticeKey: null,
+      status: "ok",
+      notes: "アプリ内のアイコンは 480 Design による Solar Icons Set（https://www.figma.com/community/file/1166831539721848736）を @solar-icons/react 経由で使用しています。",
+    });
+  } else {
+    warnings.push("node_modules/@solar-icons/react/LICENSE-THIRD-PARTY が見つかりません");
+  }
+
   // GROBID 0.9.1 CRF models, lexicons and feature code ported to TypeScript
   // (src/services/pdfExtraction/crf). License text copied from the GROBID repository.
   const grobidLicense = path.join(ROOT, "src", "services", "pdfExtraction", "crf", "GROBID-LICENSE.txt");

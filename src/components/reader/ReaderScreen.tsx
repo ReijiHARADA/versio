@@ -4,14 +4,13 @@ import type { ReactNode } from "react";
 import { INSPECTOR_ON_GROUND_QUERY, INSPECTOR_SLOT_ID } from "../shell/inspectorSlot";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
-  ArrowLeft,
-  Settings2,
-  ExternalLink,
-  FileUp,
-  PanelLeft,
-  PanelRight,
-  X,
-} from "lucide-react";
+  ArrowLeftIcon as ArrowLeft,
+  Tuning2Icon as Settings2,
+  FileSendIcon as FileUp,
+  PanelLeftIcon as PanelLeft,
+  PanelRightIcon as PanelRight,
+  CloseIcon as X,
+} from "@solar-icons/react/linear";
 import { useAppStore } from "../../stores/appStore";
 import { useSplitView } from "../../stores/splitViewStore";
 import { useLibraryCache } from "../../stores/libraryCache";
@@ -445,15 +444,6 @@ export function ReaderScreen({ paperId: paneId, onClosePane }: ReaderScreenProps
             <FileUp size={iconSize.md} />
           </button>
           <button
-            className={styles.iconButton}
-            aria-label={hasSourcePdf ? "元PDFを開く" : "保存された元PDFがありません"}
-            data-tooltip={hasSourcePdf ? "元PDFを開く" : "保存された元PDFがありません"}
-            disabled={!hasSourcePdf}
-            onClick={() => void handleOpenSourcePdf()}
-          >
-            <ExternalLink size={iconSize.md} />
-          </button>
-          <button
             className={`${styles.iconButton} ${inspectorVisible ? styles.active : ""}`}
             onClick={() => {
               setSearchView(false);
@@ -531,6 +521,7 @@ export function ReaderScreen({ paperId: paneId, onClosePane }: ReaderScreenProps
                   workspaceNames={workspaceNames}
                   annotationCount={annotations.length}
                   glossaryCount={glossary.length}
+                  onOpenSourcePdf={hasSourcePdf ? () => void handleOpenSourcePdf() : undefined}
                 />
               )}
               {inspectorView === "glossary" && <GlossaryPanel entries={glossary} onChange={setGlossary} />}
