@@ -175,7 +175,7 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         const candidateText = candidate.original?.trim() ?? "";
         // A piece of a reference entry read out between the entries (`[Preprint]. arXiv:2212.06817.`) is part of the list.
         const referenceFragment = candidate.type === "paragraph" && onlyReferences && sawReference && words(candidateText) <= 15 &&
-          /\b(?:(?:19|20)\d{2}[a-z]?\b|arXiv|doi|https?:)|\[Preprint\]|\d+\s*[–-]\s*\d+/i.test(candidateText);
+          /\b(?:(?:19|20)\d{2}[a-z]?\b|doi|https?:)|\b\p{L}+:\d{4}\.\d{4,5}\b|\[Preprint\]|\d+\s*[–-]\s*\d+/iu.test(candidateText);
         // A list's lead-in (`task (“diseased” vs. “no disease”). These modifications are:`) can be the rest of the sentence too.
         const listIntro = candidate.type === "paragraph" && candidate.metadata.listRole === "intro" && candidate.metadata.role !== "reference" &&
           !referenceSections.has(candidate.sectionId ?? "");
