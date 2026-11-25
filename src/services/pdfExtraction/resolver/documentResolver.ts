@@ -1735,9 +1735,10 @@ function demotePageOneProseAffiliations(nodes: CanonicalNode[]): CanonicalNode[]
     if (NUMBERED_INSTITUTION.test(t) && t.length <= 400 && !/[.!?]$/.test(t)) return node;
     // Nature chrome button label painted as affiliation.
     if (publisherPredicates.isNatureUpdateButton(t)) {
+      // Page chrome, not text: as `other` it became a paragraph that split the abstract around it.
       return {
         ...node,
-        role: "other" as const,
+        role: "header" as const,
         confidence: Math.min(node.confidence, 0.4),
         evidence: [
           ...node.evidence,
