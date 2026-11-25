@@ -32,6 +32,7 @@ import { isTauriApp } from "../../utils/serverReady";
 import { checkForAppUpdate } from "../../services/appUpdate";
 import { PdfFileInput } from "../ui/PdfFileInput";
 import styles from "./AppShell.module.css";
+import { TagMenu } from "../library/TagMenu";
 
 export function AppShell() {
   const location = useLocation(); const navigate = useNavigate();
@@ -230,6 +231,7 @@ export function AppShell() {
     <AppSidebar workspaceNodes={workspaceNodes} searchQuery={searchQuery} onSearchChange={setSearchQuery} onNewWorkspace={() => setCreateParentId(null)} onNewChild={(node) => setCreateParentId(node.id)} onDeleteNode={deleteNode} onAddPaperToWorkspace={addPaperFile} activeNodeId={routeNodeId} inboxCount={inboxCount} />
     <div className={styles.mainColumn}><PaperTabBar /><div className={styles.cards} data-main-pane>{splitPaperId && <SplitReaderPane paperId={splitPaperId} />}<div className={styles.main} style={splitPaperId ? { flexGrow: 1 - clampSplitRatio(splitRatio) } : undefined} data-main-card><div ref={mainBodyRef} className={styles.mainBody} data-paper-marquee>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><div className={styles.mainRim} aria-hidden /></div></div></div><div id={INSPECTOR_SLOT_ID} className={styles.inspectorSlot} /><PaperDragPreview /><PaperMarquee />
     <PlamoDownloadToast raised={Boolean(toast)} />
+    <TagMenu />
     {toast && <div ref={toastRef} className={`${styles.toast} ${toast.kind === "error" ? styles.toastError : toast.kind === "info" ? styles.toastInfo : styles.toastOk}`} role="status"><span className={styles.toastMessage}>{toast.message}</span>{toast.actionLabel && toast.onAction && <button type="button" className={styles.toastAction} onClick={() => { toast.onAction?.(); clearToast(); }}>{toast.actionLabel}</button>}</div>}
     <Presence>{shortcutsOpen && <ShortcutsSheet onClose={() => setShortcutsOpen(false)} />}</Presence>
     <Presence>{createParentId !== undefined && <NewWorkspaceNodeModal parentName={createParentId ? workspaceNodes.find((node) => node.id === createParentId)?.name : undefined} onClose={() => setCreateParentId(undefined)} onCreate={create} />}</Presence>
