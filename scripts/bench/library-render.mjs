@@ -21,25 +21,28 @@ for (const n of sizes.length ? sizes : [100, 1000]) {
   await page.waitForFunction((n) => document.querySelectorAll("article[data-paper-id]").length >= Math.min(n, 6), n, { timeout: 600_000 });
   const firstCards = Date.now() - t0;
   await page.waitForTimeout(1500);
-  const stats = await page.evaluate(async () => {
+  await page.mouse.move(900, 500);
+  // Record frame times passively while real wheel events scroll the list (~7200 px/s).
+  await page.evaluate(() => {
+    window.__frames = [];
+    let last = performance.now();
+    const step = (now) => {
+      window.__frames.push(now - last);
+      last = now;
+      if (!window.__stopFrames) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+  const until = Date.now() + 3000;
+  while (Date.now() < until) {
+    await page.mouse.wheel(0, 120);
+    await page.waitForTimeout(16);
+  }
+  const stats = await page.evaluate(() => {
+    window.__stopFrames = true;
+    const frames = window.__frames.slice(1).sort((a, b) => a - b);
     const cards = document.querySelectorAll("article[data-paper-id]").length;
     const nodes = document.getElementsByTagName("*").length;
-    const scroller = [...document.querySelectorAll("*")].find((el) => el.scrollHeight > el.clientHeight + 100 && getComputedStyle(el).overflowY === "auto");
-    // Scroll through the list for ~3 s and record frame times.
-    const frames = [];
-    let last = performance.now();
-    await new Promise((resolve) => {
-      const start = last;
-      const step = (now) => {
-        frames.push(now - last);
-        last = now;
-        if (scroller) scroller.scrollTop += 120;
-        if (now - start < 3000) requestAnimationFrame(step);
-        else resolve();
-      };
-      requestAnimationFrame(step);
-    });
-    frames.sort((a, b) => a - b);
     const p = (q) => frames[Math.floor(frames.length * q)]?.toFixed(1);
     return { cards, nodes, frames: frames.length, p50: p(0.5), p95: p(0.95), max: frames.at(-1)?.toFixed(0), heapMB: (performance.memory?.usedJSHeapSize / 1e6).toFixed(0) };
   });
