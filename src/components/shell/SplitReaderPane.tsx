@@ -9,6 +9,7 @@ import { LibraryScreen } from "../library/LibraryScreen";
 import { InboxScreen } from "../library/InboxScreen";
 import styles from "./AppShell.module.css";
 import { suppressTextSelection } from "../../utils/dragSelection";
+import { SplitPaneContext } from "./splitPaneContext";
 
 const ReaderScreen = lazy(() => import("../reader/ReaderScreen").then((m) => ({ default: m.ReaderScreen })));
 
@@ -68,17 +69,19 @@ export function SplitReaderPane({ tab }: { tab: SplitTab }) {
     <>
       <div className={`${styles.main} ${styles.splitCard}`} style={{ flexGrow: clampSplitRatio(ratio) }} data-split-card>
         <div className={styles.splitPane} data-split-pane>
-          <Suspense fallback={null}>
-            {page === "/" ? (
-              <LibraryScreen />
-            ) : page === "/inbox" ? (
-              <InboxScreen />
-            ) : kind === "paper" ? (
-              <ReaderScreen key={tab} paperId={id} onClosePane={() => useSplitView.getState().removeLeftTab(tab)} />
-            ) : (
-              <ProjectScreen key={tab} nodeId={id} />
-            )}
-          </Suspense>
+          <SplitPaneContext.Provider value={true}>
+            <Suspense fallback={null}>
+              {page === "/" ? (
+                <LibraryScreen />
+              ) : page === "/inbox" ? (
+                <InboxScreen />
+              ) : kind === "paper" ? (
+                <ReaderScreen key={tab} paperId={id} onClosePane={() => useSplitView.getState().removeLeftTab(tab)} />
+              ) : (
+                <ProjectScreen key={tab} nodeId={id} />
+              )}
+            </Suspense>
+          </SplitPaneContext.Provider>
         </div>
         <div className={styles.mainRim} aria-hidden />
       </div>
