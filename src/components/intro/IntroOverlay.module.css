@@ -1,5 +1,8 @@
 /* The intro is a sheet of paper: the same near-white as the rendered sheet, in both appearances. */
 .overlay {
+  /* Every onboarding step puts its buttons on this same line, bottom centre. */
+  --intro-actions-bottom: max(13vh, 48px);
+  --intro-actions-space: calc(var(--intro-actions-bottom) + 36px + var(--spacing-xl));
   position: fixed;
   inset: 0;
   z-index: var(--z-intro-overlay);
@@ -25,7 +28,7 @@
   /* squircle-exempt: focus-outline shape; the painted pill is .pill::before with the G2 mask */
   position: absolute;
   left: 50%;
-  bottom: max(13vh, 48px);
+  bottom: var(--intro-actions-bottom);
   transform: translateX(-50%);
   padding: 0;
   border: none;
