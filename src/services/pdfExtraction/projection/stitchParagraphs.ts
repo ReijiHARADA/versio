@@ -208,12 +208,25 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
         // | `the IG (M = 11.8, SD = 1.` | `No baseline differences …`): the line and the paragraph after it are its rest.
         if (!listItem && j === i + 1 && candidate.type === "equation" && isHardOpen(currentText) &&
           !/[∈∉∼≅≁⊂⊆⊕⊗∀∃∑∏∫∂∇′{}^_\\|]/u.test(candidateText) &&
-          (/\b(?:SD|SE|CI|IQR|OR|HR|RR|M|p|n|r)\s*[=<>≤≥]\s*[−-]?\d/.test(candidateText) ||
+          (/\b(?:SD|SE|CI|IQR|OR|HR|RR|M|p|n|r)\s*[=<>≤≥]\s*[[(]?[−-]?\d/.test(candidateText) ||
             (candidateText.match(/\b[a-z]{3,}\b/g)?.length ?? 0) >= 3) && !/(?:^|\s)\(\s*\d{1,3}[a-z]?\s*\)\s*$/.test(candidateText) &&
-          !/(?:\b(?:as|follows|by|is|are)|[:=])\s*$/.test(currentText) &&
-          out[j + 1] && eligible(out[j + 1]) && out[j + 1].pageStart <= current.pageEnd + 1 && words(out[j + 1].original ?? "") >= 3) {
-          formula = j;
-          target = j + 1;
+          !/(?:\b(?:as|follows|by|is|are)|[:=])\s*$/.test(currentText)) {
+          // (The line can finish the sentence itself: `… (m = −6.3 ms, 95%` | `CI = [−42.7 ms, 29.9 ms], BF = 0.1) … condition.`.)
+          if (TERMINAL.test(candidateText) && /\b[a-z]{3,}\.$/.test(candidateText)) {
+            target = j;
+            break;
+          }
+          if (out[j + 1] && eligible(out[j + 1]) && out[j + 1].pageStart <= current.pageEnd + 1 && words(out[j + 1].original ?? "") >= 3) {
+            formula = j;
+            target = j + 1;
+            break;
+          }
+        }
+        // A sentence cut at a relation sign (`… a DID estimate of −2.2 (P =`) goes on in the number, past a stray short line
+        // (`Burnout Inventory.` | `0.001). Absenteeism rate …`).
+        if (!listItem && j <= i + 3 && /[=<>≤≥]$/.test(currentText) && eligible(candidate) && /^[−-]?\d/.test(candidateText) && words(candidateText) >= 3 &&
+          out.slice(i + 1, j).every((b) => b.type === "paragraph" && words(b.original ?? "") <= 4)) {
+          target = j;
           break;
         }
         // A display that opens with the words of the sentence (`… The DID model was specified` + `as follows: Outcome = β0 + …`)
