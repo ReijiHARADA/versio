@@ -141,3 +141,22 @@
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: var(--spacing-xs);
 }
+
+/* Virtualized list (LibraryPaperList above VIRTUALIZE_ABOVE): rows are absolutely placed. */
+.virtualList {
+  position: relative;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.virtualList > * {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+/* The grid's row gap, carried by each virtual row. */
+.virtualGridRow {
+  padding-bottom: var(--spacing-xs);
+}

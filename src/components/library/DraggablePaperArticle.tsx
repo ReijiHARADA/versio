@@ -1,5 +1,6 @@
 import type { KeyboardEvent, ReactNode } from "react";
 import { rangeBetween, usePaperSelectionStore } from "../../stores/paperSelectionStore";
+import { paperDisplayOrder } from "./paperDisplayOrder";
 import { useDraggablePaper } from "./useDraggablePaper";
 
 type DraggablePaperArticleProps = {
@@ -49,8 +50,7 @@ export function DraggablePaperArticle({
           return;
         }
         if (event.shiftKey) {
-          const order = [...document.querySelectorAll<HTMLElement>("article[data-paper-id][data-layout]")].map((el) => el.dataset.paperId!);
-          selection.select(rangeBetween(order, selection.anchor, paperId));
+          selection.select(rangeBetween(paperDisplayOrder(), selection.anchor, paperId));
           return;
         }
         onOpen();
