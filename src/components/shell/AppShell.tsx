@@ -48,7 +48,7 @@ export function AppShell() {
   useEffect(() => setSearchQuery(""), [location.pathname, setSearchQuery]);
   // Route change: fade the new screen in (opacity only, so fixed-position descendants are unaffected).
   const mainBodyRef = useRef<HTMLDivElement>(null);
-  const splitPaperId = useSplitView((state) => state.paperId);
+  const splitTab = useSplitView((state) => state.tab);
   const splitRatio = useSplitView((state) => state.ratio);
   const routeMounted = useRef(false);
   useEffect(() => {
@@ -229,7 +229,7 @@ export function AppShell() {
     <div className={styles.titlebarDrag} data-tauri-drag-region />
     <PdfFileInput inputRef={fileInputRef} onFile={(file) => { void tryStartPdfImport(file, fileNodeId ? { workspaceNodeId: fileNodeId } : undefined); setFileNodeId(null); }} />
     <AppSidebar workspaceNodes={workspaceNodes} searchQuery={searchQuery} onSearchChange={setSearchQuery} onNewWorkspace={() => setCreateParentId(null)} onNewChild={(node) => setCreateParentId(node.id)} onDeleteNode={deleteNode} onAddPaperToWorkspace={addPaperFile} activeNodeId={routeNodeId} inboxCount={inboxCount} />
-    <div className={styles.mainColumn}><PaperTabBar /><div className={styles.cards} data-main-pane>{splitPaperId && <SplitReaderPane paperId={splitPaperId} />}<div className={styles.main} style={splitPaperId ? { flexGrow: 1 - clampSplitRatio(splitRatio) } : undefined} data-main-card><div ref={mainBodyRef} className={styles.mainBody} data-paper-marquee>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><div className={styles.mainRim} aria-hidden /></div></div></div><div id={INSPECTOR_SLOT_ID} className={styles.inspectorSlot} /><PaperDragPreview /><PaperMarquee />
+    <div className={styles.mainColumn}><PaperTabBar /><div className={styles.cards} data-main-pane>{splitTab && <SplitReaderPane tab={splitTab} />}<div className={styles.main} style={splitTab ? { flexGrow: 1 - clampSplitRatio(splitRatio) } : undefined} data-main-card><div ref={mainBodyRef} className={styles.mainBody} data-paper-marquee>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><div className={styles.mainRim} aria-hidden /></div></div></div><div id={INSPECTOR_SLOT_ID} className={styles.inspectorSlot} /><PaperDragPreview /><PaperMarquee />
     <PlamoDownloadToast raised={Boolean(toast)} />
     <TagMenu />
     {toast && <div ref={toastRef} className={`${styles.toast} ${toast.kind === "error" ? styles.toastError : toast.kind === "info" ? styles.toastInfo : styles.toastOk}`} role="status"><span className={styles.toastMessage}>{toast.message}</span>{toast.actionLabel && toast.onAction && <button type="button" className={styles.toastAction} onClick={() => { toast.onAction?.(); clearToast(); }}>{toast.actionLabel}</button>}</div>}

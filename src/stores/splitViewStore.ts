@@ -1,25 +1,26 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { TabKey } from "./paperTabsStore";
 
 /**
  * Split view (UI state only): a second paper shown on the left of the main card, beside the
  * routed page on the right. Opened by dragging a paper tab onto either half of the card (the right half moves the routed paper to the left).
  */
 type SplitViewState = {
-  /** Paper in the left pane, or null when the card is not split. */
-  paperId: string | null;
-  /** Papers whose tabs sit over the left card (they open in the left pane); includes `paperId`. */
-  leftTabs: string[];
+  /** Tab shown in the left pane (a paper or a folder), or null when the card is not split. */
+  tab: TabKey | null;
+  /** Tabs over the left card (they open in the left pane); includes `tab`. */
+  leftTabs: TabKey[];
   /** Left pane's share of the card width (0–1). */
   ratio: number;
-  /** Shows `paperId` in the left pane and adds its tab to the left group (starting one if closed). */
-  openSplit: (paperId: string) => void;
+  /** Shows `tab` in the left pane and adds it to the left group (starting one if closed). */
+  openSplit: (tab: TabKey) => void;
   closeSplit: () => void;
-  /** Moves a paper's tab to the left group without showing it. */
-  addLeftTab: (paperId: string) => void;
-  /** Takes a paper's tab out of the left group. If it was on screen there, the left pane shows
-   *  another left tab, or the split closes when none is left. */
-  removeLeftTab: (paperId: string) => void;
+  /** Moves a tab to the left group without showing it. */
+  addLeftTab: (tab: TabKey) => void;
+  /** Takes a tab out of the left group. If it was on screen there, the left pane shows another
+   *  left tab, or the split closes when none is left. */
+  removeLeftTab: (tab: TabKey) => void;
   setRatio: (ratio: number) => void;
 };
 
@@ -32,37 +33,39 @@ export const clampSplitRatio = (ratio: number) =>
 export const useSplitView = create<SplitViewState>()(
   persist(
     (set) => ({
-      paperId: null,
+      tab: null,
       leftTabs: [],
       ratio: 0.5,
-      openSplit: (paperId) =>
+      openSplit: (tab) =>
         set((state) => {
-          const base = state.paperId ? state.leftTabs : [];
-          return { paperId, leftTabs: base.includes(paperId) ? base : [...base, paperId] };
+          const base = state.tab ? state.leftTabs : [];
+          return { tab, leftTabs: base.includes(tab) ? base : [...base, tab] };
         }),
-      closeSplit: () => set({ paperId: null, leftTabs: [] }),
-      addLeftTab: (paperId) =>
-        set((state) => (!state.paperId || state.leftTabs.includes(paperId) ? state : { leftTabs: [...state.leftTabs, paperId] })),
-      removeLeftTab: (paperId) =>
+      closeSplit: () => set({ tab: null, leftTabs: [] }),
+      addLeftTab: (tab) =>
+        set((state) => (!state.tab || state.leftTabs.includes(tab) ? state : { leftTabs: [...state.leftTabs, tab] })),
+      removeLeftTab: (tab) =>
         set((state) => {
-          if (!state.leftTabs.includes(paperId) && state.paperId !== paperId) return state;
-          const index = state.leftTabs.indexOf(paperId);
-          const leftTabs = state.leftTabs.filter((id) => id !== paperId);
-          if (state.paperId !== paperId) return { leftTabs };
+          if (!state.leftTabs.includes(tab) && state.tab !== tab) return state;
+          const index = state.leftTabs.indexOf(tab);
+          const leftTabs = state.leftTabs.filter((key) => key !== tab);
+          if (state.tab !== tab) return { leftTabs };
           const next = leftTabs[index] ?? leftTabs[index - 1] ?? null;
-          return next ? { paperId: next, leftTabs } : { paperId: null, leftTabs: [] };
+          return next ? { tab: next, leftTabs } : { tab: null, leftTabs: [] };
         }),
       setRatio: (ratio) => set({ ratio: clampSplitRatio(ratio) }),
     }),
     {
       name: "versio-split-view",
-      version: 2,
-      partialize: (state) => ({ paperId: state.paperId, leftTabs: state.leftTabs, ratio: state.ratio }),
-      // v1 had no left group: the paper on screen is its only tab.
+      version: 3,
+      partialize: (state) => ({ tab: state.tab, leftTabs: state.leftTabs, ratio: state.ratio }),
+      // v1 had one left paper and no group; v2 kept paper ids. v3 keeps tab keys (papers or folders).
       migrate: (persisted, version) => {
-        const state = (persisted ?? {}) as { paperId?: string | null; ratio?: number; leftTabs?: string[] };
-        if (version < 2) return { ...state, leftTabs: state.paperId ? [state.paperId] : [] } as SplitViewState;
-        return state as SplitViewState;
+        const old = (persisted ?? {}) as { paperId?: string | null; tab?: TabKey | null; ratio?: number; leftTabs?: string[] };
+        if (version >= 3) return old as SplitViewState;
+        const tab = old.paperId ? (`paper:${old.paperId}` as TabKey) : null;
+        const leftTabs = version < 2 ? (tab ? [tab] : []) : (old.leftTabs ?? []).map((id) => `paper:${id}` as TabKey);
+        return { ratio: old.ratio, tab, leftTabs } as SplitViewState;
       },
     }
   )

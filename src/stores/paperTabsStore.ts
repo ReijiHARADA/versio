@@ -101,5 +101,5 @@ export function readerPaperId(pathname: string): string | null {
 
 /** True while the paper has an open tab or sits in the split pane (its body stays in memory for instant switching). */
 export function isPaperTabOpen(paperId: string): boolean {
-  return usePaperTabs.getState().tabs.includes(paperTab(paperId)) || useSplitView.getState().paperId === paperId;
+  return usePaperTabs.getState().tabs.includes(paperTab(paperId)) || useSplitView.getState().tab === paperTab(paperId);
 }

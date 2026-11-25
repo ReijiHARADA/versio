@@ -7,32 +7,32 @@ describe("split view left tab group", () => {
   beforeEach(() => state().closeSplit());
 
   it("starts the left group with the paper opened on the left", () => {
-    state().openSplit("a");
-    expect(state()).toMatchObject({ paperId: "a", leftTabs: ["a"] });
+    state().openSplit("paper:a");
+    expect(state()).toMatchObject({ tab: "paper:a", leftTabs: ["paper:a"] });
   });
 
   it("adds left tabs only while split, and shows one without dropping the others", () => {
-    state().addLeftTab("x");
+    state().addLeftTab("paper:x");
     expect(state().leftTabs).toEqual([]);
-    state().openSplit("a");
-    state().addLeftTab("b");
-    state().openSplit("b");
-    expect(state()).toMatchObject({ paperId: "b", leftTabs: ["a", "b"] });
+    state().openSplit("paper:a");
+    state().addLeftTab("paper:b");
+    state().openSplit("paper:b");
+    expect(state()).toMatchObject({ tab: "paper:b", leftTabs: ["paper:a", "paper:b"] });
   });
 
   it("shows a neighbouring left tab when the one on screen leaves, and closes when none is left", () => {
-    state().openSplit("a");
-    state().addLeftTab("b");
-    state().removeLeftTab("a");
-    expect(state()).toMatchObject({ paperId: "b", leftTabs: ["b"] });
-    state().removeLeftTab("b");
-    expect(state()).toMatchObject({ paperId: null, leftTabs: [] });
+    state().openSplit("paper:a");
+    state().addLeftTab("paper:b");
+    state().removeLeftTab("paper:a");
+    expect(state()).toMatchObject({ tab: "paper:b", leftTabs: ["paper:b"] });
+    state().removeLeftTab("paper:b");
+    expect(state()).toMatchObject({ tab: null, leftTabs: [] });
   });
 
   it("removing a hidden left tab keeps the paper on screen", () => {
-    state().openSplit("a");
-    state().addLeftTab("b");
-    state().removeLeftTab("b");
-    expect(state()).toMatchObject({ paperId: "a", leftTabs: ["a"] });
+    state().openSplit("paper:a");
+    state().addLeftTab("paper:b");
+    state().removeLeftTab("paper:b");
+    expect(state()).toMatchObject({ tab: "paper:a", leftTabs: ["paper:a"] });
   });
 });
