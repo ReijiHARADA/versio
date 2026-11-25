@@ -687,8 +687,10 @@ const dropClip = (width: number) =>
   `polygon(${-SHADOW_ROOM}px ${-SHADOW_ROOM}px, calc(100% + ${SHADOW_ROOM}px) ${-SHADOW_ROOM}px, calc(100% + ${SHADOW_ROOM}px) 100%, ${width}px 100%, ${width}px calc(100% + ${TAB_FLUSH_DROP}px), ${-SHADOW_ROOM}px calc(100% + ${TAB_FLUSH_DROP}px))`;
 /** Keep tracking the tab this long after a drag ends, while it glides into its slot. */
 const MORPH_TAIL_MS = SETTLE_MS + 120;
-/** Rounds the measured gap so sub-pixel jitter does not re-render the cap. */
-const snapGap = (gap: number) => (gap < 0.5 ? 0 : gap >= TAB_MORPH_GAP - 0.5 ? Infinity : Math.round(gap * 4) / 4);
+/** Rounds the measured gap so sub-pixel jitter does not re-render the cap. A tab hanging past
+ *  the card's edge (dragged toward the other split card) is off the card: plain flared cap, no
+ *  drop into a card that is not there. */
+const snapGap = (gap: number) => (gap < -1.5 ? Infinity : gap < 0.5 ? 0 :gap >= TAB_MORPH_GAP - 0.5 ? Infinity : Math.round(gap * 4) / 4);
 
 /** While a paper tab is pulled onto the card: a ghost under the pointer and, over the card's
  *  left or right half, the half it will open in. */
