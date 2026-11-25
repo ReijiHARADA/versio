@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { demoteEditorialChromeHeadings } from "../../services/pdfExtraction/resolver/documentResolver";
+import { demoteEditorialChromeHeadings, isProseRowAsHeading } from "../../services/pdfExtraction/resolver/documentResolver";
 import type { CanonicalNode } from "../../services/pdfExtraction/canonical/types";
 
 function heading(text: string, page = 2): CanonicalNode {
@@ -353,5 +353,19 @@ describe("demoteEditorialChromeHeadings", () => {
     expect(nodes.find((n) => n.text?.startsWith("0.107"))?.role).not.toBe("heading");
     expect(nodes.find((n) => n.text?.startsWith("0.444"))?.role).not.toBe("heading");
     expect(nodes.find((n) => n.text === "6 Discussion")?.role).toBe("heading");
+  });
+});
+
+describe("isProseRowAsHeading", () => {
+  it("flags credit rows and wrapped lines that open on a number and a citation", () => {
+    expect(isProseRowAsHeading("YWM: Data curation, Formal")).toBe(true);
+    expect(isProseRowAsHeading("FH: Writing – review & editing. JA:")).toBe(true);
+    expect(isProseRowAsHeading("2.6 (Berry et al., 2020), defined as an apnea–hypopnea index (AHI)")).toBe(true);
+  });
+
+  it("keeps real section titles", () => {
+    expect(isProseRowAsHeading("2.6 Data curation")).toBe(false);
+    expect(isProseRowAsHeading("Methods: Visualization of the data")).toBe(false);
+    expect(isProseRowAsHeading("3.1 (Sub)sampling strategy")).toBe(false);
   });
 });

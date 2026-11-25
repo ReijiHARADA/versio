@@ -746,6 +746,13 @@ function promoteMislabelledSectionAuthors(nodes: CanonicalNode[]): CanonicalNode
   });
 }
 
+// A credit row (`YWM: Data curation, Formal`, `FH: Writing – review & editing. JA:`) is a line of the author
+// contributions paragraph, and `2.6 (Berry et al., 2020), defined as …` is a wrapped line that opens on a number.
+export const isProseRowAsHeading = (text: string) =>
+  /^\p{Lu}[\p{Lu}.-]{0,6}:\s/u.test(text) &&
+    /\b(?:Writing\s*[–—-]\s*(?:review|original)|Data curation|Formal analysis|Conceptualization|Funding acquisition|Project administration|Methodology|Visualization|Supervision)\b/.test(text) ||
+  /^\d+(?:\.\d+)*\s*\((?:[^()]*\bet al\.|[^()]*\b(?:19|20)\d{2}\b)/.test(text);
+
 /** Frontiers-style editorial chrome and abstract lead-ins that layout promotes to heading. */
 export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): CanonicalNode[] {
   const titleText = nodes.find((n) => n.role === "title")?.text?.trim().toLowerCase() ?? "";
@@ -4659,6 +4666,14 @@ export function resolveCanonicalDocument(input: {
     (next?.role === "paragraph" || next?.role === "footnote") && next.pageStart === node.pageEnd &&
     /^[a-z]/.test(next.text?.trim() ?? "") && !/^\d+\.\d/.test(node.text?.trim() ?? "") &&
     wordCount(node.text) >= 4 && wordCount(next.text) >= 4 && startsJustBelow(node, next);
+  // `… the “New Humanities` + `Education: The 100 New` + `Textbooks” in Kazakh …`: a quotation open across the line
+  // (from the paragraph above or the line itself) closes in the next block.
+  const opensUnclosedQuote = (node: CanonicalNode, next: CanonicalNode | undefined, previous: CanonicalNode | undefined) => {
+    const text = (previous?.role === "paragraph" && previous.pageEnd === node.pageStart ? (previous.text ?? "").slice(-120) + " " : "") + (node.text ?? "");
+    const rest = next?.text?.trim() ?? "";
+    return next?.role === "paragraph" && next.pageStart === node.pageEnd && text.lastIndexOf("“") > text.lastIndexOf("”") &&
+      /^[^“”]{1,80}”/.test(rest) && startsJustBelow(node, next);
+  };
   // A lone wrapped tail (`major`) under a long title is the title's own line, not prose.
   const wordCount = (text: string | null | undefined) => (text ?? "").trim().split(/\s+/).length;
   // The canonical neighbour is not always the next printed line (a figure label can sit between).
@@ -4670,7 +4685,8 @@ export function resolveCanonicalDocument(input: {
     return gap > -2 && gap < a.height * 1.5 && Math.abs(b.x - a.x) < 30;
   };
   nodes = nodes.map((node, index) => node.role !== "heading" ||
-    !(/[,–—]\s*$/.test(node.text ?? "") || continuesInLowercase(node, nodes[index + 1])) ? node : {
+    !(/[,–—]\s*$/.test(node.text ?? "") || continuesInLowercase(node, nodes[index + 1]) || isProseRowAsHeading(node.text?.trim() ?? "") ||
+      opensUnclosedQuote(node, nodes[index + 1], nodes[index - 1])) ? node : {
     ...node,
     role: nodes[index + 1]?.role === "footnote" && !/[,–—]\s*$/.test(node.text ?? "") ? "footnote" as const : "paragraph" as const,
     confidence: Math.min(node.confidence, 0.55),
