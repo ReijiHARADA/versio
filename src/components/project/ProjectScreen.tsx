@@ -154,7 +154,7 @@ export function ProjectScreen({ nodeId: paneNodeId }: { nodeId?: string } = {}) 
             aria-label="このフォルダを書き出す"
           >
             <Upload size={18} />
-            書き出す
+            <span className={styles.exportLabel}>書き出す</span>
           </button>
           <AddPaperButton className={styles.addButton} onPickFile={() => fileInputRef.current?.click()} workspaceNodeId={nodeId} />
         </div>

@@ -28,6 +28,8 @@
 }
 
 .header {
+  /* Header controls fold to icons when this gets narrow (split view). */
+  container: page-header / inline-size;
   height: var(--header-height);
   padding: 0 var(--window-margin);
   display: flex;
