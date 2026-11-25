@@ -140,7 +140,7 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
       const fixturePath = await invoke<string | null>("ui_e2e_fixture_path");
       if (fixturePath) {
         fixtureImportStarted = true;
-        const bytes = await invoke<number[]>("read_dropped_pdf", { path: fixturePath });
+        const bytes = await invoke<ArrayBuffer>("read_dropped_pdf", { path: fixturePath });
         const fileName = fixturePath.split(/[\\/]/).pop() || "ui-e2e-fixture.pdf";
         const file = new File([new Uint8Array(bytes)], fileName, { type: "application/pdf" });
         const started = await startBackgroundImport(file);

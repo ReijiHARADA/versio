@@ -63,7 +63,7 @@ export async function maybeRunPackagedAcceptanceImport(): Promise<void> {
       at: new Date().toISOString(),
     });
 
-    const bytes = await invoke<number[]>("read_dropped_pdf", { path });
+    const bytes = await invoke<ArrayBuffer>("read_dropped_pdf", { path });
     await writeMarker({
       ok: false,
       step: "fixture_read",

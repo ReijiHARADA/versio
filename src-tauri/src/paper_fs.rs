@@ -61,17 +61,62 @@ fn collect_files(root: &Path, dir: &Path, out: &mut Vec<String>) -> Result<(), S
     Ok(())
 }
 
-#[tauri::command]
-pub fn read_app_file(app: AppHandle, relative_path: String) -> Result<Option<Vec<u8>>, String> {
-    let path = resolve(&app, &relative_path)?;
-    if !path.is_file() {
-        return Ok(None);
+/// Header that carries the app-relative path of a raw-body file command
+/// (`encodeURIComponent` on the frontend).
+const PATH_HEADER: &str = "x-versio-path";
+/// Error a missing file reports, mapped to `null` by `tauriFs.readBytes`.
+const NOT_FOUND: &str = "ENOENT";
+
+fn percent_decode(value: &str) -> Result<String, String> {
+    let bytes = value.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' {
+            let hex = value.get(i + 1..i + 3).ok_or("無効なパスです")?;
+            out.push(u8::from_str_radix(hex, 16).map_err(|_| "無効なパスです")?);
+            i += 3;
+        } else {
+            out.push(bytes[i]);
+            i += 1;
+        }
     }
-    fs::read(&path).map(Some).map_err(|e| e.to_string())
+    String::from_utf8(out).map_err(|_| "無効なパスです".into())
 }
 
+fn header_path(request: &tauri::ipc::Request<'_>) -> Result<String, String> {
+    let value = request
+        .headers()
+        .get(PATH_HEADER)
+        .and_then(|v| v.to_str().ok())
+        .ok_or("パスがありません")?;
+    percent_decode(value)
+}
+
+/// Returns the file as a raw IPC body (an `ArrayBuffer` in the webview). A JSON
+/// `Vec<u8>` turns every byte into a number: a 50 MB library.sqlite cost 2.6 GB
+/// in JavaScriptCore (docs/research/library-scale-bench-2026-11.md).
 #[tauri::command]
-pub fn write_app_file(app: AppHandle, relative_path: String, data: Vec<u8>) -> Result<(), String> {
+pub fn read_app_file(
+    app: AppHandle,
+    relative_path: String,
+) -> Result<tauri::ipc::Response, String> {
+    let path = resolve(&app, &relative_path)?;
+    if !path.is_file() {
+        return Err(NOT_FOUND.into());
+    }
+    fs::read(&path)
+        .map(tauri::ipc::Response::new)
+        .map_err(|e| e.to_string())
+}
+
+/// Takes the bytes as the raw IPC body and the path in the `x-versio-path` header.
+#[tauri::command]
+pub fn write_app_file(app: AppHandle, request: tauri::ipc::Request<'_>) -> Result<(), String> {
+    let tauri::ipc::InvokeBody::Raw(data) = request.body() else {
+        return Err("バイト列で渡してください".into());
+    };
+    let relative_path = header_path(&request)?;
     let path = resolve(&app, &relative_path)?;
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|e| e.to_string())?;
@@ -79,7 +124,7 @@ pub fn write_app_file(app: AppHandle, relative_path: String, data: Vec<u8>) -> R
     // Atomic replace: write sidecar then rename over the destination so a crash
     // mid-write cannot leave a truncated library.sqlite / package file.
     let tmp = PathBuf::from(format!("{}.tmp", path.display()));
-    fs::write(&tmp, &data).map_err(|e| e.to_string())?;
+    fs::write(&tmp, data).map_err(|e| e.to_string())?;
     fs::rename(&tmp, &path).map_err(|e| {
         let _ = fs::remove_file(&tmp);
         e.to_string()
@@ -519,8 +564,19 @@ pub fn list_app_files(app: AppHandle, prefix: String) -> Result<Vec<String>, Str
 
 #[cfg(test)]
 mod tests {
-    use super::{ensure_extension, is_safe_asset_rel, is_safe_relative};
+    use super::{ensure_extension, is_safe_asset_rel, is_safe_relative, percent_decode};
     use std::path::PathBuf;
+
+    #[test]
+    fn decodes_header_paths() {
+        assert_eq!(
+            percent_decode("papers%2Fa%20b%2F%E8%AB%96.md").unwrap(),
+            "papers/a b/論.md"
+        );
+        assert_eq!(percent_decode("library.sqlite").unwrap(), "library.sqlite");
+        assert!(percent_decode("bad%2").is_err());
+        assert!(percent_decode("bad%zz").is_err());
+    }
 
     #[test]
     fn accepts_package_paths() {

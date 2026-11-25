@@ -205,13 +205,15 @@ pub fn source_pdf_exists(app: AppHandle, paper_id: String) -> Result<bool, Strin
 }
 
 #[tauri::command]
-pub fn read_dropped_pdf(path: String) -> Result<Vec<u8>, String> {
+pub fn read_dropped_pdf(path: String) -> Result<tauri::ipc::Response, String> {
     let file_path = require_readable_pdf(&path)?;
     let size = fs::metadata(&file_path).map_err(|e| e.to_string())?.len();
     if size > MAX_DROPPED_PDF_BYTES {
         return Err("PDFが大きすぎます（100MBまで）".into());
     }
-    fs::read(&file_path).map_err(|e| e.to_string())
+    fs::read(&file_path)
+        .map(tauri::ipc::Response::new)
+        .map_err(|e| e.to_string())
 }
 
 /// Opt-in packaged acceptance: returns fixture path only when VERSIO_ACCEPTANCE=1.

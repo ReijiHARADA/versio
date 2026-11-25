@@ -24,11 +24,9 @@ export function importWorkspaceNodeIdFromLocation(
 
 export async function fileFromDroppedPath(path: string): Promise<File> {
   const { invoke } = await import("@tauri-apps/api/core");
-  const bytes = await invoke<number[] | Uint8Array>("read_dropped_pdf", { path });
+  const bytes = await invoke<ArrayBuffer>("read_dropped_pdf", { path });
   const name = path.split("/").pop() || "paper.pdf";
-  const source = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  const data = new Uint8Array(source.byteLength);
-  data.set(source);
+  const data = new Uint8Array(bytes);
   const file = new File([data], name, {
     type: "application/pdf",
   });

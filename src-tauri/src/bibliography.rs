@@ -213,7 +213,10 @@ fn openalex_pdf_url(doi: &str) -> Result<String, String> {
 /// Downloads an open-access PDF for an arXiv id or DOI. The host is fixed for
 /// arXiv; for a DOI the PDF URL comes from OpenAlex, never from the frontend.
 #[tauri::command]
-pub async fn download_open_access_pdf(kind: String, id: String) -> Result<Vec<u8>, String> {
+pub async fn download_open_access_pdf(
+    kind: String,
+    id: String,
+) -> Result<tauri::ipc::Response, String> {
     let id = id.trim().to_string();
     let url = match kind.as_str() {
         "arxiv" if is_valid_arxiv_id(&id) => format!("https://arxiv.org/pdf/{id}"),
@@ -231,7 +234,7 @@ pub async fn download_open_access_pdf(kind: String, id: String) -> Result<Vec<u8
         if !body.starts_with(b"%PDF") {
             return Err("PDF を直接取得できませんでした（出版社のページが返されました）".into());
         }
-        Ok(body)
+        Ok(tauri::ipc::Response::new(body))
     })
     .await
     .map_err(|e| e.to_string())?

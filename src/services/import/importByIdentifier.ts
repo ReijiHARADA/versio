@@ -14,11 +14,11 @@ export async function importByIdentifier(
   if (!identifier) throw new Error("arXiv ID か DOI（または arxiv.org / doi.org の URL）を入力してください");
   if (!isTauriApp()) throw new Error("arXiv・DOI からの追加はデスクトップ版のみ対応しています");
   const { invoke } = await import("@tauri-apps/api/core");
-  const bytes = await invoke<number[] | Uint8Array>("download_open_access_pdf", {
+  const bytes = await invoke<ArrayBuffer>("download_open_access_pdf", {
     kind: identifier.kind,
     id: identifier.id,
   });
-  const data = bytes instanceof Uint8Array ? new Uint8Array(bytes) : new Uint8Array(bytes);
+  const data = new Uint8Array(bytes);
   const name = `${identifier.id.replace(/[\\/:*?"<>|]+/g, "_")}.pdf`;
   return startBackgroundImport(new File([data], name, { type: "application/pdf" }), options);
 }
