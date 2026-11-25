@@ -1,5 +1,5 @@
 /* Tab strip in the title bar band above the main card. Above the window drag layer so tabs
-   stay clickable; the strip's own empty area is a drag region (data-tauri-drag-region). */
+   stay clickable. The whole strip is a deep drag region (data-tauri-drag-region="deep"): any non-interactive spot drags the window and double-click zooms it; tabs (role="tab") still block it. */
 .bar {
   --tab-hover-gap: calc(var(--spacing-xs) / 2);
   /* The card's 1px ring reads lighter than a crisp SVG stroke of the same colour
