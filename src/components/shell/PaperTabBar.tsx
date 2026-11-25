@@ -496,22 +496,24 @@ function ActiveTabShape({ moving, textured }: { moving: boolean; textured: boole
     const texture = textureRef.current;
     const tab = shapeRef.current?.parentElement;
     const card = document.querySelector<HTMLElement>("[data-main-card]");
-    if (!texture || !tab || !card) return;
+    if (!tab || !card) return;
     const c = card.getBoundingClientRect();
     setGap(snapGap(tab.getBoundingClientRect().left - c.left));
+    // Only folder tabs carry the texture; paper tabs still need the gap above.
+    if (!texture) return;
     const t = texture.getBoundingClientRect();
     const pos = `${c.left - t.left}px ${c.top - t.top}px`;
     texture.style.backgroundPosition = `${pos}, ${pos}`;
   };
   useLayoutEffect(() => syncRef.current());
   useEffect(() => {
-    const texture = textureRef.current;
+    const shape = shapeRef.current;
     const card = document.querySelector<HTMLElement>("[data-main-card]");
-    if (!texture || !card) return;
+    if (!shape || !card) return;
     const sync = () => syncRef.current();
     const observer = new ResizeObserver(sync);
     observer.observe(card);
-    const bar = texture.closest<HTMLElement>(`.${styles.bar}`);
+    const bar = shape.closest<HTMLElement>(`.${styles.bar}`);
     if (bar) observer.observe(bar);
     // Neighbouring tabs growing / the bar's padding gliding move this tab without a resize.
     bar?.addEventListener("transitionend", sync);
