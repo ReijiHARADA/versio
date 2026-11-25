@@ -23,7 +23,9 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import type { FileSystem } from "../../src/data/fs/types";
 import { openSqlite } from "../../src/data/sqlite/client";
-import { rebuildPaperFts, searchPapersFts } from "../../src/data/sqlite/fts";
+import { nativeSearchGroups, rebuildPaperFts, searchPapersFts } from "../../src/data/sqlite/fts";
+import { normalizeIndexText } from "../../src/domain/search/normalizeSearchText";
+import { singleCharWords } from "../../src/domain/search/singleCharWords";
 import { SynonymDictionary } from "../../src/domain/search/synonymDictionary";
 import { buildSearchQuery } from "../../src/domain/search/searchQuery";
 
@@ -39,6 +41,9 @@ const QUERIES = [
   "使いやすさ",
   "cognitive load",
   "zqxjv-not-present",
+  "研究",
+  "数",
+  "uniqtoken4242",
 ];
 
 function nodeFs(root: string): FileSystem {
@@ -225,6 +230,7 @@ export async function runLibraryScaleBench(sizes: number[]): Promise<void> {
     JSON.parse(readFileSync("src/generated/synonyms.json", "utf8")),
   );
   console.log(`pools: en=${pools.en.length} ja=${pools.ja.length} sentences`);
+  exportNativeBenchInput(pools, dict);
   for (const n of sizes.length ? sizes : [100, 1000]) {
     try {
       const r = await bench(n, pools, dict);
@@ -235,4 +241,22 @@ export async function runLibraryScaleBench(sizes: number[]): Promise<void> {
       );
     }
   }
+}
+
+/**
+ * Inputs for the native index bench (`cargo test --release native_scale -- --ignored`):
+ * normalized sentence pools and the queries as `search_index_search` takes them.
+ */
+function exportNativeBenchInput(pools: { en: string[]; ja: string[] }, dict: SynonymDictionary) {
+  mkdirSync(OUT, { recursive: true });
+  const queries = QUERIES.map((q) => ({ query: q, groups: nativeSearchGroups(buildSearchQuery(q, { dictionary: dict })) }));
+  writeFileSync(
+    join(OUT, "native-input.json"),
+    JSON.stringify({
+      en: pools.en.map(normalizeIndexText),
+      ja: pools.ja.map(normalizeIndexText),
+      words: pools.ja.slice(0, 200).map(singleCharWords),
+      queries,
+    })
+  );
 }

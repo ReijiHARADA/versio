@@ -2,7 +2,8 @@ import type { Paper, PaperReadStatus } from "../../types/paper";
 
 const READ_STATUSES = new Set<string>(["unread", "reading", "read"]);
 import { listAnnotationsByPaper } from "./annotationRepository";
-import { rebuildPaperFts } from "../sqlite/fts";
+import { rebuildPaperFts, refreshPaperFtsMeta } from "../sqlite/fts";
+import { nativeSearchIndex } from "../sqlite/nativeSearchIndex";
 import { extractAbbreviations } from "../../domain/search/abbreviations";
 import type { SqliteClient } from "../sqlite/client";
 import { computeNeedsTranslationResume } from "../../services/import/resumeFlag";
@@ -187,6 +188,7 @@ export function listResumeCandidatePaperIds(db: SqliteClient): string[] {
 }
 
 export function deletePaperIndex(db: SqliteClient, id: string): void {
+  nativeSearchIndex()?.delete(id);
   db.exec("DELETE FROM papers_fts WHERE paper_id = ?", [id]);
   db.exec("DELETE FROM library_terms WHERE paper_id = ?", [id]);
   db.exec("DELETE FROM paper_words WHERE paper_id = ?", [id]);
@@ -224,22 +226,26 @@ export function rebuildPaperSearchIndex(
   original: string,
   translation: string
 ): void {
+  rebuildPaperFts(db, paper.id, { ...paperSearchMeta(db, paper), original, translation });
+}
+
+function paperSearchMeta(db: SqliteClient, paper: Paper): { title: string; authors: string; annotation: string } {
   const annotation = listAnnotationsByPaper(db, paper.id)
     .map((item) => [item.note, item.selectedText].filter(Boolean).join(" "))
     .join(" ");
-  rebuildPaperFts(db, paper.id, {
+  return {
     title: [paper.titleOriginal, paper.titleTranslated].filter(Boolean).join(" "),
     authors: paper.authors.join(" "),
-    original,
-    translation,
     annotation,
-  });
+  };
 }
 
 /** Refresh FTS annotation column for one paper without rewriting package files. */
 export function refreshPaperAnnotationFts(db: SqliteClient, paperId: string): void {
   const paper = getPaperIndex(db, paperId);
   if (!paper) return;
+  // The native index keeps the body; one-character words in the note wait for the next full re-index.
+  if (refreshPaperFtsMeta(paperId, paperSearchMeta(db, paper))) return;
   const row = db.get("SELECT original, translation FROM papers_fts WHERE paper_id = ?", [paperId]);
   const original = row ? String(row.original ?? "") : "";
   const translation = row ? String(row.translation ?? "") : "";

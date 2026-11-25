@@ -6,6 +6,7 @@ import { createTauriFileSystem } from "./fs/tauriFs";
 import type { FileSystem } from "./fs/types";
 import { resetDocumentCache } from "./repositories/documentRepository";
 import { openSqlite, type SqliteClient } from "./sqlite/client";
+import { createTauriSearchIndex, setNativeSearchIndex } from "./sqlite/nativeSearchIndex";
 
 export type StorageRuntime = {
   fs: FileSystem;
@@ -35,6 +36,8 @@ export async function getStorage(): Promise<StorageRuntime> {
               ? createMemoryFileSystem()
               : createIdbFileSystem()
         );
+      // The desktop app keeps paper bodies for search in a native SQLite file.
+      setNativeSearchIndex(!testFs && isTauriApp() ? createTauriSearchIndex() : null);
       const db = await openSqlite(fs);
       runtime = { fs, db };
       return runtime;
