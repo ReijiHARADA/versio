@@ -328,8 +328,8 @@
 .pinned,
 .pinned.active {
   flex: none;
-  width: 40px; /* spacing-literal-ok: icon tab width */
-  min-width: 40px; /* spacing-literal-ok: icon tab width */
+  width: 52px; /* spacing-literal-ok: icon tab width */
+  min-width: 52px; /* spacing-literal-ok: icon tab width */
   padding-left: 0;
   padding-right: 0;
   justify-content: center;
