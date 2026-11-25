@@ -139,9 +139,10 @@
   transition: --sq-bg 120ms ease;
 }
 
-/* Pulled down towards the card: the tab waits in its slot while the ghost travels. */
-.pulled {
-  opacity: 0.45;
+/* Pulled down towards the card: the tab itself follows the pointer (no transform transition). */
+.reordering .pulled {
+  z-index: var(--z-tab-drag);
+  transition: --sq-bg 120ms ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -155,7 +156,7 @@
   position: fixed;
   z-index: var(--z-overlay);
   display: grid;
-  /* Label near the top: the dragged tab's ghost usually sits over the middle. */
+  /* Label near the top: the dragged tab usually sits over the middle. */
   place-items: start center;
   padding-top: var(--spacing-2xl);
   box-sizing: border-box;
@@ -184,34 +185,6 @@
 
 .splitZoneActive .splitZoneLabel {
   opacity: 1;
-}
-
-.ghost {
-  composes: surface from "../../styles/squircle.module.css";
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: var(--z-drag-ghost);
-  max-width: 220px;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs-plus);
-  padding: var(--spacing-xs) var(--spacing-sm-mid);
-  border-radius: var(--sq-radius-md);
-  --sq-fill: var(--sq-fill-md);
-  --sq-ring: var(--sq-ring-md);
-  --sq-bg: var(--color-bg);
-  box-shadow: var(--shadow-card);
-  color: var(--color-text);
-  font-size: var(--font-size-small);
-  pointer-events: none;
-}
-
-.ghostTitle {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 .shape {
@@ -351,6 +324,8 @@
   --sq-bg: var(--color-bg);
   color: var(--color-text);
   filter: var(--shadow-card-filter);
+  /* Own compositing layer: WKWebView otherwise leaves trails of the filtered tab as it moves. */
+  will-change: transform;
 }
 
 .bar .tab.lifted::before {
