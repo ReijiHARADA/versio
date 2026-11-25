@@ -341,3 +341,24 @@
   padding-right: 0;
   justify-content: center;
 }
+
+/* While a tab is moved (reordered or pulled towards the card to split it) it leaves its card:
+   a card-coloured clothoid rectangle, rounded on all four corners, at the inactive tabs' height. */
+.tab.lifted {
+  height: calc(var(--titlebar-h) - var(--card-gap) - var(--spacing-xs));
+  margin-bottom: var(--spacing-xs);
+  padding-bottom: 0;
+  --sq-bg: var(--color-bg);
+  color: var(--color-text);
+  filter: var(--shadow-card-filter);
+}
+
+.bar .tab.lifted::before {
+  left: 0;
+  right: 0;
+}
+
+.tab.lifted::after,
+.tab.lifted + .tab::after {
+  opacity: 0;
+}
