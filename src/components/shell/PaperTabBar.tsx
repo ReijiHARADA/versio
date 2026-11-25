@@ -519,7 +519,7 @@ export function PaperTabBar() {
     <div
       ref={barRef}
       className={`${styles.bar} ${drag ? styles.reordering : ""}`}
-      data-tauri-drag-region
+      data-tauri-drag-region="deep"
       role="tablist"
       aria-label="開いている論文とフォルダ"
       style={{ paddingLeft, paddingRight: Math.max(EDGE_PAD + 10, inset.right) }}
