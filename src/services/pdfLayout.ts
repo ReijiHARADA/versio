@@ -540,8 +540,8 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
   const agreedStarts = alignedColumnPairs && rowStartPeaks &&
     Math.abs(rowStartPeaks[0] - alignedColumnPairs.leftX) <= 8 && Math.abs(rowStartPeaks[1] - alignedColumnPairs.rightX) <= 8;
   // (So are six or more aligned pairs of equal-width lines across a gutter: a page whose right column a table fills.)
-  const strongPairs = alignedColumnPairs != null && alignedColumnPairs.count >= 6 && alignedColumnPairs.gap >= 10 &&
-    alignedColumnPairs.gap <= 40 && alignedColumnPairs.balance <= 0.1;
+  const strongPairs = alignedColumnPairs != null && alignedColumnPairs.gap >= 10 && alignedColumnPairs.gap <= 40 &&
+    ((alignedColumnPairs.count >= 6 && alignedColumnPairs.balance <= 0.1) || (alignedColumnPairs.count >= 5 && alignedColumnPairs.balance <= 0.06));
   const minShare = agreedStarts || strongPairs ? 0.15 : 0.22;
   const isMultiColumn = alignedColumnPairs
     ? rightX - leftX >= page.width * 0.22 && leftShare >= minShare && rightShare >= minShare
