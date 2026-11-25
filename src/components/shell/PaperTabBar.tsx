@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -26,6 +26,7 @@ import {
   TAB_FLUSH_LEFT_STROKE,
   TAB_HEIGHT,
 } from "./paperTabShape";
+import { morphLeftCap, TAB_MORPH_GAP } from "./paperTabCap";
 import styles from "./PaperTabBar.module.css";
 
 const DRAG_THRESHOLD = 4;
@@ -345,7 +346,7 @@ export function PaperTabBar() {
       aria-label="開いている論文とフォルダ"
       style={{ paddingLeft, paddingRight: Math.max(EDGE_PAD + 10, inset.right) }}
     >
-      {visible.map(({ key: id, kind, title, translating }, index) => {
+      {visible.map(({ key: id, kind, title, translating }) => {
         const active = id === activeId;
         const inSplit = kind === "paper" && parseTab(id).id === splitPaperId;
         const Icon = kind === "folder" ? Folder : FileText;
@@ -367,7 +368,7 @@ export function PaperTabBar() {
             onAuxClick={(event) => { if (event.button === 1) closeTab(id); }}
             onKeyDown={(event) => { if (event.key === "Enter") openTab(id); }}
           >
-            {active && <ActiveTabShape flushLeft={index === 0 && paddingLeft === 0} />}
+            {active && <ActiveTabShape moving={drag != null} />}
             <Icon className={styles.icon} size={14} strokeWidth={1.6} aria-hidden />
             <span className={styles.title}>{title}</span>
             {translating && <span className={styles.status}>翻訳中</span>}
@@ -389,7 +390,13 @@ export function PaperTabBar() {
 }
 
 const SHADOW_ROOM = 32;
-const flushClip = `polygon(${-SHADOW_ROOM}px ${-SHADOW_ROOM}px, calc(100% + ${SHADOW_ROOM}px) ${-SHADOW_ROOM}px, calc(100% + ${SHADOW_ROOM}px) 100%, ${TAB_FLUSH_CAP_WIDTH}px 100%, ${TAB_FLUSH_CAP_WIDTH}px calc(100% + ${TAB_FLUSH_DROP}px), ${-SHADOW_ROOM}px calc(100% + ${TAB_FLUSH_DROP}px))`;
+/** Cuts the shadow at the card's top edge but keeps a cap that drops `width` px wide into it. */
+const dropClip = (width: number) =>
+  `polygon(${-SHADOW_ROOM}px ${-SHADOW_ROOM}px, calc(100% + ${SHADOW_ROOM}px) ${-SHADOW_ROOM}px, calc(100% + ${SHADOW_ROOM}px) 100%, ${width}px 100%, ${width}px calc(100% + ${TAB_FLUSH_DROP}px), ${-SHADOW_ROOM}px calc(100% + ${TAB_FLUSH_DROP}px))`;
+/** Keep tracking the tab this long after a drag ends, while it glides into its slot. */
+const MORPH_TAIL_MS = SETTLE_MS + 120;
+/** Rounds the measured gap so sub-pixel jitter does not re-render the cap. */
+const snapGap = (gap: number) => (gap < 0.5 ? 0 : gap >= TAB_MORPH_GAP - 0.5 ? Infinity : Math.round(gap * 4) / 4);
 
 /** While a paper tab is pulled onto the card: a ghost under the pointer and, over the card's
  *  left or right half, the half it will open in. */
@@ -429,27 +436,45 @@ function capMaskUrl(d: string, width: number, height: number): string {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
-/** Card-coloured tab body whose flared base runs into the main card below. */
-function ActiveTabShape({ flushLeft }: { flushLeft: boolean }) {
-  const cap = (fill: string, stroke: string, width = TAB_CAP_WIDTH, height = TAB_HEIGHT) => (
+/** Card-coloured tab body whose flared base runs into the main card below. Its left cap follows
+ *  the tab's gap from the card's left edge: flush on the edge, fully flared once clear of the
+ *  card's corner, and in between the card corner and the flare grow together (see morphLeftCap). */
+function ActiveTabShape({ moving }: { moving: boolean }) {
+  const cap = (fill: string, stroke: string, width = TAB_CAP_WIDTH, height = TAB_HEIGHT, clipId?: string) => (
     <svg className={styles.cap} width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden>
+      {clipId && (
+        <clipPath id={clipId}>
+          <path d={fill} />
+        </clipPath>
+      )}
       <path d={fill} className={styles.capFill} />
-      <path d={stroke} className={styles.capStroke} />
+      <path d={stroke} className={styles.capStroke} {...(clipId ? { clipPath: `url(#${clipId})`, strokeWidth: 2 } : {})} />
     </svg>
   );
+  const clipId = `tab-cap-${useId().replace(/:/g, "")}`;
+  const shapeRef = useRef<HTMLSpanElement>(null);
   const textureRef = useRef<HTMLSpanElement>(null);
-  // Anchor the texture to the main card's top-left so its dot grid runs on from the card's.
-  useLayoutEffect(() => {
+  const [gap, setGap] = useState(Infinity);
+  // Anchor the texture to the main card's top-left so its dot grid runs on from the card's, and
+  // measure how far the tab (with its drag / glide transform) sits from the card's left edge.
+  const syncRef = useRef<() => void>(() => {});
+  syncRef.current = () => {
+    const texture = textureRef.current;
+    const tab = shapeRef.current?.parentElement;
+    const card = document.querySelector<HTMLElement>("[data-main-pane]");
+    if (!texture || !tab || !card) return;
+    const c = card.getBoundingClientRect();
+    setGap(snapGap(tab.getBoundingClientRect().left - c.left));
+    const t = texture.getBoundingClientRect();
+    const pos = `${c.left - t.left}px ${c.top - t.top}px`;
+    texture.style.backgroundPosition = `${pos}, ${pos}`;
+  };
+  useLayoutEffect(() => syncRef.current());
+  useEffect(() => {
     const texture = textureRef.current;
     const card = document.querySelector<HTMLElement>("[data-main-pane]");
     if (!texture || !card) return;
-    const sync = () => {
-      const t = texture.getBoundingClientRect();
-      const c = card.getBoundingClientRect();
-      const pos = `${c.left - t.left}px ${c.top - t.top}px`;
-      texture.style.backgroundPosition = `${pos}, ${pos}`;
-    };
-    sync();
+    const sync = () => syncRef.current();
     const observer = new ResizeObserver(sync);
     observer.observe(card);
     const bar = texture.closest<HTMLElement>(`.${styles.bar}`);
@@ -462,36 +487,55 @@ function ActiveTabShape({ flushLeft }: { flushLeft: boolean }) {
       bar?.removeEventListener("transitionend", sync);
       bar?.removeEventListener("animationend", sync);
     };
-  });
-  const leftWidth = flushLeft ? TAB_FLUSH_CAP_WIDTH : TAB_CAP_WIDTH;
-  const leftHeight = flushLeft ? TAB_HEIGHT + TAB_FLUSH_DROP : TAB_HEIGHT;
+  }, []);
+  // While tabs move (drag, then the glide into place) follow the tab every frame.
+  useEffect(() => {
+    let frame = 0;
+    const until = moving ? Infinity : performance.now() + MORPH_TAIL_MS;
+    const tick = () => {
+      syncRef.current();
+      if (performance.now() < until) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [moving]);
+
+  const mode = gap === 0 ? "flush" : gap === Infinity ? "flared" : "morph";
+  const morph = mode === "morph" ? morphLeftCap(gap) : null;
+  const left =
+    mode === "flush"
+      ? { fill: TAB_FLUSH_LEFT_FILL, stroke: TAB_FLUSH_LEFT_STROKE, width: TAB_FLUSH_CAP_WIDTH, height: TAB_HEIGHT + TAB_FLUSH_DROP, offset: 0 }
+      : morph
+        ? { fill: morph.fill, stroke: morph.stroke, width: morph.width, height: morph.height, offset: gap }
+        : { fill: TAB_CAP_LEFT_FILL, stroke: TAB_CAP_LEFT_STROKE, width: TAB_CAP_WIDTH, height: TAB_HEIGHT, offset: TAB_FLARE };
+  // Where the left cap's straight top meets the middle strip, measured from the cap's left.
+  const capInner = mode === "flared" ? TAB_CAP_WIDTH : left.width;
   const mask = [
-    `${capMaskUrl(flushLeft ? TAB_FLUSH_LEFT_FILL : TAB_CAP_LEFT_FILL, leftWidth, leftHeight)} 0 0 / ${leftWidth}px ${leftHeight}px no-repeat`,
-    `linear-gradient(#000, #000) ${leftWidth - 1}px 0 / calc(100% - ${leftWidth + TAB_CAP_WIDTH - 2}px) ${TAB_HEIGHT}px no-repeat`,
+    `${capMaskUrl(left.fill, left.width, left.height)} 0 0 / ${left.width}px ${left.height}px no-repeat`,
+    `linear-gradient(#000, #000) ${capInner - 1}px 0 / calc(100% - ${capInner + TAB_CAP_WIDTH - 2}px) ${TAB_HEIGHT}px no-repeat`,
     `${capMaskUrl(TAB_CAP_RIGHT_FILL, TAB_CAP_WIDTH, TAB_HEIGHT)} 100% 0 / ${TAB_CAP_WIDTH}px ${TAB_HEIGHT}px no-repeat`,
   ].join(", ");
   return (
     <span
+      ref={shapeRef}
       className={styles.shape}
       style={{
-        left: flushLeft ? 0 : -TAB_FLARE,
+        left: -left.offset,
         right: -TAB_FLARE,
         height: TAB_HEIGHT,
-        // The flush cap drops below the tab to square off the card's corner; keep that drop
-        // when cutting the shadow at the card's top edge.
-        ...(flushLeft ? { clipPath: flushClip } : {}),
+        // A cap that drops below the tab squares off / re-rounds the card's corner; keep that
+        // drop when cutting the shadow at the card's top edge.
+        ...(mode !== "flared" ? { clipPath: dropClip(left.width) } : {}),
       }}
       aria-hidden
     >
-      {flushLeft
-        ? cap(TAB_FLUSH_LEFT_FILL, TAB_FLUSH_LEFT_STROKE, TAB_FLUSH_CAP_WIDTH, TAB_HEIGHT + TAB_FLUSH_DROP)
-        : cap(TAB_CAP_LEFT_FILL, TAB_CAP_LEFT_STROKE)}
+      {cap(left.fill, left.stroke, left.width, left.height, morph ? clipId : undefined)}
       <span className={styles.shapeMid} />
       {cap(TAB_CAP_RIGHT_FILL, TAB_CAP_RIGHT_STROKE)}
       <span
         ref={textureRef}
         className={styles.texture}
-        style={{ height: leftHeight, mask, WebkitMask: mask }}
+        style={{ height: left.height, mask, WebkitMask: mask }}
       />
     </span>
   );
