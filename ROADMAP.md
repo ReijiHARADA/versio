@@ -102,6 +102,19 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 - プロバイダーの型が SIWC 以外（API キー型、ローカル LLM）を足せる形になっている（実装は SIWC のみで可）
 - AI チャットを使わない・サインインしない場合、外部通信は発生せず既存機能はすべて今までどおり動く
 
+### A7. クロスプラットフォーム（Windows など）
+
+**Goal** — macOS 以外（まず Windows）でも、取り込み・抽出・翻訳・ライブラリ・書き出しが macOS 版と同じように使える。研究室・大学での導入で OS を選ばない。
+
+**Done when**
+
+- Windows 版の署名付きインストーラーを配布でき、同じ Paper Package / SQLite のデータ形式で動く
+- 同梱の PLaMo 翻訳サーバー（`llama-server`）が Windows でもシステムライブラリだけで起動し、翻訳できる（GPU なし環境の速度も実測済み）
+- macOS 固有の機能に代わりがある、または「この OS では使えない」と分かる: スキャン PDF の OCR（Apple Vision）、元 PDF を開く（Preview）、メニューバー
+- Linux は Windows 版の後に需要を見て判断する
+
+**Timing** — macOS 版の公証付き配布（A3）が安定した後。
+
 ---
 
 ## B. Extraction / Translation（別ストリーム）
@@ -173,7 +186,6 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 - Word / EPUB / HTML 入力、手書きメモ
 - 論文要約・RQ 抽出・批判的評価を常設 UI にする
 - クラウド同期・共同編集・Chrome 拡張追加
-- Windows 版
 - 論文メタデータの横断自動取得
 
 ---
