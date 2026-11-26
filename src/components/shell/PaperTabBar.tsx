@@ -445,9 +445,15 @@ export function PaperTabBar() {
       // end tab's centre, so the first / last slot was unreachable.)
       const leftEdge = own.left + d.dx;
       const rightEdge = leftEdge + own.width;
+      // Split view: tabs make room only inside the dragged tab's own group; none jumps across the
+      // groove, and crossing to the other group moves none of them.
+      const group = isLeftTab(d.id);
+      const sameGroup = (i: number) => !splitTab || isLeftTab(d.keys[i]) === group;
       let to = d.from;
-      for (let i = d.from + 1; i < d.slots.length; i++) if (rightEdge > d.slots[i].left + d.slots[i].width / 2) to = i;
-      for (let i = d.from - 1; i >= 0; i--) if (leftEdge < d.slots[i].left + d.slots[i].width / 2) to = i;
+      if (!d.moveSide) {
+        for (let i = d.from + 1; i < d.slots.length && sameGroup(i); i++) if (rightEdge > d.slots[i].left + d.slots[i].width / 2) to = i;
+        for (let i = d.from - 1; i >= 0 && sameGroup(i); i--) if (leftEdge < d.slots[i].left + d.slots[i].width / 2) to = i;
+      }
       d.to = to;
     }
     d.lastX = event.clientX;
