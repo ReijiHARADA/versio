@@ -107,6 +107,24 @@
   animation: tabEnter var(--motion-enter-soft) both;
 }
 
+/* Split view: where a tab dragged over from the other group would land. Same flex as a tab, so a
+   full strip narrows its tabs to make room. */
+.dropSlot {
+  flex: 0 1 220px; /* spacing-literal-ok: same as the tab's flex-basis */
+  min-width: 44px; /* spacing-literal-ok: same as the tab's min-width */
+  animation: slotOpen var(--motion-enter-soft) both;
+}
+
+@keyframes slotOpen {
+  from {
+    min-width: 0;
+    max-width: 0;
+  }
+  to {
+    max-width: 220px; /* spacing-literal-ok: same as the tab's flex-basis */
+  }
+}
+
 @keyframes tabEnter {
   from {
     min-width: 0;
