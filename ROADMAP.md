@@ -1,6 +1,6 @@
 # Versio ロードマップ
 
-> 2026-11-24  
+> 2026-11-26  
 > **これから達成するプロダクト目標**だけを書く。いまの実装は [CURRENT_STATE.md](./CURRENT_STATE.md)。製品の定義と起動は [README.md](./README.md)。
 
 通常の実装修正では本書を更新しない。目標・優先度・スコープが変わったときだけ更新する（[AGENTS.md](./AGENTS.md)）。
@@ -68,6 +68,38 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 - 結果に一致箇所または一致対象を表示できる
 - 並び順と上限を、関連度・更新日時などの観点で明文化する
 
+### A6. Inspector の AI チャット（Sign in with ChatGPT）
+
+**Goal** — 読んでいる論文について Inspector で質問でき、回答の根拠になった原文へすぐ戻れる。推論はユーザー自身の ChatGPT 契約枠で行い、Versio は API キーもサーバーも持たない。オプトインの機能で、翻訳・読書は従来どおりローカルだけで完結する。
+
+**方針**
+
+- 認証と推論は OpenAI 公式の [Sign in with ChatGPT（SIWC）](https://developers.openai.com/siwc) の「ChatGPT plan usage」を使う。OAuth 認可コード + PKCE（S256）、公開クライアント（client secret なし）、コールバックは `http://127.0.0.1:<port>/auth/callback` のループバック（`localhost` は不可）。推論は `https://api.openai.com/v1/responses` だけ（`store: false` / `stream: true` 必須、`response.completed` で完了扱い）。モデルは `/v1/models` から、そのアカウントで使えるものを選ぶ
+- コンテキストは閲覧中の論文（Paper Package の原文・訳文）、選択範囲、図表（キャプション、可能なら画像）。送る範囲はブロック ID 単位で組み立て、回答の引用はブロック ID（`{ paperId, blockId }`）に結び付けて、クリックで Reader の該当原文へジャンプする
+- プロバイダーは抽象化する（認証・モデル一覧・ストリーム推論・利用上限エラーを共通の型で扱う）。SIWC を最初の実装にし、他社 LLM（API キー）とローカル LLM（同梱 `llama-server` など）を後から足せる形にする
+- チャット履歴はローカル（SQLite、論文に紐づく）に保存する。外部へ送るのは質問時に組み立てたコンテキストだけで、送信先と送る内容（範囲）を送信前に明示する。トークンは Rust 側の保護された保存先（macOS キーチェーンなど）に置き、WebView のストレージ・ログ・URL に出さない
+- UI は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md) に従い Inspector の 1 パネルにする。本文操作で自動的に開かない
+
+**公式仕様で確認したこと（2026-11-26 時点、Preview）**
+
+- 現在の SIWC は Preview。公式文書は「ChatGPT plan usage」を **オープンソースかつローカルで動くアプリ** 向けとして説明し、有料・リモートホストのアプリは [interest form](https://openai.com/form/sign-in-with-chatgpt-interest/) の提出が必要。一方で client ID の発行ページは「一部の商用パートナー向け、ほかは waitlist」とも書いており、個人の OSS アプリが dynamic registration だけで使えるかは文面からは確定できない
+- 使えないもの: `temperature` / `top_p` / `max_output_tokens` / `truncation` / `background`、HTTP での `previous_response_id`、file search、Code Interpreter、hosted MCP、Files API など。会話の状態は Versio 側で持つ。テキスト・画像・ファイル入力はモデルが対応していれば可
+- 利用上限: Plus は 5 時間の上限を ChatGPT を使う全アプリで共有（Pro は 5 時間上限なし）。上限到達はストリーム途中の `response.failed`（`subscription_sharing_usage_limit_exceeded` など）で届き、黙って別の課金経路に切り替えてはいけない
+- UI 要件: サインインボタンは「Continue with ChatGPT」。プラン利用を有効にした初回だけ「ChatGPT プランを使っている」ことを知らせるモーダルを出す。利用状況の近くに「Manage usage」（`https://chatgpt.com/settings/usage`）へのリンクを置く。同意画面は OpenAI がブラウザで出す
+- トークン: access / refresh / ID トークンは保護されたローカル保存先に置き、ブラウザストレージ・ログ・ソース管理・URL に入れない。refresh token は回転するので同じセッションの更新を直列化する。サインアウト時は revocation endpoint で失効させてから消す。`ext_agent_host_id` はメールやユーザー ID ではない不透明な値にする
+- 未確認: 利用規約・データの扱い（OpenAI 側の保持）に関する SIWC 固有の条件、ボタンの承認済みデザイン（`/siwc/website`）、ローカルファイルへの資格情報保存の詳細
+
+**着手の条件** — 実装前に、Versio（MIT、ローカル動作の macOS アプリ、無償配布）が dynamic registration の対象になるか、waitlist / interest form が要るかを確定させる。仕様が Preview のあいだは変わりうるので、着手時に公式文書を読み直す。
+
+**Done when**
+
+- 設定から ChatGPT でサインイン／サインアウトでき、トークンはキーチェーンなど WebView の外にだけ残る
+- Inspector で、閲覧中の論文・選択範囲・図表を文脈に質問でき、回答の引用から原文ブロックへジャンプできる
+- 送信前に送信先と送る範囲が分かり、履歴は論文ごとにローカルに残る（削除できる）
+- 上限到達・サインイン切れ・オフラインで、何が起きたかと次の操作（Manage usage、再サインイン）が分かる
+- プロバイダーの型が SIWC 以外（API キー型、ローカル LLM）を足せる形になっている（実装は SIWC のみで可）
+- AI チャットを使わない・サインインしない場合、外部通信は発生せず既存機能はすべて今までどおり動く
+
 ---
 
 ## B. Extraction / Translation（別ストリーム）
@@ -132,7 +164,7 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 
 ## C. 今はやらないこと
 
-利用実態を見るまで着手しない。常設 AI チャットは置かない。
+利用実態を見るまで着手しない。読書画面に常設する AI チャットは置かない（Inspector のオプトイン機能は A6）。
 
 - 図中文字の OCR / 翻訳
 - 元レイアウト維持型 PDF 書き出し
