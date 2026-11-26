@@ -713,12 +713,6 @@ export function PaperTabBar() {
       {leadWidth == null && pinnedTabs}
       {(leadWidth != null ? visible.filter((tab) => !isLeftTab(tab.key)) : visible).map(renderTab)}
       {drag?.mode === "split" && createPortal(<SplitDropPreview drag={drag} />, document.body)}
-      {drag?.mode === "reorder" && drag.moveSide && mainCardX != null && (
-        <StripDropTarget
-          left={drag.moveSide === "left" ? paddingLeft : mainCardX}
-          right={drag.moveSide === "left" ? (splitCardRight ?? mainCardX) : null}
-        />
-      )}
     </div>
   );
 }
@@ -805,22 +799,6 @@ function SplitDropPreview({ drag }: { drag: DragView }) {
         </div>
       )}
     </>
-  );
-}
-
-/** Split view: the other card's tab strip, outlined while a tab dragged along the bar would
- *  move there (`right`: its end from the bar's left; null runs to the bar's end). */
-function StripDropTarget({ left, right }: { left: number; right: number | null }) {
-  const [box, setBox] = useState<{ width: number; height: number } | null>(null);
-  const ref = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const rect = ref.current?.getBoundingClientRect();
-    if (rect) setBox((prev) => (prev && prev.width === rect.width && prev.height === rect.height ? prev : { width: rect.width, height: rect.height }));
-  });
-  return (
-    <div ref={ref} className={`${styles.splitZone} ${styles.splitZoneActive} ${styles.stripZone}`} style={{ left, right: right == null ? 0 : undefined, width: right == null ? undefined : right - left }} aria-hidden>
-      {box && <ZoneOutline width={box.width} height={box.height} />}
-    </div>
   );
 }
 
