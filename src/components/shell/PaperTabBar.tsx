@@ -99,6 +99,8 @@ type TabDrag = {
   overSplit: SplitSide | null;
   /** Split view already open: the card the pulled tab would open in (null: nowhere new). */
   moveSide: SplitSide | null;
+  /** Crossing to the other group: the tab there it would land before (null: after the last). */
+  insertBefore?: TabKey | null;
   /** Pointer x at the last move; on release in split view it picks the tab's side. */
   lastX: number;
   /** Pointer y at the last move. */
@@ -117,7 +119,7 @@ type TabDrag = {
   releaseSelection?: () => void;
 };
 type SplitSide = "left" | "right";
-type DragView = Pick<TabDrag, "id" | "startX" | "startY" | "from" | "to" | "dx" | "shift" | "keys" | "mode" | "overSplit" | "canRight" | "moveSide" | "zones"> & { x: number; y: number };
+type DragView = Pick<TabDrag, "id" | "startX" | "startY" | "from" | "to" | "dx" | "shift" | "keys" | "mode" | "overSplit" | "canRight" | "moveSide" | "insertBefore" | "zones"> & { x: number; y: number };
 /** Keeps the outer flares on the card's straight top edge, clear of its rounded corners. */
 const EDGE_PAD = 24;
 const isTranslating = (paper: Paper) =>
@@ -435,6 +437,13 @@ export function PaperTabBar() {
         const target: SplitSide = event.clientX < barLeft + mainCardX ? "left" : "right";
         if (target === "left" ? !isLeftTab(d.id) : isLeftTab(d.id)) d.moveSide = target;
       }
+      // That group opens a slot where the tab would land (its tabs narrow if the strip is full).
+      d.insertBefore = undefined;
+      if (d.moveSide) {
+        const toLeft = d.moveSide === "left";
+        const at = d.keys.findIndex((key, i) => key !== d.id && isLeftTab(key) === toLeft && event.clientX < d.slots[i].left + d.slots[i].width / 2);
+        d.insertBefore = at >= 0 ? d.keys[at] : null;
+      }
       const own = d.slots[d.from];
       const first = d.slots[0];
       const last = d.slots[d.slots.length - 1];
@@ -458,7 +467,7 @@ export function PaperTabBar() {
     }
     d.lastX = event.clientX;
     d.lastY = event.clientY;
-    setDrag({ id: d.id, startX: d.startX, startY: d.startY, from: d.from, to: d.to, dx: d.dx, shift: d.shift, keys: d.keys, mode: d.mode, overSplit: d.overSplit, canRight: d.canRight, moveSide: d.moveSide, zones: d.zones, x: event.clientX, y: event.clientY });
+    setDrag({ id: d.id, startX: d.startX, startY: d.startY, from: d.from, to: d.to, dx: d.dx, shift: d.shift, keys: d.keys, mode: d.mode, overSplit: d.overSplit, canRight: d.canRight, moveSide: d.moveSide, insertBefore: d.insertBefore, zones: d.zones, x: event.clientX, y: event.clientY });
   };
   const endDrag = (key: TabKey, commit: boolean) => {
     const d = dragRef.current;
@@ -486,6 +495,12 @@ export function PaperTabBar() {
         // split ends) takes its place.
         useSplitView.getState().removeLeftTab(d.id);
       }
+      // It takes the slot it was dropped in.
+      const toLeft = d.moveSide === "left";
+      const without = usePaperTabs.getState().tabs.filter((item) => item !== d.id);
+      const lastThere = without.findLastIndex((key) => isLeftTab(key) === toLeft);
+      const at = d.insertBefore ? without.indexOf(d.insertBefore) : lastThere >= 0 ? lastThere + 1 : -1;
+      if (at >= 0) usePaperTabs.getState().moveTab(d.id, at);
       moveTabToSide(d.id, d.moveSide);
     }
     const own = d.slots[d.from];
@@ -499,6 +514,28 @@ export function PaperTabBar() {
     }
     if (!crossed && Math.abs(offset) > 0.5) settleRef.current = { id: d.id, offset };
   };
+  // Crossing to the other group, the dragged tab takes the width of the slot it would land in.
+  const crossingId = drag?.mode === "reorder" && drag.moveSide ? drag.id : null;
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    if (!crossingId || !bar) return;
+    const el = bar.querySelector<HTMLElement>(`[data-tab-id="${CSS.escape(crossingId)}"]`);
+    const slot = bar.querySelector<HTMLElement>(`.${styles.dropSlot}`);
+    if (!el || !slot) return;
+    const fit = () => {
+      el.style.flex = "none";
+      el.style.minWidth = "0";
+      el.style.width = `${slot.getBoundingClientRect().width}px`;
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(slot);
+    return () => {
+      observer.disconnect();
+      el.style.flex = el.style.minWidth = el.style.width = "";
+    };
+  }, [crossingId, drag?.insertBefore]);
+
   // Released tab glides from where the pointer left it into its (new) slot.
   useLayoutEffect(() => {
     const settle = settleRef.current;
@@ -629,6 +666,14 @@ export function PaperTabBar() {
   // Room past the left card (its inspector) that the left group's tabs leave empty.
   const leadGutter = mainCardX != null && splitCardRight != null ? Math.max(0, mainCardX - splitCardRight) : 0;
   const leadTabs = leadWidth != null ? visible.filter((tab) => isLeftTab(tab.key)) : [];
+  // Split view: the group a dragged tab is crossing into opens an empty slot where it would land.
+  const withDropSlot = (group: VisibleTab[], side: SplitSide) => {
+    const nodes = group.map(renderTab);
+    if (drag?.mode !== "reorder" || drag.moveSide !== side || drag.insertBefore === undefined) return nodes;
+    const at = drag.insertBefore ? group.findIndex((tab) => tab.key === drag.insertBefore) : -1;
+    nodes.splice(at >= 0 ? at : nodes.length, 0, <div key="drop-slot" className={styles.dropSlot} aria-hidden />);
+    return nodes;
+  };
   const renderTab = ({ key: id, kind, title, translating }: VisibleTab) => {
     const active = id === activeId;
     const inSplit = id === splitTab;
@@ -713,11 +758,11 @@ export function PaperTabBar() {
       {leadWidth != null && (
         <div className={styles.lead} style={{ width: leadWidth, paddingRight: leadGutter }}>
           {pinnedTabs}
-          {leadTabs.map(renderTab)}
+          {withDropSlot(leadTabs, "left")}
         </div>
       )}
       {leadWidth == null && pinnedTabs}
-      {(leadWidth != null ? visible.filter((tab) => !isLeftTab(tab.key)) : visible).map(renderTab)}
+      {withDropSlot(leadWidth != null ? visible.filter((tab) => !isLeftTab(tab.key)) : visible, "right")}
       {drag?.mode === "split" && createPortal(<SplitDropPreview drag={drag} />, document.body)}
     </div>
   );
