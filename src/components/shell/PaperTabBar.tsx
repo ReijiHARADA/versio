@@ -418,14 +418,8 @@ export function PaperTabBar() {
       d.lastX = event.clientX;
       aimSplit(d);
       d.moveSide = null;
-      // Already split: dropping on a card opens the tab there (and moves it to that card's group).
-      if (splitTab) {
-        d.overSplit = null;
-        const groove = document.querySelector("[data-main-card]")?.getBoundingClientRect().left ?? Infinity;
-        const target: SplitSide = event.clientX < groove ? "left" : "right";
-        const shownThere = target === "right" ? d.id === activeId : d.id === splitTab;
-        d.moveSide = shownThere ? null : target;
-      }
+      // Already split: the cards are no drop targets; a tab changes sides over the tab strip.
+      if (splitTab) d.overSplit = null;
       d.dx = 0;
       d.to = d.from;
     } else {
@@ -435,6 +429,12 @@ export function PaperTabBar() {
       d.zones = undefined;
       d.overSplit = null;
       d.moveSide = null;
+      // Split view: over the other group's strip, the tab moves there and opens in that card.
+      const barLeft = barRect?.left;
+      if (splitTab && mainCardX != null && barLeft != null) {
+        const target: SplitSide = event.clientX < barLeft + mainCardX ? "left" : "right";
+        if (target === "left" ? !isLeftTab(d.id) : isLeftTab(d.id)) d.moveSide = target;
+      }
       const own = d.slots[d.from];
       const first = d.slots[0];
       const last = d.slots[d.slots.length - 1];
@@ -465,36 +465,22 @@ export function PaperTabBar() {
       if (commit) openTab(key);
       return;
     }
-    if (commit && d.mode === "split" && d.moveSide) {
-      moveTabToSide(d.id, d.moveSide);
-      return;
-    }
     if (commit && d.mode === "split" && d.overSplit) {
       if (d.overSplit === "left") openSplitFromTab(d.id);
       else openRightFromTab(d.id);
       return;
     }
     const to = commit && d.mode === "reorder" ? d.to : d.from;
-    // Split view: a tab on screen in neither pane may cross to the other card's group; it then
-    // opens on that side. The tabs on screen stay over their own card.
-    const bar = barRef.current?.getBoundingClientRect();
+    // Split view: dropped over the other card's tab strip, the tab joins that group and opens there.
     let crossed = false;
-    if (commit && d.mode === "reorder" && splitTab && mainCardX != null && bar) {
-      const wantsLeft = d.lastX < bar.left + mainCardX;
-      if (wantsLeft !== isLeftTab(d.id)) {
-        crossed = true;
-        if (!wantsLeft) {
-          // Leaving the left group; if it was on screen there, another left tab (or none: the
-          // split ends) takes its place.
-          useSplitView.getState().removeLeftTab(d.id);
-        } else if (d.id !== activeId) {
-          useSplitView.getState().addLeftTab(d.id);
-        } else {
-          // The right pane's paper moves left: the right shows its next tab, or the split ends.
-          useSplitView.getState().addLeftTab(d.id);
-          refillRight(d.id);
-        }
+    if (commit && d.mode === "reorder" && d.moveSide) {
+      crossed = true;
+      if (d.moveSide === "right") {
+        // Leaving the left group; if it was on screen there, another left tab (or none: the
+        // split ends) takes its place.
+        useSplitView.getState().removeLeftTab(d.id);
       }
+      moveTabToSide(d.id, d.moveSide);
     }
     const own = d.slots[d.from];
     const finalLeft = to > d.from ? d.slots[to].left + d.slots[to].width - own.width : to < d.from ? d.slots[to].left : own.left;
@@ -725,6 +711,12 @@ export function PaperTabBar() {
       {leadWidth == null && pinnedTabs}
       {(leadWidth != null ? visible.filter((tab) => !isLeftTab(tab.key)) : visible).map(renderTab)}
       {drag?.mode === "split" && createPortal(<SplitDropPreview drag={drag} />, document.body)}
+      {drag?.mode === "reorder" && drag.moveSide && mainCardX != null && (
+        <StripDropTarget
+          left={drag.moveSide === "left" ? paddingLeft : mainCardX}
+          right={drag.moveSide === "left" ? (splitCardRight ?? mainCardX) : null}
+        />
+      )}
     </div>
   );
 }
@@ -811,6 +803,22 @@ function SplitDropPreview({ drag }: { drag: DragView }) {
         </div>
       )}
     </>
+  );
+}
+
+/** Split view: the other card's tab strip, outlined while a tab dragged along the bar would
+ *  move there (`right`: its end from the bar's left; null runs to the bar's end). */
+function StripDropTarget({ left, right }: { left: number; right: number | null }) {
+  const [box, setBox] = useState<{ width: number; height: number } | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const rect = ref.current?.getBoundingClientRect();
+    if (rect) setBox((prev) => (prev && prev.width === rect.width && prev.height === rect.height ? prev : { width: rect.width, height: rect.height }));
+  });
+  return (
+    <div ref={ref} className={`${styles.splitZone} ${styles.splitZoneActive} ${styles.stripZone}`} style={{ left, right: right == null ? 0 : undefined, width: right == null ? undefined : right - left }} aria-hidden>
+      {box && <ZoneOutline width={box.width} height={box.height} />}
+    </div>
   );
 }
 
