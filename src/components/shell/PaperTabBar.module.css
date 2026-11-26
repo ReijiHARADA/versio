@@ -189,13 +189,6 @@
   opacity: 1;
 }
 
-/* Split view: the other group's tab strip, inside the title bar. */
-.stripZone {
-  position: absolute;
-  top: var(--spacing-xs);
-  bottom: 2px;
-}
-
 .shape {
   position: absolute;
   bottom: 0;
