@@ -547,6 +547,8 @@ export function PaperTabBar() {
     const page = pageTabForPath(location.pathname);
     if (activeId && activeId !== key) useSplitView.getState().openSplit(activeId);
     else useSplitView.getState().showPage(activeId ? "page:/" : page ?? "page:/");
+    // Only the dropped tab goes right; the other tabs stay over the left card.
+    for (const other of usePaperTabs.getState().tabs) if (other !== key) useSplitView.getState().addLeftTab(other);
     if (key !== activeId) navigate(tabPath(key));
   };
 
