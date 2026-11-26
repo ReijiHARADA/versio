@@ -490,7 +490,7 @@ export function PaperTabBar() {
         } else if (d.id !== activeId) {
           useSplitView.getState().addLeftTab(d.id);
         } else {
-          // The right pane's paper moves left: the right shows its next tab, or all papers.
+          // The right pane's paper moves left: the right shows its next tab, or the split ends.
           useSplitView.getState().addLeftTab(d.id);
           refillRight(d.id);
         }
@@ -517,15 +517,20 @@ export function PaperTabBar() {
   });
 
   // The right side lost its paper / folder to the left: it moves on to a neighbouring tab, or
-  // with none left shows all papers.
+  // with none left the split ends and that paper / folder fills the card.
   const refillRight = (key: TabKey) => {
     const next = rightNeighbour(key);
     lastActiveRef.current = null;
-    navigate(next ? tabPath(next) : "/");
+    if (next) {
+      navigate(tabPath(next));
+      return;
+    }
+    useSplitView.getState().closeSplit();
+    navigate(tabPath(key));
   };
 
   // Dropped on the card's left half: the paper opens there; if it was the page on the right,
-  // the right side moves on to a neighbouring tab (or all papers).
+  // the right side moves on to a neighbouring tab (or the split ends).
   const openSplitFromTab = (key: TabKey) => {
     useSplitView.getState().openSplit(key);
     if (key === activeId) refillRight(key);
@@ -546,7 +551,7 @@ export function PaperTabBar() {
       useSplitView.getState().openSplit(key);
       return;
     }
-    // The right pane's paper moves left: the right shows its next tab, or all papers.
+    // The right pane's paper moves left: the right shows its next tab, or the split ends.
     useSplitView.getState().openSplit(key);
     refillRight(key);
   };
