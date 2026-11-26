@@ -382,6 +382,25 @@ try {
       ) {
         throw new Error(`export dialog is outside the viewport: ${JSON.stringify(bounds)}`);
       }
+      // The modal overlay must dim the title bar controls (tabs, search) as well.
+      const uncovered = await dialog.evaluate((element) => {
+        const overlay = element.parentElement;
+        const targets = [
+          document.querySelector('[data-testid="title-search"], [role="search"] input, input[placeholder*="検索"]'),
+          document.querySelector('[role="tab"]'),
+        ].filter(Boolean);
+        return targets
+          .map((target) => {
+            const r = target.getBoundingClientRect();
+            const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+            return overlay.contains(hit) ? null : target.outerHTML.slice(0, 80);
+          })
+          .filter(Boolean);
+      });
+      if (uncovered.length > 0) {
+        throw new Error(`modal overlay does not cover title bar controls: ${uncovered.join(" | ")}`);
+      }
+      await page.waitForTimeout(400);
       await shot("reader-export-dialog");
       await page.keyboard.press("Escape");
       await dialog.waitFor({ state: "detached" });

@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--z-overlay);
+  z-index: var(--z-modal);
   padding: max(var(--spacing-md), env(safe-area-inset-top))
     max(var(--spacing-md), env(safe-area-inset-right))
     max(var(--spacing-md), env(safe-area-inset-bottom))
