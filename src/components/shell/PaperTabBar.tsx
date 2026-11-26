@@ -536,6 +536,33 @@ export function PaperTabBar() {
     };
   }, [crossingId, drag?.insertBefore]);
 
+  // A drag must never outlive its tab or the bar: closed / trashed mid-drag, Escape, or the bar
+  // unmounting cancels it, so the selection lock and the split slots are always released.
+  const cancelDragRef = useRef<() => void>(() => {});
+  cancelDragRef.current = () => {
+    const d = dragRef.current;
+    if (!d) return;
+    dragRef.current = null;
+    setDrag(null);
+    setSplitPeek(false);
+    d.releaseSelection?.();
+  };
+  const dragId = drag?.id ?? null;
+  useEffect(() => {
+    if (dragId && !tabs.includes(dragId)) cancelDragRef.current();
+  }, [dragId, tabs]);
+  useEffect(() => {
+    if (!dragId) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      cancelDragRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [dragId]);
+  useEffect(() => () => cancelDragRef.current(), []);
+
   // Released tab glides from where the pointer left it into its (new) slot.
   useLayoutEffect(() => {
     const settle = settleRef.current;
@@ -693,6 +720,8 @@ export function PaperTabBar() {
         onPointerMove={onPointerMove}
         onPointerUp={() => endDrag(id, true)}
         onPointerCancel={() => endDrag(id, false)}
+        // Capture lost without a pointerup (window lost focus, system gesture): cancel.
+        onLostPointerCapture={() => cancelDragRef.current()}
         onAuxClick={(event) => { if (event.button === 1) closeTab(id); }}
         onKeyDown={(event) => { if (event.key === "Enter") openTab(id); }}
       >
