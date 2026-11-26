@@ -72,6 +72,8 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 
 **Goal** — 読んでいる論文について Inspector で質問でき、回答の根拠になった原文へすぐ戻れる。推論はユーザー自身の ChatGPT 契約枠で行い、Versio は API キーもサーバーも持たない。オプトインの機能で、翻訳・読書は従来どおりローカルだけで完結する。
 
+**背景** — これまで AI チャットを置かなかったのは、チャットに足るローカルモデルを費用を抑えてアプリに同梱・常駐させるのが現実的でなかったため。SIWC ならユーザー自身の ChatGPT 契約枠で推論でき、Versio 側にモデルも API 費用も要らないので、導入を検討する。
+
 **方針**
 
 - 認証と推論は OpenAI 公式の [Sign in with ChatGPT（SIWC）](https://developers.openai.com/siwc) の「ChatGPT plan usage」を使う。OAuth 認可コード + PKCE（S256）、公開クライアント（client secret なし）、コールバックは `http://127.0.0.1:<port>/auth/callback` のループバック（`localhost` は不可）。推論は `https://api.openai.com/v1/responses` だけ（`store: false` / `stream: true` 必須、`response.completed` で完了扱い）。モデルは `/v1/models` から、そのアカウントで使えるものを選ぶ
@@ -164,7 +166,7 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 
 ## C. 今はやらないこと
 
-利用実態を見るまで着手しない。読書画面に常設する AI チャットは置かない（Inspector のオプトイン機能は A6）。
+利用実態を見るまで着手しない。
 
 - 図中文字の OCR / 翻訳
 - 元レイアウト維持型 PDF 書き出し
