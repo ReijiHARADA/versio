@@ -54,25 +54,30 @@ const rectOf = (selector: string) => {
   return rect && rect.width > 0 ? rect : null;
 };
 /** Targets never overlap the main card: the card shrinks to open an empty slot on the side being
- *  aimed at. Left target: the left slot only (not the sidebar). Right target: the right slot plus
- *  the open inspector. */
-function measureSplitZones(canLeft: boolean, canRight: boolean): SplitZones | null {
+ *  aimed at. Left target: the left slot only (not the sidebar). Right target: the slot between the
+ *  card and its inspector, or, for another paper, the slot past the inspector (`outer`), so the
+ *  inspector stays beside the paper it belongs to. */
+function measureSplitZones(canLeft: boolean, canRight: boolean, outer = false): SplitZones | null {
   const card = rectOf("[data-main-card]");
   if (!card) return null;
   const leftSlot = document.querySelector("[data-split-peek-left]")?.getBoundingClientRect();
   const rightSlot = document.querySelector("[data-split-peek]")?.getBoundingClientRect();
   const inspector = rectOf(`#${INSPECTOR_SLOT_ID}`);
-  return {
-    top: card.top,
-    height: card.height,
-    left: canLeft && leftSlot ? [leftSlot.left, card.left] : null,
-    right: canRight && rightSlot ? [card.right, inspector && inspector.left >= rightSlot.right - 1 ? inspector.right : rightSlot.right] : null,
-  };
+  const outerSlot = document.querySelector("[data-split-peek-outer]")?.getBoundingClientRect();
+  const right: [number, number] | null = !canRight
+    ? null
+    : outer && inspector && outerSlot
+      ? [inspector.right, outerSlot.right]
+      : rightSlot
+        ? [card.right, Math.max(rightSlot.right, card.right)]
+        : null;
+  return { top: card.top, height: card.height, left: canLeft && leftSlot ? [leftSlot.left, card.left] : null, right };
 }
 /** Opens (or closes) the empty slots beside the main card where a pulled tab can open. */
-const setSplitPeek = (left: boolean, right = left) => {
+const setSplitPeek = (left: boolean, right = left, outer = false) => {
   document.querySelector<HTMLElement>("[data-split-peek-left]")?.toggleAttribute("data-open", left);
-  document.querySelector<HTMLElement>("[data-split-peek]")?.toggleAttribute("data-open", right);
+  document.querySelector<HTMLElement>("[data-split-peek]")?.toggleAttribute("data-open", right && !outer);
+  document.querySelector<HTMLElement>("[data-split-peek-outer]")?.toggleAttribute("data-open", right && outer);
 };
 /** How long the slots take to open (AppShell.module.css .splitPeek). */
 const PEEK_MS = 240;
@@ -360,9 +365,11 @@ export function PaperTabBar() {
     const half: SplitSide | null = !card ? null : d.lastX < card.left + card.width / 2 ? "left" : "right";
     // With only one side open to it, the tab aims there from anywhere on the card.
     const side = !half ? null : !d.canLeft ? (d.canRight ? "right" : null) : half === "left" ? "left" : d.canRight ? "right" : null;
+    // Another paper aimed right opens past the open inspector, which stays with the current paper.
+    const outer = side === "right" && d.id !== activeId && rectOf(`#${INSPECTOR_SLOT_ID}`) != null;
     if (side !== d.peekSide) {
       d.peekSide = side;
-      setSplitPeek(side === "left", side === "right");
+      setSplitPeek(side === "left", side === "right", outer);
       const startedAt = performance.now();
       const follow = () => {
         if (dragRef.current !== d || d.mode !== "split" || d.peekSide !== side) return;
@@ -372,10 +379,10 @@ export function PaperTabBar() {
       };
       requestAnimationFrame(follow);
     }
-    d.zones = measureSplitZones(side === "left", side === "right");
+    d.zones = measureSplitZones(side === "left", side === "right", outer);
     const z = d.zones;
     const x = d.lastX;
-    d.overSplit = !z ? null : z.left && x >= z.left[0] && x < z.left[1] ? "left" : z.right && x > z.right[0] ? "right" : null;
+    d.overSplit = !z ? null : z.left && x >= z.left[0] && x < z.left[1] ? "left" : z.right && x >= z.right[0] ? "right" : null;
   };
   const onPointerMove = (event: React.PointerEvent) => {
     const d = dragRef.current;
