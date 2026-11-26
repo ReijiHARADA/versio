@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -16,22 +16,10 @@ import { isPageTab, pagePath, pageTabForPath, useSplitView, type PageTab } from 
 import { useAppStore } from "../../stores/appStore";
 import { displayPaperTitle } from "../../services/translation/quality";
 import type { Paper } from "../../types/paper";
-import {
-  TAB_CAP_LEFT_FILL,
-  TAB_CAP_LEFT_STROKE,
-  TAB_CAP_RIGHT_FILL,
-  TAB_CAP_RIGHT_STROKE,
-  TAB_CAP_WIDTH,
-  TAB_FLARE,
-  TAB_FLUSH_CAP_WIDTH,
-  TAB_FLUSH_DROP,
-  TAB_FLUSH_LEFT_FILL,
-  TAB_FLUSH_LEFT_STROKE,
-  TAB_CORNER_UNIT,
-  TAB_HEIGHT,
-  TAB_K,
-} from "./paperTabShape";
-import { morphLeftCap, TAB_MORPH_GAP } from "./paperTabCap";
+import { ActiveTabShape } from "./ActiveTabShape";
+import { SplitDropPreview } from "./SplitDropPreview";
+import { measureSplitZones, PEEK_MS, rectOf, setSplitPeek } from "./splitPeek";
+import { clampDx, crossDropIndex, crossInsertBefore, reorderTarget, SETTLE_MS, type DragView, type SplitSide, type TabDrag } from "./tabDrag";
 import { INSPECTOR_SLOT_ID } from "./inspectorSlot";
 import styles from "./PaperTabBar.module.css";
 import { suppressTextSelection } from "../../utils/dragSelection";
@@ -46,80 +34,6 @@ const PINNED_TABS: { path: string; page: PageTab; label: string; Icon: typeof Li
 const DRAG_THRESHOLD = 4;
 /** How far below the strip a paper tab must be pulled before it becomes a split-view drop. */
 const SPLIT_PULL = 24;
-const SETTLE_MS = 180;
-/** x ranges of the split drop targets, from the layout frozen when the tab is pulled down. */
-type SplitZones = { top: number; height: number; left: [number, number] | null; right: [number, number] | null };
-const rectOf = (selector: string) => {
-  const rect = document.querySelector(selector)?.getBoundingClientRect();
-  return rect && rect.width > 0 ? rect : null;
-};
-/** Targets never overlap the main card: the card shrinks to open an empty slot on the side being
- *  aimed at. Left target: the left slot only (not the sidebar). Right target: the slot between the
- *  card and its inspector, or, for another paper, the slot past the inspector (`outer`), so the
- *  inspector stays beside the paper it belongs to. */
-function measureSplitZones(canLeft: boolean, canRight: boolean, outer = false): SplitZones | null {
-  const card = rectOf("[data-main-card]");
-  if (!card) return null;
-  const leftSlot = document.querySelector("[data-split-peek-left]")?.getBoundingClientRect();
-  const rightSlot = document.querySelector("[data-split-peek]")?.getBoundingClientRect();
-  const inspector = rectOf(`#${INSPECTOR_SLOT_ID}`);
-  const outerSlot = document.querySelector("[data-split-peek-outer]")?.getBoundingClientRect();
-  const right: [number, number] | null = !canRight
-    ? null
-    : outer && inspector && outerSlot
-      ? [inspector.right, outerSlot.right]
-      : rightSlot
-        ? [card.right, Math.max(rightSlot.right, card.right)]
-        : null;
-  return { top: card.top, height: card.height, left: canLeft && leftSlot ? [leftSlot.left, card.left] : null, right };
-}
-/** Opens (or closes) the empty slots beside the main card where a pulled tab can open. */
-const setSplitPeek = (left: boolean, right = left, outer = false) => {
-  document.querySelector<HTMLElement>("[data-split-peek-left]")?.toggleAttribute("data-open", left);
-  document.querySelector<HTMLElement>("[data-split-peek]")?.toggleAttribute("data-open", right && !outer);
-  document.querySelector<HTMLElement>("[data-split-peek-outer]")?.toggleAttribute("data-open", right && outer);
-};
-/** How long the slots take to open (AppShell.module.css .splitPeek). */
-const PEEK_MS = 240;
-
-type TabDrag = {
-  id: TabKey;
-  startX: number;
-  startY: number;
-  moved: boolean;
-  /** Tab order and slot rects frozen at drag start; neighbours are shifted by transforms only. */
-  keys: TabKey[];
-  slots: { left: number; width: number }[];
-  from: number;
-  to: number;
-  dx: number;
-  shift: number;
-  mode: "reorder" | "split";
-  /** Half of the card the pulled tab will open in, or null when it is not over one. */
-  overSplit: SplitSide | null;
-  /** Split view already open: the card the pulled tab would open in (null: nowhere new). */
-  moveSide: SplitSide | null;
-  /** Crossing to the other group: the tab there it would land before (null: after the last). */
-  insertBefore?: TabKey | null;
-  /** Pointer x at the last move; on release in split view it picks the tab's side. */
-  lastX: number;
-  /** Pointer y at the last move. */
-  lastY: number;
-  /** Pointer offset inside the tab when grabbed; the pulled tab keeps it under the pointer. */
-  grabX: number;
-  grabY: number;
-  /** Whether the right half accepts the tab (the paper that is there now can move left). */
-  canRight: boolean;
-  canLeft?: boolean;
-  /** Side whose slot is open beside the shrunken card. */
-  peekSide?: SplitSide | null;
-  /** Drop targets: the slots beside the shrunken card (re-measured while they open). */
-  zones?: SplitZones | null;
-  /** Lifts the drag-time text-selection lock (set once the drag passes its threshold). */
-  releaseSelection?: () => void;
-};
-type SplitSide = "left" | "right";
-type DragView = Pick<TabDrag, "id" | "startX" | "startY" | "from" | "to" | "dx" | "shift" | "keys" | "mode" | "overSplit" | "canRight" | "moveSide" | "insertBefore" | "zones"> & { x: number; y: number };
 /** Keeps the outer flares on the card's straight top edge, clear of its rounded corners. */
 const EDGE_PAD = 24;
 const isTranslating = (paper: Paper) =>
@@ -419,9 +333,9 @@ export function PaperTabBar() {
       d.mode = "split";
       d.lastX = event.clientX;
       aimSplit(d);
+      // Already split, aimSplit finds no target: the cards are no drop targets, a tab changes
+      // sides over the tab strip.
       d.moveSide = null;
-      // Already split: the cards are no drop targets; a tab changes sides over the tab strip.
-      if (splitTab) d.overSplit = null;
       d.dx = 0;
       d.to = d.from;
     } else {
@@ -438,32 +352,13 @@ export function PaperTabBar() {
         if (target === "left" ? !isLeftTab(d.id) : isLeftTab(d.id)) d.moveSide = target;
       }
       // That group opens a slot where the tab would land (its tabs narrow if the strip is full).
-      d.insertBefore = undefined;
-      if (d.moveSide) {
-        const toLeft = d.moveSide === "left";
-        const at = d.keys.findIndex((key, i) => key !== d.id && isLeftTab(key) === toLeft && event.clientX < d.slots[i].left + d.slots[i].width / 2);
-        d.insertBefore = at >= 0 ? d.keys[at] : null;
-      }
-      const own = d.slots[d.from];
-      const first = d.slots[0];
-      const last = d.slots[d.slots.length - 1];
-      const dx = event.clientX - d.startX;
-      d.dx = Math.min(last.left + last.width - (own.left + own.width), Math.max(first.left - own.left, dx));
-      // Swap once the dragged tab's leading edge passes a neighbour's middle. (Its centre cannot:
-      // the drag stops at the strip's ends, where an equal-width tab's centre only reaches the
-      // end tab's centre, so the first / last slot was unreachable.)
-      const leftEdge = own.left + d.dx;
-      const rightEdge = leftEdge + own.width;
+      const toLeft = d.moveSide === "left";
+      d.insertBefore = d.moveSide ? crossInsertBefore(d.keys, d.slots, d.id, event.clientX, (key) => isLeftTab(key) === toLeft) : undefined;
+      d.dx = clampDx(d.slots, d.from, event.clientX - d.startX);
       // Split view: tabs make room only inside the dragged tab's own group; none jumps across the
       // groove, and crossing to the other group moves none of them.
       const group = isLeftTab(d.id);
-      const sameGroup = (i: number) => !splitTab || isLeftTab(d.keys[i]) === group;
-      let to = d.from;
-      if (!d.moveSide) {
-        for (let i = d.from + 1; i < d.slots.length && sameGroup(i); i++) if (rightEdge > d.slots[i].left + d.slots[i].width / 2) to = i;
-        for (let i = d.from - 1; i >= 0 && sameGroup(i); i--) if (leftEdge < d.slots[i].left + d.slots[i].width / 2) to = i;
-      }
-      d.to = to;
+      d.to = d.moveSide ? d.from : reorderTarget(d.slots, d.from, d.dx, (i) => !splitTab || isLeftTab(d.keys[i]) === group);
     }
     d.lastX = event.clientX;
     d.lastY = event.clientY;
@@ -497,9 +392,7 @@ export function PaperTabBar() {
       }
       // It takes the slot it was dropped in.
       const toLeft = d.moveSide === "left";
-      const without = usePaperTabs.getState().tabs.filter((item) => item !== d.id);
-      const lastThere = without.findLastIndex((key) => isLeftTab(key) === toLeft);
-      const at = d.insertBefore ? without.indexOf(d.insertBefore) : lastThere >= 0 ? lastThere + 1 : -1;
+      const at = crossDropIndex(usePaperTabs.getState().tabs, d.id, d.insertBefore ?? null, (key) => isLeftTab(key) === toLeft);
       if (at >= 0) usePaperTabs.getState().moveTab(d.id, at);
       moveTabToSide(d.id, d.moveSide);
     }
@@ -794,233 +687,5 @@ export function PaperTabBar() {
       {withDropSlot(leadWidth != null ? visible.filter((tab) => !isLeftTab(tab.key)) : visible, "right")}
       {drag?.mode === "split" && createPortal(<SplitDropPreview drag={drag} />, document.body)}
     </div>
-  );
-}
-
-const SHADOW_ROOM = 32;
-/** Cuts the shadow at the card's top edge but keeps a cap that drops `width` px wide into it. */
-const dropClip = (left: number | null, right: number | null) => {
-  const S = SHADOW_ROOM;
-  const D = TAB_FLUSH_DROP;
-  const pts = [`${-S}px ${-S}px`, `calc(100% + ${S}px) ${-S}px`];
-  if (right != null) pts.push(`calc(100% + ${S}px) calc(100% + ${D}px)`, `calc(100% - ${right}px) calc(100% + ${D}px)`, `calc(100% - ${right}px) 100%`);
-  else pts.push(`calc(100% + ${S}px) 100%`);
-  if (left != null) pts.push(`${left}px 100%`, `${left}px calc(100% + ${D}px)`, `${-S}px calc(100% + ${D}px)`);
-  else pts.push(`${-S}px 100%`);
-  return `polygon(${pts.join(", ")})`;
-};
-/** Mirrors an absolute M/L path left-right within `width` (a left cap into a right cap). */
-const mirrorPath = (d: string, width: number) =>
-  d.replace(/([ML])(-?[\d.]+) (-?[\d.]+)/g, (_, cmd: string, x: string, y: string) => `${cmd}${+(width - Number(x)).toFixed(2)} ${y}`);
-type Cap = { fill: string; stroke: string; width: number; height: number; offset: number; mode: "flush" | "flared" | "morph" };
-/** The active tab's cap for its gap from the card's edge (see morphLeftCap); `right` mirrors it. */
-function tabCap(gap: number, right: boolean): Cap {
-  if (gap === Infinity) {
-    return right
-      ? { fill: TAB_CAP_RIGHT_FILL, stroke: TAB_CAP_RIGHT_STROKE, width: TAB_CAP_WIDTH, height: TAB_HEIGHT, offset: TAB_FLARE, mode: "flared" }
-      : { fill: TAB_CAP_LEFT_FILL, stroke: TAB_CAP_LEFT_STROKE, width: TAB_CAP_WIDTH, height: TAB_HEIGHT, offset: TAB_FLARE, mode: "flared" };
-  }
-  const base: Cap =
-    gap === 0
-      ? { fill: TAB_FLUSH_LEFT_FILL, stroke: TAB_FLUSH_LEFT_STROKE, width: TAB_FLUSH_CAP_WIDTH, height: TAB_HEIGHT + TAB_FLUSH_DROP, offset: 0, mode: "flush" }
-      : { ...morphLeftCap(gap), offset: gap, mode: "morph" };
-  return right ? { ...base, fill: mirrorPath(base.fill, base.width), stroke: mirrorPath(base.stroke, base.width) } : base;
-}
-/** Keep tracking the tab this long after a drag ends, while it glides into its slot. */
-const MORPH_TAIL_MS = SETTLE_MS + 120;
-/** Rounds the measured gap so sub-pixel jitter does not re-render the cap. A tab hanging past
- *  the card's edge (dragged toward the other split card) is off the card: plain flared cap, no
- *  drop into a card that is not there. */
-const snapGap = (gap: number) => (gap < -1.5 ? Infinity : gap < 0.5 ? 0 :gap >= TAB_MORPH_GAP - 0.5 ? Infinity : Math.round(gap * 4) / 4);
-
-/** Side margin of a split target's outline inside its drop range (the range itself stays full width). */
-const ZONE_MARGIN_X = 12;
-
-/** Card-radius clothoid rectangle (corner extent = 10 × K, as --sq-radius-card), inset by half the
- *  stroke and by ZONE_MARGIN_X on the left and right. */
-function zoneOutlinePath(width: number, height: number, inset = 0.75): string {
-  const x0 = inset + ZONE_MARGIN_X;
-  const y0 = inset;
-  const x1 = width - inset - ZONE_MARGIN_X;
-  const y1 = height - inset;
-  const s = Math.max(0, Math.min(10 * TAB_K - inset, (x1 - x0) / 2, (y1 - y0) / 2));
-  const pts: string[] = [];
-  const add = (x: number, y: number) => pts.push(`${x.toFixed(2)} ${y.toFixed(2)}`);
-  add(x1 - s, y0);
-  for (const [u, v] of TAB_CORNER_UNIT) add(x1 + u * s, y0 + v * s);
-  add(x1, y1 - s);
-  for (const [u, v] of TAB_CORNER_UNIT) add(x1 - v * s, y1 + u * s);
-  add(x0 + s, y1);
-  for (const [u, v] of TAB_CORNER_UNIT) add(x0 - u * s, y1 - v * s);
-  add(x0, y0 + s);
-  for (const [u, v] of TAB_CORNER_UNIT) add(x0 + v * s, y0 - u * s);
-  return `M${pts.join("L")}Z`;
-}
-
-function ZoneOutline({ width, height }: { width: number; height: number }) {
-  return (
-    <svg className={styles.splitZoneOutline} width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden>
-      <path d={zoneOutlinePath(width, height)} />
-    </svg>
-  );
-}
-
-/** While a paper tab is pulled onto the card (the tab itself follows the pointer): over the
- *  card's left or right half, the half it will open in. */
-function SplitDropPreview({ drag }: { drag: DragView }) {
-  // Each target is drawn exactly where it accepts the drop; over one, it lights up.
-  const zone = (side: SplitSide) => {
-    const range = drag.zones?.[side];
-    const zones = drag.zones;
-    return (
-      range &&
-      zones && (
-        <div
-          className={`${styles.splitZone} ${drag.overSplit === side ? styles.splitZoneActive : ""}`}
-          style={{ left: range[0], top: zones.top, width: range[1] - range[0], height: zones.height }}
-          aria-hidden
-        >
-          <ZoneOutline width={range[1] - range[0]} height={zones.height} />
-          <span className={styles.splitZoneLabel}>{side === "left" ? "左に並べて開く" : "右に並べて開く"}</span>
-        </div>
-      )
-    );
-  };
-  // Already split: the whole card the tab would open in lights up.
-  const target = drag.moveSide ? document.querySelector(drag.moveSide === "left" ? "[data-split-card]" : "[data-main-card]")?.getBoundingClientRect() : null;
-  const splitOpen = document.querySelector("[data-split-card]") != null;
-  return (
-    <>
-      {!splitOpen && zone("left")}
-      {!splitOpen && zone("right")}
-      {target && (
-        <div
-          className={`${styles.splitZone} ${styles.splitZoneActive}`}
-          style={{ left: target.left, top: target.top, width: target.width, height: target.height }}
-          aria-hidden
-        >
-          <ZoneOutline width={target.width} height={target.height} />
-          <span className={styles.splitZoneLabel}>{drag.moveSide === "left" ? "左で開く" : "右で開く"}</span>
-        </div>
-      )}
-    </>
-  );
-}
-
-/** A cap's fill path as a CSS mask image. */
-function capMaskUrl(d: string, width: number, height: number): string {
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'><path d='${d}'/></svg>`;
-  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
-}
-
-/** Card-coloured tab body whose flared base runs into the main card below. Its left cap follows
- *  the tab's gap from the card's left edge: flush on the edge, fully flared once clear of the
- *  card's corner, and in between the card corner and the flare grow together (see morphLeftCap).
- *  `textured` paints the card's paper texture too: folder pages show it, Reader covers the card
- *  with a plain fill. */
-/** The tab of the paper a card shows, joined to that card (`card`: the card's selector). */
-function ActiveTabShape({ moving, textured, card: cardSelector = "[data-main-card]" }: { moving: boolean; textured: boolean; card?: string }) {
-  const cap = (fill: string, stroke: string, width = TAB_CAP_WIDTH, height = TAB_HEIGHT, clipId?: string) => (
-    <svg className={styles.cap} width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden>
-      {clipId && (
-        <clipPath id={clipId}>
-          <path d={fill} />
-        </clipPath>
-      )}
-      <path d={fill} className={styles.capFill} />
-      <path d={stroke} className={styles.capStroke} {...(clipId ? { clipPath: `url(#${clipId})`, strokeWidth: 2 } : {})} />
-    </svg>
-  );
-  const clipId = `tab-cap-${useId().replace(/:/g, "")}`;
-  const shapeRef = useRef<HTMLSpanElement>(null);
-  const textureRef = useRef<HTMLSpanElement>(null);
-  const [gap, setGap] = useState(Infinity);
-  const [rightGap, setRightGap] = useState(Infinity);
-  // Anchor the texture to the main card's top-left so its dot grid runs on from the card's, and
-  // measure how far the tab (with its drag / glide transform) sits from the card's left edge.
-  const syncRef = useRef<() => void>(() => {});
-  syncRef.current = () => {
-    const texture = textureRef.current;
-    const tab = shapeRef.current?.parentElement;
-    const card = document.querySelector<HTMLElement>(cardSelector);
-    if (!tab || !card) return;
-    const c = card.getBoundingClientRect();
-    const r = tab.getBoundingClientRect();
-    setGap(snapGap(r.left - c.left));
-    setRightGap(snapGap(c.right - r.right));
-    // Only folder tabs carry the texture; paper tabs still need the gap above.
-    if (!texture) return;
-    const t = texture.getBoundingClientRect();
-    const pos = `${c.left - t.left}px ${c.top - t.top}px`;
-    texture.style.backgroundPosition = `${pos}, ${pos}`;
-  };
-  useLayoutEffect(() => syncRef.current());
-  useEffect(() => {
-    const shape = shapeRef.current;
-    const card = document.querySelector<HTMLElement>(cardSelector);
-    if (!shape || !card) return;
-    const sync = () => syncRef.current();
-    const observer = new ResizeObserver(sync);
-    observer.observe(card);
-    const bar = shape.closest<HTMLElement>(`.${styles.bar}`);
-    if (bar) observer.observe(bar);
-    // Neighbouring tabs growing / the bar's padding gliding move this tab without a resize.
-    bar?.addEventListener("transitionend", sync);
-    bar?.addEventListener("animationend", sync);
-    return () => {
-      observer.disconnect();
-      bar?.removeEventListener("transitionend", sync);
-      bar?.removeEventListener("animationend", sync);
-    };
-  }, [cardSelector]);
-  // While tabs move (drag, then the glide into place) follow the tab every frame.
-  useEffect(() => {
-    let frame = 0;
-    const until = moving ? Infinity : performance.now() + MORPH_TAIL_MS;
-    const tick = () => {
-      syncRef.current();
-      if (performance.now() < until) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [moving]);
-
-  const left = tabCap(gap, false);
-  const right = tabCap(rightGap, true);
-  // Where each cap's straight top meets the middle strip, measured from that cap's outer edge.
-  const capInner = left.mode === "flared" ? TAB_CAP_WIDTH : left.width;
-  const capInnerRight = right.mode === "flared" ? TAB_CAP_WIDTH : right.width;
-  const mask = [
-    `${capMaskUrl(left.fill, left.width, left.height)} 0 0 / ${left.width}px ${left.height}px no-repeat`,
-    `linear-gradient(#000, #000) ${capInner - 1}px 0 / calc(100% - ${capInner + capInnerRight - 2}px) ${TAB_HEIGHT}px no-repeat`,
-    `${capMaskUrl(right.fill, right.width, right.height)} 100% 0 / ${right.width}px ${right.height}px no-repeat`,
-  ].join(", ");
-  return (
-    <span
-      ref={shapeRef}
-      className={styles.shape}
-      style={{
-        left: -left.offset,
-        right: -right.offset,
-        height: TAB_HEIGHT,
-        // A cap that drops below the tab squares off / re-rounds the card's corner; keep that
-        // drop when cutting the shadow at the card's top edge.
-        ...(left.mode !== "flared" || right.mode !== "flared"
-          ? { clipPath: dropClip(left.mode !== "flared" ? left.width : null, right.mode !== "flared" ? right.width : null) }
-          : {}),
-      }}
-      aria-hidden
-    >
-      {cap(left.fill, left.stroke, left.width, left.height, left.mode === "morph" ? clipId : undefined)}
-      <span className={styles.shapeMid} />
-      {cap(right.fill, right.stroke, right.width, right.height, right.mode === "morph" ? `${clipId}-r` : undefined)}
-      {textured && (
-        <span
-          ref={textureRef}
-          className={styles.texture}
-          style={{ height: Math.max(left.height, right.height), mask, WebkitMask: mask }}
-        />
-      )}
-    </span>
   );
 }
